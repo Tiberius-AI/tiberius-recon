@@ -60,20 +60,20 @@
   const WALKTHROUGH_STEPS = [
     {
       badge: 'STEP 1 OF 3 • 2:00 AM DEEP PORTAL RECON',
-      title: '2:00 AM: Live Browser Sweeps Non-API Building Portals',
-      desc: 'Your Digital Scout opens a real browser while you sleep—logging into suburban Accela & EnerGov building departments to pull $240,000+ commercial TI buildouts and residential addition permits filed in the last 24 hours.',
+      title: '2:00 AM: Pulls Fresh Building Permits While the City Sleeps',
+      desc: 'At 2:04 AM, while your trucks are parked for the night, your Scout logs into suburban building departments (Accela & EnerGov) and pulls every $240,000+ commercial buildout, shell permit, and custom addition filed in the last 24 hours.',
       telemetry: 'LIVE CAPTURE: PERMIT #BP-2026-08941 • $240,000 TI PERMIT • FILED 14 HRS AGO'
     },
     {
       badge: 'STEP 2 OF 3 • 4:30 AM COUNTY TAX ROLL X-RAY',
-      title: '4:30 AM: Verifies the Real Owner & Decision-Maker',
-      desc: 'Cross-references County Appraisal District (CAD) records to verify the deeded owner, assessed property value, square footage, and direct GC Project Manager or Property Manager phone and email.',
+      title: '4:30 AM: Pulls Parcel ID, Sq Ft & Owner Cell in 14 Seconds',
+      desc: 'Runs each street address and parcel ID through the County Appraisal District (CAD) tax roll—verifying the deeded owner, assessed property value, square footage, and direct GC Project Manager or Property Manager cell and work email.',
       telemetry: 'CAD X-RAY MATCH: $940,000 ASSESSED VALUE • 4,120 SQ FT • 1.4 ACRES • VERIFIED OWNER'
     },
     {
       badge: 'STEP 3 OF 3 • 7:00 AM SILVER PLATTER QUEUE',
-      title: '7:00 AM: 90-Second Morning Coffee Approval',
-      desc: 'You wake up to researched deal cards with proof on top and a custom 4-sentence intro written in your voice below. Tap [ ✓ Approve & Send ] in 90 seconds and roll out to the job site.',
+      title: '7:00 AM: Pour Your Coffee & Tap Send 3 Times in 90 Seconds',
+      desc: 'At 6:45 AM, you open one text link. Three researched local deals sit on your screen with the permit proof on top and a custom 4-sentence intro written in your voice below. Tap [ ✓ Approve & Send ] and roll out to the job site.',
       telemetry: '07:00:00 AM QUEUE READY: 3 UNLOCKED CARDS • 100% HUMAN-IN-THE-LOOP ✓'
     }
   ];
