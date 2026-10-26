@@ -114,17 +114,17 @@
 
   <!-- ========================================================================
        STICKY LIGHT-MODE NAVBAR
-       - Exact Homepage Brand Logo Asset on Left (adjusted for #FFFFFF header)
-       - Mobile Navbar Locked at 64px (h-16) with Logo Left + 1 Clean CTA Right
+       - Mobile: Logo takes the entire top space (no buttons or menus on mobile)
+       - Desktop: 50% larger logo on left + nav links center + CTA button right
        ======================================================================== -->
   <header id="command-navbar" class="enterprise-navbar">
-    <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-      <!-- Left: Exact Homepage Brand Logo Image (/images/tiberius-ai.png) -->
+    <div class="max-w-[1280px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-28 flex items-center justify-center md:justify-between gap-4">
+      <!-- Left (Full-Width Centered on Mobile): logo4.png with "THE BAD BOYS OF AI." slogan -->
       <a href="/" class="brand-logo focus:outline-none" aria-label="Tiberius AI Home">
         <img
-          src="/images/tiberius-ai.png"
-          onerror="this.onerror=null;this.src='images/tiberius-ai.png';"
-          alt="Tiberius AI"
+          src="/images/logo4.png"
+          onerror="this.onerror=null;this.src='images/logo4.png';"
+          alt="Tiberius AI — The Bad Boys of AI."
           class="brand-logo-img"
         />
       </a>
@@ -140,11 +140,11 @@
         <a href="#faq" class="hover:text-blue-700 transition-colors">FAQ</a>
       </nav>
 
-      <!-- Right: One Clean Button on Mobile & Desktop -->
-      <div class="flex items-center flex-shrink-0">
+      <!-- Right (Desktop/Tablet Only — Hidden on Mobile): Primary CTA Button -->
+      <div class="hidden md:flex items-center flex-shrink-0">
         <a
           href="#activation-vault"
-          class="btn-trust-emerald px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5"
+          class="btn-trust-emerald px-5 py-2.5 rounded-lg text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5"
         >
           <span>Start 7-Day Test Drive →</span>
         </a>
@@ -1426,10 +1426,10 @@
       <div>
         <a href="/" class="brand-logo mb-3 focus:outline-none" aria-label="Tiberius AI Home">
           <img
-            src="/images/tiberius-ai.png"
-            onerror="this.onerror=null;this.src='images/tiberius-ai.png';"
-            alt="Tiberius AI"
-            class="brand-logo-img"
+            src="/images/logo4.png"
+            onerror="this.onerror=null;this.src='images/logo4.png';"
+            alt="Tiberius AI — The Bad Boys of AI."
+            class="footer-logo-img"
           />
         </a>
         <p class="text-xs sm:text-sm text-[#64748B] max-w-md">

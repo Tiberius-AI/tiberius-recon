@@ -82,19 +82,25 @@ body {
 }
 
 /* ==========================================================================
-   STICKY LIGHT-MODE NAVBAR (LOCKED AT 64PX / h-16 ON MOBILE)
+   LIGHT-MODE NAVBAR (FULL-WIDTH LOGO HEADER ON MOBILE, STICKY ON DESKTOP)
    ========================================================================== */
 .enterprise-navbar {
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid #E2E8F0;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .enterprise-navbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
 }
 
 .enterprise-navbar.is-scrolled {
@@ -103,33 +109,46 @@ body {
 }
 
 .brand-logo {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   text-decoration: none;
-  flex-shrink: 0;
+  width: 100%;
 }
 
-/* The homepage /images/tiberius-ai.png asset has white "TIBERIUS AI" letters
-   and gold "THE BAD BOYS OF AI." tagline. Using invert + hue-rotate(180deg)
-   converts the white letters to Deep Slate (#0F172A) while preserving the
-   warm gold/amber tagline on a crisp #FFFFFF navbar. */
+/* Mobile (<768px): Logo takes the entire top header space with no buttons or menus */
 .brand-logo-img {
-  height: 38px;
-  max-height: 38px;
-  width: auto;
-  max-width: 175px;
+  width: 100%;
+  max-width: 345px;
+  height: auto;
+  max-height: none;
   object-fit: contain;
   display: block;
-  flex-shrink: 0;
-  filter: invert(0.92) hue-rotate(180deg) saturate(1.45) contrast(1.12);
 }
 
+/* Desktop (>=768px): 50% larger logo on the left */
 @media (min-width: 768px) {
-  .brand-logo-img {
-    height: 46px;
-    max-height: 46px;
-    max-width: 220px;
+  .brand-logo {
+    display: inline-flex;
+    width: auto;
+    justify-content: flex-start;
+    flex-shrink: 0;
   }
+
+  .brand-logo-img {
+    height: 92px;
+    max-height: 92px;
+    width: auto;
+    max-width: 380px;
+  }
+}
+
+.footer-logo-img {
+  height: 64px;
+  width: auto;
+  max-width: 280px;
+  object-fit: contain;
+  display: block;
 }
 
 /* ==========================================================================
