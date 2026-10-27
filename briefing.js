@@ -11,6 +11,7 @@
 (function () {
   'use strict';
 
+  if (typeof window === 'undefined') return;
   if (window.__TIBERIUS_BRIEFING_APP_INITIALIZED__) return;
   window.__TIBERIUS_BRIEFING_APP_INITIALIZED__ = true;
 

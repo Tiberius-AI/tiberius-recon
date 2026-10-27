@@ -10,6 +10,7 @@
 (function () {
   'use strict';
 
+  if (typeof window === 'undefined') return;
   if (window.__TIBERIUS_COMMAND_PORTAL_INITIALIZED__) return;
   window.__TIBERIUS_COMMAND_PORTAL_INITIALIZED__ = true;
 
