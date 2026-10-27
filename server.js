@@ -44,6 +44,20 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
+// Explicit static file references so Vercel's Node File Tracer (@vercel/nft)
+// automatically bundles all HTML, CSS, JS, and image assets into the Serverless Function.
+const NFT_BUNDLED_FILES = {
+  '/index.html': path.join(__dirname, 'index.html'),
+  '/briefing.html': path.join(__dirname, 'briefing.html'),
+  '/command.html': path.join(__dirname, 'command.html'),
+  '/styles.css': path.join(__dirname, 'styles.css'),
+  '/app.js': path.join(__dirname, 'app.js'),
+  '/briefing.js': path.join(__dirname, 'briefing.js'),
+  '/command.js': path.join(__dirname, 'command.js'),
+  '/images/logo4.png': path.join(__dirname, 'images', 'logo4.png'),
+  '/images/tiberius-ai.png': path.join(__dirname, 'images', 'tiberius-ai.png')
+};
+
 function createExpressStyleHelpers(req, res, parsedUrl, bodyObj) {
   req.query = Object.assign({}, req.query || {}, Object.fromEntries(parsedUrl.searchParams.entries()));
   if (bodyObj !== undefined) {
@@ -100,59 +114,64 @@ function readJsonBody(req) {
 }
 
 async function handleRequest(req, res) {
-  const parsedUrl = new URL(req.url || '/', 'http://localhost');
-  let pathname = parsedUrl.pathname;
+  try {
+    const parsedUrl = new URL(req.url || '/', 'http://localhost');
+    let pathname = parsedUrl.pathname;
 
-  // 1. Handle API routes
-  if (API_ROUTES[pathname]) {
-    const bodyObj = await readJsonBody(req);
-    createExpressStyleHelpers(req, res, parsedUrl, bodyObj);
-    try {
-      await API_ROUTES[pathname](req, res);
-    } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+    // 1. Handle API routes
+    if (API_ROUTES[pathname]) {
+      const bodyObj = await readJsonBody(req);
+      createExpressStyleHelpers(req, res, parsedUrl, bodyObj);
+      try {
+        await API_ROUTES[pathname](req, res);
+      } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+      }
+      return;
     }
-    return;
+
+    // 2. Normalize /recon/* prefix
+    if (pathname === '/recon' || pathname === '/recon/') {
+      pathname = '/index.html';
+    } else if (pathname.startsWith('/recon/')) {
+      pathname = pathname.slice('/recon'.length);
+    }
+
+    // 3. Clean URLs mapping
+    if (pathname === '/' || pathname === '/index') pathname = '/index.html';
+    if (pathname === '/briefing') pathname = '/briefing.html';
+    if (pathname === '/command') pathname = '/command.html';
+
+    const relPath = pathname.replace(/^\/+/, '');
+    let safeFilePath = NFT_BUNDLED_FILES[pathname] || path.join(ROOT_DIR, relPath);
+
+    if (!safeFilePath.startsWith(ROOT_DIR)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Forbidden');
+      return;
+    }
+
+    if (!fs.existsSync(safeFilePath) && fs.existsSync(`${safeFilePath}.html`)) {
+      safeFilePath = `${safeFilePath}.html`;
+    }
+
+    if (fs.existsSync(safeFilePath) && fs.statSync(safeFilePath).isFile()) {
+      const ext = path.extname(safeFilePath).toLowerCase();
+      const content = fs.readFileSync(safeFilePath);
+      res.writeHead(200, {
+        'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
+        'Cache-Control': ext === '.html' ? 'public, max-age=0, must-revalidate' : 'public, max-age=3600'
+      });
+      res.end(content);
+      return;
+    }
+
+    res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: 'Not found', path: pathname, rootDir: ROOT_DIR }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: err.message }));
   }
-
-  // 2. Normalize /recon/* prefix
-  if (pathname === '/recon' || pathname === '/recon/') {
-    pathname = '/index.html';
-  } else if (pathname.startsWith('/recon/')) {
-    pathname = pathname.slice('/recon'.length);
-  }
-
-  // 3. Clean URLs mapping
-  if (pathname === '/' || pathname === '/index') pathname = '/index.html';
-  if (pathname === '/briefing') pathname = '/briefing.html';
-  if (pathname === '/command') pathname = '/command.html';
-
-  const relPath = pathname.replace(/^\/+/, '');
-  let safeFilePath = path.join(ROOT_DIR, relPath);
-
-  if (!safeFilePath.startsWith(ROOT_DIR)) {
-    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Forbidden');
-    return;
-  }
-
-  if (!fs.existsSync(safeFilePath) && fs.existsSync(`${safeFilePath}.html`)) {
-    safeFilePath = `${safeFilePath}.html`;
-  }
-
-  if (fs.existsSync(safeFilePath) && fs.statSync(safeFilePath).isFile()) {
-    const ext = path.extname(safeFilePath).toLowerCase();
-    const content = fs.readFileSync(safeFilePath);
-    res.writeHead(200, {
-      'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
-      'Cache-Control': ext === '.html' ? 'public, max-age=0, must-revalidate' : 'public, max-age=3600'
-    });
-    res.end(content);
-    return;
-  }
-
-  res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify({ ok: false, error: 'Not found', path: pathname }));
 }
 
 function createReconServer() {

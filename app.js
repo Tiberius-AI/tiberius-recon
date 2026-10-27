@@ -11,7 +11,12 @@
 (function () {
   'use strict';
 
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    if (typeof module !== 'undefined') {
+      module.exports = require('./server');
+    }
+    return;
+  }
   if (window.__TIBERIUS_RECON_LIGHT_INITIALIZED__) return;
   window.__TIBERIUS_RECON_LIGHT_INITIALIZED__ = true;
 
