@@ -11,7 +11,7 @@
  */
 
 const assert = require('assert');
-const { createReconServer } = require('../server');
+const { createReconServer } = require('../scripts/dev-server');
 
 async function runTests() {
   const server = createReconServer();

@@ -4,8 +4,9 @@
   "private": true,
   "description": "Tiberius Recon™ — Overnight Building Permit & CAD Tax Roll Recon Platform + 7:00 AM Morning Briefing & 1-Tap Dispatch",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js",
+    "dev": "node scripts/dev-server.js",
+    "start": "node scripts/dev-server.js",
+    "build": "node -e \"const fs=require('fs'),path=require('path');fs.mkdirSync('dist',{recursive:true});const files=['index.html','styles.css','app.js','briefing.html','briefing.js','command.html','command.js'];for(const f of files){if(fs.existsSync(f))fs.copyFileSync(f,path.join('dist',f));}const dirs=['images'];for(const d of dirs){if(fs.existsSync(d))fs.cpSync(d,path.join('dist',d),{recursive:true});}console.log('Built Tiberius Recon static bundle to dist/');\"",
     "recon:night-sweep": "node workers/orchestrator.js --dry-run",
     "test": "node tests/recon.test.js"
   }

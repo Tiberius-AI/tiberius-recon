@@ -1,5 +1,5 @@
 /**
- * TIBERIUS RECON™ — LOCAL DEVELOPMENT & API SERVER (server.js)
+ * TIBERIUS RECON™ — LOCAL DEVELOPMENT & API SERVER (scripts/dev-server.js)
  * Serves static Enterprise Light-Mode pages (/, /briefing, /command)
  * and mounts all /api/recon/* serverless handlers.
  */
@@ -9,13 +9,15 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
-const availabilityHandler = require('./api/recon/availability');
-const activateHandler = require('./api/recon/activate');
-const briefingHandler = require('./api/recon/briefing');
-const approveHandler = require('./api/recon/approve');
-const cronMorningHandler = require('./api/recon/cron-morning');
-const liveAgentHandler = require('./api/recon/live-agent');
-const cadLookupHandler = require('./api/recon/cad-lookup');
+const ROOT_DIR = path.resolve(__dirname, '..');
+
+const availabilityHandler = require('../api/recon/availability');
+const activateHandler = require('../api/recon/activate');
+const briefingHandler = require('../api/recon/briefing');
+const approveHandler = require('../api/recon/approve');
+const cronMorningHandler = require('../api/recon/cron-morning');
+const liveAgentHandler = require('../api/recon/live-agent');
+const cadLookupHandler = require('../api/recon/cad-lookup');
 
 const API_ROUTES = {
   '/api/recon/availability': availabilityHandler,
@@ -105,8 +107,8 @@ function createReconServer() {
     if (pathname === '/briefing') pathname = '/briefing.html';
     if (pathname === '/command') pathname = '/command.html';
 
-    const safeFilePath = path.join(__dirname, pathname.replace(/^\/+/, ''));
-    if (!safeFilePath.startsWith(__dirname)) {
+    const safeFilePath = path.join(ROOT_DIR, pathname.replace(/^\/+/, ''));
+    if (!safeFilePath.startsWith(ROOT_DIR)) {
       res.writeHead(403);
       res.end('Forbidden');
       return;
