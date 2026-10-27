@@ -690,4 +690,239 @@
       }
     });
   }
+
+  /* ==========================================================================
+     7. 21ST.DEV ("G3") WEBGL1 'SILK' SHADER, 3D TILT & PIXEL-GRID ENGINE
+     ========================================================================== */
+  function initG3VisualEngine() {
+    document.documentElement.classList.add('dark');
+    if (document.body) {
+      document.body.classList.add('g-root', 'g3-root');
+    }
+
+    // 7A. 3D Scroll-Tilted Interactive Stage (--tilt-progress)
+    function syncHeroTilt() {
+      if (!videoPlayerCard) return;
+      const rect = videoPlayerCard.getBoundingClientRect();
+      const vh = window.innerHeight || 900;
+      const raw = 1 - Math.max(0, Math.min(1, (rect.top - vh * 0.12) / (vh * 0.65)));
+      const eased = 0.45 + raw * 0.55;
+      videoPlayerCard.style.setProperty('--tilt-progress', eased.toFixed(3));
+    }
+    window.addEventListener('scroll', syncHeroTilt, { passive: true });
+    syncHeroTilt();
+
+    // 7B. Authentic 21st.dev WebGL1 'silk' Fragment Shader (OKLab + Film Grain)
+    const VERT_SRC = [
+      'attribute vec2 a_pos;',
+      'varying vec2 v_uv;',
+      'void main() {',
+      '  v_uv = a_pos * 0.5 + 0.5;',
+      '  gl_Position = vec4(a_pos, 0.0, 1.0);',
+      '}'
+    ].join('\n');
+
+    const FRAG_SRC = [
+      'precision highp float;',
+      'varying vec2 v_uv;',
+      'uniform float u_time;',
+      'uniform vec2 u_res;',
+      'uniform vec3 u_c0;',
+      'uniform vec3 u_c1;',
+      'uniform vec3 u_c2;',
+      'uniform vec3 u_c3;',
+      '',
+      'vec3 rgb2oklab(vec3 c) {',
+      '  float l = 0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b;',
+      '  float m = 0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b;',
+      '  float s = 0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b;',
+      '  float l_ = pow(max(l, 0.0), 1.0 / 3.0);',
+      '  float m_ = pow(max(m, 0.0), 1.0 / 3.0);',
+      '  float s_ = pow(max(s, 0.0), 1.0 / 3.0);',
+      '  return vec3(',
+      '    0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,',
+      '    1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,',
+      '    0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_',
+      '  );',
+      '}',
+      '',
+      'vec3 oklab2rgb(vec3 c) {',
+      '  float l_ = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;',
+      '  float m_ = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;',
+      '  float s_ = c.x - 0.0894841775 * c.y - 1.2914855480 * c.z;',
+      '  float l = l_ * l_ * l_;',
+      '  float m = m_ * m_ * m_;',
+      '  float s = s_ * s_ * s_;',
+      '  return vec3(',
+      '    +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,',
+      '    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,',
+      '    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s',
+      '  );',
+      '}',
+      '',
+      'vec3 mixOklab(vec3 a, vec3 b, float t) {',
+      '  return oklab2rgb(mix(rgb2oklab(a), rgb2oklab(b), clamp(t, 0.0, 1.0)));',
+      '}',
+      '',
+      'vec3 paletteOklab(float t) {',
+      '  t = clamp(t, 0.0, 1.0);',
+      '  if (t < 0.333) return mixOklab(u_c0, u_c1, t * 3.0);',
+      '  if (t < 0.666) return mixOklab(u_c1, u_c2, (t - 0.333) * 3.0);',
+      '  return mixOklab(u_c2, u_c3, (t - 0.666) * 3.0);',
+      '}',
+      '',
+      'float grainHash(vec2 p) {',
+      '  vec3 p3 = fract(vec3(p.xyx) * 0.1031);',
+      '  p3 += dot(p3, p3.yzx + 33.33);',
+      '  return fract((p3.x + p3.y) * p3.z);',
+      '}',
+      '',
+      'void main() {',
+      '  vec2 uv = v_uv;',
+      '  float aspect = u_res.x / max(u_res.y, 1.0);',
+      '  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);',
+      '  float t = u_time * 0.35;',
+      '  vec2 u = p * 1.15;',
+      '  float s = sin(u.x * 3.0 + u.y * 2.0 + t * 1.1 + sin(u.y * 5.0 - t) * 0.6);',
+      '  float s2 = cos(u.x * 2.0 - u.y * 4.0 + t * 0.7 + s * 0.8);',
+      '  float v = s * 0.5 + s2 * 0.5;',
+      '  float h = smoothstep(-0.85, 0.85, v);',
+      '  float sheen = pow(max(0.0, 1.0 - abs(v)), 4.0);',
+      '  vec3 col = paletteOklab(h * 0.82) + u_c3 * sheen * 0.32;',
+      '  float g = (grainHash(gl_FragCoord.xy + fract(t) * 100.0) - 0.5) * 0.025;',
+      '  gl_FragColor = vec4(clamp(col + g, 0.0, 1.0), 1.0);',
+      '}'
+    ].join('\n');
+
+    function mountSilkShader(canvas) {
+      const gl = canvas.getContext('webgl', { alpha: false, antialias: false, powerPreference: 'low-power' });
+      if (!gl) return;
+
+      function compile(type, src) {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) return null;
+        return sh;
+      }
+
+      const vs = compile(gl.VERTEX_SHADER, VERT_SRC);
+      const fs = compile(gl.FRAGMENT_SHADER, FRAG_SRC);
+      if (!vs || !fs) return;
+
+      const prog = gl.createProgram();
+      gl.attachShader(prog, vs);
+      gl.attachShader(prog, fs);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+      gl.useProgram(prog);
+
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const aPos = gl.getAttribLocation(prog, 'a_pos');
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+      const uTime = gl.getUniformLocation(prog, 'u_time');
+      const uRes = gl.getUniformLocation(prog, 'u_res');
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_c0'), 0.02, 0.02, 0.03);
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_c1'), 0.0, 0.063, 0.247);
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_c2'), 0.0, 0.204, 1.0);
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_c3'), 0.31, 0.435, 1.0);
+
+      let isVisible = true;
+      const start = performance.now();
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const w = Math.max(1, Math.floor(canvas.clientWidth * dpr * 0.65));
+        const h = Math.max(1, Math.floor(canvas.clientHeight * dpr * 0.65));
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+          gl.viewport(0, 0, w, h);
+        }
+      }
+
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            isVisible = entry.isIntersecting;
+          });
+        });
+        io.observe(canvas);
+      }
+
+      function render(now) {
+        if (isVisible) {
+          resize();
+          gl.uniform1f(uTime, (now - start) * 0.001);
+          gl.uniform2f(uRes, canvas.width, canvas.height);
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        }
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    }
+
+    document.querySelectorAll('canvas[data-g3-shader="silk"]').forEach(mountSilkShader);
+
+    // 7C. 21st.dev Canvas 2D Pixel-Grid Wordmark Footer
+    function renderPixelFooter(canvas) {
+      const word = canvas.getAttribute('data-pixel-word') || 'TIBERIUS RECON';
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(320, canvas.clientWidth || 1100);
+      const h = Math.max(80, canvas.clientHeight || 100);
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      const off = document.createElement('canvas');
+      const cell = w < 640 ? 4 : 5;
+      const cols = Math.floor(w / cell);
+      const rows = Math.floor(h / cell);
+      off.width = cols;
+      off.height = rows;
+      const octx = off.getContext('2d');
+      if (!octx) return;
+
+      octx.fillStyle = '#000';
+      octx.fillRect(0, 0, cols, rows);
+      octx.fillStyle = '#fff';
+      octx.textAlign = 'center';
+      octx.textBaseline = 'middle';
+      const fontSize = Math.min(rows * 0.78, (cols / (word.length * 0.62)));
+      octx.font = `800 ${fontSize}px "General Sans", "Inter", sans-serif`;
+      octx.fillText(word, cols / 2, rows / 2);
+
+      const data = octx.getImageData(0, 0, cols, rows).data;
+      for (let y = 0; y < rows; y++) {
+        const vFade = 1 - (y / rows) * 0.75;
+        for (let x = 0; x < cols; x++) {
+          const alpha = data[(y * cols + x) * 4];
+          if (alpha > 90) {
+            const isCobalt = (x + y) % 5 === 0;
+            ctx.fillStyle = isCobalt
+              ? `rgba(79, 111, 255, ${(0.58 * vFade).toFixed(2)})`
+              : `rgba(244, 244, 245, ${(0.28 * vFade).toFixed(2)})`;
+            ctx.fillRect(x * cell, y * cell, cell - 1.2, cell - 1.2);
+          }
+        }
+      }
+    }
+
+    const pixelCanvases = Array.from(document.querySelectorAll('canvas.g3-footer-pixel-canvas'));
+    pixelCanvases.forEach(renderPixelFooter);
+    window.addEventListener('resize', () => pixelCanvases.forEach(renderPixelFooter), { passive: true });
+  }
+
+  initG3VisualEngine();
 })();

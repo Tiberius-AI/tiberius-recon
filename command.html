@@ -1,37 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Territory Command &amp; Smart Site Equity Portal | Tiberius Recon™</title>
   <meta name="description" content="Manage your Tiberius Recon™ territory zip code locks, minimum permit valuation filters, Gemini shop-voice calibration, and $200/mo Rent-to-Own Smart Site code equity." />
 
-  <!-- Google Fonts: Plus Jakarta Sans, Outfit, Inter, JetBrains Mono -->
+  <!-- Google Fonts & Fontshare General Sans (21st.dev G3 Typography) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
 
-  <!-- Tailwind CSS via CDN -->
+  <!-- Tailwind CSS via CDN configured for 21st.dev G3 Dark Glass -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            ink: '#0F172A',
-            bodyInk: '#334155',
-            mutedInk: '#64748B',
-            stoneBg: '#F4F4F0',
-            alabasterBg: '#F8FAFC',
-            navyAccent: '#1E40AF',
-            royalAccent: '#2563EB',
-            trustEmerald: '#059669',
-            trustEmeraldDark: '#047857',
-            permitAmber: '#D97706'
+            ink: '#F4F4F5',
+            bodyInk: '#D4D4D8',
+            mutedInk: '#90909A',
+            stoneBg: '#070709',
+            alabasterBg: '#0B0B0E',
+            navyAccent: '#4F6FFF',
+            royalAccent: '#0034FF',
+            trustEmerald: '#10B981',
+            trustEmeraldDark: '#059669',
+            permitAmber: '#F59E0B'
           },
           fontFamily: {
-            display: ['Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
-            sans: ['Inter', 'sans-serif'],
+            display: ['General Sans', 'Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
+            sans: ['General Sans', 'Inter', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace']
           }
         }
@@ -43,12 +45,22 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body class="bg-[#F4F4F0] text-bodyInk selection:bg-blue-100 selection:text-blue-900 min-h-screen flex flex-col">
+<body class="g-root g3-root bg-subtle-grid text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
 
   <!-- ========================================================================
-       STICKY LIGHT-MODE NAVBAR
+       21ST.DEV 7-LAYER PROGRESSIVE BACKDROP-BLUR STICKY NAVBAR
        ======================================================================== -->
   <header id="command-navbar" class="enterprise-navbar">
+    <div class="g3-glass-bar" aria-hidden="true">
+      <div class="g3-pb g3-pb-1"></div>
+      <div class="g3-pb g3-pb-2"></div>
+      <div class="g3-pb g3-pb-3"></div>
+      <div class="g3-pb g3-pb-4"></div>
+      <div class="g3-pb g3-pb-5"></div>
+      <div class="g3-pb g3-pb-6"></div>
+      <div class="g3-pb g3-pb-7"></div>
+      <div class="g3-dim"></div>
+    </div>
     <div class="max-w-[1280px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-24 flex items-center justify-center md:justify-between gap-4">
       <a href="/" class="brand-logo focus:outline-none" aria-label="Tiberius Recon Home">
         <img
@@ -62,7 +74,7 @@
       <nav aria-label="Command Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-700">
         <a href="/" class="hover:text-blue-700 transition-colors">← Recon Overview</a>
         <a id="nav-briefing-link" href="briefing.html" class="hover:text-blue-700 transition-colors flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+          <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
           <span>07:00 AM Briefing Queue</span>
         </a>
         <span class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
@@ -73,7 +85,7 @@
       <div class="hidden md:flex items-center gap-2.5 flex-shrink-0">
         <a
           href="login.html"
-          class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold inline-flex items-center gap-1.5 transition-colors"
+          class="btn-outline-slate px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
         >
           <span>🔐 Switch Account / Admin</span>
         </a>
@@ -92,9 +104,13 @@
     <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
       <!-- ====================================================================
-           TOP COMMAND HEADER
+           TOP COMMAND HEADER (WITH 21ST.DEV WEBGL SILK SHADER STAGE)
            ==================================================================== -->
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+      <section class="enterprise-card g3-hero-stage bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        <div class="g3-hero-bg" aria-hidden="true" style="opacity: 0.45;">
+          <canvas class="g3-hero-bg-canvas" data-g3-shader="silk"></canvas>
+          <div class="g3-hero-vignette"></div>
+        </div>
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF] mb-2.5">
             <span>CONTRACTOR TERRITORY &amp; VOICE CALIBRATION</span>
@@ -375,6 +391,9 @@
         <a href="/" class="text-blue-700 hover:underline">← Back to /recon Overview</a>
         <a href="briefing.html" class="text-emerald-700 hover:underline">Open 7:00 AM Briefing Queue →</a>
       </div>
+    </div>
+    <div class="g3-footer-pixel-wrap" aria-hidden="true">
+      <canvas class="g3-footer-pixel-canvas" data-pixel-word="TERRITORY COMMAND"></canvas>
     </div>
   </footer>
 

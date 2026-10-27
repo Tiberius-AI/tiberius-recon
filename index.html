@@ -1,37 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tiberius Recon™ | Overnight Building Permit &amp; Tax Roll Recon for Contractors</title>
   <meta name="description" content="Stop buying shared leads or grinding through city portals at night. Your Tiberius Scout pulls live $240K+ building permits and owner cell numbers by 7:00 AM." />
 
-  <!-- Google Fonts: Plus Jakarta Sans, Outfit, Inter, JetBrains Mono -->
+  <!-- Google Fonts & Fontshare General Sans (21st.dev G3 Typography) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
 
-  <!-- Tailwind CSS via CDN configured for High-Trust Enterprise Light Mode -->
+  <!-- Tailwind CSS via CDN configured for 21st.dev G3 Dark Glass & Electric Cobalt -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            ink: '#0F172A',
-            bodyInk: '#334155',
-            mutedInk: '#64748B',
-            stoneBg: '#F4F4F0',
-            alabasterBg: '#F8FAFC',
-            navyAccent: '#1E40AF',
-            royalAccent: '#2563EB',
-            trustEmerald: '#059669',
-            trustEmeraldDark: '#047857',
-            permitAmber: '#D97706'
+            ink: '#F4F4F5',
+            bodyInk: '#D4D4D8',
+            mutedInk: '#90909A',
+            stoneBg: '#070709',
+            alabasterBg: '#0B0B0E',
+            navyAccent: '#4F6FFF',
+            royalAccent: '#0034FF',
+            trustEmerald: '#10B981',
+            trustEmeraldDark: '#059669',
+            permitAmber: '#F59E0B'
           },
           fontFamily: {
-            display: ['Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
-            sans: ['Inter', 'sans-serif'],
+            display: ['General Sans', 'Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
+            sans: ['General Sans', 'Inter', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace']
           }
         }
@@ -110,14 +112,24 @@
   </script>
 </head>
 
-<body class="bg-white text-bodyInk selection:bg-blue-100 selection:text-blue-900">
+<body class="g-root g3-root bg-[#09090B] text-bodyInk selection:bg-blue-600/40 selection:text-white">
 
   <!-- ========================================================================
-       STICKY LIGHT-MODE NAVBAR
+       21ST.DEV 7-LAYER PROGRESSIVE BACKDROP-BLUR STICKY NAVBAR (.g3-glass-bar)
        - Mobile: Logo takes the entire top space (no buttons or menus on mobile)
        - Desktop: 50% larger logo on left + nav links center + CTA button right
        ======================================================================== -->
   <header id="command-navbar" class="enterprise-navbar">
+    <div class="g3-glass-bar" aria-hidden="true">
+      <div class="g3-pb g3-pb-1"></div>
+      <div class="g3-pb g3-pb-2"></div>
+      <div class="g3-pb g3-pb-3"></div>
+      <div class="g3-pb g3-pb-4"></div>
+      <div class="g3-pb g3-pb-5"></div>
+      <div class="g3-pb g3-pb-6"></div>
+      <div class="g3-pb g3-pb-7"></div>
+      <div class="g3-dim"></div>
+    </div>
     <div class="max-w-[1280px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-28 flex items-center justify-center md:justify-between gap-4">
       <!-- Left (Full-Width Centered on Mobile): logo4.png with "THE BAD BOYS OF AI." slogan -->
       <a href="/" class="brand-logo focus:outline-none" aria-label="Tiberius AI Home">
@@ -133,7 +145,7 @@
       <nav aria-label="Primary Navigation" class="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-700">
         <a href="#before-after-story" class="hover:text-blue-700 transition-colors">Before vs. After</a>
         <a href="#simulator" class="hover:text-blue-700 transition-colors flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+          <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
           <span>7:00 AM Queue Demo</span>
         </a>
         <a href="#pricing" class="hover:text-blue-700 transition-colors">Pricing &amp; Tiers</a>
@@ -144,7 +156,7 @@
       <div class="hidden md:flex items-center gap-3 flex-shrink-0">
         <a
           href="login.html"
-          class="px-4 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5 transition-colors"
+          class="btn-outline-slate px-4 py-2.5 rounded-lg font-semibold text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5"
         >
           <span>🔐 Client Sign-In</span>
         </a>
@@ -160,11 +172,16 @@
 
   <main>
     <!-- ======================================================================
-         CHAPTER 1 (WHITE BACKGROUND #FFFFFF): STANDARD VIDEO OVERVIEW HERO
+         CHAPTER 1 (21ST.DEV G3 WEBGL SILK SHADER STAGE): VIDEO OVERVIEW HERO
          - Clean 2-Column Desktop / Single-Column Mobile
          - On Mobile: 16:9 Video Player placed right between Subhead & Primary CTA
          ====================================================================== -->
-    <section id="hero-overview" class="section-bg-white py-10 sm:py-16 lg:py-20 border-b border-slate-200/80" aria-label="Tiberius Recon Overview">
+    <section id="hero-overview" class="section-bg-white g3-hero-stage py-10 sm:py-16 lg:py-20 border-b border-slate-200/80" aria-label="Tiberius Recon Overview">
+      <!-- 21st.dev WebGL1 'silk' Shader Canvas & Radial Vignette -->
+      <div class="g3-hero-bg" aria-hidden="true">
+        <canvas class="g3-hero-bg-canvas" data-g3-shader="silk"></canvas>
+        <div class="g3-hero-vignette"></div>
+      </div>
       <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-y-7 lg:gap-x-12 lg:gap-y-6 items-center">
 
@@ -352,6 +369,13 @@
         </div>
       </div>
     </section>
+
+    <!-- 21st.dev G5 Seam Light Shader Transition -->
+    <div class="g5-lights" aria-hidden="true">
+      <div class="g5-seam g5-seam-top"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
+      <div class="g5-seam g5-seam-bottom"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
+      <div class="g5-lights-glow"></div>
+    </div>
 
     <!-- ======================================================================
          BEFORE VS. AFTER SECTION
@@ -765,6 +789,13 @@
       </div>
     </section>
 
+    <!-- 21st.dev G5 Seam Light Shader Transition -->
+    <div class="g5-lights" aria-hidden="true">
+      <div class="g5-seam g5-seam-top"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
+      <div class="g5-seam g5-seam-bottom"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
+      <div class="g5-lights-glow"></div>
+    </div>
+
     <!-- ======================================================================
          TRANSPARENT PRICING TIERS + SMART SITE EQUITY TOGGLE
          ====================================================================== -->
@@ -907,8 +938,8 @@
           </article>
 
           <!-- TIER 2: $597/mo Commercial & Sub Permit Radar [MOST POPULAR FOR SUBS & COMMERCIAL] -->
-          <article class="bg-white border-2 border-blue-600 rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col justify-between relative">
-            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-blue-600 text-white font-mono-telemetry font-bold text-[11px] tracking-wider shadow-md whitespace-nowrap">
+          <article class="g3-conic-card bg-white border-2 border-blue-600 rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col justify-between relative">
+            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-[#0034FF] to-[#4F6FFF] text-white font-mono-telemetry font-bold text-[11px] tracking-wider shadow-[0_6px_20px_-4px_rgba(0,52,255,0.85)] border border-white/20 whitespace-nowrap">
               MOST POPULAR FOR SUBS &amp; COMMERCIAL
             </div>
 
@@ -1242,14 +1273,45 @@
       </div>
     </section>
 
+    <!-- 21st.dev G5 Seam Light Shader Transition -->
+    <div class="g5-lights" aria-hidden="true">
+      <div class="g5-seam g5-seam-top"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
+      <div class="g5-seam g5-seam-bottom"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
+      <div class="g5-lights-glow"></div>
+    </div>
+
     <!-- ======================================================================
-         SINGLE-CARD TERRITORY ACTIVATION VAULT
+         SINGLE-CARD TERRITORY ACTIVATION VAULT (WITH 21ST.DEV -8DEG MARQUEE)
          ====================================================================== -->
-    <section id="activation-vault" class="section-bg-stone py-16 sm:py-24 px-4 sm:px-6 lg:px-8" aria-label="Territory Activation Vault">
-      <!-- Centered White Conversion Card (bg-white border border-slate-200 rounded-2xl shadow-lg p-8 max-w-2xl mx-auto) -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 max-w-2xl mx-auto relative overflow-hidden">
+    <section id="activation-vault" class="section-bg-stone g-closing-stage py-16 sm:py-24 px-4 sm:px-6 lg:px-8" aria-label="Territory Activation Vault">
+      <!-- 21st.dev -8deg Tilted Drifting Telemetry Marquee Backdrop -->
+      <div class="g-closing-bg" aria-hidden="true">
+        <div class="g-closing-row">
+          <div class="g-closing-tile">⚡ PERMIT #BP-2026-08941 • $240,000 TI BUILDOUT • ACCELA PORTAL</div>
+          <div class="g-closing-tile">🏛️ PARCEL #TCAD-014017 • $1.84M ASSESSED • VERIFIED OWNER CELL</div>
+          <div class="g-closing-tile">☕ 07:00:00 AM BRIEFING • 3 UNLOCKED RECON CARDS • 1-TAP APPROVE</div>
+          <div class="g-closing-tile">🏢 140-UNIT MULTIFAMILY DEED TRANSFER • CAPEX VENDOR WINDOW</div>
+          <div class="g-closing-tile">⚡ PERMIT #BP-2026-08941 • $240,000 TI BUILDOUT • ACCELA PORTAL</div>
+          <div class="g-closing-tile">🏛️ PARCEL #TCAD-014017 • $1.84M ASSESSED • VERIFIED OWNER CELL</div>
+          <div class="g-closing-tile">☕ 07:00:00 AM BRIEFING • 3 UNLOCKED RECON CARDS • 1-TAP APPROVE</div>
+          <div class="g-closing-tile">🏢 140-UNIT MULTIFAMILY DEED TRANSFER • CAPEX VENDOR WINDOW</div>
+        </div>
+        <div class="g-closing-row g-closing-row-reverse">
+          <div class="g-closing-tile">🏡 4,120 SQ FT CUSTOM ADDITION • $940K CAD TAX ROLL MATCH</div>
+          <div class="g-closing-tile">🛡️ 100% ZIP EXCLUSIVITY • NOTHING SENDS WITHOUT YOUR TAP</div>
+          <div class="g-closing-tile">💎 RENT-TO-OWN SMART SITE • +$200/MO CODE OWNERSHIP EQUITY</div>
+          <div class="g-closing-tile">🔍 02:00 AM ENER-GOV &amp; ACCELA SWEEP • 14-SECOND CAD X-RAY</div>
+          <div class="g-closing-tile">🏡 4,120 SQ FT CUSTOM ADDITION • $940K CAD TAX ROLL MATCH</div>
+          <div class="g-closing-tile">🛡️ 100% ZIP EXCLUSIVITY • NOTHING SENDS WITHOUT YOUR TAP</div>
+          <div class="g-closing-tile">💎 RENT-TO-OWN SMART SITE • +$200/MO CODE OWNERSHIP EQUITY</div>
+          <div class="g-closing-tile">🔍 02:00 AM ENER-GOV &amp; ACCELA SWEEP • 14-SECOND CAD X-RAY</div>
+        </div>
+      </div>
+
+      <!-- Centered G3 Obsidian Conversion Card -->
+      <div class="enterprise-card bg-white border border-slate-200 rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 max-w-2xl mx-auto relative overflow-hidden">
         <!-- Crisp Top Accent Bar -->
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1E40AF] via-[#059669] to-[#1E40AF]" aria-hidden="true"></div>
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#0034FF] via-[#10B981] to-[#4F6FFF]" aria-hidden="true"></div>
 
         <!-- FORM VIEW -->
         <div id="vault-form-view">
@@ -1507,6 +1569,11 @@
     <div class="max-w-[1280px] mx-auto mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B] font-mono-telemetry">
       <span>© 2026 TIBERIUS AI. ALL RIGHTS RESERVED.</span>
       <span>NOTHING SENDS WITHOUT YOUR TAP • ZERO AUTOMATED SPAM • ZERO WEBSITE CHANGES REQUIRED</span>
+    </div>
+
+    <!-- 21st.dev Canvas 2D Pixel-Grid Wordmark Lockup -->
+    <div class="g3-footer-pixel-wrap" aria-hidden="true">
+      <canvas class="g3-footer-pixel-canvas" data-pixel-word="TIBERIUS RECON"></canvas>
     </div>
   </footer>
 

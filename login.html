@@ -1,24 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Client Sign-In & Agency Command — Tiberius Recon™</title>
+  <title>Client Sign-In &amp; Agency Command — Tiberius Recon™</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['General Sans', 'Plus Jakarta Sans', 'Inter', 'sans-serif'],
+            sans: ['General Sans', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/recon/styles.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="bg-alabaster text-slate-900 antialiased selection:bg-blue-600 selection:text-white min-h-screen flex flex-col">
+<body class="g-root g3-root bg-subtle-grid text-slate-900 antialiased selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
 
-  <!-- TOP STICKY NAVIGATION -->
-  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm">
+  <!-- 21ST.DEV 7-LAYER PROGRESSIVE BACKDROP-BLUR STICKY NAVIGATION -->
+  <header class="enterprise-navbar sticky top-0 z-50">
+    <div class="g3-glass-bar" aria-hidden="true">
+      <div class="g3-pb g3-pb-1"></div>
+      <div class="g3-pb g3-pb-2"></div>
+      <div class="g3-pb g3-pb-3"></div>
+      <div class="g3-pb g3-pb-4"></div>
+      <div class="g3-pb g3-pb-5"></div>
+      <div class="g3-pb g3-pb-6"></div>
+      <div class="g3-pb g3-pb-7"></div>
+      <div class="g3-dim"></div>
+    </div>
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <a href="index.html" class="flex items-center gap-2.5 group">
-          <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-display font-bold text-sm tracking-wider shadow-sm group-hover:bg-blue-600 transition-colors">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-b from-[#1E4BFF] to-[#0034FF] text-white flex items-center justify-center font-display font-bold text-sm tracking-wider shadow-[0_6px_18px_-4px_rgba(0,52,255,0.75)] border border-white/20">
             TR
           </div>
           <div>
@@ -42,10 +67,10 @@
         <button id="nav-logout-btn" type="button" class="hidden px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-colors">
           Sign Out
         </button>
-        <a href="briefing.html" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold transition-colors">
+        <a href="briefing.html" class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-semibold">
           7:00 AM Briefing
         </a>
-        <a href="command.html" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold transition-colors">
+        <a href="command.html" class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-semibold">
           Territory Command
         </a>
       </div>
@@ -57,8 +82,12 @@
     <!-- SIGN-IN & QUICK ACCOUNT SWITCHER GRID -->
     <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-      <!-- Left 5 Cols: Contractor & Admin Sign-In Form -->
-      <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-7 space-y-5">
+      <!-- Left 5 Cols: Contractor & Admin Sign-In Form (21st.dev G3 Shader Stage) -->
+      <div class="lg:col-span-5 enterprise-card g3-hero-stage bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-7 space-y-5">
+        <div class="g3-hero-bg" aria-hidden="true" style="opacity: 0.4;">
+          <canvas class="g3-hero-bg-canvas" data-g3-shader="silk"></canvas>
+          <div class="g3-hero-vignette"></div>
+        </div>
         <div>
           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono-telemetry font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
             🔐 Secure Account Access
@@ -84,7 +113,7 @@
               type="text"
               required
               placeholder="e.g. travis@lonestarconcrete.com or (830) 555-0194"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/60 text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+              class="enterprise-input w-full px-3.5 py-2.5 rounded-xl text-sm font-medium"
             />
           </div>
 
@@ -97,14 +126,14 @@
               type="password"
               required
               placeholder="Enter password or 5-digit territory PIN"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/60 text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+              class="enterprise-input w-full px-3.5 py-2.5 rounded-xl text-sm font-medium"
             />
           </div>
 
           <button
             id="login-submit-btn"
             type="submit"
-            class="w-full py-3 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-display font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+            class="btn-executive-navy w-full py-3 px-5 rounded-xl font-display font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Sign In to Territory Account →</span>
           </button>
@@ -190,11 +219,11 @@
             data-quick-pass="roofing78701"
             class="quick-login-btn text-left p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 transition-all group space-y-1.5"
           >
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-2">
               <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-mono-telemetry font-bold">
-                CLIENT #2 • ZIP 78701 (EXCLUSIVE)
+                CLIENT #2 • ZIP 78701 (EXCL.)
               </span>
-              <span class="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform">Sign In →</span>
+              <span class="text-xs font-semibold text-blue-600 shrink-0 whitespace-nowrap group-hover:translate-x-0.5 transition-transform">Sign In →</span>
             </div>
             <p class="font-display font-bold text-slate-900 text-sm">Centex Industrial Roofing Systems</p>
             <p class="text-xs text-slate-600">Dana Vance • Commercial Roofing • Tier 3</p>
@@ -208,11 +237,11 @@
             data-quick-pass="hvac78258"
             class="quick-login-btn text-left p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 transition-all group space-y-1.5"
           >
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-2">
               <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-mono-telemetry font-bold">
                 CLIENT #3 • ZIP 78258
               </span>
-              <span class="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform">Sign In →</span>
+              <span class="text-xs font-semibold text-blue-600 shrink-0 whitespace-nowrap group-hover:translate-x-0.5 transition-transform">Sign In →</span>
             </div>
             <p class="font-display font-bold text-slate-900 text-sm">Alamo Mechanical &amp; HVAC</p>
             <p class="text-xs text-slate-600">Carlos Mendez • Commercial HVAC • Tier 2</p>
@@ -224,13 +253,13 @@
             type="button"
             data-quick-id="admin@tiberius.ai"
             data-quick-pass="TiberiusAdmin2026!"
-            class="quick-login-btn text-left p-4 rounded-xl border-2 border-slate-900 bg-slate-900 text-white hover:bg-slate-800 transition-all group space-y-1.5"
+            class="quick-login-btn g3-conic-card text-left p-4 rounded-xl border border-blue-500/50 text-white transition-all group space-y-1.5"
           >
-            <div class="flex items-center justify-between">
-              <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] font-mono-telemetry font-bold">
+            <div class="flex items-center justify-between gap-2">
+              <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-mono-telemetry font-bold">
                 ★ MASTER AGENCY ADMIN
               </span>
-              <span class="text-xs font-semibold text-amber-300 group-hover:translate-x-0.5 transition-transform">Unlock Command →</span>
+              <span class="text-xs font-semibold text-amber-300 shrink-0 whitespace-nowrap group-hover:translate-x-0.5 transition-transform">Unlock →</span>
             </div>
             <p class="font-display font-bold text-white text-sm">Tiberius Master Agency Roster</p>
             <p class="text-xs text-slate-300">Manage all client accounts, zip locks &amp; live sweeps</p>
@@ -306,15 +335,15 @@
         <form id="admin-create-client-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Company Name</label>
-            <input id="new-client-company" type="text" required placeholder="e.g. Brazos Commercial Electric" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            <input id="new-client-company" type="text" required placeholder="e.g. Brazos Commercial Electric" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Owner / Estimator Name</label>
-            <input id="new-client-owner" type="text" required placeholder="e.g. Luke Garrison" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            <input id="new-client-owner" type="text" required placeholder="e.g. Luke Garrison" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Primary Trade</label>
-            <select id="new-client-trade" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+            <select id="new-client-trade" class="enterprise-select w-full px-3 py-2 rounded-xl text-sm">
               <option value="Commercial Concrete">Commercial Concrete</option>
               <option value="Commercial Roofing">Commercial Roofing</option>
               <option value="Commercial HVAC">Commercial HVAC</option>
@@ -324,19 +353,19 @@
           </div>
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Target Zip Code</label>
-            <input id="new-client-zip" type="text" required value="78666" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            <input id="new-client-zip" type="text" required value="78666" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Work Email (Login ID)</label>
-            <input id="new-client-email" type="email" required placeholder="luke@brazoselectric.com" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            <input id="new-client-email" type="email" required placeholder="luke@brazoselectric.com" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Mobile Phone</label>
-            <input id="new-client-phone" type="text" required placeholder="(512) 555-0144" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            <input id="new-client-phone" type="text" required placeholder="(512) 555-0144" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Intelligence Tier</label>
-            <select id="new-client-tier" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+            <select id="new-client-tier" class="enterprise-select w-full px-3 py-2 rounded-xl text-sm">
               <option value="Tier 2: Commercial Permits">Tier 2: Commercial Permits ($597/mo)</option>
               <option value="Tier 3: Full Territory Exclusivity">Tier 3: 100% Zip Exclusive ($897/mo)</option>
               <option value="Tier 1: B2B Property Scout">Tier 1: B2B Property Scout ($297/mo)</option>
@@ -344,10 +373,10 @@
           </div>
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Initial Account Password / PIN</label>
-            <input id="new-client-password" type="text" required value="recon2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            <input id="new-client-password" type="text" required value="recon2026" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div class="flex items-end">
-            <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-bold text-xs shadow-sm transition-colors">
+            <button type="submit" class="btn-trust-emerald w-full py-2.5 px-4 rounded-xl font-display font-bold text-xs transition-colors cursor-pointer">
               + Create Client Account &amp; Briefing
             </button>
           </div>
@@ -356,6 +385,19 @@
     </section>
 
   </main>
+
+  <footer class="section-bg-white border-t border-slate-200 py-8 px-4 sm:px-6 lg:px-8 mt-8">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B] font-mono-telemetry">
+      <span>TIBERIUS RECON™ • MULTI-CLIENT AUTH &amp; AGENCY COMMAND</span>
+      <div class="flex items-center gap-5">
+        <a href="index.html" class="text-blue-700 hover:underline">← Back to /recon Overview</a>
+        <a href="briefing.html" class="text-emerald-700 hover:underline">Open 7:00 AM Briefing Queue →</a>
+      </div>
+    </div>
+    <div class="g3-footer-pixel-wrap" aria-hidden="true">
+      <canvas class="g3-footer-pixel-canvas" data-pixel-word="AGENCY COMMAND"></canvas>
+    </div>
+  </footer>
 
   <script src="login.js" onerror="this.onerror=null;this.src='/recon/login.js';"></script>
 </body>

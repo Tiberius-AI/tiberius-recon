@@ -241,4 +241,81 @@
 
   renderEquityBar();
   loadCommandState();
+
+  /* ==========================================================================
+     21ST.DEV ("G3") WEBGL1 'SILK' SHADER & PIXEL-GRID FOOTER ENGINE
+     ========================================================================== */
+  (function initG3PortalEffects() {
+    document.documentElement.classList.add('dark');
+    if (document.body) document.body.classList.add('g-root', 'g3-root');
+
+    const VERT_SRC = 'attribute vec2 a_pos; varying vec2 v_uv; void main(){ v_uv=a_pos*0.5+0.5; gl_Position=vec4(a_pos,0.0,1.0); }';
+    const FRAG_SRC = [
+      'precision highp float; varying vec2 v_uv; uniform float u_time; uniform vec2 u_res;',
+      'uniform vec3 u_c0; uniform vec3 u_c1; uniform vec3 u_c2; uniform vec3 u_c3;',
+      'vec3 mixCol(vec3 a, vec3 b, float t){ return mix(a, b, clamp(t,0.0,1.0)); }',
+      'vec3 pal(float t){ t=clamp(t,0.0,1.0); if(t<0.333)return mixCol(u_c0,u_c1,t*3.0); if(t<0.666)return mixCol(u_c1,u_c2,(t-0.333)*3.0); return mixCol(u_c2,u_c3,(t-0.666)*3.0); }',
+      'void main(){',
+      '  vec2 p=(v_uv-0.5)*vec2(u_res.x/max(u_res.y,1.0),1.0)*1.15; float t=u_time*0.35;',
+      '  float s=sin(p.x*3.0+p.y*2.0+t*1.1+sin(p.y*5.0-t)*0.6);',
+      '  float s2=cos(p.x*2.0-p.y*4.0+t*0.7+s*0.8); float v=s*0.5+s2*0.5;',
+      '  float h=smoothstep(-0.85,0.85,v); float sh=pow(max(0.0,1.0-abs(v)),4.0);',
+      '  gl_FragColor=vec4(clamp(pal(h*0.82)+u_c3*sh*0.32,0.0,1.0),1.0);',
+      '}'
+    ].join('\n');
+
+    document.querySelectorAll('canvas[data-g3-shader="silk"]').forEach((canvas) => {
+      const gl = canvas.getContext('webgl', { alpha: false, antialias: false, powerPreference: 'low-power' });
+      if (!gl) return;
+      const vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, VERT_SRC); gl.compileShader(vs);
+      const fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, FRAG_SRC); gl.compileShader(fs);
+      const prog = gl.createProgram(); gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+      gl.useProgram(prog);
+      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const aPos = gl.getAttribLocation(prog, 'a_pos'); gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+      const uTime = gl.getUniformLocation(prog, 'u_time');
+      const uRes = gl.getUniformLocation(prog, 'u_res');
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_c0'), 0.02, 0.02, 0.03);
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_c1'), 0.0, 0.063, 0.247);
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_c2'), 0.0, 0.204, 1.0);
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_c3'), 0.31, 0.435, 1.0);
+      const start = performance.now();
+      function loop(now) {
+        const w = Math.max(1, Math.floor(canvas.clientWidth * 0.75));
+        const h = Math.max(1, Math.floor(canvas.clientHeight * 0.75));
+        if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
+        gl.uniform1f(uTime, (now - start) * 0.001);
+        gl.uniform2f(uRes, w, h);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    });
+
+    document.querySelectorAll('canvas.g3-footer-pixel-canvas').forEach((canvas) => {
+      const word = canvas.getAttribute('data-pixel-word') || 'TERRITORY COMMAND';
+      const w = Math.max(320, canvas.clientWidth || 1100), h = Math.max(80, canvas.clientHeight || 96);
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d'); if (!ctx) return;
+      const cell = 5, cols = Math.floor(w / cell), rows = Math.floor(h / cell);
+      const off = document.createElement('canvas'); off.width = cols; off.height = rows;
+      const octx = off.getContext('2d'); if (!octx) return;
+      octx.fillStyle = '#000'; octx.fillRect(0, 0, cols, rows);
+      octx.fillStyle = '#fff'; octx.textAlign = 'center'; octx.textBaseline = 'middle';
+      octx.font = `800 ${Math.min(rows * 0.75, cols / (word.length * 0.62))}px "General Sans", "Inter", sans-serif`;
+      octx.fillText(word, cols / 2, rows / 2);
+      const data = octx.getImageData(0, 0, cols, rows).data;
+      for (let y = 0; y < rows; y++) {
+        const fade = 1 - (y / rows) * 0.75;
+        for (let x = 0; x < cols; x++) {
+          if (data[(y * cols + x) * 4] > 90) {
+            ctx.fillStyle = (x + y) % 5 === 0 ? `rgba(79,111,255,${(0.55 * fade).toFixed(2)})` : `rgba(244,244,245,${(0.26 * fade).toFixed(2)})`;
+            ctx.fillRect(x * cell, y * cell, cell - 1.2, cell - 1.2);
+          }
+        }
+      }
+    });
+  })();
 })();
