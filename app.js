@@ -60,21 +60,21 @@
   const WALKTHROUGH_STEPS = [
     {
       badge: 'STEP 1 OF 3 • 2:00 AM DEEP PORTAL RECON',
-      title: '2:00 AM: Pulls Fresh Building Permits While the City Sleeps',
-      desc: 'At 2:04 AM, while your trucks are parked for the night, your Scout logs into suburban building departments (Accela & EnerGov) and pulls every $240,000+ commercial buildout, shell permit, and custom addition filed in the last 24 hours.',
+      title: '2:00 AM: Overnight Permit Recon While the City Sleeps',
+      desc: 'At 2:04 AM, while your trucks are parked for the night, your Tiberius Scout logs into suburban building departments (Accela & EnerGov) and runs recon on every $240,000+ commercial buildout, shell permit, and custom addition filed in the last 24 hours.',
       telemetry: 'LIVE CAPTURE: PERMIT #BP-2026-08941 • $240,000 TI PERMIT • FILED 14 HRS AGO'
     },
     {
       badge: 'STEP 2 OF 3 • 4:30 AM COUNTY TAX ROLL X-RAY',
       title: '4:30 AM: Pulls Parcel ID, Sq Ft & Owner Cell in 14 Seconds',
-      desc: 'Runs each street address and parcel ID through the County Appraisal District (CAD) tax roll—verifying the deeded owner, assessed property value, square footage, and direct GC Project Manager or Property Manager cell and work email.',
+      desc: 'Your Tiberius Scout runs each street address and parcel ID through the County Appraisal District (CAD) tax roll—verifying the deeded owner, assessed property value, square footage, and direct GC Project Manager or Property Manager cell and work email.',
       telemetry: 'CAD X-RAY MATCH: $940,000 ASSESSED VALUE • 4,120 SQ FT • 1.4 ACRES • VERIFIED OWNER'
     },
     {
-      badge: 'STEP 3 OF 3 • 7:00 AM SILVER PLATTER QUEUE',
+      badge: 'STEP 3 OF 3 • 7:00 AM RECON BRIEFING',
       title: '7:00 AM: Pour Your Coffee & Tap Send 3 Times in 90 Seconds',
-      desc: 'At 6:45 AM, you open one text link. Three researched local deals sit on your screen with the permit proof on top and a custom 4-sentence intro written in your voice below. Tap [ ✓ Approve & Send ] and roll out to the job site.',
-      telemetry: '07:00:00 AM QUEUE READY: 3 UNLOCKED CARDS • 100% HUMAN-IN-THE-LOOP ✓'
+      desc: 'At 6:45 AM, your Tiberius Scout texts you one link. Three verified recon cards sit on your screen with the permit proof on top and a custom 4-sentence intro written in your voice below. Tap [ ✓ Approve & Send ] and roll out to the job site.',
+      telemetry: '07:00:00 AM RECON BRIEFING READY: 3 VERIFIED CARDS • NOTHING SENDS WITHOUT YOUR TAP ✓'
     }
   ];
 
@@ -237,7 +237,7 @@
       contactHeader: 'COUNTY APPRAISAL DISTRICT DEED MATCH:',
       contactName: 'Dr. Robert & Elena Harrison • Verified Property Owners',
       contactShort: 'Dr. Robert & Elena Harrison',
-      contactMeta: 'Parcel #CAD-90418-A • Direct Owner Mobile & Email Unlocked',
+      contactMeta: 'Parcel #CAD-90418-A • Direct Owner Mobile & Email Verified',
       draftLabel: '4-SENTENCE OWNER INTRO (YOUR VOICE):',
       draftBody:
         '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate on Whispering Pines Ln. Our custom residential team specializes in high-end estate projects across the neighborhood with zero day-labor subs and a 100% clean-site guarantee. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a quick 10-minute site walk this week?"'
@@ -293,7 +293,7 @@
               </h3>
 
               <p class="text-[#334155] text-sm leading-relaxed mb-4">
-                In real life, that custom 4-sentence intro just landed directly in their inbox from your address while your competitors are still asleep.
+                In real life, that custom 4-sentence intro from your Tiberius Scout just landed directly in their inbox from your address while your competitors are still asleep.
               </p>
 
               <div class="p-3.5 rounded-xl bg-white border border-emerald-200 mb-4">
@@ -303,7 +303,7 @@
             </div>
 
             <div class="pt-3 border-t border-emerald-200 flex items-center justify-between">
-              <span class="font-mono-telemetry text-[11px] text-emerald-800 font-bold">✓ 1-TAP HUMAN APPROVAL</span>
+              <span class="font-mono-telemetry text-[11px] text-emerald-800 font-bold">✓ YOU APPROVE &amp; SEND</span>
               <button
                 type="button"
                 data-action="reset-card"
@@ -444,12 +444,12 @@
     if (priceSub1El) {
       priceSub1El.textContent = isBundle
         ? 'INCLUDES SMART SITE (+$200/MO EQUITY CREDIT)'
-        : 'STARTS WITH 7-DAY FREE TEST DRIVE (3 DEALS/DAY)';
+        : 'STARTS WITH 7-DAY FREE TEST DRIVE (3 RECON CARDS/DAY)';
     }
     if (priceSub2El) {
       priceSub2El.textContent = isBundle
         ? 'INCLUDES SMART SITE (+$200/MO EQUITY CREDIT)'
-        : 'STARTS WITH 7-DAY FREE TEST DRIVE (3 DEALS/DAY)';
+        : 'STARTS WITH 7-DAY FREE TEST DRIVE (3 RECON CARDS/DAY)';
     }
     if (priceSub3El) {
       priceSub3El.textContent = isBundle
