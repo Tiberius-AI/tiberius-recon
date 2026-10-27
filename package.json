@@ -1,0 +1,13 @@
+{
+  "name": "tiberius-recon-platform",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "description": "Tiberius Recon™ — Overnight Building Permit & CAD Tax Roll Recon Platform + 7:00 AM Morning Briefing & 1-Tap Dispatch",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "recon:night-sweep": "node workers/orchestrator.js --dry-run",
+    "test": "node tests/recon.test.js"
+  }
+}
