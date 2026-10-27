@@ -337,24 +337,31 @@ async function runLiveZeroApiAddressXRay(queryRaw = '') {
   }
 
   const url = `https://data.austintexas.gov/resource/3syk-w9eu.json?$limit=5&$order=issue_date%20DESC&$where=${whereClause}`;
-  const resp = await fetch(url, {
-    headers: { Accept: 'application/json' },
-    signal: AbortSignal.timeout(6500)
-  });
-
   let rows = [];
-  if (resp.ok) {
-    rows = await resp.json();
+  try {
+    const resp = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(6500)
+    });
+    if (resp.ok) {
+      rows = await resp.json();
+    }
+  } catch (_err) {
+    rows = [];
   }
 
   // If user typed an address not in Austin dataset, fetch the latest high-value live record and label clearly
   if (!Array.isArray(rows) || rows.length === 0) {
-    const fallbackResp = await fetch(
-      `https://data.austintexas.gov/resource/3syk-w9eu.json?$limit=3&$order=issue_date%20DESC&$where=total_valuation_remodel%20%3E%20150000%20AND%20contractor_phone%20IS%20NOT%20NULL`,
-      { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) }
-    );
-    if (fallbackResp.ok) {
-      rows = await fallbackResp.json();
+    try {
+      const fallbackResp = await fetch(
+        `https://data.austintexas.gov/resource/3syk-w9eu.json?$limit=3&$order=issue_date%20DESC&$where=total_valuation_remodel%20%3E%20150000%20AND%20contractor_phone%20IS%20NOT%20NULL`,
+        { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) }
+      );
+      if (fallbackResp.ok) {
+        rows = await fallbackResp.json();
+      }
+    } catch (_err2) {
+      rows = [];
     }
   }
 
