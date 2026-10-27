@@ -344,9 +344,20 @@
       .join('');
   }
 
+  function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    const jwt = localStorage.getItem('tiberius_recon_session_jwt');
+    if (jwt) {
+      headers.Authorization = `Bearer ${jwt}`;
+    }
+    return headers;
+  }
+
   async function loadBriefing() {
     try {
-      const resp = await fetch(`/api/recon/briefing?token=${encodeURIComponent(activeToken)}`);
+      const resp = await fetch(`/api/recon/briefing?token=${encodeURIComponent(activeToken)}`, {
+        headers: getAuthHeaders()
+      });
       if (!resp.ok) throw new Error('API non-200');
       const data = await resp.json();
       if (data && data.ok && data.briefing) {
@@ -365,7 +376,7 @@
     try {
       const resp = await fetch('/api/recon/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           token: activeToken,
           ...payload

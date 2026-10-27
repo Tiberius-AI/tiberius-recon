@@ -108,15 +108,26 @@
     }
   }
 
+  function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    const jwt = localStorage.getItem('tiberius_recon_session_jwt');
+    if (jwt) {
+      headers.Authorization = `Bearer ${jwt}`;
+    }
+    return headers;
+  }
+
   async function loadCommandState() {
     try {
-      const resp = await fetch(`/api/recon/briefing?token=${encodeURIComponent(activeToken)}`);
+      const resp = await fetch(`/api/recon/briefing?token=${encodeURIComponent(activeToken)}`, {
+        headers: getAuthHeaders()
+      });
       const data = await resp.json();
       if (data && data.ok) {
         const c = data.contractor || {};
         const b = data.briefing || {};
         if (cmdContractorTitle && b.territoryZip) {
-          cmdContractorTitle.textContent = `Territory Command: ${b.tradeName} (${b.territoryZip})`;
+          cmdContractorTitle.textContent = `${c.companyName ? c.companyName + ' — ' : ''}${b.tradeName} (${b.territoryZip})`;
         }
         if (cmdTradeSelect && b.tradeName) cmdTradeSelect.value = b.tradeName;
         if (cmdTierSelect && b.tierLevel) cmdTierSelect.value = b.tierLevel;

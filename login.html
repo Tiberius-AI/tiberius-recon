@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Sign-In & Agency Command — Tiberius Recon™</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-alabaster text-slate-900 antialiased selection:bg-blue-600 selection:text-white min-h-screen flex flex-col">
+
+  <!-- TOP STICKY NAVIGATION -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="flex items-center gap-2.5 group">
+          <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-display font-bold text-sm tracking-wider shadow-sm group-hover:bg-blue-600 transition-colors">
+            TR
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-display font-extrabold text-slate-900 tracking-tight text-sm sm:text-base">TIBERIUS RECON™</span>
+              <span class="px-2 py-0.5 text-[10px] font-mono-telemetry font-semibold uppercase tracking-wider bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                MULTI-CLIENT AUTH
+              </span>
+            </div>
+            <p class="text-[11px] font-mono-telemetry text-slate-500">
+              Isolated Contractor Accounts • Signed 30-Day Sessions • Agency Command
+            </p>
+          </div>
+        </a>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <span id="nav-auth-status-badge" class="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200/80 text-xs font-mono-telemetry font-semibold text-slate-700">
+          Not Signed In
+        </span>
+        <button id="nav-logout-btn" type="button" class="hidden px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-colors">
+          Sign Out
+        </button>
+        <a href="briefing.html" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold transition-colors">
+          7:00 AM Briefing
+        </a>
+        <a href="command.html" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold transition-colors">
+          Territory Command
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
+
+    <!-- SIGN-IN & QUICK ACCOUNT SWITCHER GRID -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left 5 Cols: Contractor & Admin Sign-In Form -->
+      <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-7 space-y-5">
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono-telemetry font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+            🔐 Secure Account Access
+          </span>
+          <h1 class="mt-2.5 font-display text-2xl font-extrabold text-slate-900 tracking-tight">
+            Contractor &amp; Agency Sign-In
+          </h1>
+          <p class="mt-1 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Sign in with your work email or mobile phone and territory password/PIN to access your isolated 7:00 AM recon queue.
+          </p>
+        </div>
+
+        <div id="auth-error-banner" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-800"></div>
+        <div id="auth-success-banner" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800"></div>
+
+        <form id="login-form" class="space-y-4">
+          <div>
+            <label for="login-identifier" class="block text-xs font-mono-telemetry font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Work Email or Mobile Phone
+            </label>
+            <input
+              id="login-identifier"
+              type="text"
+              required
+              placeholder="e.g. travis@lonestarconcrete.com or (830) 555-0194"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/60 text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+            />
+          </div>
+
+          <div>
+            <label for="login-password" class="block text-xs font-mono-telemetry font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Account Password or Territory PIN
+            </label>
+            <input
+              id="login-password"
+              type="password"
+              required
+              placeholder="Enter password or 5-digit territory PIN"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/60 text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+            />
+          </div>
+
+          <button
+            id="login-submit-btn"
+            type="submit"
+            class="w-full py-3 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-display font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+          >
+            <span>Sign In to Territory Account →</span>
+          </button>
+        </form>
+
+        <!-- Authenticated Contractor Quick Actions Card (Shown when signed in) -->
+        <div id="active-session-card" class="hidden pt-4 border-t border-slate-200/80 space-y-3">
+          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-emerald-800">
+                ✓ ACTIVE AUTHENTICATED SESSION
+              </span>
+              <span id="session-role-pill" class="px-2 py-0.5 rounded bg-emerald-700 text-white text-[10px] font-mono-telemetry font-bold uppercase">
+                CONTRACTOR
+              </span>
+            </div>
+            <p id="session-company-name" class="font-display font-bold text-slate-900 text-base">--</p>
+            <p id="session-meta-line" class="text-xs font-mono-telemetry text-slate-600">--</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <a
+              id="session-open-briefing-btn"
+              href="briefing.html"
+              class="py-2.5 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-bold text-xs text-center shadow-sm transition-colors"
+            >
+              Open My 7:00 AM Briefing →
+            </a>
+            <a
+              id="session-open-command-btn"
+              href="command.html"
+              class="py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-bold text-xs text-center shadow-sm transition-colors"
+            >
+              Open Territory Command →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right 7 Cols: Instant Account Switcher for Testing Client Isolation & Master Admin -->
+      <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-7 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-slate-500">
+              1-CLICK MULTI-TENANT TEST SWITCHER
+            </span>
+            <h2 class="font-display text-lg sm:text-xl font-extrabold text-slate-900">
+              Test Separate Client Accounts &amp; Master Agency Admin
+            </h2>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-mono-telemetry font-semibold">
+            3 Isolated Clients + 1 Master Admin
+          </span>
+        </div>
+
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          Click any account below to sign in immediately and verify that each contractor only sees their own locked zip code, their own trade permits, and their own Smart Site Equity balance.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <!-- Client 1 -->
+          <button
+            type="button"
+            data-quick-id="travis@lonestarconcrete.com"
+            data-quick-pass="concrete78130"
+            class="quick-login-btn text-left p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 transition-all group space-y-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-mono-telemetry font-bold">
+                CLIENT #1 • ZIP 78130
+              </span>
+              <span class="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform">Sign In →</span>
+            </div>
+            <p class="font-display font-bold text-slate-900 text-sm">Lone Star Commercial Concrete</p>
+            <p class="text-xs text-slate-600">Travis Miller • Commercial Concrete • Tier 2</p>
+            <p class="text-[11px] font-mono-telemetry text-slate-500">travis@lonestarconcrete.com • PIN: 78130</p>
+          </button>
+
+          <!-- Client 2 -->
+          <button
+            type="button"
+            data-quick-id="dana@centexroofing.com"
+            data-quick-pass="roofing78701"
+            class="quick-login-btn text-left p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 transition-all group space-y-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-mono-telemetry font-bold">
+                CLIENT #2 • ZIP 78701 (EXCLUSIVE)
+              </span>
+              <span class="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform">Sign In →</span>
+            </div>
+            <p class="font-display font-bold text-slate-900 text-sm">Centex Industrial Roofing Systems</p>
+            <p class="text-xs text-slate-600">Dana Vance • Commercial Roofing • Tier 3</p>
+            <p class="text-[11px] font-mono-telemetry text-slate-500">dana@centexroofing.com • PIN: 78701</p>
+          </button>
+
+          <!-- Client 3 -->
+          <button
+            type="button"
+            data-quick-id="carlos@alamohvac.com"
+            data-quick-pass="hvac78258"
+            class="quick-login-btn text-left p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 transition-all group space-y-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-mono-telemetry font-bold">
+                CLIENT #3 • ZIP 78258
+              </span>
+              <span class="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform">Sign In →</span>
+            </div>
+            <p class="font-display font-bold text-slate-900 text-sm">Alamo Mechanical &amp; HVAC</p>
+            <p class="text-xs text-slate-600">Carlos Mendez • Commercial HVAC • Tier 2</p>
+            <p class="text-[11px] font-mono-telemetry text-slate-500">carlos@alamohvac.com • PIN: 78258</p>
+          </button>
+
+          <!-- Master Agency Admin -->
+          <button
+            type="button"
+            data-quick-id="admin@tiberius.ai"
+            data-quick-pass="TiberiusAdmin2026!"
+            class="quick-login-btn text-left p-4 rounded-xl border-2 border-slate-900 bg-slate-900 text-white hover:bg-slate-800 transition-all group space-y-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] font-mono-telemetry font-bold">
+                ★ MASTER AGENCY ADMIN
+              </span>
+              <span class="text-xs font-semibold text-amber-300 group-hover:translate-x-0.5 transition-transform">Unlock Command →</span>
+            </div>
+            <p class="font-display font-bold text-white text-sm">Tiberius Master Agency Roster</p>
+            <p class="text-xs text-slate-300">Manage all client accounts, zip locks &amp; live sweeps</p>
+            <p class="text-[11px] font-mono-telemetry text-slate-400">admin@tiberius.ai</p>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MASTER AGENCY ADMIN COMMAND ROSTER (Revealed when signed in as ADMIN) -->
+    <section id="master-admin-panel" class="hidden space-y-6">
+      <div class="bg-slate-900 text-white rounded-2xl p-6 sm:p-7 shadow-md space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span class="px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 text-[11px] font-mono-telemetry font-bold uppercase tracking-wider">
+              ★ MASTER AGENCY COMMAND CENTER
+            </span>
+            <h2 class="mt-2 font-display text-2xl font-extrabold tracking-tight">
+              All Client Contractor Accounts &amp; Locked Territories
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300">
+              Inspect every client's isolated 7:00 AM briefing, trigger a live Zero-API municipal sweep into their queue, or onboard a new contractor account below.
+            </p>
+          </div>
+        </div>
+
+        <!-- Admin KPI Strip -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+            <p class="text-[11px] font-mono-telemetry text-slate-400 uppercase">Active Client Accounts</p>
+            <p id="admin-kpi-clients" class="mt-1 font-display text-2xl font-extrabold text-white">3</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+            <p class="text-[11px] font-mono-telemetry text-slate-400 uppercase">Locked Territory Zips</p>
+            <p id="admin-kpi-locks" class="mt-1 font-display text-2xl font-extrabold text-emerald-400">4</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+            <p class="text-[11px] font-mono-telemetry text-slate-400 uppercase">Agency Monthly Recurring</p>
+            <p id="admin-kpi-mrr" class="mt-1 font-display text-2xl font-extrabold text-amber-300">$2,591/mo</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+            <p class="text-[11px] font-mono-telemetry text-slate-400 uppercase">Deals Approved Today</p>
+            <p id="admin-kpi-approved" class="mt-1 font-display text-2xl font-extrabold text-blue-400">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Client Accounts Roster Cards -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-lg font-extrabold text-slate-900">
+            Client Contractor Accounts
+          </h3>
+          <span id="admin-action-status" class="text-xs font-mono-telemetry text-blue-600 font-semibold"></span>
+        </div>
+
+        <div id="admin-clients-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Populated dynamically by login.js -->
+        </div>
+      </div>
+
+      <!-- Onboard New Client Account Form -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-4">
+        <div>
+          <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-blue-700">
+            + AGENCY CLIENT ONBOARDING
+          </span>
+          <h3 class="font-display text-lg font-extrabold text-slate-900">
+            Create Separate Contractor Account &amp; Lock Territory
+          </h3>
+        </div>
+
+        <form id="admin-create-client-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Company Name</label>
+            <input id="new-client-company" type="text" required placeholder="e.g. Brazos Commercial Electric" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Owner / Estimator Name</label>
+            <input id="new-client-owner" type="text" required placeholder="e.g. Luke Garrison" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Primary Trade</label>
+            <select id="new-client-trade" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+              <option value="Commercial Concrete">Commercial Concrete</option>
+              <option value="Commercial Roofing">Commercial Roofing</option>
+              <option value="Commercial HVAC">Commercial HVAC</option>
+              <option value="Commercial Electrical">Commercial Electrical</option>
+              <option value="Site Work &amp; Excavation">Site Work &amp; Excavation</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Target Zip Code</label>
+            <input id="new-client-zip" type="text" required value="78666" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Work Email (Login ID)</label>
+            <input id="new-client-email" type="email" required placeholder="luke@brazoselectric.com" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Mobile Phone</label>
+            <input id="new-client-phone" type="text" required placeholder="(512) 555-0144" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Intelligence Tier</label>
+            <select id="new-client-tier" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+              <option value="Tier 2: Commercial Permits">Tier 2: Commercial Permits ($597/mo)</option>
+              <option value="Tier 3: Full Territory Exclusivity">Tier 3: 100% Zip Exclusive ($897/mo)</option>
+              <option value="Tier 1: B2B Property Scout">Tier 1: B2B Property Scout ($297/mo)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Initial Account Password / PIN</label>
+            <input id="new-client-password" type="text" required value="recon2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-bold text-xs shadow-sm transition-colors">
+              + Create Client Account &amp; Briefing
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="login.js"></script>
+</body>
+</html>

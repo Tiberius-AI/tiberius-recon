@@ -146,7 +146,7 @@ async function runTests() {
     assert.ok(liveAgentData.cards.length >= 3);
     assert.ok(liveAgentData.cards[0].contactPhone.length >= 10);
 
-    console.log('[9/9] Testing Zero-API Live CAD Address & Parcel X-Ray (/api/recon/cad-lookup)...');
+    console.log('[9/11] Testing Zero-API Live CAD Address & Parcel X-Ray (/api/recon/cad-lookup)...');
     const cadResp = await fetch(
       `${baseUrl}/api/recon/cad-lookup?address=${encodeURIComponent('16013 N IH 35')}`
     );
@@ -155,13 +155,66 @@ async function runTests() {
     assert.strictEqual(cadData.mode, 'ZERO_API_LIVE_CAD_XRAY');
     assert.ok(cadData.parcelId.includes('TCAD'));
 
+    console.log('[10/11] Testing Multi-Client Contractor Sign-In & Session Isolation (/api/recon/auth)...');
+    const clientLoginResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        identifier: 'dana@centexroofing.com',
+        password: 'roofing78701'
+      })
+    });
+    const clientLoginData = await clientLoginResp.json();
+    assert.strictEqual(clientLoginData.ok, true);
+    assert.strictEqual(clientLoginData.role, 'CONTRACTOR');
+    assert.strictEqual(clientLoginData.account.baseZip, '78701');
+    assert.strictEqual(clientLoginData.account.magicToken, 'centex-roofing-78701');
+    assert.ok(clientLoginData.sessionToken.length > 40);
+
+    // Verify authenticated session retrieval using Bearer token
+    const sessionCheckResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      headers: { Authorization: `Bearer ${clientLoginData.sessionToken}` }
+    });
+    const sessionCheckData = await sessionCheckResp.json();
+    assert.strictEqual(sessionCheckData.authenticated, true);
+    assert.strictEqual(sessionCheckData.account.companyName, 'Centex Industrial Roofing Systems');
+
+    // Verify Contractor cannot access Master Admin API
+    const unauthorizedAdminResp = await fetch(`${baseUrl}/api/recon/admin`, {
+      headers: { Authorization: `Bearer ${clientLoginData.sessionToken}` }
+    });
+    assert.strictEqual(unauthorizedAdminResp.status, 401);
+
+    console.log('[11/11] Testing Master Agency Admin Auth & Multi-Client Roster (/api/recon/admin)...');
+    const adminLoginResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        identifier: 'admin@tiberius.ai',
+        password: 'TiberiusAdmin2026!'
+      })
+    });
+    const adminLoginData = await adminLoginResp.json();
+    assert.strictEqual(adminLoginData.ok, true);
+    assert.strictEqual(adminLoginData.role, 'ADMIN');
+
+    const adminRosterResp = await fetch(`${baseUrl}/api/recon/admin`, {
+      headers: { Authorization: `Bearer ${adminLoginData.sessionToken}` }
+    });
+    const adminRosterData = await adminRosterResp.json();
+    assert.strictEqual(adminRosterData.ok, true);
+    assert.ok(adminRosterData.clients.length >= 3);
+    assert.ok(adminRosterData.metrics.estimatedAgencyMrr > 0);
+
     // Also verify static HTML endpoints respond 200
-    for (const page of ['/', '/briefing', '/command']) {
+    for (const page of ['/', '/briefing', '/command', '/login']) {
       const pageResp = await fetch(`${baseUrl}${page}`);
       assert.strictEqual(pageResp.status, 200, `Expected 200 for ${page}`);
     }
 
-    console.log('\n✅ ALL 9 TIBERIUS RECON™ END-TO-END & LIVE ZERO-API AGENT TESTS PASSED.');
+    console.log('\n✅ ALL 11 TIBERIUS RECON™ END-TO-END, MULTI-CLIENT AUTH & LIVE ZERO-API TESTS PASSED.');
   } finally {
     server.close();
   }

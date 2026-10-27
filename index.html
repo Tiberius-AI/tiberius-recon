@@ -140,8 +140,14 @@
         <a href="#faq" class="hover:text-blue-700 transition-colors">FAQ</a>
       </nav>
 
-      <!-- Right (Desktop/Tablet Only — Hidden on Mobile): Primary CTA Button -->
-      <div class="hidden md:flex items-center flex-shrink-0">
+      <!-- Right (Desktop/Tablet Only — Hidden on Mobile): Client Login + Primary CTA Button -->
+      <div class="hidden md:flex items-center gap-3 flex-shrink-0">
+        <a
+          href="login.html"
+          class="px-4 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5 transition-colors"
+        >
+          <span>🔐 Client Sign-In</span>
+        </a>
         <a
           href="#activation-vault"
           class="btn-trust-emerald px-5 py-2.5 rounded-lg text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5"
@@ -1337,6 +1343,35 @@
                   type="email"
                   required
                   placeholder="you@company.com"
+                  class="enterprise-input"
+                />
+              </div>
+            </div>
+
+            <!-- Company Name & Account Password / PIN Inputs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label for="vault-company-input" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Shop / Company Name
+                </label>
+                <input
+                  id="vault-company-input"
+                  name="companyName"
+                  type="text"
+                  placeholder="e.g. Lone Star Commercial Concrete"
+                  class="enterprise-input"
+                />
+              </div>
+
+              <div>
+                <label for="vault-password-input" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Create Account Password or PIN
+                </label>
+                <input
+                  id="vault-password-input"
+                  name="accountPassword"
+                  type="password"
+                  placeholder="For private 7AM queue access"
                   class="enterprise-input"
                 />
               </div>

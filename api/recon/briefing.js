@@ -6,33 +6,51 @@
  *          and re-calibrates the morning briefing cards.
  */
 
-const { getBriefingByToken, updateContractorCommand } = require('../../db/store');
+const {
+  getBriefingByToken,
+  updateContractorCommand,
+  hydrateAccountFromSession
+} = require('../../db/store');
+const { extractSessionFromRequest } = require('../../db/auth');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Recon-Session');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  const sessionClaims = extractSessionFromRequest(req);
+  const hydrated = sessionClaims ? hydrateAccountFromSession(sessionClaims) : null;
+
   if (req.method === 'GET') {
-    const token = (req.query && (req.query.token || req.query.t)) || 'demo-7am-briefing';
+    const requestedToken = req.query && (req.query.token || req.query.t);
+    const token =
+      requestedToken ||
+      (hydrated && hydrated.account && hydrated.account.magicToken) ||
+      'demo-7am-briefing';
+
     const data = getBriefingByToken(token);
     if (!data) {
       return res.status(404).json({ ok: false, error: 'Morning briefing not found' });
     }
     return res.status(200).json({
       ok: true,
+      authenticatedAccount: hydrated ? hydrated.account : null,
       ...data
     });
   }
 
   if (req.method === 'POST') {
     const body = req.body || {};
+    const token =
+      body.token ||
+      (hydrated && hydrated.account && hydrated.account.magicToken) ||
+      'demo-7am-briefing';
     const result = updateContractorCommand({
-      token: body.token || 'demo-7am-briefing',
+      token,
       primaryTrade: body.primaryTrade,
       territoryZip: body.territoryZip,
       tierLevel: body.tierLevel,

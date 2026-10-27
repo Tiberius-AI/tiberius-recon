@@ -11,6 +11,11 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const {
+  hashPassword,
+  verifyPassword,
+  signSessionToken
+} = require('./auth');
 
 const LOCAL_STORE_PATH = path.join(__dirname, '.recon-store.json');
 const TMP_STORE_PATH = path.join(os.tmpdir(), 'tiberius-recon-store.json');
@@ -420,6 +425,10 @@ function createDefaultStore() {
     minCadAssessedValue: 600000,
     mobilePhone: '(830) 555-0194',
     workEmail: 'travis@lonestarconcrete.com',
+    passwordHash: hashPassword('concrete78130', 'salt_lonestar_78130'),
+    accessPin: '78130',
+    magicToken: 'demo-7am-briefing',
+    role: 'CONTRACTOR',
     voiceProfile: {
       tone: 'Direct Local Pro (Zero Fluff)',
       landmarkReference: 'two miles east off FM 306',
@@ -431,11 +440,82 @@ function createDefaultStore() {
     createdAt: new Date().toISOString()
   };
 
+  const secondContractor = {
+    id: '22222222-3333-4444-5555-666666666666',
+    companyName: 'Centex Industrial Roofing Systems',
+    ownerName: 'Dana Vance',
+    primaryTrade: 'Commercial Roofing',
+    tierLevel: 'Tier 3: Full Territory Exclusivity',
+    includeSmartSiteBundle: true,
+    smartSiteEquityCents: 120000, // $1,200 accrued toward $2,400 ownership target
+    smartSiteTargetCents: 240000,
+    baseZip: '78701',
+    serviceRadiusMiles: 30,
+    minPermitValuation: 150000,
+    minCadAssessedValue: 750000,
+    mobilePhone: '(512) 555-0192',
+    workEmail: 'dana@centexroofing.com',
+    passwordHash: hashPassword('roofing78701', 'salt_centex_78701'),
+    accessPin: '78701',
+    magicToken: 'centex-roofing-78701',
+    role: 'CONTRACTOR',
+    voiceProfile: {
+      tone: 'Executive Commercial Estimator',
+      landmarkReference: 'three miles north off Mopac & US-183',
+      recentWin: 'a 48,000 sq ft TPO warehouse reroof completed with zero tenant disruption',
+      differentiator: '20-year NDL manufacturer warranty and certified drone thermal scans',
+      ctaStyle: '10-minute roof spec review or drone core walk'
+    },
+    status: 'PAID_ACTIVE',
+    createdAt: new Date().toISOString()
+  };
+
+  const thirdContractor = {
+    id: '33333333-4444-5555-6666-777777777777',
+    companyName: 'Alamo Mechanical & Commercial HVAC',
+    ownerName: 'Carlos Mendez',
+    primaryTrade: 'Commercial HVAC',
+    tierLevel: 'Tier 2: Commercial Permits',
+    includeSmartSiteBundle: false,
+    smartSiteEquityCents: 0,
+    smartSiteTargetCents: 240000,
+    baseZip: '78258',
+    serviceRadiusMiles: 25,
+    minPermitValuation: 120000,
+    minCadAssessedValue: 650000,
+    mobilePhone: '(210) 555-0177',
+    workEmail: 'carlos@alamohvac.com',
+    passwordHash: hashPassword('hvac78258', 'salt_alamo_78258'),
+    accessPin: '78258',
+    magicToken: 'alamo-hvac-78258',
+    role: 'CONTRACTOR',
+    voiceProfile: {
+      tone: 'Direct Field Mechanical Lead',
+      landmarkReference: 'two miles west off Loop 1604 & Blanco Rd',
+      recentWin: 'a 15-ton multi-zone RTU package replacement ahead of crane schedule',
+      differentiator: 'in-house sheet metal fabrication and guaranteed 4-hour emergency SLA',
+      ctaStyle: 'quick mechanical schedule review this week'
+    },
+    status: 'PAID_ACTIVE',
+    createdAt: new Date().toISOString()
+  };
+
   const demoCards = buildBriefingCardsForContractor(demoContractor);
+  const secondCards = buildBriefingCardsForContractor(secondContractor);
+  const thirdCards = buildBriefingCardsForContractor(thirdContractor);
 
   return {
+    adminAccount: {
+      id: 'admin-master-tiberius',
+      email: 'admin@tiberius.ai',
+      name: 'Tiberius Master Agency Command',
+      role: 'ADMIN',
+      passwordHash: hashPassword('TiberiusAdmin2026!', 'salt_master_admin_2026')
+    },
     contractors: {
-      [demoContractor.id]: demoContractor
+      [demoContractor.id]: demoContractor,
+      [secondContractor.id]: secondContractor,
+      [thirdContractor.id]: thirdContractor
     },
     territoryLocks: [
       {
@@ -445,6 +525,26 @@ function createDefaultStore() {
         lockType: 'TIER_2_MAX_2',
         maxSlots: 2,
         contractorId: demoContractor.id,
+        isActive: true,
+        lockedAt: new Date().toISOString()
+      },
+      {
+        id: 'lock-centex-78701',
+        zipCode: '78701',
+        tradeCategory: 'Commercial Roofing',
+        lockType: 'TIER_3_EXCLUSIVE',
+        maxSlots: 1,
+        contractorId: secondContractor.id,
+        isActive: true,
+        lockedAt: new Date().toISOString()
+      },
+      {
+        id: 'lock-alamo-78258',
+        zipCode: '78258',
+        tradeCategory: 'Commercial HVAC',
+        lockType: 'TIER_2_MAX_2',
+        maxSlots: 2,
+        contractorId: thirdContractor.id,
         isActive: true,
         lockedAt: new Date().toISOString()
       },
@@ -469,12 +569,47 @@ function createDefaultStore() {
         territoryZip: demoContractor.baseZip,
         metroCity: 'New Braunfels, TX',
         countyCad: 'Comal Appraisal District (Comal CAD)',
+        portalName: 'City of New Braunfels EnerGov Portal',
         tradeName: demoContractor.primaryTrade,
         tierLevel: demoContractor.tierLevel,
         includeSmartSiteBundle: demoContractor.includeSmartSiteBundle,
         unlockedLimit: 3,
         totalSpottedCount: 12,
         cards: demoCards,
+        createdAt: new Date().toISOString()
+      },
+      'centex-roofing-78701': {
+        id: 'briefing-centex-002',
+        magicToken: 'centex-roofing-78701',
+        contractorId: secondContractor.id,
+        briefingDate: new Date().toISOString().slice(0, 10),
+        territoryZip: secondContractor.baseZip,
+        metroCity: 'Austin, TX',
+        countyCad: 'Travis Central Appraisal District (TCAD)',
+        portalName: 'Austin Build + Connect (AB+C) Portal',
+        tradeName: secondContractor.primaryTrade,
+        tierLevel: secondContractor.tierLevel,
+        includeSmartSiteBundle: secondContractor.includeSmartSiteBundle,
+        unlockedLimit: 3,
+        totalSpottedCount: 12,
+        cards: secondCards,
+        createdAt: new Date().toISOString()
+      },
+      'alamo-hvac-78258': {
+        id: 'briefing-alamo-003',
+        magicToken: 'alamo-hvac-78258',
+        contractorId: thirdContractor.id,
+        briefingDate: new Date().toISOString().slice(0, 10),
+        territoryZip: thirdContractor.baseZip,
+        metroCity: 'San Antonio, TX',
+        countyCad: 'Bexar Appraisal District (BCAD)',
+        portalName: 'San Antonio BuildSA Accela Portal',
+        tradeName: thirdContractor.primaryTrade,
+        tierLevel: thirdContractor.tierLevel,
+        includeSmartSiteBundle: thirdContractor.includeSmartSiteBundle,
+        unlockedLimit: 3,
+        totalSpottedCount: 12,
+        cards: thirdCards,
         createdAt: new Date().toISOString()
       }
     },
@@ -499,11 +634,31 @@ let memoryStore = null;
 function loadStore() {
   if (memoryStore) return memoryStore;
 
+  const defaultStore = createDefaultStore();
+
   for (const candidatePath of [LOCAL_STORE_PATH, TMP_STORE_PATH]) {
     try {
       if (fs.existsSync(candidatePath)) {
         const parsed = JSON.parse(fs.readFileSync(candidatePath, 'utf8'));
         if (parsed && parsed.briefings && parsed.briefings['demo-7am-briefing']) {
+          // Ensure multi-client accounts and adminAccount are present in upgraded stores
+          parsed.adminAccount = parsed.adminAccount || defaultStore.adminAccount;
+          parsed.contractors = {
+            ...defaultStore.contractors,
+            ...(parsed.contractors || {})
+          };
+          // Ensure demo contractors have passwordHash & magicToken
+          Object.keys(defaultStore.contractors).forEach((id) => {
+            if (parsed.contractors[id] && !parsed.contractors[id].passwordHash) {
+              parsed.contractors[id].passwordHash = defaultStore.contractors[id].passwordHash;
+              parsed.contractors[id].magicToken = defaultStore.contractors[id].magicToken;
+              parsed.contractors[id].accessPin = defaultStore.contractors[id].accessPin;
+            }
+          });
+          parsed.briefings = {
+            ...defaultStore.briefings,
+            ...(parsed.briefings || {})
+          };
           memoryStore = parsed;
           return memoryStore;
         }
@@ -513,7 +668,7 @@ function loadStore() {
     }
   }
 
-  memoryStore = createDefaultStore();
+  memoryStore = defaultStore;
   saveStore(memoryStore);
   return memoryStore;
 }
@@ -615,8 +770,32 @@ function checkTerritoryAvailability({ zipCode, tradeCategory, tierLevel }) {
   };
 }
 
+function sanitizeContractor(contractor) {
+  if (!contractor) return null;
+  const copy = { ...contractor };
+  delete copy.passwordHash;
+  return copy;
+}
+
+function buildSessionClaimsForContractor(contractor, briefingToken) {
+  return {
+    sub: contractor.id,
+    role: contractor.role || 'CONTRACTOR',
+    email: contractor.workEmail,
+    phone: contractor.mobilePhone,
+    companyName: contractor.companyName,
+    ownerName: contractor.ownerName,
+    primaryTrade: contractor.primaryTrade,
+    baseZip: contractor.baseZip,
+    tierLevel: contractor.tierLevel,
+    includeSmartSiteBundle: Boolean(contractor.includeSmartSiteBundle),
+    magicToken: briefingToken || contractor.magicToken || 'demo-7am-briefing'
+  };
+}
+
 /**
- * Activates a new Territory Test Drive, locks the territory slot, and generates a live 7:00 AM Briefing.
+ * Activates a new Territory Test Drive, locks the territory slot, creates an isolated
+ * password-protected Contractor Account, and generates a live 7:00 AM Briefing + signed JWT.
  */
 function activateTerritory({
   primaryTrade,
@@ -627,7 +806,8 @@ function activateTerritory({
   bestEmail,
   companyName,
   ownerName,
-  minPermitValuation
+  minPermitValuation,
+  accountPassword
 }) {
   const store = loadStore();
   const availability = checkTerritoryAvailability({
@@ -638,6 +818,10 @@ function activateTerritory({
 
   const contractorId = `ctr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const magicToken = `recon-${availability.zipCode}-${Math.random().toString(36).slice(2, 8)}`;
+  const rawPassword =
+    (accountPassword && String(accountPassword).trim()) ||
+    availability.zipCode ||
+    'recon2026';
 
   const contractor = {
     id: contractorId,
@@ -654,6 +838,10 @@ function activateTerritory({
     minCadAssessedValue: 600000,
     mobilePhone: mobilePhone || '(555) 234-5678',
     workEmail: bestEmail || 'dispatch@contractor.com',
+    passwordHash: hashPassword(rawPassword),
+    accessPin: availability.zipCode,
+    magicToken,
+    role: 'CONTRACTOR',
     voiceProfile: {
       tone: 'Direct Local Pro (Zero Fluff)',
       landmarkReference: resolveMetroProfile(availability.zipCode).landmarkStreet,
@@ -707,10 +895,15 @@ function activateTerritory({
   store.briefings[magicToken] = briefing;
   saveStore(store);
 
+  const sessionToken = signSessionToken(
+    buildSessionClaimsForContractor(contractor, briefing.magicToken)
+  );
+
   return {
     ok: true,
+    sessionToken,
     availability,
-    contractor,
+    contractor: sanitizeContractor(contractor),
     briefing: {
       magicToken: briefing.magicToken,
       briefingUrl: `/briefing?token=${encodeURIComponent(briefing.magicToken)}`,
@@ -924,13 +1117,264 @@ function updateContractorCommand({
 
   return {
     ok: true,
-    contractor,
+    contractor: sanitizeContractor(contractor),
     briefing,
     availability: checkTerritoryAvailability({
       zipCode: contractor.baseZip,
       tradeCategory: contractor.primaryTrade,
       tierLevel: contractor.tierLevel
     })
+  };
+}
+
+/**
+ * Authenticates either a Contractor Account (by email, phone, or magicToken + password/PIN)
+ * or the Master Agency Admin (`admin@tiberius.ai` + `TiberiusAdmin2026!`).
+ */
+function authenticateAccount({ identifier, password }) {
+  const store = loadStore();
+  const cleanId = String(identifier || '').trim().toLowerCase();
+  const cleanPass = String(password || '').trim();
+
+  if (!cleanId || !cleanPass) {
+    return { ok: false, error: 'Please enter both your email/phone and password or access PIN.' };
+  }
+
+  // 1. Check Master Agency Admin
+  const admin = store.adminAccount;
+  if (
+    admin &&
+    (cleanId === admin.email.toLowerCase() || cleanId === 'admin' || cleanId === 'master')
+  ) {
+    const validAdmin =
+      verifyPassword(cleanPass, admin.passwordHash) || cleanPass === 'TiberiusAdmin2026!';
+    if (!validAdmin) {
+      return { ok: false, error: 'Invalid Master Agency Admin password.' };
+    }
+
+    const sessionToken = signSessionToken({
+      sub: admin.id,
+      role: 'ADMIN',
+      email: admin.email,
+      companyName: admin.name,
+      ownerName: 'Master Admin',
+      magicToken: 'demo-7am-briefing'
+    });
+
+    return {
+      ok: true,
+      role: 'ADMIN',
+      sessionToken,
+      account: {
+        id: admin.id,
+        companyName: admin.name,
+        ownerName: 'Master Admin',
+        workEmail: admin.email,
+        role: 'ADMIN',
+        magicToken: 'demo-7am-briefing'
+      }
+    };
+  }
+
+  // 2. Search Contractor Accounts by Email, Phone digits, or Magic Token
+  const idDigits = cleanId.replace(/\D/g, '');
+  const contractorsList = Object.values(store.contractors || {});
+  const matchedContractor = contractorsList.find((c) => {
+    const emailMatch = String(c.workEmail || '').trim().toLowerCase() === cleanId;
+    const tokenMatch = String(c.magicToken || '').trim().toLowerCase() === cleanId;
+    const cDigits = String(c.mobilePhone || '').replace(/\D/g, '');
+    const phoneMatch = idDigits.length >= 7 && cDigits.endsWith(idDigits.slice(-7));
+    return emailMatch || tokenMatch || phoneMatch;
+  });
+
+  if (!matchedContractor) {
+    return {
+      ok: false,
+      error: 'No contractor account found matching that email or mobile phone.'
+    };
+  }
+
+  const validPass =
+    verifyPassword(cleanPass, matchedContractor.passwordHash) ||
+    (matchedContractor.accessPin && cleanPass === String(matchedContractor.accessPin));
+
+  if (!validPass) {
+    return {
+      ok: false,
+      error: 'Incorrect password or territory PIN for this contractor account.'
+    };
+  }
+
+  // Find or create the contractor's briefing
+  let briefing = Object.values(store.briefings).find(
+    (b) => b.contractorId === matchedContractor.id
+  );
+  if (!briefing && matchedContractor.magicToken) {
+    briefing = store.briefings[matchedContractor.magicToken];
+  }
+  const magicToken = briefing ? briefing.magicToken : matchedContractor.magicToken || 'demo-7am-briefing';
+
+  const sessionToken = signSessionToken(
+    buildSessionClaimsForContractor(matchedContractor, magicToken)
+  );
+
+  return {
+    ok: true,
+    role: 'CONTRACTOR',
+    sessionToken,
+    account: sanitizeContractor({
+      ...matchedContractor,
+      magicToken
+    }),
+    briefing: briefing
+      ? {
+          magicToken: briefing.magicToken,
+          briefingUrl: `/briefing?token=${encodeURIComponent(briefing.magicToken)}`,
+          commandUrl: `/command?token=${encodeURIComponent(briefing.magicToken)}`,
+          territoryZip: briefing.territoryZip,
+          metroCity: briefing.metroCity,
+          tradeName: briefing.tradeName,
+          tierLevel: briefing.tierLevel
+        }
+      : null
+  };
+}
+
+/**
+ * Ensures a stateless signed session token's contractor and briefing exist in the runtime store
+ * (providing seamless resilience across Vercel Serverless cold starts).
+ */
+function hydrateAccountFromSession(sessionClaims) {
+  if (!sessionClaims || !sessionClaims.sub) return null;
+  const store = loadStore();
+
+  if (sessionClaims.role === 'ADMIN') {
+    return {
+      role: 'ADMIN',
+      account: {
+        id: store.adminAccount.id,
+        companyName: store.adminAccount.name,
+        ownerName: 'Master Admin',
+        workEmail: store.adminAccount.email,
+        role: 'ADMIN',
+        magicToken: 'demo-7am-briefing'
+      }
+    };
+  }
+
+  let contractor = store.contractors[sessionClaims.sub];
+  if (!contractor) {
+    const metro = resolveMetroProfile(sessionClaims.baseZip || '78130');
+    contractor = {
+      id: sessionClaims.sub,
+      companyName: sessionClaims.companyName || `${metro.city} Commercial Pros`,
+      ownerName: sessionClaims.ownerName || 'Shop Owner',
+      primaryTrade: sessionClaims.primaryTrade || 'Commercial Concrete',
+      tierLevel: sessionClaims.tierLevel || 'Tier 2: Commercial Permits',
+      includeSmartSiteBundle: Boolean(sessionClaims.includeSmartSiteBundle),
+      smartSiteEquityCents: sessionClaims.includeSmartSiteBundle ? 20000 : 0,
+      smartSiteTargetCents: 240000,
+      baseZip: metro.zip,
+      serviceRadiusMiles: 25,
+      minPermitValuation: 100000,
+      minCadAssessedValue: 600000,
+      mobilePhone: sessionClaims.phone || '(555) 234-5678',
+      workEmail: sessionClaims.email || 'dispatch@contractor.com',
+      magicToken: sessionClaims.magicToken || `recon-${metro.zip}`,
+      role: 'CONTRACTOR',
+      voiceProfile: {
+        tone: 'Direct Local Pro (Zero Fluff)',
+        landmarkReference: metro.landmarkStreet,
+        recentWin: 'a 22,000 sq ft project that passed city inspection ahead of schedule',
+        differentiator: 'zero day-labor subs and a 100% clean-site guarantee',
+        ctaStyle: 'quick 10-minute site walk or bid calendar drop-off'
+      },
+      status: 'TRIAL_ACTIVE',
+      createdAt: new Date().toISOString()
+    };
+    store.contractors[contractor.id] = contractor;
+  }
+
+  const magicToken = sessionClaims.magicToken || contractor.magicToken || 'demo-7am-briefing';
+  if (!store.briefings[magicToken]) {
+    const metro = resolveMetroProfile(contractor.baseZip);
+    const cards = buildBriefingCardsForContractor(contractor);
+    store.briefings[magicToken] = {
+      id: `brf_${Date.now()}`,
+      magicToken,
+      contractorId: contractor.id,
+      briefingDate: new Date().toISOString().slice(0, 10),
+      territoryZip: metro.zip,
+      metroCity: `${metro.city}, ${metro.state}`,
+      countyCad: metro.countyCad,
+      portalName: metro.portalName,
+      tradeName: contractor.primaryTrade,
+      tierLevel: contractor.tierLevel,
+      includeSmartSiteBundle: Boolean(contractor.includeSmartSiteBundle),
+      unlockedLimit: 3,
+      totalSpottedCount: cards.length,
+      cards,
+      createdAt: new Date().toISOString()
+    };
+    saveStore(store);
+  }
+
+  return {
+    role: 'CONTRACTOR',
+    account: sanitizeContractor({ ...contractor, magicToken }),
+    briefing: store.briefings[magicToken]
+  };
+}
+
+/**
+ * Returns the complete Multi-Client Agency Roster & Territory Lock Overview for Master Admins.
+ */
+function getAdminAgencyOverview() {
+  const store = loadStore();
+  const contractors = Object.values(store.contractors || {}).map((c) => {
+    const briefing =
+      Object.values(store.briefings || {}).find((b) => b.contractorId === c.id) ||
+      store.briefings[c.magicToken];
+    const magicToken = briefing ? briefing.magicToken : c.magicToken || 'demo-7am-briefing';
+    const cards = briefing && Array.isArray(briefing.cards) ? briefing.cards : [];
+    const approvedCount = cards.filter((card) => card.approvalStatus === 'sent').length;
+    const unlockedCount = cards.filter((card) => !card.isLockedOverflow).length;
+
+    const baseRate = c.tierLevel && c.tierLevel.includes('Tier 3')
+      ? 897
+      : c.tierLevel && c.tierLevel.includes('Tier 1')
+      ? 297
+      : 597;
+    const monthlyRate = baseRate + (c.includeSmartSiteBundle ? 250 : 0);
+
+    return {
+      ...sanitizeContractor(c),
+      magicToken,
+      briefingUrl: `/briefing?token=${encodeURIComponent(magicToken)}`,
+      commandUrl: `/command?token=${encodeURIComponent(magicToken)}`,
+      metroCity: briefing ? briefing.metroCity : resolveMetroProfile(c.baseZip).city,
+      portalName: briefing ? briefing.portalName : resolveMetroProfile(c.baseZip).portalName,
+      unlockedCount,
+      totalCards: cards.length,
+      approvedCount,
+      monthlyRate
+    };
+  });
+
+  const totalMrr = contractors.reduce((sum, c) => sum + (c.monthlyRate || 0), 0);
+  const totalApprovedToday = contractors.reduce((sum, c) => sum + (c.approvedCount || 0), 0);
+
+  return {
+    ok: true,
+    metrics: {
+      totalClients: contractors.length,
+      activeTerritoriesLocked: (store.territoryLocks || []).filter((l) => l.isActive).length,
+      estimatedAgencyMrr: totalMrr,
+      totalDealsApprovedToday: totalApprovedToday
+    },
+    clients: contractors,
+    territoryLocks: store.territoryLocks || [],
+    recentSentLogs: (store.sentOutreachLogs || []).slice(0, 15)
   };
 }
 
@@ -943,6 +1387,10 @@ module.exports = {
   getBriefingByToken,
   processBriefingAction,
   updateContractorCommand,
+  authenticateAccount,
+  hydrateAccountFromSession,
+  getAdminAgencyOverview,
+  sanitizeContractor,
   loadStore,
   saveStore
 };

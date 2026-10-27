@@ -607,12 +607,16 @@
       const zipInput = document.getElementById('vault-zip-input');
       const phoneInput = document.getElementById('vault-phone-input');
       const emailInput = document.getElementById('vault-email-input');
+      const companyInput = document.getElementById('vault-company-input');
+      const passwordInput = document.getElementById('vault-password-input');
 
       const selectedTrade = vaultTradeSelect ? vaultTradeSelect.value : 'Commercial Concrete';
       const selectedTier = vaultTierSelect ? vaultTierSelect.value : 'Tier 2: Commercial Permits';
       const zipVal = zipInput && zipInput.value.trim() ? zipInput.value.trim() : '78130';
       const phoneVal = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : 'SMS Queue Armed';
       const emailVal = emailInput && emailInput.value.trim() ? emailInput.value.trim() : 'Primary Inbox Armed';
+      const companyVal = companyInput && companyInput.value.trim() ? companyInput.value.trim() : '';
+      const passwordVal = passwordInput && passwordInput.value.trim() ? passwordInput.value.trim() : '';
       const includeSmartSite = Boolean(vaultSmartSiteCheckbox && vaultSmartSiteCheckbox.checked);
 
       if (confirmTradeVal) confirmTradeVal.textContent = selectedTrade;
@@ -638,6 +642,8 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            companyName: companyVal,
+            accountPassword: passwordVal,
             primaryTrade: selectedTrade,
             tierLevel: selectedTier,
             includeSmartSiteBundle: includeSmartSite,
@@ -650,6 +656,12 @@
         if (data && data.ok && data.briefing) {
           const token = data.briefing.magicToken;
           localStorage.setItem('tiberius_recon_token', token);
+          if (data.sessionToken) {
+            localStorage.setItem('tiberius_recon_session_jwt', data.sessionToken);
+          }
+          if (data.contractor) {
+            localStorage.setItem('tiberius_recon_account', JSON.stringify(data.contractor));
+          }
           if (confirmZipVal) {
             confirmZipVal.textContent = `${data.briefing.territoryZip} (${data.briefing.metroCity})`;
           }

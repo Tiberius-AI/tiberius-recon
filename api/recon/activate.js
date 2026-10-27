@@ -6,6 +6,7 @@
  */
 
 const { activateTerritory } = require('../../db/store');
+const { setSessionCookie } = require('../../db/auth');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,8 +39,13 @@ module.exports = async function handler(req, res) {
     bestEmail: body.bestEmail || body.email || 'you@company.com',
     companyName: body.companyName || '',
     ownerName: body.ownerName || '',
-    minPermitValuation: body.minPermitValuation || 100000
+    minPermitValuation: body.minPermitValuation || 100000,
+    accountPassword: body.accountPassword || body.password || ''
   });
+
+  if (activation.sessionToken) {
+    setSessionCookie(res, activation.sessionToken);
+  }
 
   let webhookForwarded = false;
   if (process.env.LEAD_WEBHOOK_URL) {
