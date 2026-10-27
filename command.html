@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Territory Command &amp; Smart Site Equity Portal | Tiberius Recon™</title>
+  <meta name="description" content="Manage your Tiberius Recon™ territory zip code locks, minimum permit valuation filters, Gemini shop-voice calibration, and $200/mo Rent-to-Own Smart Site code equity." />
+
+  <!-- Google Fonts: Plus Jakarta Sans, Outfit, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0F172A',
+            bodyInk: '#334155',
+            mutedInk: '#64748B',
+            stoneBg: '#F4F4F0',
+            alabasterBg: '#F8FAFC',
+            navyAccent: '#1E40AF',
+            royalAccent: '#2563EB',
+            trustEmerald: '#059669',
+            trustEmeraldDark: '#047857',
+            permitAmber: '#D97706'
+          },
+          fontFamily: {
+            display: ['Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="/recon/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body class="bg-[#F4F4F0] text-bodyInk selection:bg-blue-100 selection:text-blue-900 min-h-screen flex flex-col">
+
+  <!-- ========================================================================
+       STICKY LIGHT-MODE NAVBAR
+       ======================================================================== -->
+  <header id="command-navbar" class="enterprise-navbar">
+    <div class="max-w-[1280px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-24 flex items-center justify-center md:justify-between gap-4">
+      <a href="/" class="brand-logo focus:outline-none" aria-label="Tiberius Recon Home">
+        <img
+          src="/images/logo4.png"
+          onerror="this.onerror=null;this.src='images/logo4.png';"
+          alt="Tiberius AI — The Bad Boys of AI."
+          class="brand-logo-img"
+        />
+      </a>
+
+      <nav aria-label="Command Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-700">
+        <a href="/" class="hover:text-blue-700 transition-colors">← Recon Overview</a>
+        <a id="nav-briefing-link" href="briefing.html" class="hover:text-blue-700 transition-colors flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+          <span>07:00 AM Briefing Queue</span>
+        </a>
+        <span class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
+          TERRITORY COMMAND PORTAL
+        </span>
+      </nav>
+
+      <div class="hidden md:flex items-center gap-2.5 flex-shrink-0">
+        <a
+          id="cta-briefing-link"
+          href="briefing.html"
+          class="btn-trust-emerald px-4 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
+        >
+          <span>Open 7:00 AM Cards →</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-8 sm:py-12">
+    <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+      <!-- ====================================================================
+           TOP COMMAND HEADER
+           ==================================================================== -->
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF] mb-2.5">
+            <span>CONTRACTOR TERRITORY &amp; VOICE CALIBRATION</span>
+          </div>
+          <h1 id="cmd-contractor-title" class="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-[#0F172A] tracking-tight">
+            Territory Command &amp; Smart Site Equity
+          </h1>
+          <p class="text-sm sm:text-base text-[#334155] mt-1">
+            Configure your target zip code exclusivity, minimum permit dollar thresholds, 4-sentence shop voice, and Inbound CAD Property X-Ray.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+          <a
+            id="hero-open-briefing-btn"
+            href="briefing.html"
+            class="btn-trust-emerald px-5 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-2"
+          >
+            <span>☕ Open Today's 7:00 AM Briefing →</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           2-COLUMN MAIN GRID:
+           Left (7 cols): Territory Lock & Shop Voice Calibrator
+           Right (5 cols): Smart Site $200/mo Equity Ledger + Live 10-Sec CAD X-Ray Tool
+           ==================================================================== -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+
+        <!-- LEFT COLUMN: TERRITORY & SHOP VOICE CALIBRATION FORM -->
+        <section class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8">
+          <div class="flex items-center justify-between gap-2 pb-4 mb-6 border-b border-slate-200">
+            <div>
+              <span class="font-mono-telemetry text-xs text-[#1E40AF]">MODULE 01 • 2:00 AM SCOUT PARAMETERS</span>
+              <h2 class="font-display font-extrabold text-xl sm:text-2xl text-[#0F172A]">
+                Territory Lock &amp; Shop Voice Calibration
+              </h2>
+            </div>
+            <span id="cmd-availability-pill" class="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
+              ✓ SLOT OPEN
+            </span>
+          </div>
+
+          <form id="command-settings-form" class="space-y-5" novalidate>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="cmd-trade-select" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Primary Trade Category
+                </label>
+                <select id="cmd-trade-select" class="enterprise-select">
+                  <option value="Commercial Concrete">Commercial Concrete &amp; Paving</option>
+                  <option value="Roofing / Exteriors">Roofing / Storm Restoration &amp; Exteriors</option>
+                  <option value="Electrical / HVAC">Electrical, Mechanical &amp; HVAC (MEP)</option>
+                  <option value="Pools / Fencing / Custom Home">Custom Pools, Fencing &amp; Outdoor</option>
+                  <option value="B2B / Commercial Services">B2B / Commercial Property Services</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="cmd-tier-select" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Active Territory Tier
+                </label>
+                <select id="cmd-tier-select" class="enterprise-select">
+                  <option value="Tier 1: B2B Scout">Tier 1: B2B Deal Scout ($297/mo)</option>
+                  <option value="Tier 2: Commercial Permits">Tier 2: Commercial Permit Radar ($597/mo • Max 2/Zip)</option>
+                  <option value="Tier 3: Full CAD + Residential Dominion">Tier 3: Full Territory Dominion ($897/mo • 100% Zip Exclusive)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="cmd-zip-input" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Primary Zip Code / Metro
+                </label>
+                <div class="flex gap-2">
+                  <input
+                    id="cmd-zip-input"
+                    type="text"
+                    value="78130"
+                    placeholder="e.g. 78130 or 75024"
+                    class="enterprise-input"
+                  />
+                  <button
+                    id="cmd-check-zip-btn"
+                    type="button"
+                    class="btn-outline-slate px-3.5 py-2 rounded-xl text-xs font-mono-telemetry shrink-0 cursor-pointer"
+                  >
+                    Check Zip
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label for="cmd-min-valuation-select" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Minimum Permit Dollar Valuation Filter
+                </label>
+                <select id="cmd-min-valuation-select" class="enterprise-select">
+                  <option value="50000">$50,000+ (Commercial &amp; High-End Residential)</option>
+                  <option value="100000" selected>$100,000+ (Eliminates Handyman / Small Jobs)</option>
+                  <option value="240000">$240,000+ (Major Commercial TI &amp; Custom Estates)</option>
+                  <option value="500000">$500,000+ (Commercial Shells &amp; Heavy Industrial)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Live Zip Availability Feedback Box -->
+            <div id="cmd-zip-status-box" class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+              <div id="cmd-zip-status-title" class="font-mono-telemetry text-emerald-800 font-bold">
+                ✓ 78130 (New Braunfels) AVAILABLE • 1 OF 2 TRADE SLOTS OPEN
+              </div>
+              <p id="cmd-zip-status-desc" class="text-slate-600">
+                Connected to City of New Braunfels EnerGov Portal &amp; Comal Appraisal District (Comal CAD).
+              </p>
+            </div>
+
+            <!-- Shop Voice Calibration Fields -->
+            <div class="pt-3 border-t border-slate-200 space-y-4">
+              <div class="font-mono-telemetry text-xs text-[#1E40AF]">
+                GEMINI 4-SENTENCE SHOP-VOICE CALIBRATION:
+              </div>
+
+              <div>
+                <label for="cmd-landmark-input" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Local Street / Landmark Reference (Used in Sentence #2)
+                </label>
+                <input
+                  id="cmd-landmark-input"
+                  type="text"
+                  value="two miles east off FM 306"
+                  placeholder="e.g. two miles east on Commerce Dr"
+                  class="enterprise-input"
+                />
+              </div>
+
+              <div>
+                <label for="cmd-differentiator-input" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Shop Differentiator &amp; Guarantee (Used in Sentence #3)
+                </label>
+                <input
+                  id="cmd-differentiator-input"
+                  type="text"
+                  value="zero day-labor subs and a 100% clean-site guarantee"
+                  class="enterprise-input"
+                />
+              </div>
+            </div>
+
+            <div class="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <button
+                id="cmd-save-btn"
+                type="submit"
+                class="btn-trust-emerald py-3.5 px-6 rounded-xl text-sm font-bold cursor-pointer"
+              >
+                ✓ Save Calibration &amp; Rebuild 7:00 AM Cards
+              </button>
+              <span id="cmd-save-feedback" class="font-mono-telemetry text-xs text-emerald-700 font-bold hidden">
+                ✓ SAVED &amp; BRIEFING RECALIBRATED
+              </span>
+            </div>
+          </form>
+        </section>
+
+        <!-- RIGHT COLUMN: SMART SITE EQUITY LEDGER + 10-SEC INBOUND CAD X-RAY TOOL -->
+        <div class="lg:col-span-5 space-y-7">
+
+          <!-- MODULE 02: RENT-TO-OWN SMART SITE EQUITY LEDGER -->
+          <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-7">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="font-mono-telemetry text-xs text-[#1E40AF]">MODULE 02 • OFFENSE + DEFENSE EQUITY</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[11px] text-emerald-800 font-bold">
+                +$200/MO EQUITY CREDIT
+              </span>
+            </div>
+
+            <h2 class="font-display font-extrabold text-xl text-[#0F172A] mb-2">
+              Rent-to-Own Smart Site Equity Ledger
+            </h2>
+            <p class="text-xs sm:text-sm text-[#334155] mb-4">
+              Every month your Smart Site bundle is active, <strong class="text-[#0F172A]">$200/mo is credited directly toward 100% code &amp; domain ownership</strong>.
+            </p>
+
+            <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-200 mb-4">
+              <div class="flex items-center justify-between text-xs font-mono-telemetry text-[#1E40AF] mb-1.5">
+                <span id="equity-accrued-label">ACCRUED EQUITY: $800.00</span>
+                <span id="equity-pct-label">33% TOWARD 100% BUYOUT ($2,400)</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
+                <div id="equity-progress-bar" class="equity-bar-fill h-full rounded-full" style="width: 33%;"></div>
+              </div>
+              <div class="mt-2.5 flex items-center justify-between text-[11px] text-slate-600">
+                <span>Monthly Equity Credit: <strong>+$200.00/mo</strong></span>
+                <button
+                  id="simulate-month-credit-btn"
+                  type="button"
+                  class="text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer"
+                >
+                  + Simulate Next Month (+$200)
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-2 text-xs text-[#0F172A]">
+              <div class="font-mono-telemetry text-[10px] text-slate-500">ACTIVE INBOUND DEFENSE MODULES:</div>
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <span>🛡️ <strong>10-Second Inbound CAD Property X-Ray</strong></span>
+                <span class="font-mono-telemetry text-[10px] text-emerald-700 font-bold">ACTIVE ✓</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <span>🛡️ <strong>3-Second Missed-Call Text Rescue</strong></span>
+                <span class="font-mono-telemetry text-[10px] text-emerald-700 font-bold">ACTIVE ✓</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <span>🛡️ <strong>5-Star Review Shield</strong></span>
+                <span class="font-mono-telemetry text-[10px] text-emerald-700 font-bold">ACTIVE ✓</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- MODULE 03: LIVE 10-SECOND INBOUND CAD PROPERTY X-RAY TESTER -->
+          <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-7">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="font-mono-telemetry text-xs text-amber-800">MODULE 03 • LIVE TAX ROLL X-RAY</span>
+              <span class="font-mono-telemetry text-[10px] text-emerald-700 font-bold">14-SEC ENGINE</span>
+            </div>
+            <h2 class="font-display font-extrabold text-xl text-[#0F172A] mb-2">
+              Instant CAD Parcel &amp; Owner X-Ray
+            </h2>
+            <p class="text-xs text-[#334155] mb-4">
+              Test the 4:30 AM County Appraisal District X-Ray on any street address to pull the deeded owner, assessed value, sq ft, and lot acreage.
+            </p>
+
+            <div class="flex gap-2 mb-4">
+              <input
+                id="cad-xray-address-input"
+                type="text"
+                value="1140 Whispering Pines Ln"
+                placeholder="Enter street address or parcel ID..."
+                class="enterprise-input text-xs sm:text-sm"
+              />
+              <button
+                id="cad-xray-run-btn"
+                type="button"
+                class="btn-executive-navy px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 cursor-pointer"
+              >
+                Run X-Ray →
+              </button>
+            </div>
+
+            <div id="cad-xray-result-box" class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <div class="flex items-center justify-between font-mono-telemetry text-[11px] text-[#1E40AF]">
+                <span id="cad-res-parcel">PARCEL #CAD-78130-90418A</span>
+                <span class="text-emerald-700 font-bold">MATCHED ✓</span>
+              </div>
+              <div id="cad-res-owner" class="font-bold text-sm text-[#0F172A]">
+                Deeded Owner: Dr. Robert &amp; Elena Harrison
+              </div>
+              <div id="cad-res-metrics" class="text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5">
+                $940,000 Assessed Value • 4,120 Sq Ft • 1.4 Acres • Homestead Verified
+              </div>
+              <div id="cad-res-contact" class="text-slate-600 font-mono-telemetry text-[11px]">
+                DIRECT CELL: (512) 555-0199 • EMAIL: rharrison.md@privateestate.org
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="section-bg-white border-t border-slate-200 py-8 px-4 sm:px-6 lg:px-8 mt-12">
+    <div class="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B] font-mono-telemetry">
+      <span>TIBERIUS RECON™ • TERRITORY COMMAND &amp; SMART SITE EQUITY PORTAL</span>
+      <div class="flex items-center gap-5">
+        <a href="/" class="text-blue-700 hover:underline">← Back to /recon Overview</a>
+        <a href="briefing.html" class="text-emerald-700 hover:underline">Open 7:00 AM Briefing Queue →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/recon/command.js"></script>
+  <script src="command.js"></script>
+</body>
+</html>

@@ -1,3 +1,29 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/briefing",
+      "destination": "/briefing.html"
+    },
+    {
+      "source": "/command",
+      "destination": "/command.html"
+    },
+    {
+      "source": "/recon",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/recon/briefing",
+      "destination": "/briefing.html"
+    },
+    {
+      "source": "/recon/command",
+      "destination": "/command.html"
+    },
+    {
+      "source": "/recon/:file*",
+      "destination": "/:file*"
+    }
+  ]
 }

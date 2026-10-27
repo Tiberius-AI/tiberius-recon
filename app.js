@@ -498,6 +498,9 @@
      ========================================================================== */
   const vaultTradeSelect = document.getElementById('vault-trade-select-mobile');
   const vaultTierSelect = document.getElementById('vault-tier-select-mobile');
+  const vaultZipInputEl = document.getElementById('vault-zip-input');
+  const vaultAvailabilityBanner = document.getElementById('vault-live-availability-banner');
+  const vaultAvailabilityText = document.getElementById('vault-availability-text');
   const pricingTierCtas = Array.from(document.querySelectorAll('.pricing-tier-cta[data-select-tier]'));
   const activationForm = document.getElementById('territory-activation-form');
   const vaultFormView = document.getElementById('vault-form-view');
@@ -508,15 +511,54 @@
   const confirmZipVal = document.getElementById('confirm-zip-val');
   const confirmTierVal = document.getElementById('confirm-tier-val');
   const confirmContactVal = document.getElementById('confirm-contact-val');
+  const confirmOpenBriefingLink = document.getElementById('confirm-open-briefing-link');
+  const confirmOpenCommandLink = document.getElementById('confirm-open-command-link');
   const sevenAmCountdownEl = document.getElementById('seven-am-countdown');
 
   let countdownInterval = null;
+  let zipCheckDebounce = null;
+
+  async function refreshVaultTerritoryAvailability() {
+    const zip = vaultZipInputEl && vaultZipInputEl.value.trim() ? vaultZipInputEl.value.trim() : '78130';
+    const trade = vaultTradeSelect ? vaultTradeSelect.value : 'Commercial Concrete';
+    const tier = vaultTierSelect ? vaultTierSelect.value : 'Tier 2: Commercial Permits';
+
+    try {
+      const resp = await fetch(
+        `/api/recon/availability?zip=${encodeURIComponent(zip)}&trade=${encodeURIComponent(trade)}&tier=${encodeURIComponent(tier)}`
+      );
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (data && data.ok && vaultAvailabilityText && vaultAvailabilityBanner) {
+        vaultAvailabilityText.textContent = data.statusBadge;
+        if (data.isAvailable) {
+          vaultAvailabilityBanner.className =
+            'p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-2 text-xs font-mono-telemetry text-emerald-800';
+        } else {
+          vaultAvailabilityBanner.className =
+            'p-3 rounded-xl bg-rose-50/80 border border-rose-200 flex items-center justify-between gap-2 text-xs font-mono-telemetry text-rose-800';
+        }
+      }
+    } catch (_err) {
+      // Keep default banner if offline
+    }
+  }
+
+  if (vaultZipInputEl) {
+    vaultZipInputEl.addEventListener('input', () => {
+      if (zipCheckDebounce) clearTimeout(zipCheckDebounce);
+      zipCheckDebounce = setTimeout(refreshVaultTerritoryAvailability, 260);
+    });
+  }
+  if (vaultTradeSelect) vaultTradeSelect.addEventListener('change', refreshVaultTerritoryAvailability);
+  if (vaultTierSelect) vaultTierSelect.addEventListener('change', refreshVaultTerritoryAvailability);
 
   pricingTierCtas.forEach((cta) => {
     cta.addEventListener('click', () => {
       const tier = cta.getAttribute('data-select-tier');
       if (tier && vaultTierSelect) {
         vaultTierSelect.value = tier;
+        refreshVaultTerritoryAvailability();
       }
     });
   });
@@ -553,7 +595,7 @@
   }
 
   if (activationForm) {
-    activationForm.addEventListener('submit', (e) => {
+    activationForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const zipInput = document.getElementById('vault-zip-input');
@@ -562,10 +604,10 @@
 
       const selectedTrade = vaultTradeSelect ? vaultTradeSelect.value : 'Commercial Concrete';
       const selectedTier = vaultTierSelect ? vaultTierSelect.value : 'Tier 2: Commercial Permits';
-      const zipVal = zipInput && zipInput.value.trim() ? zipInput.value.trim() : '75024 (Local Metro Radius)';
+      const zipVal = zipInput && zipInput.value.trim() ? zipInput.value.trim() : '78130';
       const phoneVal = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : 'SMS Queue Armed';
       const emailVal = emailInput && emailInput.value.trim() ? emailInput.value.trim() : 'Primary Inbox Armed';
-      const includeSmartSite = vaultSmartSiteCheckbox && vaultSmartSiteCheckbox.checked;
+      const includeSmartSite = Boolean(vaultSmartSiteCheckbox && vaultSmartSiteCheckbox.checked);
 
       if (confirmTradeVal) confirmTradeVal.textContent = selectedTrade;
       if (confirmZipVal) confirmZipVal.textContent = zipVal;
@@ -584,6 +626,37 @@
       }
 
       startSevenAMCountdown();
+
+      try {
+        const resp = await fetch('/api/recon/activate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            primaryTrade: selectedTrade,
+            tierLevel: selectedTier,
+            includeSmartSiteBundle: includeSmartSite,
+            territoryZip: zipVal,
+            mobilePhone: phoneVal,
+            bestEmail: emailVal
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.briefing) {
+          const token = data.briefing.magicToken;
+          localStorage.setItem('tiberius_recon_token', token);
+          if (confirmZipVal) {
+            confirmZipVal.textContent = `${data.briefing.territoryZip} (${data.briefing.metroCity})`;
+          }
+          if (confirmOpenBriefingLink) {
+            confirmOpenBriefingLink.href = `briefing.html?token=${encodeURIComponent(token)}`;
+          }
+          if (confirmOpenCommandLink) {
+            confirmOpenCommandLink.href = `command.html?token=${encodeURIComponent(token)}`;
+          }
+        }
+      } catch (_err) {
+        // Offline fallback preserves UI state
+      }
     });
   }
 

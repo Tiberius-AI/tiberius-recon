@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>07:00 AM Morning Recon Briefing | Tiberius Recon™</title>
+  <meta name="description" content="Your 7:00 AM Tiberius Recon™ Morning Briefing. Review verified overnight building permits, CAD tax roll matches, and 1-tap Approve & Send intros." />
+
+  <!-- Google Fonts: Plus Jakarta Sans, Outfit, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS via CDN configured for High-Trust Enterprise Light Mode -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0F172A',
+            bodyInk: '#334155',
+            mutedInk: '#64748B',
+            stoneBg: '#F4F4F0',
+            alabasterBg: '#F8FAFC',
+            navyAccent: '#1E40AF',
+            royalAccent: '#2563EB',
+            trustEmerald: '#059669',
+            trustEmeraldDark: '#047857',
+            permitAmber: '#D97706'
+          },
+          fontFamily: {
+            display: ['Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="/recon/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body class="bg-[#F8FAFC] text-bodyInk selection:bg-blue-100 selection:text-blue-900 min-h-screen flex flex-col">
+
+  <!-- ========================================================================
+       STICKY LIGHT-MODE NAVBAR
+       ======================================================================== -->
+  <header id="command-navbar" class="enterprise-navbar">
+    <div class="max-w-[1280px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-24 flex items-center justify-center md:justify-between gap-4">
+      <a href="/" class="brand-logo focus:outline-none" aria-label="Tiberius Recon Home">
+        <img
+          src="/images/logo4.png"
+          onerror="this.onerror=null;this.src='images/logo4.png';"
+          alt="Tiberius AI — The Bad Boys of AI."
+          class="brand-logo-img"
+        />
+      </a>
+
+      <nav aria-label="Briefing Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-700">
+        <a href="/" class="hover:text-blue-700 transition-colors">← Recon Overview</a>
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
+          <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+          <span id="nav-territory-pill">07:00 AM BRIEFING QUEUE • LIVE</span>
+        </span>
+      </nav>
+
+      <div class="hidden md:flex items-center gap-2.5 flex-shrink-0">
+        <a
+          id="nav-command-link"
+          href="command.html"
+          class="btn-outline-slate px-4 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
+        >
+          <span>⚙️ Territory &amp; Voice Command</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-8 sm:py-12">
+    <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+
+      <!-- ====================================================================
+           OVERNIGHT TELEMETRY & 7:00 AM BRIEFING HEADER CARD
+           ==================================================================== -->
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7 mb-7">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-slate-200">
+          <div>
+            <div class="flex flex-wrap items-center gap-2 mb-2.5">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                <span>07:00:00 AM MORNING RECON BRIEFING</span>
+              </span>
+              <span id="briefing-tier-badge" class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
+                TIER 2 • COMMERCIAL PERMIT RADAR
+              </span>
+              <span id="briefing-exclusivity-badge" class="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 font-mono-telemetry text-xs text-amber-800">
+                ✓ ZIP CAPACITY VERIFIED
+              </span>
+            </div>
+
+            <h1 id="briefing-main-title" class="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-[#0F172A] tracking-tight">
+              Good Morning — Your 3 Verified Recon Cards Are Ready.
+            </h1>
+            <p id="briefing-subtitle" class="text-sm sm:text-base text-[#334155] mt-1.5">
+              Swept at 2:04 AM from municipal permit portals &amp; cross-checked at 4:30 AM against County Appraisal District (CAD) tax rolls. Nothing sends without your tap.
+            </p>
+          </div>
+
+          <!-- Right Status Counter & Reset / Command Buttons -->
+          <div class="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-2.5 shrink-0">
+            <div id="briefing-approved-counter" class="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs sm:text-sm text-emerald-800 font-bold text-center">
+              Deals Approved This Morning: 0/3
+            </div>
+            <div class="flex flex-wrap items-center gap-2 justify-end">
+              <button
+                id="briefing-live-zero-api-btn"
+                type="button"
+                class="btn-trust-emerald px-3.5 py-1.5 rounded-lg text-xs font-mono-telemetry cursor-pointer"
+              >
+                🛰️ Pull Real Live Permits (Zero-API Agent)
+              </button>
+              <button
+                id="briefing-run-night-sweep-btn"
+                type="button"
+                class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-mono-telemetry cursor-pointer"
+              >
+                ⚡ Re-Run 2:00 AM Sweep
+              </button>
+              <button
+                id="briefing-export-csv-btn"
+                type="button"
+                class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-mono-telemetry cursor-pointer"
+              >
+                ⬇️ Export CSV
+              </button>
+              <button
+                id="briefing-reset-all-btn"
+                type="button"
+                class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-mono-telemetry cursor-pointer"
+              >
+                Reset Queue ↺
+              </button>
+              <a
+                id="mobile-command-link"
+                href="command.html"
+                class="md:hidden btn-executive-navy px-3 py-1.5 rounded-lg text-xs font-mono-telemetry"
+              >
+                ⚙️ Command
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Territory & Trade Calibrator Strip -->
+        <div class="pt-5 grid grid-cols-1 md:grid-cols-12 gap-3.5 items-end">
+          <div class="md:col-span-4">
+            <label for="calibrator-trade-select" class="block text-[11px] font-mono-telemetry text-slate-600 mb-1">
+              ACTIVE SHOP TRADE (LIVE CALIBRATION):
+            </label>
+            <select id="calibrator-trade-select" class="enterprise-select text-sm py-2">
+              <option value="Commercial Concrete">Commercial Concrete &amp; Paving</option>
+              <option value="Roofing / Exteriors">Roofing / Storm Restoration &amp; Exteriors</option>
+              <option value="Electrical / HVAC">Electrical, Mechanical &amp; HVAC (MEP)</option>
+              <option value="Pools / Fencing / Custom Home">Custom Pools, Fencing &amp; Outdoor</option>
+              <option value="B2B / Commercial Services">B2B / Commercial Property Services</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-3">
+            <label for="calibrator-zip-input" class="block text-[11px] font-mono-telemetry text-slate-600 mb-1">
+              TARGET ZIP / METRO (CAD X-RAY):
+            </label>
+            <input
+              id="calibrator-zip-input"
+              type="text"
+              value="78130"
+              placeholder="e.g. 78130, 78257, 78746, 75024"
+              class="enterprise-input text-sm py-2"
+            />
+          </div>
+
+          <div class="md:col-span-3">
+            <label for="calibrator-landmark-input" class="block text-[11px] font-mono-telemetry text-slate-600 mb-1">
+              NEARBY JOB LANDMARK (SENTENCE #2):
+            </label>
+            <input
+              id="calibrator-landmark-input"
+              type="text"
+              value="two miles east off FM 306"
+              placeholder="e.g. two miles east on Commerce Dr"
+              class="enterprise-input text-sm py-2"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <button
+              id="calibrator-apply-btn"
+              type="button"
+              class="btn-executive-navy w-full py-2.5 px-3 rounded-xl text-xs font-bold cursor-pointer"
+            >
+              Recalibrate Cards →
+            </button>
+          </div>
+        </div>
+
+        <!-- Overnight Telemetry Banner (Revealed on 2:00 AM Sweep Trigger) -->
+        <div id="night-sweep-telemetry-banner" class="hidden mt-4 p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-[#1E40AF]">
+          <span id="night-sweep-telemetry-text">✓ 02:00 AM SWEEP COMPLETE: 476 PORTAL ROWS SCANNED • 100% ZERO-HALLUCINATION VERIFIED</span>
+          <span class="text-emerald-700 font-bold">ALL 4 CONNECTORS ONLINE ✓</span>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           UNLOCKED MORNING RECON CARDS GRID
+           ==================================================================== -->
+      <section aria-label="Unlocked Morning Recon Cards" class="mb-10">
+        <div id="briefing-cards-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          <!-- Populated dynamically by briefing.js -->
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           LOCKED TERRITORY OVERFLOW VAULT (TRIAL CONVERSION ENGINE)
+           ==================================================================== -->
+      <section id="briefing-locked-vault" class="bg-amber-50/90 border border-amber-300 rounded-2xl p-6 sm:p-7 shadow-sm mb-10">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
+          <div class="flex items-start gap-3.5">
+            <span class="text-2xl flex-shrink-0" aria-hidden="true">🔒</span>
+            <div>
+              <h2 id="locked-vault-heading" class="font-display font-extrabold text-base sm:text-lg text-amber-950">
+                6 Additional Verified Recon Cards Spotted in Your Zip Last Night (Locked on Free 3-a-Day Test Drive)
+              </h2>
+              <p class="text-xs sm:text-sm text-amber-900/90 mt-0.5">
+                Your 7-Day Free Test Drive unlocks your top 3 cards every morning. Upgrade your territory tier below to immediately unblur and unlock your full daily queue:
+              </p>
+            </div>
+          </div>
+
+          <button
+            id="unlock-full-queue-btn"
+            type="button"
+            class="btn-executive-navy px-5 py-3.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center gap-2 self-start lg:self-center cursor-pointer"
+          >
+            <span>🔓 Unlock Full Daily Recon Queue Now →</span>
+          </button>
+        </div>
+
+        <div id="locked-overflow-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <!-- Populated dynamically by briefing.js -->
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           DISPATCHED OUTREACH AUDIT LOG
+           ==================================================================== -->
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7">
+        <div class="flex items-center justify-between gap-2 mb-4">
+          <div>
+            <span class="font-mono-telemetry text-xs text-[#1E40AF]">HUMAN-IN-THE-LOOP AUDIT LOG</span>
+            <h2 class="font-display font-extrabold text-xl text-[#0F172A]">
+              Approved &amp; Dispatched Deals This Morning
+            </h2>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
+            ✓ ZERO AUTO-SPAM GUARDRAIL ACTIVE
+          </span>
+        </div>
+
+        <div id="briefing-sent-logs-container" class="space-y-3 text-sm text-slate-600">
+          <p class="text-xs font-mono-telemetry text-slate-500">
+            No cards dispatched yet this morning. Tap [ ✓ Approve &amp; Send ] on any card above to log and dispatch your 4-sentence intro.
+          </p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="section-bg-white border-t border-slate-200 py-8 px-4 sm:px-6 lg:px-8 mt-12">
+    <div class="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B] font-mono-telemetry">
+      <span>TIBERIUS RECON™ • 07:00 AM MORNING BRIEFING ENGINE</span>
+      <div class="flex items-center gap-5">
+        <a href="/" class="text-blue-700 hover:underline">← Back to /recon Overview</a>
+        <a href="command.html" class="text-emerald-700 hover:underline">Open Territory Command Portal →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/recon/briefing.js"></script>
+  <script src="briefing.js"></script>
+</body>
+</html>

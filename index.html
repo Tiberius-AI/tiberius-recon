@@ -557,13 +557,16 @@
               07:00:00 AM MORNING RECON BRIEFING • 3 VERIFIED CARDS READY
             </span>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-3">
             <span id="deals-fired-counter" class="px-3 py-1 rounded-lg bg-white border border-slate-200 font-mono-telemetry text-xs text-emerald-700 font-bold shadow-sm">
               Deals Approved This Morning: 0/3
             </span>
             <button id="reset-all-simulator-btn" type="button" class="text-xs font-mono-telemetry text-blue-700 hover:text-blue-900 underline cursor-pointer">
               Reset All ↺
             </button>
+            <a href="briefing.html" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-mono-telemetry text-xs font-bold shadow-sm transition-colors">
+              Open Live 7:00 AM App ↗
+            </a>
           </div>
         </div>
 
@@ -1339,6 +1342,12 @@
               </div>
             </div>
 
+            <!-- Live Territory Zip Exclusivity & Slot Availability Strip -->
+            <div id="vault-live-availability-banner" class="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-2 text-xs font-mono-telemetry text-emerald-800">
+              <span id="vault-availability-text">✓ REAL-TIME TERRITORY CHECK: 2 OF 2 TRADE SLOTS OPEN IN YOUR ZIP</span>
+              <span class="font-bold whitespace-nowrap">CAD + PORTAL READY ✓</span>
+            </div>
+
             <!-- Full-Width Emerald Submit Button -->
             <div class="pt-1">
               <button
@@ -1403,6 +1412,24 @@
             <div id="confirm-contact-val" class="text-[11px] font-mono-telemetry text-[#64748B] mt-1.5">
               SMS DISPATCH LINK QUEUED FOR YOUR MOBILE
             </div>
+          </div>
+
+          <!-- Direct Action Buttons to Open Live Briefing Queue & Command Portal -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto mb-5">
+            <a
+              id="confirm-open-briefing-link"
+              href="briefing.html"
+              class="btn-trust-emerald w-full sm:w-auto px-5 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-2"
+            >
+              <span>☕ Preview Your 7:00 AM Briefing Queue Now →</span>
+            </a>
+            <a
+              id="confirm-open-command-link"
+              href="command.html"
+              class="btn-outline-slate w-full sm:w-auto px-4 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-2"
+            >
+              <span>⚙️ Open Command Portal</span>
+            </a>
           </div>
 
           <button id="vault-reset-btn" type="button" class="text-xs font-mono-telemetry text-blue-700 hover:text-blue-900 underline cursor-pointer">
