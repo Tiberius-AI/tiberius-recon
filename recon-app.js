@@ -13,7 +13,11 @@
 
   if (typeof window === 'undefined') {
     if (typeof module !== 'undefined') {
-      module.exports = require('./server');
+      try {
+        module.exports = require('./server');
+      } catch (_e) {
+        // Ignore when located in subfolder
+      }
     }
     return;
   }
