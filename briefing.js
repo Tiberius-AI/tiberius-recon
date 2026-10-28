@@ -21,8 +21,10 @@
 
   const navCommandLink = document.getElementById('nav-command-link');
   const mobileCommandLink = document.getElementById('mobile-command-link');
+  const navInboxLink = document.getElementById('nav-inbox-link');
   if (navCommandLink) navCommandLink.href = `command.html?token=${encodeURIComponent(activeToken)}`;
   if (mobileCommandLink) mobileCommandLink.href = `command.html?token=${encodeURIComponent(activeToken)}`;
+  if (navInboxLink) navInboxLink.href = `inbox.html?token=${encodeURIComponent(activeToken)}`;
 
   const navTerritoryPill = document.getElementById('nav-territory-pill');
   const briefingTierBadge = document.getElementById('briefing-tier-badge');

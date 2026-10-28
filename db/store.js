@@ -198,14 +198,108 @@ function getTradeTemplate(trade) {
 }
 
 /* ==========================================================================
+   AUTONOMOUS CLIENT KNOWLEDGE BASE ("SHOP DOSSIER") BUILDER
+   ========================================================================== */
+function buildDefaultKnowledgeBaseForContractor(contractor = {}) {
+  const metro = resolveMetroProfile(contractor.baseZip || '78130');
+  const tradeTpl = getTradeTemplate(contractor.primaryTrade);
+  const voice = contractor.voiceProfile || {};
+  const landmark = voice.landmarkReference || metro.landmarkStreet;
+  const companySlug = String(contractor.companyName || 'commercialpros')
+    .toLowerCase()
+    .replace(/\b(inc|llc|ltd|corp|co|company|systems|pros)\b/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+  const tradeLower = String(contractor.primaryTrade || '').toLowerCase();
+  let coreServices = [
+    'Commercial Tilt-Wall & Structural Slabs',
+    'Heavy-Duty Truck Aprons & Loading Docks',
+    'ADA Ramp & Sidewalk Compliance',
+    'Post-Tension Custom Residential Foundations',
+    'Weekend Phased Parking Lot Pouring'
+  ];
+  let certificationsAndBonding =
+    'ACI-Certified Flatwork Finishers • $2M/$5M Commercial GL + Workers Comp • Bonded up to $1.5M Single Project';
+
+  if (tradeLower.includes('roof')) {
+    coreServices = [
+      'Commercial TPO, PVC & EPDM Flat Roof Systems',
+      '20-Year NDL Manufacturer Warranty Replacements',
+      'Standing Seam Architectural Metal Roofing',
+      'Drone Thermal Moisture & Hail Core Scans',
+      'Multi-Family CapEx Phased Re-Roofing'
+    ];
+    certificationsAndBonding =
+      'GAF Master Select & Johns Manville Peak Advantage • $2M/$5M Commercial GL • 20-Year NDL Warranty Certified';
+  } else if (tradeLower.includes('hvac') || tradeLower.includes('electr') || tradeLower.includes('mech')) {
+    coreServices = [
+      'Commercial RTU Package Unit Replacements (5–25 Ton)',
+      'Medical & Retail TI Mechanical/Electrical Buildouts',
+      '3-Phase 480V Panel, Switchgear & Transformer Upgrades',
+      'In-House Custom Sheet Metal Duct Fabrication',
+      'Guaranteed 4-Hour Emergency Commercial SLA'
+    ];
+    certificationsAndBonding =
+      'TDLR Class-A TACLA & Master Electrical License • EPA 608 Universal • $2M/$5M Commercial GL & Bonded';
+  } else if (tradeLower.includes('build') || tradeLower.includes('remodel') || tradeLower.includes('pool')) {
+    coreServices = [
+      'Structural Custom Estate Additions & Guest Casitas',
+      'Architectural Steel, Framing & Luxury Finish-Out',
+      'Turnkey Commercial Tenant Improvements (TI)',
+      'Custom Outdoor Living Pavilions & Pool Structures',
+      'Dedicated Full-Time On-Site Superintendent'
+    ];
+    certificationsAndBonding =
+      'Licensed Custom Builder & Commercial GC • $2M/$5M Builder Risk + GL • 10-Year Structural Warranty';
+  } else if (tradeLower.includes('b2b') || tradeLower.includes('service') || tradeLower.includes('plumb')) {
+    coreServices = [
+      '24/7 Commercial Facility & Multi-Family SLA Contracts',
+      'Night & Weekend Phased CapEx Upgrades (Zero Tenant Disruption)',
+      'Hydro-Jetting, Backflow & Commercial MEP Maintenance',
+      'Dedicated Regional Portfolio Account Manager',
+      'Same-Day Digital Photo & Inspection Reporting'
+    ];
+    certificationsAndBonding =
+      'Vendor-Compliance Ready (Net-30, W-9, COI on File) • $2M/$5M Commercial GL + Umbrella';
+  }
+
+  return {
+    websiteUrl:
+      contractor.websiteUrl ||
+      `https://www.${companySlug || 'lonestarconcrete'}.com`,
+    yearsInBusiness: '14+ Years Serving ' + metro.city + ' & Corridor',
+    coreServices,
+    certificationsAndBonding,
+    warrantyAndGuarantee:
+      voice.differentiator || 'zero day-labor subs and a 100% clean-site guarantee',
+    proofProjects:
+      voice.recentWin ||
+      `${tradeTpl.card1CompletedJob} ${landmark} (passed city inspection ahead of schedule)`,
+    idealJobProfile: `$${Number(contractor.minPermitValuation || 100000).toLocaleString()}+ Commercial Permits, Multi-Family CapEx & $${Number(
+      contractor.minCadAssessedValue || 600000
+    ).toLocaleString()}+ Custom Residential`,
+    preferredCta:
+      voice.ctaStyle || 'quick 10-minute site walk or COI + bid calendar drop-off',
+    signatureLine: `${contractor.ownerName || 'Shop Owner'} • ${
+      contractor.companyName || 'Commercial Pros'
+    } • ${contractor.mobilePhone || '(512) 555-0194'}`,
+    crawlSource: 'Verified Shop Onboarding Profile',
+    lastUpdatedAt: new Date().toISOString()
+  };
+}
+
+/* ==========================================================================
    BUILD 3 UNLOCKED + 9 LOCKED BRIEFING CARDS FOR ANY TRADE & TERRITORY
    ========================================================================== */
 function buildBriefingCardsForContractor(contractor) {
   const metro = resolveMetroProfile(contractor.baseZip);
   const tradeTpl = getTradeTemplate(contractor.primaryTrade);
   const voice = contractor.voiceProfile || {};
+  const kb = contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor);
   const landmark = voice.landmarkReference || metro.landmarkStreet;
   const isPaidTier = contractor.status === 'PAID_ACTIVE';
+  const proofJobSnippet = kb.proofProjects || `${tradeTpl.card1CompletedJob} ${landmark}`;
+  const guaranteeSnippet = kb.warrantyAndGuarantee || 'zero day-labor subs and a 100% clean-site guarantee';
 
   const unlockedCards = [
     {
@@ -234,9 +328,9 @@ function buildBriefingCardsForContractor(contractor) {
       contactMeta: `Direct Work Email + Cell Verified • 3.8 Miles From Your Shop (${metro.zip})`,
       contactEmail: 'mvance@apexcommercialbuilders.com',
       contactPhone: '(512) 555-0148',
-      draftLabel: '4-SENTENCE BID INTRO (YOUR VOICE):',
+      draftLabel: '4-SENTENCE BID INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
       draftSubject: `Bid numbers for ${metro.industrialCorridor} ($240K Permit #BP-2026-08941)`,
-      draftBody: `"Hey Marcus — saw the $240,000 commercial TI buildout permit filed yesterday at ${metro.industrialCorridor}. Our crew just wrapped ${tradeTpl.card1CompletedJob} ${landmark} and passed city inspection ahead of schedule. We have a crew opening up next month and would love to drop off numbers on the ${tradeTpl.card1Scope}. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"`,
+      draftBody: `"Hey Marcus — saw the $240,000 commercial TI buildout permit filed yesterday at ${metro.industrialCorridor}. Our crew just wrapped ${tradeTpl.card1CompletedJob} ${landmark} (${proofJobSnippet}) and passed city inspection ahead of schedule. We have a crew opening up next month and would love to drop off numbers on the ${tradeTpl.card1Scope}. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"`,
       approvalStatus: 'ready',
       dispatchChannel: 'CLOUD_EMAIL',
       approvedAt: null,
@@ -268,9 +362,9 @@ function buildBriefingCardsForContractor(contractor) {
       contactMeta: `Direct Inbox + Office Line • Active Q4 CapEx Upgrade Budget (${metro.city})`,
       contactEmail: 'dsterling@crestviewcommercial.com',
       contactPhone: '(512) 555-0182',
-      draftLabel: '4-SENTENCE VENDOR INTRO (YOUR VOICE):',
+      draftLabel: '4-SENTENCE VENDOR INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
       draftSubject: `Vendor packet for Oakridge Commons (${metro.commercialAvenue})`,
-      draftBody: `"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads on ${metro.commercialAvenue}. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage and specialize in weekend phased work on ${tradeTpl.card2Scope} so zero tenants lose access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"`,
+      draftBody: `"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads on ${metro.commercialAvenue}. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage (${kb.certificationsAndBonding.split('•')[0].trim()}) and specialize in weekend phased work on ${tradeTpl.card2Scope} so zero tenants lose access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"`,
       approvalStatus: 'ready',
       dispatchChannel: 'CLOUD_EMAIL',
       approvedAt: null,
@@ -302,9 +396,9 @@ function buildBriefingCardsForContractor(contractor) {
       contactMeta: `Parcel #CAD-90418-A (${metro.countyCad}) • Direct Owner Mobile & Email Verified`,
       contactEmail: 'rharrison.md@privateestate.org',
       contactPhone: '(512) 555-0199',
-      draftLabel: '4-SENTENCE OWNER INTRO (YOUR VOICE):',
+      draftLabel: '4-SENTENCE OWNER INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
       draftSubject: `Quick question on your ${metro.estateNeighborhood} addition permit`,
-      draftBody: `"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at ${metro.estateNeighborhood}. Our custom residential team specializes in ${tradeTpl.card3Scope} across ${metro.city} with zero day-labor subs and a 100% clean-site guarantee. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a quick 10-minute site walk this week?"`,
+      draftBody: `"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at ${metro.estateNeighborhood}. Our custom residential team specializes in ${tradeTpl.card3Scope} across ${metro.city} with ${guaranteeSnippet}. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a ${kb.preferredCta} this week?"`,
       approvalStatus: 'ready',
       dispatchChannel: 'CLOUD_EMAIL',
       approvedAt: null,
@@ -419,6 +513,216 @@ function buildBriefingCardsForContractor(contractor) {
 }
 
 /* ==========================================================================
+   CONVERSATION ROOM & FOLLOW-UP THREAD SEEDER
+   ========================================================================== */
+function createDefaultConversationThreads(contractor, cards = []) {
+  const metro = resolveMetroProfile(contractor.baseZip || '78130');
+  const tradeTpl = getTradeTemplate(contractor.primaryTrade);
+  const kb = contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor);
+  const c1 = cards[0] || {};
+  const c2 = cards[1] || {};
+  const c3 = cards[2] || {};
+  const c4 = cards[3] || {};
+
+  return [
+    {
+      id: 'thread-deal-1',
+      cardId: 'deal-1',
+      cardNumber: c1.cardNumber || 'CARD 01 • COMMERCIAL PERMIT',
+      stage: 'REPLIED_HOT',
+      stageBadge: '🔥 HOT REPLY — BID WALK REQUESTED',
+      unread: true,
+      dealValuation: '$240,000',
+      permitNumber: '#BP-2026-08941',
+      propertyAddress: `${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
+      headline: c1.headline || tradeTpl.card1Headline,
+      cadDetails: c1.cadDetails || {
+        parcelId: `CAD-${metro.zip}-8941`,
+        countyName: metro.countyCad,
+        deededOwner: 'Industrial Parkway Holdings LLC',
+        assessedValue: '$1,850,000',
+        buildingSqFt: '18,500 Sq Ft',
+        lotAcres: '2.4 Acres'
+      },
+      contactName: c1.contactName || 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+      contactShort: c1.contactShort || 'Marcus Vance (Apex Commercial Builders)',
+      contactEmail: c1.contactEmail || 'mvance@apexcommercialbuilders.com',
+      contactPhone: c1.contactPhone || '(512) 555-0148',
+      channel: 'CLOUD_EMAIL',
+      lastActivityLabel: '14 mins ago',
+      followUpDueLabel: 'Reply Now — Bid Window Closes Friday',
+      messages: [
+        {
+          id: 'msg-101',
+          sender: 'CONTRACTOR',
+          senderName: `${contractor.ownerName} (${contractor.companyName})`,
+          timestamp: 'Today • 07:02 AM',
+          channel: 'CLOUD_EMAIL',
+          body: (c1.draftBody || '').replace(/^"|"$/g, '')
+        },
+        {
+          id: 'msg-102',
+          sender: 'PROSPECT',
+          senderName: 'Marcus Vance (Apex Commercial Builders)',
+          timestamp: 'Today • 08:19 AM',
+          channel: 'CLOUD_EMAIL',
+          body: `Hey ${
+            (contractor.ownerName || 'there').split(' ')[0]
+          } — timing is spot on. Our previous sub backed out on the ${
+            tradeTpl.card1Scope
+          } schedule at ${
+            metro.industrialCorridor
+          }. Do you guys carry $2M commercial GL + bonding, and can you walk the site with my superintendent this Thursday at 9:00 AM to review the plan set?`
+        }
+      ]
+    },
+    {
+      id: 'thread-deal-2',
+      cardId: 'deal-2',
+      cardNumber: c2.cardNumber || 'CARD 02 • B2B PROPERTY MANAGER',
+      stage: 'REPLIED_HOT',
+      stageBadge: '🔥 HOT REPLY — VENDOR PACKET REQUESTED',
+      unread: true,
+      dealValuation: '$14,200,000 CapEx',
+      permitNumber: `Deed Transfer • Parcel #CAD-${metro.zip}-4410`,
+      propertyAddress: `${metro.commercialAvenue}, ${metro.city}, ${metro.state} ${metro.zip}`,
+      headline: c2.headline || tradeTpl.card2Headline,
+      cadDetails: c2.cadDetails || {
+        parcelId: `CAD-${metro.zip}-4410`,
+        countyName: metro.countyCad,
+        deededOwner: 'Crestview Commercial REIT IV LP',
+        assessedValue: '$14,200,000',
+        buildingSqFt: '142,000 Sq Ft',
+        lotAcres: '8.6 Acres'
+      },
+      contactName: c2.contactName || 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+      contactShort: c2.contactShort || 'Dana Sterling (Crestview Commercial Mgmt)',
+      contactEmail: c2.contactEmail || 'dsterling@crestviewcommercial.com',
+      contactPhone: c2.contactPhone || '(512) 555-0182',
+      channel: 'CLOUD_EMAIL',
+      lastActivityLabel: '42 mins ago',
+      followUpDueLabel: 'Send W-9, COI & Warranty Summary',
+      messages: [
+        {
+          id: 'msg-201',
+          sender: 'CONTRACTOR',
+          senderName: `${contractor.ownerName} (${contractor.companyName})`,
+          timestamp: 'Today • 07:03 AM',
+          channel: 'CLOUD_EMAIL',
+          body: (c2.draftBody || '').replace(/^"|"$/g, '')
+        },
+        {
+          id: 'msg-202',
+          sender: 'PROSPECT',
+          senderName: 'Dana Sterling (Crestview Commercial Mgmt)',
+          timestamp: 'Today • 08:47 AM',
+          channel: 'CLOUD_EMAIL',
+          body: `Hi ${
+            (contractor.ownerName || 'there').split(' ')[0]
+          }, thanks for reaching out. We are onboarding two new preferred ${
+            tradeTpl.shortTrade
+          } vendors for Oakridge Commons this quarter. What specific services and warranties do you offer, and can you reply with your insurance/bonding details so I can add ${
+            contractor.companyName
+          } to Thursday's walk?`
+        }
+      ]
+    },
+    {
+      id: 'thread-deal-3',
+      cardId: 'deal-3',
+      cardNumber: c3.cardNumber || 'CARD 03 • RESIDENTIAL + CAD X-RAY',
+      stage: 'FOLLOWUP_DUE',
+      stageBadge: '⏳ DAY-3 FOLLOW-UP READY',
+      unread: false,
+      dealValuation: '$940,000 Estate',
+      permitNumber: `CAD Parcel #CAD-${metro.zip}-90418A`,
+      propertyAddress: `${metro.estateNeighborhood}, ${metro.city}, ${metro.state} ${metro.zip}`,
+      headline: c3.headline || `${metro.estateNeighborhood} — ${tradeTpl.card3Headline}`,
+      cadDetails: c3.cadDetails || {
+        parcelId: `CAD-${metro.zip}-90418A`,
+        countyName: metro.countyCad,
+        deededOwner: 'Dr. Robert & Elena Harrison',
+        assessedValue: '$940,000',
+        buildingSqFt: '4,120 Sq Ft',
+        lotAcres: '1.4 Acres'
+      },
+      contactName: c3.contactName || 'Dr. Robert & Elena Harrison • Verified Property Owners',
+      contactShort: c3.contactShort || 'Dr. Robert & Elena Harrison',
+      contactEmail: c3.contactEmail || 'rharrison.md@privateestate.org',
+      contactPhone: c3.contactPhone || '(512) 555-0199',
+      channel: 'NATIVE_SMS',
+      lastActivityLabel: 'Sent 3 days ago • Opened 2x',
+      followUpDueLabel: '⚡ 1-Tap Day-3 Bump Recommended Today',
+      messages: [
+        {
+          id: 'msg-301',
+          sender: 'CONTRACTOR',
+          senderName: `${contractor.ownerName} (${contractor.companyName})`,
+          timestamp: '3 Days Ago • 07:05 AM',
+          channel: 'CLOUD_EMAIL',
+          body: (c3.draftBody || '').replace(/^"|"$/g, '')
+        }
+      ]
+    },
+    {
+      id: 'thread-deal-4',
+      cardId: 'deal-4',
+      cardNumber: c4.cardNumber || 'CARD 04 • COMMERCIAL SHELL PERMIT',
+      stage: 'SITE_WALK_BOOKED',
+      stageBadge: '📅 SITE WALK BOOKED — THU 8:30 AM',
+      unread: false,
+      dealValuation: '$410,000',
+      permitNumber: `#BP-2026-0914`,
+      propertyAddress: `4829 Main St, ${metro.city}, ${metro.state} ${metro.zip}`,
+      headline: c4.headline || '$410,000 Commercial Shell & Retail Pad Permit',
+      cadDetails: {
+        parcelId: `CAD-${metro.zip}-9104`,
+        countyName: metro.countyCad,
+        deededOwner: 'Horizon Commercial Development LP',
+        assessedValue: '$2,150,000',
+        buildingSqFt: '24,000 Sq Ft',
+        lotAcres: '3.1 Acres'
+      },
+      contactName: 'Grant Mercer • VP Operations @ Horizon Commercial GC',
+      contactShort: 'Grant Mercer (Horizon Commercial GC)',
+      contactEmail: 'gmercer@horizoncommercialgc.com',
+      contactPhone: '(512) 555-0211',
+      channel: 'CLOUD_EMAIL',
+      lastActivityLabel: 'Confirmed Yesterday',
+      followUpDueLabel: 'Site Walk Locked: Thu 8:30 AM @ 4829 Main St',
+      messages: [
+        {
+          id: 'msg-401',
+          sender: 'CONTRACTOR',
+          senderName: `${contractor.ownerName} (${contractor.companyName})`,
+          timestamp: 'Yesterday • 07:04 AM',
+          channel: 'CLOUD_EMAIL',
+          body: (c4.draftBody || '').replace(/^"|"$/g, '')
+        },
+        {
+          id: 'msg-402',
+          sender: 'PROSPECT',
+          senderName: 'Grant Mercer (Horizon Commercial GC)',
+          timestamp: 'Yesterday • 10:12 AM',
+          channel: 'CLOUD_EMAIL',
+          body: `Appreciate the note ${
+            (contractor.ownerName || '').split(' ')[0]
+          }. Heard good things about your crew's work (${kb.proofProjects}). Let's meet at the 4829 Main St trailer Thursday at 8:30 AM and I'll hand you the full civil/architectural drawings.`
+        },
+        {
+          id: 'msg-403',
+          sender: 'CONTRACTOR',
+          senderName: `${contractor.ownerName} (${contractor.companyName})`,
+          timestamp: 'Yesterday • 10:28 AM',
+          channel: 'CLOUD_EMAIL',
+          body: `Locked in for Thursday at 8:30 AM at the 4829 Main St job trailer, Grant. Bringing our COI, W-9, and commercial unit-price sheet. — ${kb.signatureLine}`
+        }
+      ]
+    }
+  ];
+}
+
+/* ==========================================================================
    DEFAULT INITIAL STORE SEED
    ========================================================================== */
 function createDefaultStore() {
@@ -437,6 +741,7 @@ function createDefaultStore() {
     minCadAssessedValue: 600000,
     mobilePhone: '(830) 555-0194',
     workEmail: 'travis@lonestarconcrete.com',
+    websiteUrl: 'https://www.lonestarconcrete.com',
     passwordHash: hashPassword('concrete78130', 'salt_lonestar_78130'),
     accessPin: '78130',
     magicToken: 'demo-7am-briefing',
@@ -451,6 +756,7 @@ function createDefaultStore() {
     status: 'TRIAL_ACTIVE',
     createdAt: new Date().toISOString()
   };
+  demoContractor.knowledgeBase = buildDefaultKnowledgeBaseForContractor(demoContractor);
 
   const secondContractor = {
     id: '22222222-3333-4444-5555-666666666666',
@@ -467,6 +773,7 @@ function createDefaultStore() {
     minCadAssessedValue: 750000,
     mobilePhone: '(512) 555-0192',
     workEmail: 'dana@centexroofing.com',
+    websiteUrl: 'https://www.centexroofing.com',
     passwordHash: hashPassword('roofing78701', 'salt_centex_78701'),
     accessPin: '78701',
     magicToken: 'centex-roofing-78701',
@@ -481,6 +788,7 @@ function createDefaultStore() {
     status: 'PAID_ACTIVE',
     createdAt: new Date().toISOString()
   };
+  secondContractor.knowledgeBase = buildDefaultKnowledgeBaseForContractor(secondContractor);
 
   const thirdContractor = {
     id: '33333333-4444-5555-6666-777777777777',
@@ -497,6 +805,7 @@ function createDefaultStore() {
     minCadAssessedValue: 650000,
     mobilePhone: '(210) 555-0177',
     workEmail: 'carlos@alamohvac.com',
+    websiteUrl: 'https://www.alamohvac.com',
     passwordHash: hashPassword('hvac78258', 'salt_alamo_78258'),
     accessPin: '78258',
     magicToken: 'alamo-hvac-78258',
@@ -511,6 +820,7 @@ function createDefaultStore() {
     status: 'PAID_ACTIVE',
     createdAt: new Date().toISOString()
   };
+  thirdContractor.knowledgeBase = buildDefaultKnowledgeBaseForContractor(thirdContractor);
 
   const demoCards = buildBriefingCardsForContractor(demoContractor);
   const secondCards = buildBriefingCardsForContractor(secondContractor);
@@ -625,6 +935,11 @@ function createDefaultStore() {
         createdAt: new Date().toISOString()
       }
     },
+    conversationThreads: {
+      'demo-7am-briefing': createDefaultConversationThreads(demoContractor, demoCards),
+      'centex-roofing-78701': createDefaultConversationThreads(secondContractor, secondCards),
+      'alamo-hvac-78258': createDefaultConversationThreads(thirdContractor, thirdCards)
+    },
     sentOutreachLogs: [],
     workerRuns: [
       {
@@ -659,17 +974,26 @@ function loadStore() {
             ...defaultStore.contractors,
             ...(parsed.contractors || {})
           };
-          // Ensure demo contractors have passwordHash & magicToken
-          Object.keys(defaultStore.contractors).forEach((id) => {
-            if (parsed.contractors[id] && !parsed.contractors[id].passwordHash) {
-              parsed.contractors[id].passwordHash = defaultStore.contractors[id].passwordHash;
-              parsed.contractors[id].magicToken = defaultStore.contractors[id].magicToken;
-              parsed.contractors[id].accessPin = defaultStore.contractors[id].accessPin;
+          // Ensure demo contractors have passwordHash, magicToken & knowledgeBase
+          Object.keys(parsed.contractors).forEach((id) => {
+            const c = parsed.contractors[id];
+            if (!c) return;
+            if (defaultStore.contractors[id] && !c.passwordHash) {
+              c.passwordHash = defaultStore.contractors[id].passwordHash;
+              c.magicToken = defaultStore.contractors[id].magicToken;
+              c.accessPin = defaultStore.contractors[id].accessPin;
+            }
+            if (!c.knowledgeBase) {
+              c.knowledgeBase = buildDefaultKnowledgeBaseForContractor(c);
             }
           });
           parsed.briefings = {
             ...defaultStore.briefings,
             ...(parsed.briefings || {})
+          };
+          parsed.conversationThreads = {
+            ...defaultStore.conversationThreads,
+            ...(parsed.conversationThreads || {})
           };
           memoryStore = parsed;
           return memoryStore;
@@ -818,6 +1142,7 @@ function activateTerritory({
   bestEmail,
   companyName,
   ownerName,
+  websiteUrl,
   minPermitValuation,
   accountPassword
 }) {
@@ -850,6 +1175,7 @@ function activateTerritory({
     minCadAssessedValue: 600000,
     mobilePhone: mobilePhone || '(555) 234-5678',
     workEmail: bestEmail || 'dispatch@contractor.com',
+    websiteUrl: websiteUrl ? String(websiteUrl).trim() : undefined,
     passwordHash: hashPassword(rawPassword),
     accessPin: availability.zipCode,
     magicToken,
@@ -864,6 +1190,7 @@ function activateTerritory({
     status: 'TRIAL_ACTIVE',
     createdAt: new Date().toISOString()
   };
+  contractor.knowledgeBase = buildDefaultKnowledgeBaseForContractor(contractor);
 
   store.contractors[contractorId] = contractor;
 
@@ -905,6 +1232,8 @@ function activateTerritory({
   };
 
   store.briefings[magicToken] = briefing;
+  store.conversationThreads = store.conversationThreads || {};
+  store.conversationThreads[magicToken] = createDefaultConversationThreads(contractor, cards);
   saveStore(store);
 
   const sessionToken = signSessionToken(
@@ -920,6 +1249,7 @@ function activateTerritory({
       magicToken: briefing.magicToken,
       briefingUrl: `/briefing?token=${encodeURIComponent(briefing.magicToken)}`,
       commandUrl: `/command?token=${encodeURIComponent(briefing.magicToken)}`,
+      inboxUrl: `/inbox?token=${encodeURIComponent(briefing.magicToken)}`,
       territoryZip: briefing.territoryZip,
       metroCity: briefing.metroCity,
       countyCad: briefing.countyCad,
@@ -1088,6 +1418,58 @@ function processBriefingAction({
     };
 
     store.sentOutreachLogs.unshift(logEntry);
+
+    // Ensure a live thread exists or is updated in the Conversation Room
+    store.conversationThreads = store.conversationThreads || {};
+    if (!store.conversationThreads[briefing.magicToken]) {
+      store.conversationThreads[briefing.magicToken] = createDefaultConversationThreads(
+        contractor,
+        briefing.cards
+      );
+    }
+    const threads = store.conversationThreads[briefing.magicToken];
+    let existingThread = threads.find((t) => t.cardId === card.id);
+    if (!existingThread) {
+      existingThread = {
+        id: `thread-${card.id}`,
+        cardId: card.id,
+        cardNumber: card.cardNumber,
+        stage: 'FOLLOWUP_DUE',
+        stageBadge: '📤 INTRO DISPATCHED — TRACKING OPENS',
+        unread: false,
+        dealValuation: (card.pillText && card.pillText.match(/\$[0-9,]+[KM]?/)?.[0]) || '$240,000',
+        permitNumber: card.cardNumber,
+        propertyAddress: card.subMeta || card.headline,
+        headline: card.headline,
+        cadDetails: card.cadDetails || {
+          parcelId: `CAD-${briefing.territoryZip}-${card.cardRank || 1}01`,
+          countyName: briefing.countyCad,
+          deededOwner: 'Verified Property Owner / GC',
+          assessedValue: card.cadCallout || '$1,450,000',
+          buildingSqFt: '18,500 Sq Ft',
+          lotAcres: '2.1 Acres'
+        },
+        contactName: card.contactName,
+        contactShort: card.contactShort || card.contactName,
+        contactEmail: card.contactEmail,
+        contactPhone: card.contactPhone,
+        channel: card.dispatchChannel,
+        lastActivityLabel: 'Dispatched just now',
+        followUpDueLabel: 'Day-3 Auto-Follow-Up Queued',
+        messages: []
+      };
+      threads.unshift(existingThread);
+    }
+    existingThread.messages.push({
+      id: `msg_${Date.now()}`,
+      sender: 'CONTRACTOR',
+      senderName: contractor ? `${contractor.ownerName} (${contractor.companyName})` : 'You',
+      timestamp: `Today • ${card.approvedTimeLabel}`,
+      channel: card.dispatchChannel,
+      body: (card.draftBody || '').replace(/^"|"$/g, '')
+    });
+    existingThread.lastActivityLabel = `Dispatched ${card.approvedTimeLabel}`;
+
     saveStore(store);
 
     return {
@@ -1433,15 +1815,357 @@ function getAdminAgencyOverview() {
   };
 }
 
+/**
+ * Updates the Contractor's Shop Knowledge Base ("Shop Dossier") and recalibrates their
+ * 7:00 AM Briefing drafts & Conversation Room AI Drafter.
+ */
+function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
+  const store = loadStore();
+  const cleanToken = String(token || 'demo-7am-briefing').trim();
+  const briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
+  if (!briefing) return { ok: false, error: 'Briefing not found' };
+
+  const contractor =
+    store.contractors[briefing.contractorId] ||
+    store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  const currentKb =
+    contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor);
+
+  const normalizedServices = Array.isArray(knowledgeBase.coreServices)
+    ? knowledgeBase.coreServices.map((s) => String(s).trim()).filter(Boolean)
+    : typeof knowledgeBase.coreServices === 'string' && knowledgeBase.coreServices.trim()
+    ? knowledgeBase.coreServices
+        .split(/[,;\n]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : currentKb.coreServices;
+
+  contractor.knowledgeBase = {
+    ...currentKb,
+    websiteUrl:
+      knowledgeBase.websiteUrl !== undefined
+        ? String(knowledgeBase.websiteUrl).trim()
+        : currentKb.websiteUrl,
+    yearsInBusiness:
+      knowledgeBase.yearsInBusiness !== undefined
+        ? String(knowledgeBase.yearsInBusiness).trim()
+        : currentKb.yearsInBusiness,
+    coreServices: normalizedServices,
+    certificationsAndBonding:
+      knowledgeBase.certificationsAndBonding !== undefined
+        ? String(knowledgeBase.certificationsAndBonding).trim()
+        : currentKb.certificationsAndBonding,
+    warrantyAndGuarantee:
+      knowledgeBase.warrantyAndGuarantee !== undefined
+        ? String(knowledgeBase.warrantyAndGuarantee).trim()
+        : currentKb.warrantyAndGuarantee,
+    proofProjects:
+      knowledgeBase.proofProjects !== undefined
+        ? String(knowledgeBase.proofProjects).trim()
+        : currentKb.proofProjects,
+    idealJobProfile:
+      knowledgeBase.idealJobProfile !== undefined
+        ? String(knowledgeBase.idealJobProfile).trim()
+        : currentKb.idealJobProfile,
+    preferredCta:
+      knowledgeBase.preferredCta !== undefined
+        ? String(knowledgeBase.preferredCta).trim()
+        : currentKb.preferredCta,
+    signatureLine:
+      knowledgeBase.signatureLine !== undefined
+        ? String(knowledgeBase.signatureLine).trim()
+        : currentKb.signatureLine,
+    crawlSource: knowledgeBase.crawlSource || 'Manual / Live Website Sync',
+    lastUpdatedAt: new Date().toISOString()
+  };
+
+  if (contractor.knowledgeBase.websiteUrl) {
+    contractor.websiteUrl = contractor.knowledgeBase.websiteUrl;
+  }
+
+  // Keep voiceProfile synchronized with Knowledge Base
+  contractor.voiceProfile = {
+    ...(contractor.voiceProfile || {}),
+    recentWin: contractor.knowledgeBase.proofProjects,
+    differentiator: contractor.knowledgeBase.warrantyAndGuarantee,
+    ctaStyle: contractor.knowledgeBase.preferredCta
+  };
+
+  const wasAllUnlocked = briefing.unlockedLimit > 3;
+  briefing.cards = buildBriefingCardsForContractor(contractor);
+  if (wasAllUnlocked) {
+    briefing.unlockedLimit = briefing.cards.length;
+    briefing.cards.forEach((c, idx) => {
+      c.isLockedOverflow = false;
+      c.unlockedBadge = `UNLOCKED #${idx + 1}`;
+    });
+  }
+
+  saveStore(store);
+
+  return {
+    ok: true,
+    contractor: sanitizeContractor(contractor),
+    knowledgeBase: contractor.knowledgeBase,
+    briefing
+  };
+}
+
+/**
+ * Returns the full state for the 3-Pane Reply & Follow-Up Conversation Room (`inbox.html`).
+ */
+function getConversationRoomState(token) {
+  const store = loadStore();
+  const cleanToken = String(token || 'demo-7am-briefing').trim();
+  const briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
+  if (!briefing) return { ok: false, error: 'Briefing not found' };
+
+  const contractor =
+    store.contractors[briefing.contractorId] ||
+    store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  if (!contractor.knowledgeBase) {
+    contractor.knowledgeBase = buildDefaultKnowledgeBaseForContractor(contractor);
+  }
+
+  store.conversationThreads = store.conversationThreads || {};
+  if (!store.conversationThreads[briefing.magicToken]) {
+    store.conversationThreads[briefing.magicToken] = createDefaultConversationThreads(
+      contractor,
+      briefing.cards
+    );
+    saveStore(store);
+  }
+
+  const threads = store.conversationThreads[briefing.magicToken];
+  const hotRepliesCount = threads.filter((t) => t.stage === 'REPLIED_HOT').length;
+  const followUpDueCount = threads.filter((t) => t.stage === 'FOLLOWUP_DUE').length;
+  const bookedWalksCount = threads.filter((t) => t.stage === 'SITE_WALK_BOOKED').length;
+
+  return {
+    ok: true,
+    token: briefing.magicToken,
+    contractor: sanitizeContractor(contractor),
+    knowledgeBase: contractor.knowledgeBase,
+    briefing: {
+      magicToken: briefing.magicToken,
+      territoryZip: briefing.territoryZip,
+      metroCity: briefing.metroCity,
+      countyCad: briefing.countyCad,
+      portalName: briefing.portalName,
+      tradeName: briefing.tradeName,
+      tierLevel: briefing.tierLevel
+    },
+    metrics: {
+      totalThreads: threads.length,
+      hotRepliesCount,
+      followUpDueCount,
+      bookedWalksCount
+    },
+    threads
+  };
+}
+
+/**
+ * Handles actions inside the 3-Pane Conversation Room:
+ * - 'send_message': sends a contractor reply & updates thread status
+ * - 'draft_kb_reply': uses contractor.knowledgeBase + last prospect message to generate a smart reply
+ * - 'draft_day3_bump': generates a 2-sentence Day-3 follow-up bump
+ * - 'draft_site_walk': generates a Thursday 9:00 AM site-walk confirmation
+ * - 'simulate_inbound_reply': injects a realistic incoming reply from the GC/PM/Homeowner
+ * - 'update_stage': updates the thread stage pill
+ */
+function processConversationAction({
+  token,
+  action,
+  threadId,
+  messageBody,
+  channel = 'CLOUD_EMAIL',
+  stage
+}) {
+  const store = loadStore();
+  const cleanToken = String(token || 'demo-7am-briefing').trim();
+  const briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
+  if (!briefing) return { ok: false, error: 'Briefing not found' };
+
+  const contractor =
+    store.contractors[briefing.contractorId] ||
+    store.contractors['11111111-2222-3333-4444-555555555555'];
+  const kb = contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor);
+
+  store.conversationThreads = store.conversationThreads || {};
+  if (!store.conversationThreads[briefing.magicToken]) {
+    store.conversationThreads[briefing.magicToken] = createDefaultConversationThreads(
+      contractor,
+      briefing.cards
+    );
+  }
+
+  const threads = store.conversationThreads[briefing.magicToken];
+  const thread = threads.find((t) => t.id === threadId) || threads[0];
+  if (!thread) {
+    return { ok: false, error: 'Conversation thread not found' };
+  }
+
+  const prospectFirst = String(thread.contactShort || thread.contactName || 'there')
+    .trim()
+    .split(/\s+/)[0];
+  const topServices = (kb.coreServices || []).slice(0, 3).join(', ');
+
+  if (action === 'draft_kb_reply') {
+    const lastMsg = thread.messages[thread.messages.length - 1];
+    const lastBodyLower = String(lastMsg?.body || '').toLowerCase();
+
+    let generatedDraft = '';
+    if (lastBodyLower.includes('vendor') || lastBodyLower.includes('w-9') || lastBodyLower.includes('warrant')) {
+      generatedDraft = `Hi ${prospectFirst} — happy to send our full vendor packet right over. ${contractor.companyName} specializes in ${topServices}, and we carry ${kb.certificationsAndBonding} backed by ${kb.warrantyAndGuarantee}. We also recently completed ${kb.proofProjects}. Can I lock in Thursday at 9:00 AM to walk ${thread.propertyAddress.split(',')[0]} with your team? — ${kb.signatureLine}`;
+    } else {
+      generatedDraft = `Hey ${prospectFirst} — yes, we carry ${kb.certificationsAndBonding} and our ${contractor.primaryTrade} crews specialize in ${topServices} (${kb.warrantyAndGuarantee}). We just wrapped ${kb.proofProjects}, so our crew is ready for the schedule at ${thread.propertyAddress.split(',')[0]}. Thursday at 9:00 AM works great for our estimator to meet on-site with our COI and unit-price sheet. — ${kb.signatureLine}`;
+    }
+
+    return {
+      ok: true,
+      action,
+      threadId: thread.id,
+      draftText: generatedDraft,
+      knowledgeFactsUsed: [
+        kb.certificationsAndBonding,
+        topServices,
+        kb.proofProjects,
+        kb.warrantyAndGuarantee
+      ]
+    };
+  }
+
+  if (action === 'draft_day3_bump') {
+    const bumpDraft = `Hi ${prospectFirst} — floating this back to the top of your inbox regarding the ${thread.headline} (${thread.propertyAddress.split(',')[0]}). Our ${contractor.primaryTrade} crew (${kb.yearsInBusiness}, ${kb.warrantyAndGuarantee}) has an opening in our bid calendar this week — open to a ${kb.preferredCta} on Thursday? — ${kb.signatureLine}`;
+    return {
+      ok: true,
+      action,
+      threadId: thread.id,
+      draftText: bumpDraft
+    };
+  }
+
+  if (action === 'draft_site_walk') {
+    const walkDraft = `Hey ${prospectFirst} — locking us in for Thursday at 9:00 AM on-site at ${thread.propertyAddress.split(',')[0]}. I'll bring our COI (${kb.certificationsAndBonding.split('•')[0].trim()}), W-9, and a line-item bid sheet for the ${thread.headline}. My direct cell is ${contractor.mobilePhone} if anything shifts. — ${kb.signatureLine}`;
+    return {
+      ok: true,
+      action,
+      threadId: thread.id,
+      draftText: walkDraft
+    };
+  }
+
+  if (action === 'send_message') {
+    const cleanBody = String(messageBody || '').trim();
+    if (!cleanBody) {
+      return { ok: false, error: 'Message body cannot be empty.' };
+    }
+    const nowLabel = new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const newMsg = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      sender: 'CONTRACTOR',
+      senderName: `${contractor.ownerName} (${contractor.companyName})`,
+      timestamp: `Today • ${nowLabel}`,
+      channel: channel || 'CLOUD_EMAIL',
+      body: cleanBody
+    };
+    thread.messages.push(newMsg);
+    thread.unread = false;
+    thread.lastActivityLabel = `Replied Today • ${nowLabel}`;
+
+    if (stage) {
+      thread.stage = stage;
+    } else if (cleanBody.toLowerCase().includes('thursday') || cleanBody.toLowerCase().includes('walk') || cleanBody.toLowerCase().includes('8:30') || cleanBody.toLowerCase().includes('9:00')) {
+      thread.stage = 'SITE_WALK_BOOKED';
+      thread.stageBadge = '📅 SITE WALK PROPOSED / CONFIRMED';
+      thread.followUpDueLabel = 'Site Walk Scheduled • Bring COI & Bid Sheet';
+    } else {
+      thread.stage = 'AWAITING_REPLY';
+      thread.stageBadge = '✅ REPLIED — AWAITING PROSPECT CONFIRMATION';
+      thread.followUpDueLabel = 'Auto-Follow-Up Paused (Active Conversation)';
+    }
+
+    saveStore(store);
+    return {
+      ok: true,
+      action,
+      thread,
+      message: newMsg,
+      roomState: getConversationRoomState(briefing.magicToken)
+    };
+  }
+
+  if (action === 'simulate_inbound_reply') {
+    const nowLabel = new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const inboundMsg = {
+      id: `msg_${Date.now()}_in`,
+      sender: 'PROSPECT',
+      senderName: thread.contactShort,
+      timestamp: `Today • ${nowLabel}`,
+      channel: 'CLOUD_EMAIL',
+      body: `Sounds good ${(contractor.ownerName || '').split(' ')[0]} — Thursday at 9:00 AM at ${thread.propertyAddress.split(',')[0]} works for us. Please bring your COI, W-9, and any unit pricing on ${ (kb.coreServices || [])[0] || contractor.primaryTrade }. See you on site.`
+    };
+    thread.messages.push(inboundMsg);
+    thread.stage = 'REPLIED_HOT';
+    thread.stageBadge = '🔥 NEW INBOUND REPLY — SITE WALK CONFIRMED';
+    thread.unread = true;
+    thread.lastActivityLabel = `New Reply • ${nowLabel}`;
+    thread.followUpDueLabel = 'Prospect Confirmed Site Walk!';
+
+    saveStore(store);
+    return {
+      ok: true,
+      action,
+      thread,
+      message: inboundMsg,
+      roomState: getConversationRoomState(briefing.magicToken)
+    };
+  }
+
+  if (action === 'update_stage' && stage) {
+    thread.stage = stage;
+    const badgeMap = {
+      REPLIED_HOT: '🔥 HOT REPLY — ACTION REQUIRED',
+      FOLLOWUP_DUE: '⏳ DAY-3 FOLLOW-UP READY',
+      SITE_WALK_BOOKED: '📅 SITE WALK BOOKED',
+      AWAITING_REPLY: '✅ REPLIED — AWAITING CONFIRMATION'
+    };
+    thread.stageBadge = badgeMap[stage] || stage;
+    thread.unread = false;
+    saveStore(store);
+    return {
+      ok: true,
+      action,
+      thread,
+      roomState: getConversationRoomState(briefing.magicToken)
+    };
+  }
+
+  return { ok: false, error: `Unsupported conversation action: ${action}` };
+}
+
 module.exports = {
   resolveMetroProfile,
   getTradeTemplate,
+  buildDefaultKnowledgeBaseForContractor,
   buildBriefingCardsForContractor,
   checkTerritoryAvailability,
   activateTerritory,
   getBriefingByToken,
   processBriefingAction,
   updateContractorCommand,
+  updateContractorKnowledgeBase,
+  getConversationRoomState,
+  processConversationAction,
   authenticateAccount,
   hydrateAccountFromSession,
   getAdminAgencyOverview,

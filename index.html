@@ -153,10 +153,16 @@
       </nav>
 
       <!-- Right (Desktop/Tablet Only — Hidden on Mobile): Client Login + Primary CTA Button -->
-      <div class="hidden md:flex items-center gap-3 flex-shrink-0">
+      <div class="hidden md:flex items-center gap-2.5 flex-shrink-0">
+        <a
+          href="inbox.html"
+          class="btn-outline-slate px-3.5 py-2.5 rounded-lg font-semibold text-xs sm:text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5"
+        >
+          <span>💬 Conversation Room</span>
+        </a>
         <a
           href="login.html"
-          class="btn-outline-slate px-4 py-2.5 rounded-lg font-semibold text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5"
+          class="btn-outline-slate px-3.5 py-2.5 rounded-lg font-semibold text-xs sm:text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5"
         >
           <span>🔐 Client Sign-In</span>
         </a>
@@ -1410,8 +1416,8 @@
               </div>
             </div>
 
-            <!-- Company Name & Account Password / PIN Inputs -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Company Name, Website URL & Account Password / PIN Inputs -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               <div>
                 <label for="vault-company-input" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
                   Shop / Company Name
@@ -1420,14 +1426,27 @@
                   id="vault-company-input"
                   name="companyName"
                   type="text"
-                  placeholder="e.g. Lone Star Commercial Concrete"
+                  placeholder="e.g. Lone Star Concrete"
+                  class="enterprise-input"
+                />
+              </div>
+
+              <div>
+                <label for="vault-website-input" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
+                  Company Website (Auto-Scan KB)
+                </label>
+                <input
+                  id="vault-website-input"
+                  name="websiteUrl"
+                  type="text"
+                  placeholder="e.g. lonestarconcrete.com"
                   class="enterprise-input"
                 />
               </div>
 
               <div>
                 <label for="vault-password-input" class="block text-xs font-bold uppercase tracking-wider text-[#0F172A] mb-1.5">
-                  Create Account Password or PIN
+                  Create Account Password / PIN
                 </label>
                 <input
                   id="vault-password-input"
@@ -1511,21 +1530,28 @@
             </div>
           </div>
 
-          <!-- Direct Action Buttons to Open Live Briefing Queue & Command Portal -->
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto mb-5">
+          <!-- Direct Action Buttons to Open Live Briefing Queue, Conversation Room & Command Portal -->
+          <div class="flex flex-wrap items-center justify-center gap-3 max-w-xl mx-auto mb-5">
             <a
               id="confirm-open-briefing-link"
               href="briefing.html"
-              class="btn-trust-emerald w-full sm:w-auto px-5 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-2"
+              class="btn-trust-emerald px-5 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-2"
             >
-              <span>☕ Preview Your 7:00 AM Briefing Queue Now →</span>
+              <span>☕ Open 7:00 AM Briefing →</span>
+            </a>
+            <a
+              id="confirm-open-inbox-link"
+              href="inbox.html"
+              class="btn-executive-navy px-4 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-2"
+            >
+              <span>💬 Open Conversation Room →</span>
             </a>
             <a
               id="confirm-open-command-link"
               href="command.html"
-              class="btn-outline-slate w-full sm:w-auto px-4 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-2"
+              class="btn-outline-slate px-4 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-2"
             >
-              <span>⚙️ Open Command Portal</span>
+              <span>🧠 Shop Knowledge Base</span>
             </a>
           </div>
 

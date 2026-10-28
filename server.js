@@ -22,6 +22,8 @@ const liveAgentHandler = require('./api/recon/live-agent');
 const cadLookupHandler = require('./api/recon/cad-lookup');
 const authHandler = require('./api/recon/auth');
 const adminHandler = require('./api/recon/admin');
+const knowledgeHandler = require('./api/recon/knowledge');
+const inboxHandler = require('./api/recon/inbox');
 
 const API_ROUTES = {
   '/api/recon/availability': availabilityHandler,
@@ -32,7 +34,9 @@ const API_ROUTES = {
   '/api/recon/live-agent': liveAgentHandler,
   '/api/recon/cad-lookup': cadLookupHandler,
   '/api/recon/auth': authHandler,
-  '/api/recon/admin': adminHandler
+  '/api/recon/admin': adminHandler,
+  '/api/recon/knowledge': knowledgeHandler,
+  '/api/recon/inbox': inboxHandler
 };
 
 const MIME_TYPES = {
@@ -55,12 +59,14 @@ const NFT_BUNDLED_FILES = {
   '/briefing.html': path.join(__dirname, 'briefing.html'),
   '/command.html': path.join(__dirname, 'command.html'),
   '/login.html': path.join(__dirname, 'login.html'),
+  '/inbox.html': path.join(__dirname, 'inbox.html'),
   '/styles.css': path.join(__dirname, 'styles.css'),
   '/app.js': path.join(__dirname, 'recon-app.js'),
   '/recon-app.js': path.join(__dirname, 'recon-app.js'),
   '/briefing.js': path.join(__dirname, 'briefing.js'),
   '/command.js': path.join(__dirname, 'command.js'),
   '/login.js': path.join(__dirname, 'login.js'),
+  '/inbox.js': path.join(__dirname, 'inbox.js'),
   '/images/logo4.png': path.join(__dirname, 'images', 'logo4.png'),
   '/images/tiberius-ai.png': path.join(__dirname, 'images', 'tiberius-ai.png')
 };
@@ -149,6 +155,7 @@ async function handleRequest(req, res) {
     if (pathname === '/briefing') pathname = '/briefing.html';
     if (pathname === '/command') pathname = '/command.html';
     if (pathname === '/login' || pathname === '/admin') pathname = '/login.html';
+    if (pathname === '/inbox' || pathname === '/conversations') pathname = '/inbox.html';
 
     const relPath = pathname.replace(/^\/+/, '');
     let safeFilePath = NFT_BUNDLED_FILES[pathname] || path.join(ROOT_DIR, relPath);

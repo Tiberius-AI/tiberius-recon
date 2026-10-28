@@ -209,12 +209,77 @@ async function runTests() {
     assert.ok(adminRosterData.metrics.estimatedAgencyMrr > 0);
 
     // Also verify static HTML endpoints respond 200
-    for (const page of ['/', '/briefing', '/command', '/login']) {
+    for (const page of ['/', '/briefing', '/command', '/login', '/inbox']) {
       const pageResp = await fetch(`${baseUrl}${page}`);
       assert.strictEqual(pageResp.status, 200, `Expected 200 for ${page}`);
     }
 
-    console.log('\n✅ ALL 11 TIBERIUS RECON™ END-TO-END, MULTI-CLIENT AUTH & LIVE ZERO-API TESTS PASSED.');
+    console.log('[12/13] Testing Autonomous Client Knowledge Base & Website Auto-Scanner (/api/recon/knowledge)...');
+    const kbGetResp = await fetch(`${baseUrl}/api/recon/knowledge?token=${encodeURIComponent(token)}`);
+    const kbGetData = await kbGetResp.json();
+    assert.strictEqual(kbGetData.ok, true);
+    assert.ok(Array.isArray(kbGetData.knowledgeBase.coreServices));
+    assert.ok(kbGetData.knowledgeBase.coreServices.length >= 3);
+
+    const kbSaveResp = await fetch(`${baseUrl}/api/recon/knowledge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save_knowledge',
+        token,
+        knowledgeBase: {
+          websiteUrl: 'https://www.sanantonioroofingpros.com',
+          coreServices: 'TPO Flat Roofs, 20-Year NDL Warranties, Standing Seam Metal',
+          certificationsAndBonding: 'GAF Master Select • $5M Commercial Umbrella • Bonded up to $2M',
+          proofProjects: 'a 65,000 sq ft distribution center roof off I-10',
+          warrantyAndGuarantee: 'zero tenant disruption and a 20-year NDL leak-free guarantee'
+        }
+      })
+    });
+    const kbSaveData = await kbSaveResp.json();
+    assert.strictEqual(kbSaveData.ok, true);
+    assert.strictEqual(kbSaveData.knowledgeBase.websiteUrl, 'https://www.sanantonioroofingpros.com');
+    assert.ok(kbSaveData.briefing.cards[0].draftBody.includes('65,000 sq ft distribution center roof off I-10'));
+
+    console.log('[13/13] Testing 3-Pane Conversation Room & Knowledge-Base AI Reply Drafter (/api/recon/inbox)...');
+    const inboxGetResp = await fetch(`${baseUrl}/api/recon/inbox?token=${encodeURIComponent(token)}`);
+    const inboxState = await inboxGetResp.json();
+    assert.strictEqual(inboxState.ok, true);
+    assert.ok(inboxState.threads.length >= 4);
+    const firstThreadId = inboxState.threads[0].id;
+
+    // Draft a reply using the updated Knowledge Base
+    const draftReplyResp = await fetch(`${baseUrl}/api/recon/inbox`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        action: 'draft_kb_reply',
+        threadId: firstThreadId
+      })
+    });
+    const draftReplyData = await draftReplyResp.json();
+    assert.strictEqual(draftReplyData.ok, true);
+    assert.ok(draftReplyData.draftText.includes('GAF Master Select'));
+    assert.ok(draftReplyData.draftText.includes('65,000 sq ft distribution center roof off I-10'));
+
+    // Send the reply in the Conversation Room
+    const sendReplyResp = await fetch(`${baseUrl}/api/recon/inbox`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        action: 'send_message',
+        threadId: firstThreadId,
+        messageBody: draftReplyData.draftText,
+        channel: 'CLOUD_EMAIL'
+      })
+    });
+    const sendReplyData = await sendReplyResp.json();
+    assert.strictEqual(sendReplyData.ok, true);
+    assert.ok(sendReplyData.thread.messages.length >= 3);
+
+    console.log('\n✅ ALL 13 TIBERIUS RECON™ END-TO-END, KNOWLEDGE BASE, CONVERSATION ROOM & LIVE ZERO-API TESTS PASSED.');
   } finally {
     server.close();
   }

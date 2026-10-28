@@ -77,17 +77,27 @@
           <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
           <span>07:00 AM Briefing Queue</span>
         </a>
+        <a id="nav-inbox-link" href="inbox.html" class="hover:text-blue-700 transition-colors flex items-center gap-1.5">
+          <span>💬 Conversation Room</span>
+        </a>
         <span class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
-          TERRITORY COMMAND PORTAL
+          TERRITORY COMMAND &amp; SHOP DOSSIER
         </span>
       </nav>
 
       <div class="hidden md:flex items-center gap-2.5 flex-shrink-0">
         <a
+          id="cta-inbox-link"
+          href="inbox.html"
+          class="btn-outline-slate px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
+        >
+          <span>💬 Replies &amp; Follow-Up</span>
+        </a>
+        <a
           href="login.html"
           class="btn-outline-slate px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
         >
-          <span>🔐 Switch Account / Admin</span>
+          <span>🔐 Switch Account</span>
         </a>
         <a
           id="cta-briefing-link"
@@ -125,6 +135,13 @@
 
         <div class="flex flex-wrap items-center gap-3 shrink-0">
           <a
+            id="hero-open-inbox-btn"
+            href="inbox.html"
+            class="btn-outline-slate px-4 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-2"
+          >
+            <span>💬 Open Conversation Room (Replies)</span>
+          </a>
+          <a
             id="hero-open-briefing-btn"
             href="briefing.html"
             class="btn-trust-emerald px-5 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-2"
@@ -132,6 +149,172 @@
             <span>☕ Open Today's 7:00 AM Briefing →</span>
           </a>
         </div>
+      </section>
+
+      <!-- ====================================================================
+           MODULE 00 • AUTONOMOUS CLIENT KNOWLEDGE BASE ("SHOP DOSSIER")
+           & ZERO-API WEBSITE AUTO-SCANNER
+           ==================================================================== -->
+      <section class="enterprise-card bg-slate-900 border border-slate-700 rounded-2xl shadow-lg p-6 sm:p-8 space-y-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-700">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-xs text-blue-300 mb-2">
+              <span>🧠 AUTONOMOUS CLIENT KNOWLEDGE BASE • POWERS ALL EMAILS &amp; REPLIES</span>
+            </div>
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-white">
+              Client Shop Dossier &amp; Zero-API Website Auto-Scanner
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-3xl">
+              When a new client signs up, our Zero-API Onboarding Agent crawls their live website (or discovers it by company name) to learn their exact services, bonding, warranties, and local proof projects—so every 7:00 AM intro and Conversation Room reply sounds 100% like the shop owner.
+            </p>
+          </div>
+          <div id="kb-crawl-status" class="px-3.5 py-2 rounded-xl bg-slate-800/90 border border-slate-700 font-mono-telemetry text-xs text-emerald-400 shrink-0">
+            ✓ ACTIVE KNOWLEDGE BASE LOADED
+          </div>
+        </div>
+
+        <!-- Live Website Auto-Scanner Bar -->
+        <div class="p-4 sm:p-5 rounded-xl bg-slate-800/90 border border-slate-700 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <label for="kb-website-input" class="text-xs font-bold uppercase tracking-wider text-amber-300 font-mono-telemetry">
+              🛰️ STEP 1: ENTER CLIENT WEBSITE URL OR COMPANY NAME FOR AUTO-DISCOVERY
+            </label>
+            <span class="font-mono-telemetry text-[11px] text-slate-300">
+              Zero API Keys • Extracts Services, Certifications &amp; Meta Proof
+            </span>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input
+              id="kb-website-input"
+              type="text"
+              value="https://www.lonestarconcrete.com"
+              placeholder="e.g. https://www.yourcompany.com or Company Name"
+              class="enterprise-input flex-1 text-sm"
+            />
+            <button
+              id="kb-scan-btn"
+              type="button"
+              class="btn-executive-navy px-5 py-3 rounded-xl text-xs sm:text-sm font-bold shrink-0 cursor-pointer inline-flex items-center justify-center gap-2"
+            >
+              <span>🛰️ Auto-Scan Website to Build Knowledge Base</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Structured Knowledge Base Editor -->
+        <form id="kb-editor-form" class="space-y-4" novalidate>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+              <label for="kb-services-input" class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5">
+                Core Services &amp; Specialties (Comma-Separated)
+              </label>
+              <textarea
+                id="kb-services-input"
+                rows="2"
+                class="enterprise-input text-xs sm:text-sm"
+                placeholder="Commercial Tilt-Wall & Slabs, Heavy-Duty Truck Aprons, ADA Compliance..."
+              ></textarea>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+              <label for="kb-certs-input" class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5">
+                Licenses, Bonding &amp; Insurance Coverage
+              </label>
+              <textarea
+                id="kb-certs-input"
+                rows="2"
+                class="enterprise-input text-xs sm:text-sm"
+                placeholder="$2M/$5M Commercial GL, Workers Comp, Bonded up to $1.5M..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+              <label for="kb-proof-input" class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5">
+                Completed Local Proof Project (Used in Sentence #2 of Outreach)
+              </label>
+              <input
+                id="kb-proof-input"
+                type="text"
+                class="enterprise-input text-xs sm:text-sm"
+                placeholder="e.g. a 22,000 sq ft tilt-wall & dock apron project off FM 306"
+              />
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+              <label for="kb-warranty-input" class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5">
+                Crew Guarantee &amp; Differentiator (Used in Sentence #3 of Outreach)
+              </label>
+              <input
+                id="kb-warranty-input"
+                type="text"
+                class="enterprise-input text-xs sm:text-sm"
+                placeholder="e.g. zero day-labor subs and a 100% clean-site guarantee"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+              <label for="kb-years-input" class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5">
+                Years in Business / Territory
+              </label>
+              <input
+                id="kb-years-input"
+                type="text"
+                class="enterprise-input text-xs sm:text-sm"
+                placeholder="14+ Years Serving Central TX"
+              />
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+              <label for="kb-cta-input" class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5">
+                Preferred Call-to-Action (Sentence #4)
+              </label>
+              <input
+                id="kb-cta-input"
+                type="text"
+                class="enterprise-input text-xs sm:text-sm"
+                placeholder="quick 10-minute site walk or COI + bid calendar drop-off"
+              />
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+              <label for="kb-signature-input" class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5">
+                Email &amp; Conversation Room Signature
+              </label>
+              <input
+                id="kb-signature-input"
+                type="text"
+                class="enterprise-input text-xs sm:text-sm"
+                placeholder="Travis Miller • Lone Star Concrete • (830) 555-0194"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+            <div class="flex flex-wrap items-center gap-3">
+              <button
+                id="kb-save-btn"
+                type="submit"
+                class="btn-trust-emerald px-6 py-3 rounded-xl text-xs sm:text-sm font-bold cursor-pointer"
+              >
+                ✓ Save Shop Knowledge Base &amp; Sync Email/Reply Agents
+              </button>
+              <a
+                id="kb-open-inbox-link"
+                href="inbox.html"
+                class="btn-outline-slate px-4 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
+              >
+                <span>💬 Test in Conversation Room →</span>
+              </a>
+            </div>
+            <span id="kb-save-feedback" class="font-mono-telemetry text-xs text-emerald-400 font-bold hidden">
+              ✓ KNOWLEDGE BASE SAVED • ALL 7:00 AM INTROS &amp; REPLY AGENTS UPDATED
+            </span>
+          </div>
+        </form>
       </section>
 
       <!-- ====================================================================

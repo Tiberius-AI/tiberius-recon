@@ -522,6 +522,7 @@
   const confirmTierVal = document.getElementById('confirm-tier-val');
   const confirmContactVal = document.getElementById('confirm-contact-val');
   const confirmOpenBriefingLink = document.getElementById('confirm-open-briefing-link');
+  const confirmOpenInboxLink = document.getElementById('confirm-open-inbox-link');
   const confirmOpenCommandLink = document.getElementById('confirm-open-command-link');
   const sevenAmCountdownEl = document.getElementById('seven-am-countdown');
 
@@ -612,6 +613,7 @@
       const phoneInput = document.getElementById('vault-phone-input');
       const emailInput = document.getElementById('vault-email-input');
       const companyInput = document.getElementById('vault-company-input');
+      const websiteInput = document.getElementById('vault-website-input');
       const passwordInput = document.getElementById('vault-password-input');
 
       const selectedTrade = vaultTradeSelect ? vaultTradeSelect.value : 'Commercial Concrete';
@@ -620,6 +622,7 @@
       const phoneVal = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : 'SMS Queue Armed';
       const emailVal = emailInput && emailInput.value.trim() ? emailInput.value.trim() : 'Primary Inbox Armed';
       const companyVal = companyInput && companyInput.value.trim() ? companyInput.value.trim() : '';
+      const websiteVal = websiteInput && websiteInput.value.trim() ? websiteInput.value.trim() : '';
       const passwordVal = passwordInput && passwordInput.value.trim() ? passwordInput.value.trim() : '';
       const includeSmartSite = Boolean(vaultSmartSiteCheckbox && vaultSmartSiteCheckbox.checked);
 
@@ -647,6 +650,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             companyName: companyVal,
+            websiteUrl: websiteVal,
             accountPassword: passwordVal,
             primaryTrade: selectedTrade,
             tierLevel: selectedTier,
@@ -671,6 +675,9 @@
           }
           if (confirmOpenBriefingLink) {
             confirmOpenBriefingLink.href = `briefing.html?token=${encodeURIComponent(token)}`;
+          }
+          if (confirmOpenInboxLink) {
+            confirmOpenInboxLink.href = `inbox.html?token=${encodeURIComponent(token)}`;
           }
           if (confirmOpenCommandLink) {
             confirmOpenCommandLink.href = `command.html?token=${encodeURIComponent(token)}`;

@@ -14,7 +14,13 @@
  *           for the Contractor Command Portal.
  */
 
-const { getTradeTemplate, loadStore, saveStore } = require('../db/store');
+const {
+  getTradeTemplate,
+  buildDefaultKnowledgeBaseForContractor,
+  updateContractorKnowledgeBase,
+  loadStore,
+  saveStore
+} = require('../db/store');
 
 const BROWSER_HEADERS = {
   'User-Agent':
@@ -427,6 +433,149 @@ async function injectLiveZeroApiCardsIntoBriefing({
   };
 }
 
+/**
+ * Autonomously crawls a client contractor's live website (or discovers it via DuckDuckGo HTML search
+ * if only companyName is provided) with ZERO API keys, extracts real business services, credentials,
+ * years in business, and contact info, and builds/updates their Shop Knowledge Base in db/store.js.
+ */
+async function scanClientWebsiteForKnowledgeBase({
+  token = 'demo-7am-briefing',
+  websiteUrl = '',
+  companyName = '',
+  primaryTrade = ''
+} = {}) {
+  const store = loadStore();
+  const cleanToken = String(token || 'demo-7am-briefing').trim();
+  const briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
+  const contractor =
+    (briefing && store.contractors[briefing.contractorId]) ||
+    store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  const effectiveTrade = primaryTrade || (contractor && contractor.primaryTrade) || 'Commercial Concrete';
+  const effectiveCompany = companyName || (contractor && contractor.companyName) || 'Commercial Pros';
+  const defaultKb = buildDefaultKnowledgeBaseForContractor({
+    ...(contractor || {}),
+    companyName: effectiveCompany,
+    primaryTrade: effectiveTrade,
+    websiteUrl: websiteUrl || (contractor && contractor.websiteUrl)
+  });
+
+  let targetUrl = String(websiteUrl || '').trim();
+  if (targetUrl && !/^https?:\/\//i.test(targetUrl)) {
+    targetUrl = `https://${targetUrl}`;
+  }
+
+  // If no URL provided, discover via DuckDuckGo search
+  if (!targetUrl) {
+    const discovered = await crawlLiveCompanyWebsiteAndEmail(
+      effectiveCompany,
+      contractor?.ownerName || 'Owner',
+      briefing?.metroCity || 'Texas'
+    );
+    targetUrl = discovered.websiteUrl;
+  }
+
+  let pageTitle = '';
+  let metaDesc = '';
+  let extractedHeadings = [];
+  let extractedYears = '';
+  let extractedCerts = '';
+  let pagesScanned = 0;
+
+  try {
+    const parsedUrl = new URL(targetUrl);
+    const resp = await fetch(parsedUrl.href, {
+      headers: BROWSER_HEADERS,
+      signal: AbortSignal.timeout(4500)
+    });
+    if (resp.ok) {
+      pagesScanned += 1;
+      const html = await resp.text();
+      const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      if (titleMatch) {
+        pageTitle = titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      }
+      const descMatch =
+        html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i) ||
+        html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
+      if (descMatch) {
+        metaDesc = descMatch[1].replace(/\s+/g, ' ').trim();
+      }
+
+      const headingMatches = [...html.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)];
+      extractedHeadings = headingMatches
+        .map((m) =>
+          m[1]
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&#[0-9]+;/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+        )
+        .filter((h) => h.length >= 6 && h.length <= 68 && !/cookie|privacy|login|menu|nav|cart/i.test(h))
+        .slice(0, 6);
+
+      const yearsMatch = html.match(/(\d{1,2}\+?\s*years\s+(?:of\s+)?(?:experience|in\s+business|serving)|since\s+19\d\d|since\s+20[012]\d)/i);
+      if (yearsMatch) {
+        extractedYears = yearsMatch[1].replace(/\s+/g, ' ').trim();
+      }
+
+      const certKeywords = [];
+      if (/bonded/i.test(html)) certKeywords.push('Bonded');
+      if (/insured/i.test(html)) certKeywords.push('Fully Insured');
+      if (/licensed/i.test(html)) certKeywords.push('State Licensed');
+      if (/osha/i.test(html)) certKeywords.push('OSHA Certified');
+      if (/ndl|gaf|johns\s*manville|carlisle/i.test(html)) certKeywords.push('Manufacturer NDL Warranty Certified');
+      if (/aci/i.test(html)) certKeywords.push('ACI Certified');
+      if (/tacla|tdlr/i.test(html)) certKeywords.push('TDLR / TACLA Licensed');
+      if (certKeywords.length > 0) {
+        extractedCerts = `${certKeywords.join(' • ')} (${defaultKb.certificationsAndBonding})`;
+      }
+    }
+  } catch (_err) {
+    // Graceful fallback if external URL blocks or times out
+  }
+
+  const mergedServices =
+    extractedHeadings.length >= 2
+      ? [...new Set([...extractedHeadings.slice(0, 3), ...defaultKb.coreServices.slice(0, 3)])]
+      : defaultKb.coreServices;
+
+  const updatedKbPayload = {
+    websiteUrl: targetUrl || defaultKb.websiteUrl,
+    yearsInBusiness: extractedYears || defaultKb.yearsInBusiness,
+    coreServices: mergedServices,
+    certificationsAndBonding: extractedCerts || defaultKb.certificationsAndBonding,
+    warrantyAndGuarantee: metaDesc
+      ? `${defaultKb.warrantyAndGuarantee} • Website Note: "${metaDesc.slice(0, 110)}"`
+      : defaultKb.warrantyAndGuarantee,
+    proofProjects: defaultKb.proofProjects,
+    idealJobProfile: defaultKb.idealJobProfile,
+    preferredCta: defaultKb.preferredCta,
+    signatureLine: defaultKb.signatureLine,
+    crawlSource:
+      pagesScanned > 0
+        ? `Live Zero-API Website Crawl (${targetUrl}${pageTitle ? ' — ' + pageTitle.slice(0, 48) : ''})`
+        : `Zero-API Domain & Trade Profile Synthesis (${targetUrl})`
+  };
+
+  const saved = updateContractorKnowledgeBase({
+    token: cleanToken,
+    knowledgeBase: updatedKbPayload
+  });
+
+  return {
+    ok: true,
+    mode: 'ZERO_API_KB_SCANNER',
+    pagesScanned,
+    pageTitle: pageTitle || effectiveCompany,
+    websiteUrl: updatedKbPayload.websiteUrl,
+    knowledgeBase: saved.knowledgeBase,
+    contractor: saved.contractor,
+    briefing: saved.briefing
+  };
+}
+
 if (require.main === module) {
   runZeroApiLiveRecon()
     .then((res) => {
@@ -461,5 +610,6 @@ if (require.main === module) {
 module.exports = {
   runZeroApiLiveRecon,
   runLiveZeroApiAddressXRay,
-  injectLiveZeroApiCardsIntoBriefing
+  injectLiveZeroApiCardsIntoBriefing,
+  scanClientWebsiteForKnowledgeBase
 };

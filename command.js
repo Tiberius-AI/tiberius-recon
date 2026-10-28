@@ -27,6 +27,24 @@
     if (el) el.href = `briefing.html?token=${encodeURIComponent(activeToken)}`;
   });
 
+  ['nav-inbox-link', 'cta-inbox-link', 'hero-open-inbox-btn', 'kb-open-inbox-link'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.href = `inbox.html?token=${encodeURIComponent(activeToken)}`;
+  });
+
+  const kbWebsiteInput = document.getElementById('kb-website-input');
+  const kbScanBtn = document.getElementById('kb-scan-btn');
+  const kbCrawlStatus = document.getElementById('kb-crawl-status');
+  const kbEditorForm = document.getElementById('kb-editor-form');
+  const kbServicesInput = document.getElementById('kb-services-input');
+  const kbCertsInput = document.getElementById('kb-certs-input');
+  const kbProofInput = document.getElementById('kb-proof-input');
+  const kbWarrantyInput = document.getElementById('kb-warranty-input');
+  const kbYearsInput = document.getElementById('kb-years-input');
+  const kbCtaInput = document.getElementById('kb-cta-input');
+  const kbSignatureInput = document.getElementById('kb-signature-input');
+  const kbSaveFeedback = document.getElementById('kb-save-feedback');
+
   const cmdContractorTitle = document.getElementById('cmd-contractor-title');
   const cmdAvailabilityPill = document.getElementById('cmd-availability-pill');
   const cmdTradeSelect = document.getElementById('cmd-trade-select');
@@ -117,6 +135,34 @@
     return headers;
   }
 
+  function renderKnowledgeBase(kb = {}) {
+    if (kbWebsiteInput && kb.websiteUrl) kbWebsiteInput.value = kb.websiteUrl;
+    if (kbServicesInput && Array.isArray(kb.coreServices)) {
+      kbServicesInput.value = kb.coreServices.join(', ');
+    }
+    if (kbCertsInput && kb.certificationsAndBonding) {
+      kbCertsInput.value = kb.certificationsAndBonding;
+    }
+    if (kbProofInput && kb.proofProjects) {
+      kbProofInput.value = kb.proofProjects;
+    }
+    if (kbWarrantyInput && kb.warrantyAndGuarantee) {
+      kbWarrantyInput.value = kb.warrantyAndGuarantee;
+    }
+    if (kbYearsInput && kb.yearsInBusiness) {
+      kbYearsInput.value = kb.yearsInBusiness;
+    }
+    if (kbCtaInput && kb.preferredCta) {
+      kbCtaInput.value = kb.preferredCta;
+    }
+    if (kbSignatureInput && kb.signatureLine) {
+      kbSignatureInput.value = kb.signatureLine;
+    }
+    if (kbCrawlStatus && kb.crawlSource) {
+      kbCrawlStatus.textContent = `✓ ${kb.crawlSource.toUpperCase()}`;
+    }
+  }
+
   async function loadCommandState() {
     try {
       const resp = await fetch(`/api/recon/briefing?token=${encodeURIComponent(activeToken)}`, {
@@ -143,6 +189,9 @@
             cmdDifferentiatorInput.value = c.voiceProfile.differentiator;
           }
         }
+        if (c.knowledgeBase) {
+          renderKnowledgeBase(c.knowledgeBase);
+        }
         if (typeof c.smartSiteEquityCents === 'number' && c.smartSiteEquityCents > 0) {
           currentEquityCents = c.smartSiteEquityCents;
           renderEquityBar();
@@ -154,6 +203,84 @@
     } catch (_err) {
       renderEquityBar();
     }
+  }
+
+  if (kbScanBtn) {
+    kbScanBtn.addEventListener('click', async () => {
+      const websiteVal = kbWebsiteInput ? kbWebsiteInput.value.trim() : '';
+      const originalText = kbScanBtn.textContent;
+      kbScanBtn.textContent = '🛰️ Crawling Live Website & Extracting Services...';
+      kbScanBtn.disabled = true;
+
+      try {
+        const resp = await fetch('/api/recon/knowledge', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            action: 'scan_website',
+            token: activeToken,
+            websiteUrl: websiteVal,
+            primaryTrade: cmdTradeSelect ? cmdTradeSelect.value : undefined
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.knowledgeBase) {
+          renderKnowledgeBase(data.knowledgeBase);
+          if (kbSaveFeedback) {
+            kbSaveFeedback.textContent = `✓ WEBSITE SCANNED (${data.websiteUrl}) • KNOWLEDGE BASE & 7:00 AM DRAFTS UPDATED`;
+            kbSaveFeedback.classList.remove('hidden');
+            setTimeout(() => kbSaveFeedback.classList.add('hidden'), 5000);
+          }
+        }
+      } catch (_err) {
+        // Ignore
+      } finally {
+        kbScanBtn.textContent = originalText;
+        kbScanBtn.disabled = false;
+      }
+    });
+  }
+
+  if (kbEditorForm) {
+    kbEditorForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const kbPayload = {
+        websiteUrl: kbWebsiteInput ? kbWebsiteInput.value.trim() : '',
+        coreServices: kbServicesInput ? kbServicesInput.value.trim() : '',
+        certificationsAndBonding: kbCertsInput ? kbCertsInput.value.trim() : '',
+        proofProjects: kbProofInput ? kbProofInput.value.trim() : '',
+        warrantyAndGuarantee: kbWarrantyInput ? kbWarrantyInput.value.trim() : '',
+        yearsInBusiness: kbYearsInput ? kbYearsInput.value.trim() : '',
+        preferredCta: kbCtaInput ? kbCtaInput.value.trim() : '',
+        signatureLine: kbSignatureInput ? kbSignatureInput.value.trim() : ''
+      };
+
+      try {
+        const resp = await fetch('/api/recon/knowledge', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            action: 'save_knowledge',
+            token: activeToken,
+            knowledgeBase: kbPayload
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.knowledgeBase) {
+          renderKnowledgeBase(data.knowledgeBase);
+          if (cmdDifferentiatorInput && data.knowledgeBase.warrantyAndGuarantee) {
+            cmdDifferentiatorInput.value = data.knowledgeBase.warrantyAndGuarantee;
+          }
+          if (kbSaveFeedback) {
+            kbSaveFeedback.textContent = '✓ KNOWLEDGE BASE SAVED • ALL 7:00 AM INTROS & REPLY AGENTS UPDATED';
+            kbSaveFeedback.classList.remove('hidden');
+            setTimeout(() => kbSaveFeedback.classList.add('hidden'), 4000);
+          }
+        }
+      } catch (_err) {
+        // Ignore
+      }
+    });
   }
 
   if (cmdCheckZipBtn) {

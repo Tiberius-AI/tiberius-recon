@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conversation Room — Replies &amp; Follow-Up | Tiberius Recon™</title>
+  <meta name="description" content="3-Pane Contractor Reply & Follow-Up Conversation Room powered by your Autonomous Client Knowledge Base, County CAD X-Ray, and 1-Tap AI Reply Drafter." />
+
+  <!-- Google Fonts & Fontshare General Sans (21st.dev G3 Typography) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            ink: '#F4F4F5',
+            bodyInk: '#D4D4D8',
+            mutedInk: '#90909A',
+            stoneBg: '#070709',
+            alabasterBg: '#0B0B0E',
+            navyAccent: '#4F6FFF',
+            royalAccent: '#0034FF',
+            trustEmerald: '#10B981',
+            trustEmeraldDark: '#059669',
+            permitAmber: '#F59E0B'
+          },
+          fontFamily: {
+            display: ['General Sans', 'Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
+            sans: ['General Sans', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="/recon/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body class="g-root g3-root bg-subtle-grid text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
+
+  <!-- ========================================================================
+       STICKY NAVBAR
+       ======================================================================== -->
+  <header id="inbox-navbar" class="enterprise-navbar">
+    <div class="g3-glass-bar" aria-hidden="true">
+      <div class="g3-pb g3-pb-1"></div>
+      <div class="g3-pb g3-pb-2"></div>
+      <div class="g3-pb g3-pb-3"></div>
+      <div class="g3-pb g3-pb-4"></div>
+      <div class="g3-pb g3-pb-5"></div>
+      <div class="g3-pb g3-pb-6"></div>
+      <div class="g3-pb g3-pb-7"></div>
+      <div class="g3-dim"></div>
+    </div>
+    <div class="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-24 flex items-center justify-between gap-4">
+      <a href="/" class="brand-logo focus:outline-none" aria-label="Tiberius Recon Home">
+        <img
+          src="/images/logo4.png"
+          onerror="this.onerror=null;this.src='images/logo4.png';"
+          alt="Tiberius AI — The Bad Boys of AI."
+          class="brand-logo-img"
+        />
+      </a>
+
+      <nav aria-label="Conversation Room Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-200">
+        <a href="/" class="hover:text-blue-400 transition-colors">← Recon Overview</a>
+        <a id="nav-briefing-link" href="briefing.html" class="hover:text-blue-400 transition-colors flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
+          <span>07:00 AM Briefing Cards</span>
+        </a>
+        <a id="nav-command-link" href="command.html" class="hover:text-blue-400 transition-colors">
+          🧠 Shop Knowledge Base &amp; Territory
+        </a>
+        <span class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300">
+          💬 CONVERSATION &amp; FOLLOW-UP ROOM
+        </span>
+      </nav>
+
+      <div class="flex items-center gap-2.5 flex-shrink-0">
+        <a
+          id="cta-command-link"
+          href="command.html"
+          class="btn-outline-slate px-3.5 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5"
+        >
+          <span>🧠 Knowledge Base</span>
+        </a>
+        <a
+          href="login.html"
+          class="btn-outline-slate px-3.5 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5"
+        >
+          <span>🔐 Switch Account</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-6 sm:py-8">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+      <!-- ====================================================================
+           TOP CONVERSATION ROOM HEADER & METRICS BAR
+           ==================================================================== -->
+      <section class="enterprise-card g3-hero-stage bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-7">
+        <div class="g3-hero-bg" aria-hidden="true" style="opacity: 0.22;">
+          <canvas class="g3-hero-bg-canvas" data-g3-shader="silk"></canvas>
+          <div class="g3-hero-vignette"></div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div>
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 font-mono-telemetry text-xs text-emerald-300 font-bold">
+                💬 LIVE 2-WAY REPLY &amp; FOLLOW-UP ROOM
+              </span>
+              <span id="inbox-kb-badge" class="px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-xs text-blue-300">
+                🧠 SHOP KNOWLEDGE BASE CONNECTED
+              </span>
+            </div>
+            <h1 id="inbox-contractor-title" class="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+              Lone Star Commercial Concrete &amp; Paving — Deal Replies &amp; Follow-Ups
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 mt-1">
+              See every GC, Property Manager, and Homeowner reply in one place. Draft 1-tap replies using your Shop Knowledge Base, trigger Day-3 follow-ups, and lock in site walks.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              id="simulate-reply-btn"
+              type="button"
+              class="btn-executive-navy px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span>⚡ Simulate Live Prospect Reply</span>
+            </button>
+            <a
+              id="header-briefing-btn"
+              href="briefing.html"
+              class="btn-trust-emerald px-4 py-2.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
+            >
+              <span>☕ Back to 7:00 AM Cards →</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 4 Live Pipeline Counters -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-slate-700/80">
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
+            <div class="font-mono-telemetry text-[11px] text-amber-300">🔥 HOT REPLIES WAITING</div>
+            <div id="metric-hot-replies" class="font-display font-extrabold text-2xl text-white mt-0.5">2</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
+            <div class="font-mono-telemetry text-[11px] text-blue-300">⏳ DAY-3 FOLLOW-UPS READY</div>
+            <div id="metric-followups-due" class="font-display font-extrabold text-2xl text-white mt-0.5">1</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
+            <div class="font-mono-telemetry text-[11px] text-emerald-400">📅 SITE WALKS BOOKED</div>
+            <div id="metric-walks-booked" class="font-display font-extrabold text-2xl text-white mt-0.5">1</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
+            <div class="font-mono-telemetry text-[11px] text-slate-300">💬 TOTAL ACTIVE THREADS</div>
+            <div id="metric-total-threads" class="font-display font-extrabold text-2xl text-white mt-0.5">4</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           3-PANE CONVERSATION & FOLLOW-UP WORKSPACE
+           Pane 1 (3 cols): Thread List & Stage Filters
+           Pane 2 (5 cols): Live Message Thread + 1-Tap Knowledge Base AI Composer
+           Pane 3 (4 cols): Permit/CAD X-Ray Dossier + Active Shop Knowledge Base
+           ==================================================================== -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- PANE 1 (LEFT): THREAD QUEUE -->
+        <section class="lg:col-span-3 bg-slate-900 border border-slate-700 rounded-2xl p-4 space-y-4">
+          <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-700">
+            <div>
+              <div class="font-mono-telemetry text-[11px] text-blue-400 font-bold">PANE 01 • DEAL INBOX</div>
+              <h2 class="font-display font-bold text-base text-white">Active Threads &amp; Follow-Ups</h2>
+            </div>
+          </div>
+
+          <!-- Filter Pills -->
+          <div class="flex flex-wrap gap-1.5" role="tablist" aria-label="Thread Filter">
+            <button type="button" data-filter="ALL" class="inbox-filter-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-telemetry bg-blue-600 text-white font-bold cursor-pointer">
+              All
+            </button>
+            <button type="button" data-filter="REPLIED_HOT" class="inbox-filter-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-telemetry bg-slate-800 text-slate-300 border border-slate-700 hover:text-white cursor-pointer">
+              🔥 Replies
+            </button>
+            <button type="button" data-filter="FOLLOWUP_DUE" class="inbox-filter-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-telemetry bg-slate-800 text-slate-300 border border-slate-700 hover:text-white cursor-pointer">
+              ⏳ Follow-Up
+            </button>
+            <button type="button" data-filter="SITE_WALK_BOOKED" class="inbox-filter-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-telemetry bg-slate-800 text-slate-300 border border-slate-700 hover:text-white cursor-pointer">
+              📅 Booked
+            </button>
+          </div>
+
+          <!-- Thread Cards List -->
+          <div id="inbox-thread-list" class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1">
+            <!-- Populated dynamically by inbox.js -->
+          </div>
+        </section>
+
+        <!-- PANE 2 (CENTER): CONVERSATION TIMELINE + AI KNOWLEDGE BASE COMPOSER -->
+        <section class="lg:col-span-5 bg-slate-900 border border-slate-700 rounded-2xl p-5 flex flex-col space-y-4">
+          <!-- Thread Header -->
+          <div class="pb-4 border-b border-slate-700 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span id="active-thread-stage-badge" class="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                🔥 HOT REPLY — BID WALK REQUESTED
+              </span>
+              <select
+                id="active-thread-stage-select"
+                aria-label="Update Deal Stage"
+                class="bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1 text-xs font-mono-telemetry"
+              >
+                <option value="REPLIED_HOT">Stage: 🔥 Hot Reply</option>
+                <option value="FOLLOWUP_DUE">Stage: ⏳ Day-3 Follow-Up Ready</option>
+                <option value="SITE_WALK_BOOKED">Stage: 📅 Site Walk Booked</option>
+                <option value="AWAITING_REPLY">Stage: ✅ Replied / Waiting</option>
+              </select>
+            </div>
+
+            <h2 id="active-thread-contact" class="font-display font-extrabold text-xl text-white">
+              Marcus Vance • Sr. PM @ Apex Commercial Builders
+            </h2>
+            <div id="active-thread-property" class="text-xs text-slate-300 font-medium">
+              $240,000 Commercial TI Buildout • #BP-2026-08941
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 pt-1 text-xs font-mono-telemetry">
+              <a id="active-thread-phone" href="tel:5125550148" class="text-emerald-400 hover:underline font-bold">
+                📞 (512) 555-0148
+              </a>
+              <span class="text-slate-600">•</span>
+              <a id="active-thread-email" href="mailto:mvance@apexcommercialbuilders.com" class="text-blue-400 hover:underline">
+                ✉️ mvance@apexcommercialbuilders.com
+              </a>
+            </div>
+          </div>
+
+          <!-- Conversation Messages Timeline -->
+          <div id="thread-messages-container" class="space-y-3.5 max-h-[380px] overflow-y-auto pr-1 py-1">
+            <!-- Populated dynamically by inbox.js -->
+          </div>
+
+          <!-- 1-Tap AI Drafter Bar (Powered by Client Knowledge Base) -->
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                🧠 1-TAP AI REPLY &amp; FOLLOW-UP DRAFTER (USES YOUR KNOWLEDGE BASE):
+              </span>
+              <span id="drafter-status-pill" class="font-mono-telemetry text-[10px] text-emerald-400">
+                READY ✓
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                id="btn-draft-kb-reply"
+                type="button"
+                class="btn-executive-navy px-3 py-2 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>🧠 Draft Reply Using Knowledge Base</span>
+              </button>
+              <button
+                id="btn-draft-day3-bump"
+                type="button"
+                class="btn-outline-slate px-3 py-2 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>🔔 Draft Day-3 Follow-Up Bump</span>
+              </button>
+              <button
+                id="btn-draft-site-walk"
+                type="button"
+                class="btn-outline-slate px-3 py-2 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>📅 Propose Thu 9:00 AM Site Walk</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Reply Composer Form -->
+          <form id="reply-composer-form" class="space-y-3 pt-1" novalidate>
+            <textarea
+              id="reply-composer-textarea"
+              rows="4"
+              placeholder="Click '🧠 Draft Reply Using Knowledge Base' above or type your response..."
+              class="enterprise-input text-xs sm:text-sm w-full"
+            ></textarea>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <label for="reply-channel-select" class="text-[11px] font-mono-telemetry text-slate-300">
+                  CHANNEL:
+                </label>
+                <select
+                  id="reply-channel-select"
+                  class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs font-mono-telemetry"
+                >
+                  <option value="CLOUD_EMAIL">☁️ Cloud Email Dispatch</option>
+                  <option value="NATIVE_SMS">📱 Native SMS Handoff</option>
+                  <option value="NATIVE_EMAIL">✉️ Native Mail App</option>
+                </select>
+              </div>
+
+              <button
+                id="btn-send-reply"
+                type="submit"
+                class="btn-trust-emerald px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>✓ Send Reply &amp; Log Follow-Up</span>
+              </button>
+            </div>
+            <div id="reply-send-feedback" class="font-mono-telemetry text-xs text-emerald-400 font-bold hidden">
+              ✓ REPLY DISPATCHED &amp; LOGGED IN CONVERSATION TIMELINE
+            </div>
+          </form>
+        </section>
+
+        <!-- PANE 3 (RIGHT): PERMIT + CAD X-RAY DOSSIER & ACTIVE KNOWLEDGE BASE -->
+        <div class="lg:col-span-4 space-y-6">
+
+          <!-- CARD A: PERMIT & COUNTY CAD X-RAY DOSSIER -->
+          <section class="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-3.5">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+              <div>
+                <div class="font-mono-telemetry text-[11px] text-amber-300 font-bold">PANE 03 • DEAL INTELLIGENCE</div>
+                <h3 class="font-display font-bold text-base text-white">Permit &amp; County CAD X-Ray</h3>
+              </div>
+              <span id="dossier-valuation-badge" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+                $240,000
+              </span>
+            </div>
+
+            <div class="space-y-2.5 text-xs">
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">
+                <div class="font-mono-telemetry text-[10px] text-slate-400">PERMIT &amp; PROPERTY ADDRESS</div>
+                <div id="dossier-headline" class="font-bold text-white text-sm mt-0.5">
+                  $240,000 Commercial Concrete &amp; Tilt-Wall Permit
+                </div>
+                <div id="dossier-address" class="text-slate-300 mt-0.5">
+                  1420 Industrial Pkwy, New Braunfels, TX 78130
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5">
+                <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">
+                  <div class="font-mono-telemetry text-[10px] text-slate-400">CAD PARCEL ID</div>
+                  <div id="dossier-parcel" class="font-mono-telemetry font-bold text-amber-300 mt-0.5">
+                    CAD-78130-8941
+                  </div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">
+                  <div class="font-mono-telemetry text-[10px] text-slate-400">ASSESSED VALUE</div>
+                  <div id="dossier-assessed" class="font-mono-telemetry font-bold text-emerald-400 mt-0.5">
+                    $1,850,000
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700 space-y-1">
+                <div class="font-mono-telemetry text-[10px] text-slate-400">DEEDED OWNER &amp; FOOTPRINT</div>
+                <div id="dossier-owner" class="font-bold text-white">
+                  Industrial Parkway Holdings LLC
+                </div>
+                <div id="dossier-footprint" class="text-slate-300 font-mono-telemetry text-[11px]">
+                  18,500 Sq Ft • 2.4 Acres • Comal CAD Verified
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CARD B: ACTIVE CLIENT KNOWLEDGE BASE ("SHOP DOSSIER") -->
+          <section class="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-3.5">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+              <div>
+                <div class="font-mono-telemetry text-[11px] text-blue-400 font-bold">🧠 AI AGENT MEMORY</div>
+                <h3 class="font-display font-bold text-base text-white">Active Client Knowledge Base</h3>
+              </div>
+              <a
+                id="pane-edit-kb-link"
+                href="command.html"
+                class="text-xs font-mono-telemetry text-emerald-400 hover:underline font-bold"
+              >
+                Edit / Scan Site →
+              </a>
+            </div>
+
+            <p class="text-xs text-slate-300">
+              The AI Reply Drafter automatically pulls these verified facts about your business when answering GC &amp; Property Manager questions:
+            </p>
+
+            <div class="space-y-2.5 text-xs">
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">
+                <div class="font-mono-telemetry text-[10px] text-amber-300">CORE SERVICES &amp; SPECIALTIES</div>
+                <div id="kb-drawer-services" class="flex flex-wrap gap-1.5 mt-1.5">
+                  <!-- Service pills populated by inbox.js -->
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">
+                <div class="font-mono-telemetry text-[10px] text-emerald-400">LICENSES, BONDING &amp; INSURANCE</div>
+                <div id="kb-drawer-certs" class="text-white font-medium mt-0.5">
+                  ACI-Certified Flatwork Finishers • $2M/$5M Commercial GL • Bonded up to $1.5M
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">
+                <div class="font-mono-telemetry text-[10px] text-blue-300">COMPLETED LOCAL PROOF PROJECT</div>
+                <div id="kb-drawer-proof" class="text-slate-200 mt-0.5">
+                  a 22,000 sq ft commercial tilt-wall &amp; dock apron project two miles east off FM 306
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">
+                <div class="font-mono-telemetry text-[10px] text-slate-400">GUARANTEE &amp; SIGNATURE</div>
+                <div id="kb-drawer-warranty" class="text-slate-200 mt-0.5">
+                  zero day-labor subs and a 100% clean-site guarantee
+                </div>
+                <div id="kb-drawer-signature" class="font-mono-telemetry text-[11px] text-emerald-400 mt-1">
+                  Travis Miller • Lone Star Commercial Concrete &amp; Paving • (830) 555-0194
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="section-bg-white border-t border-slate-800 py-8 px-4 sm:px-6 lg:px-8 mt-12">
+    <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-mono-telemetry">
+      <span>TIBERIUS RECON™ • 3-PANE REPLY &amp; FOLLOW-UP CONVERSATION ROOM</span>
+      <div class="flex items-center gap-5">
+        <a id="footer-briefing-link" href="briefing.html" class="text-emerald-400 hover:underline">← 7:00 AM Briefing Queue</a>
+        <a id="footer-command-link" href="command.html" class="text-blue-400 hover:underline">Shop Knowledge Base &amp; Command →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/recon/inbox.js"></script>
+  <script src="inbox.js"></script>
+</body>
+</html>

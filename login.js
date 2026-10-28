@@ -97,6 +97,10 @@
     if (sessionOpenBriefingBtn) {
       sessionOpenBriefingBtn.href = `briefing.html?token=${encodeURIComponent(magicToken)}`;
     }
+    const sessionOpenInboxBtn = document.getElementById('session-open-inbox-btn');
+    if (sessionOpenInboxBtn) {
+      sessionOpenInboxBtn.href = `inbox.html?token=${encodeURIComponent(magicToken)}`;
+    }
     if (sessionOpenCommandBtn) {
       sessionOpenCommandBtn.href = `command.html?token=${encodeURIComponent(magicToken)}`;
     }
@@ -169,14 +173,21 @@
             data-switch-token="${client.magicToken}"
             class="client-impersonate-link px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-display font-bold text-xs transition-colors"
           >
-            Open 7:00 AM Briefing →
+            ☕ 7:00 AM Briefing →
+          </a>
+          <a
+            href="inbox.html?token=${encodeURIComponent(client.magicToken)}"
+            data-switch-token="${client.magicToken}"
+            class="client-impersonate-link px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-display font-bold text-xs transition-colors"
+          >
+            💬 Conversation Room →
           </a>
           <a
             href="command.html?token=${encodeURIComponent(client.magicToken)}"
             data-switch-token="${client.magicToken}"
             class="client-impersonate-link px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-display font-bold text-xs transition-colors"
           >
-            Territory Command →
+            🧠 Knowledge Base &amp; Command →
           </a>
           <button
             type="button"
