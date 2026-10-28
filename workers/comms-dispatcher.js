@@ -93,6 +93,7 @@ async function dispatchViaResendEmail({
   recipientName,
   subject,
   bodyText,
+  htmlBody,
   token = 'demo-7am-briefing',
   threadId = 'thread-deal-1',
   providerConfig = {}
@@ -131,7 +132,7 @@ async function dispatchViaResendEmail({
 
   let providerError = null;
   const isFictionalDemoRecipient =
-    /@(apexcommercialbuilders\.com|crestviewcommercial\.com|horizoncommercialgc\.com|contractor\.com|gmail-demo\.com)$/i.test(
+    /@(apexcommercialbuilders\.com|crestviewcommercial\.com|horizoncommercialgc\.com|contractor\.com|gmail-demo\.com|privateestate\.org|vantageretail\.com|prescotcapital\.com|medcorebuilders\.com|ironcladindustrial\.com|austinortho\.com|spawglass\.com|r-o\.com|arlucasconstruction\.com|tsbyrne\.com|joeris\.com|bartlettcocke\.com|guidoconstruction\.com|chasco\.com|sabrecommercial\.com)$/i.test(
       String(recipientEmail || '').trim()
     );
 
@@ -142,23 +143,27 @@ async function dispatchViaResendEmail({
 
     for (const candidateFrom of candidateFromAddresses) {
       try {
+        const emailPayload = {
+          from: `${senderDisplay} <${candidateFrom}>`,
+          to: [recipientEmail],
+          reply_to: replyToList,
+          subject: emailSubject,
+          text: cleanBody,
+          headers: {
+            'X-Tiberius-Token': String(token),
+            'X-Tiberius-Thread-Id': String(threadId)
+          }
+        };
+        if (htmlBody) {
+          emailPayload.html = String(htmlBody);
+        }
         const resp = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${resendApiKey}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            from: `${senderDisplay} <${candidateFrom}>`,
-            to: [recipientEmail],
-            reply_to: replyToList,
-            subject: emailSubject,
-            text: cleanBody,
-            headers: {
-              'X-Tiberius-Token': String(token),
-              'X-Tiberius-Thread-Id': String(threadId)
-            }
-          }),
+          body: JSON.stringify(emailPayload),
           signal: AbortSignal.timeout(8000)
         });
         const data = await resp.json();

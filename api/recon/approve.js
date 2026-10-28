@@ -10,7 +10,11 @@
  *  - unlock-full-queue: Upgrades trial briefing to unlock all overflow cards in the territory
  */
 
-const { processBriefingAction, getBriefingByToken } = require('../../db/store');
+const {
+  processBriefingAction,
+  getBriefingByToken,
+  ensureCloudAccountsSynced
+} = require('../../db/store');
 const { dispatchApprovedOutreach } = require('../../workers/dispatch/outbound-sender');
 
 module.exports = async function handler(req, res) {
@@ -29,6 +33,7 @@ module.exports = async function handler(req, res) {
   const body = req.body || {};
   const token = body.token || 'demo-7am-briefing';
   const action = body.action || 'approve-send';
+  await ensureCloudAccountsSynced({ token });
 
   const result = processBriefingAction({
     token,

@@ -10,7 +10,8 @@
 const {
   authenticateAccount,
   activateTerritory,
-  hydrateAccountFromSession
+  hydrateAccountFromSession,
+  ensureCloudAccountsSynced
 } = require('../../db/store');
 const {
   extractSessionFromRequest,
@@ -85,8 +86,10 @@ module.exports = async function handler(req, res) {
     }
 
     // Default: action === 'login'
+    const identifier = body.identifier || body.email || body.phone || '';
+    await ensureCloudAccountsSynced({ identifier });
     const result = authenticateAccount({
-      identifier: body.identifier || body.email || body.phone || '',
+      identifier,
       password: body.password || body.pin || ''
     });
 

@@ -8,7 +8,8 @@
 
 const {
   getConversationRoomState,
-  processConversationAction
+  processConversationAction,
+  ensureCloudAccountsSynced
 } = require('../../db/store');
 const {
   dispatchViaResendEmail,
@@ -35,6 +36,7 @@ module.exports = async function handler(req, res) {
   try {
     const body = typeof req.body === 'object' && req.body ? req.body : {};
     const token = body.token || 'demo-7am-briefing';
+    await ensureCloudAccountsSynced({ token });
     const threadId = body.threadId || 'thread-deal-1';
     const channel = body.channel || 'RESEND_EMAIL';
     const messageBody = String(body.messageBody || body.draftBody || '').trim();

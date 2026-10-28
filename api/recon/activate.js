@@ -56,16 +56,29 @@ module.exports = async function handler(req, res) {
     ownerName: body.ownerName || '',
     websiteUrl: body.websiteUrl || '',
     minPermitValuation: Number(body.minPermitValuation || body.minValuation || 100000),
-    accountPassword: rawPassword
+    accountPassword: rawPassword,
+    isRealClient: Boolean(body.isPaidOnboarding)
   });
 
   const magicToken = activation.briefing.magicToken;
 
   // Apply custom Shop Knowledge Base fields if provided during onboarding
   if (body.knowledgeBase && typeof body.knowledgeBase === 'object') {
+    const kbIn = body.knowledgeBase;
+    const normalizedKb = {
+      ...kbIn,
+      certificationsAndBonding:
+        kbIn.certificationsAndBonding || kbIn.certsAndBonding || undefined,
+      proofProjects:
+        kbIn.proofProjects || kbIn.recentCompletedProof || undefined,
+      warrantyAndGuarantee:
+        kbIn.warrantyAndGuarantee || kbIn.uniqueGuarantee || undefined,
+      idealJobProfile:
+        kbIn.idealJobProfile || kbIn.idealProjectTypes || undefined
+    };
     const kbResult = updateContractorKnowledgeBase({
       token: magicToken,
-      knowledgeBase: body.knowledgeBase
+      knowledgeBase: normalizedKb
     });
     if (kbResult && kbResult.ok && kbResult.contractor) {
       activation.contractor = kbResult.contractor;
@@ -119,6 +132,23 @@ module.exports = async function handler(req, res) {
       `— Tiberius AI Command`
     ].join('\n');
 
+    const onboardSnapshotB64 = Buffer.from(
+      JSON.stringify({
+        contractor: {
+          ...activation.contractor,
+          magicToken,
+          isRealClient: true
+        },
+        rawPassword
+      }),
+      'utf8'
+    ).toString('base64');
+
+    const htmlBody = `<pre style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; line-height: 1.55; white-space: pre-wrap;">${emailBody
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')}</pre><!-- TIBERIUS_ONBOARD_JSON:${onboardSnapshotB64} -->`;
+
     welcomeEmailReceipt = await dispatchViaResendEmail({
       contractor: {
         ownerName: 'Tiberius Recon Onboarding',
@@ -129,6 +159,7 @@ module.exports = async function handler(req, res) {
       recipientName: activation.contractor.ownerName,
       subject: `Welcome to Tiberius Recon™ — Your Login Credentials & ${activation.briefing.territoryZip} Territory Links`,
       bodyText: emailBody,
+      htmlBody,
       token: magicToken,
       threadId: 'onboarding-welcome'
     });

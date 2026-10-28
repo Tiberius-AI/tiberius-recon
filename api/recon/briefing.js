@@ -9,7 +9,8 @@
 const {
   getBriefingByToken,
   updateContractorCommand,
-  hydrateAccountFromSession
+  hydrateAccountFromSession,
+  ensureCloudAccountsSynced
 } = require('../../db/store');
 const { extractSessionFromRequest } = require('../../db/auth');
 
@@ -32,6 +33,7 @@ module.exports = async function handler(req, res) {
       (hydrated && hydrated.account && hydrated.account.magicToken) ||
       'demo-7am-briefing';
 
+    await ensureCloudAccountsSynced({ token });
     const data = getBriefingByToken(token);
     if (!data) {
       return res.status(404).json({ ok: false, error: 'Morning briefing not found' });
@@ -49,6 +51,7 @@ module.exports = async function handler(req, res) {
       body.token ||
       (hydrated && hydrated.account && hydrated.account.magicToken) ||
       'demo-7am-briefing';
+    await ensureCloudAccountsSynced({ token });
     const result = updateContractorCommand({
       token,
       primaryTrade: body.primaryTrade,

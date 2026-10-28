@@ -285,16 +285,20 @@
       // Persist session & active tokens in localStorage so client is immediately signed in everywhere
       try {
         if (data.sessionToken) {
+          localStorage.setItem('tiberius_recon_session_jwt', data.sessionToken);
           localStorage.setItem('tiberius_recon_session_token', data.sessionToken);
         }
         if (data.magicToken) {
+          localStorage.setItem('tiberius_recon_token', data.magicToken);
           localStorage.setItem('tiberius_recon_active_token', data.magicToken);
         }
         if (data.contractor && data.contractor.id) {
           localStorage.setItem('tiberius_recon_contractor_id', data.contractor.id);
         }
         if (data.contractor) {
-          localStorage.setItem('tiberius_recon_profile', JSON.stringify(data.contractor));
+          const accountWithToken = { ...data.contractor, magicToken: data.magicToken };
+          localStorage.setItem('tiberius_recon_account', JSON.stringify(accountWithToken));
+          localStorage.setItem('tiberius_recon_profile', JSON.stringify(accountWithToken));
         }
       } catch (_storageErr) {
         // Ignore storage errors in private mode
@@ -327,8 +331,8 @@
 
       if ($('cred-email-status')) {
         const er = data.welcomeEmailReceipt;
-        if (er && er.liveDispatched) {
-          $('cred-email-status').textContent = `✓ Live Email Sent to ${creds.loginEmail} (via ${er.from || 'recon@send.tiberius.ai'})`;
+        if (er && (er.liveDispatched || er.provider === 'RESEND_LIVE')) {
+          $('cred-email-status').textContent = `✓ Live Email Sent to ${creds.loginEmail} (via recon@send.tiberius.ai)`;
           $('cred-email-status').className = 'text-emerald-400 font-mono-telemetry font-bold';
         } else if (sendWelcomeCredentials) {
           $('cred-email-status').textContent = `✓ Credentials Queued for ${creds.loginEmail}`;
@@ -341,7 +345,7 @@
 
       if ($('cred-sms-status')) {
         const sr = data.welcomeSmsReceipt;
-        if (sr && sr.liveDispatched) {
+        if (sr && (sr.liveDispatched || sr.provider === 'TWILIO_LIVE_API')) {
           $('cred-sms-status').textContent = `✓ Live SMS Sent to ${creds.loginPhone} (${sr.provider || 'TWILIO_LIVE_API'})`;
           $('cred-sms-status').className = 'text-emerald-400 font-mono-telemetry font-bold';
         } else if (sendWelcomeCredentials) {

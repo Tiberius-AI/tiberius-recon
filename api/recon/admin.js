@@ -8,7 +8,8 @@
 
 const {
   getAdminAgencyOverview,
-  activateTerritory
+  activateTerritory,
+  ensureCloudAccountsSynced
 } = require('../../db/store');
 const { extractSessionFromRequest } = require('../../db/auth');
 const { injectLiveZeroApiCardsIntoBriefing } = require('../../workers/live-zero-api-agent');
@@ -31,6 +32,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
+    await ensureCloudAccountsSynced();
     return res.status(200).json(getAdminAgencyOverview());
   }
 

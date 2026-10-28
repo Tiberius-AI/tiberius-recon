@@ -416,6 +416,41 @@ async function runTests() {
     assert.ok(onbActivateData.welcomeEmailReceipt);
     assert.ok(onbActivateData.welcomeSmsReceipt);
 
+    // Verify newly onboarded real company briefing has zero 555 demo phone numbers
+    const onbBriefingResp = await fetch(
+      `${baseUrl}/api/recon/briefing?token=${encodeURIComponent(onbActivateData.magicToken)}`
+    );
+    const onbBriefingData = await onbBriefingResp.json();
+    assert.strictEqual(onbBriefingData.ok, true);
+    assert.ok(
+      onbBriefingData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
+      'Real onboarded client cards must not contain 555 demo numbers'
+    );
+
+    // Verify A-lert Roof Systems (feedbackdaisy+alert@gmail.com / getter8039) login + non-555 cards
+    const alertLoginResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        identifier: 'feedbackdaisy+alert@gmail.com',
+        password: 'getter8039'
+      })
+    });
+    const alertLoginData = await alertLoginResp.json();
+    assert.strictEqual(alertLoginData.ok, true);
+    assert.strictEqual(alertLoginData.account.companyName, 'A-lert Roof Systems');
+    assert.strictEqual(alertLoginData.account.magicToken, 'recon-78130-2101s6');
+
+    const alertBriefingResp = await fetch(`${baseUrl}/api/recon/briefing?token=recon-78130-2101s6`);
+    const alertBriefingData = await alertBriefingResp.json();
+    assert.strictEqual(alertBriefingData.ok, true);
+    assert.strictEqual(alertBriefingData.contractor.companyName, 'A-lert Roof Systems');
+    assert.ok(
+      alertBriefingData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
+      'A-lert Roof Systems cards must not contain 555 demo numbers'
+    );
+
     console.log('\n✅ ALL 18 TIBERIUS RECON™ END-TO-END, POST-PAY ONBOARDING, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS & CONVERSATION ROOM TESTS PASSED.');
   } finally {
     server.close();

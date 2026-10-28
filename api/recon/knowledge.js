@@ -11,7 +11,8 @@
 const {
   getBriefingByToken,
   updateContractorKnowledgeBase,
-  buildDefaultKnowledgeBaseForContractor
+  buildDefaultKnowledgeBaseForContractor,
+  ensureCloudAccountsSynced
 } = require('../../db/store');
 const { scanClientWebsiteForKnowledgeBase } = require('../../workers/live-zero-api-agent');
 
@@ -29,6 +30,7 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
       const token = urlObj.searchParams.get('token') || 'demo-7am-briefing';
+      await ensureCloudAccountsSynced({ token });
       const data = getBriefingByToken(token);
       if (!data || !data.contractor) {
         res.statusCode = 404;
@@ -56,6 +58,7 @@ module.exports = async function handler(req, res) {
       const body = typeof req.body === 'object' && req.body ? req.body : {};
       const action = body.action || 'save_knowledge';
       const token = body.token || 'demo-7am-briefing';
+      await ensureCloudAccountsSynced({ token });
 
       if (action === 'scan_website') {
         const result = await scanClientWebsiteForKnowledgeBase({

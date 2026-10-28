@@ -12,7 +12,8 @@ const {
   getBriefingByToken,
   getConversationRoomState,
   recordScoutAlertLog,
-  provisionContractorTwilioSubaccount
+  provisionContractorTwilioSubaccount,
+  ensureCloudAccountsSynced
 } = require('../../db/store');
 const {
   getContractorTwilioA2PState,
@@ -33,6 +34,7 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const token = (req.query && (req.query.token || req.query.t)) || 'demo-7am-briefing';
+      await ensureCloudAccountsSynced({ token });
       const roomState = getConversationRoomState(token);
       if (!roomState || !roomState.ok) {
         res.statusCode = 404;
@@ -57,6 +59,7 @@ module.exports = async function handler(req, res) {
       const body = typeof req.body === 'object' && req.body ? req.body : {};
       const token = body.token || 'demo-7am-briefing';
       const action = body.action || 'send_morning_briefing_sms';
+      await ensureCloudAccountsSynced({ token });
 
       if (action === 'provision_twilio_subaccount') {
         const provResult = provisionContractorTwilioSubaccount({

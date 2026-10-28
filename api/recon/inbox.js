@@ -18,7 +18,8 @@
 
 const {
   getConversationRoomState,
-  processConversationAction
+  processConversationAction,
+  ensureCloudAccountsSynced
 } = require('../../db/store');
 const { dispatchViaResendEmail } = require('../../workers/comms-dispatcher');
 
@@ -36,6 +37,7 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
       const token = urlObj.searchParams.get('token') || 'demo-7am-briefing';
+      await ensureCloudAccountsSynced({ token });
       const state = getConversationRoomState(token);
       res.statusCode = state.ok ? 200 : 404;
       res.setHeader('Content-Type', 'application/json');
@@ -45,6 +47,7 @@ module.exports = async function handler(req, res) {
     if (req.method === 'POST') {
       const body = typeof req.body === 'object' && req.body ? req.body : {};
       const token = body.token || 'demo-7am-briefing';
+      await ensureCloudAccountsSynced({ token });
       const action = body.action;
       const threadId = body.threadId;
       const channel = body.channel || 'RESEND_EMAIL';
