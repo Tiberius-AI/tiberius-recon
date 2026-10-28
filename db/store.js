@@ -182,7 +182,19 @@ const TRADE_TEMPLATES = {
 };
 
 function getTradeTemplate(trade) {
-  return TRADE_TEMPLATES[trade] || TRADE_TEMPLATES['Commercial Concrete'];
+  if (TRADE_TEMPLATES[trade]) return TRADE_TEMPLATES[trade];
+  const lower = String(trade || '').toLowerCase();
+  if (lower.includes('roof') || lower.includes('exterior')) return TRADE_TEMPLATES['Roofing / Exteriors'];
+  if (lower.includes('hvac') || lower.includes('electr') || lower.includes('mep') || lower.includes('mech')) {
+    return TRADE_TEMPLATES['Electrical / HVAC'];
+  }
+  if (lower.includes('pool') || lower.includes('fenc') || lower.includes('outdoor')) {
+    return TRADE_TEMPLATES['Pools / Fencing / Custom Home'];
+  }
+  if (lower.includes('b2b') || lower.includes('facility')) {
+    return TRADE_TEMPLATES['B2B / Commercial Services'];
+  }
+  return TRADE_TEMPLATES['Commercial Concrete'];
 }
 
 /* ==========================================================================
@@ -444,7 +456,7 @@ function createDefaultStore() {
     id: '22222222-3333-4444-5555-666666666666',
     companyName: 'Centex Industrial Roofing Systems',
     ownerName: 'Dana Vance',
-    primaryTrade: 'Commercial Roofing',
+    primaryTrade: 'Roofing / Exteriors',
     tierLevel: 'Tier 3: Full Territory Exclusivity',
     includeSmartSiteBundle: true,
     smartSiteEquityCents: 120000, // $1,200 accrued toward $2,400 ownership target
@@ -474,7 +486,7 @@ function createDefaultStore() {
     id: '33333333-4444-5555-6666-777777777777',
     companyName: 'Alamo Mechanical & Commercial HVAC',
     ownerName: 'Carlos Mendez',
-    primaryTrade: 'Commercial HVAC',
+    primaryTrade: 'Electrical / HVAC',
     tierLevel: 'Tier 2: Commercial Permits',
     includeSmartSiteBundle: false,
     smartSiteEquityCents: 0,
@@ -955,7 +967,10 @@ function processBriefingAction({
   cardId,
   updatedDraftBody,
   dispatchChannel,
-  upgradeTier
+  upgradeTier,
+  primaryTrade,
+  territoryZip,
+  landmarkReference
 }) {
   const store = loadStore();
   const cleanToken = String(token || 'demo-7am-briefing').trim();
@@ -967,6 +982,38 @@ function processBriefingAction({
   const contractor =
     store.contractors[briefing.contractorId] ||
     store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  // Sync trade or zip if user changed the dropdown before clicking Unlock or Approve
+  let needsCardRebuild = false;
+  if (primaryTrade && primaryTrade !== briefing.tradeName) {
+    briefing.tradeName = primaryTrade;
+    if (contractor) contractor.primaryTrade = primaryTrade;
+    needsCardRebuild = true;
+  }
+  if (territoryZip && String(territoryZip).trim() && String(territoryZip).trim() !== briefing.territoryZip) {
+    const metro = resolveMetroProfile(territoryZip);
+    briefing.territoryZip = metro.zip;
+    briefing.metroCity = `${metro.city}, ${metro.state}`;
+    briefing.countyCad = metro.countyCad;
+    briefing.portalName = metro.portalName;
+    if (contractor) contractor.baseZip = metro.zip;
+    needsCardRebuild = true;
+  }
+  if (landmarkReference && contractor && contractor.voiceProfile && landmarkReference !== contractor.voiceProfile.landmarkReference) {
+    contractor.voiceProfile.landmarkReference = landmarkReference;
+    needsCardRebuild = true;
+  }
+  if (needsCardRebuild && contractor) {
+    const wasAllUnlocked = briefing.unlockedLimit > 3;
+    briefing.cards = buildBriefingCardsForContractor(contractor);
+    if (wasAllUnlocked) {
+      briefing.unlockedLimit = briefing.cards.length;
+      briefing.cards.forEach((c, idx) => {
+        c.isLockedOverflow = false;
+        c.unlockedBadge = `UNLOCKED #${idx + 1}`;
+      });
+    }
+  }
 
   if (action === 'reset-all') {
     briefing.cards.forEach((card) => {
@@ -1112,7 +1159,15 @@ function updateContractorCommand({
   };
 
   // Re-calibrate the briefing cards to reflect updated trade, zip, and shop voice
+  const wasAllUnlocked = briefing.unlockedLimit > 3;
   briefing.cards = buildBriefingCardsForContractor(contractor);
+  if (wasAllUnlocked) {
+    briefing.unlockedLimit = briefing.cards.length;
+    briefing.cards.forEach((c, idx) => {
+      c.isLockedOverflow = false;
+      c.unlockedBadge = `UNLOCKED #${idx + 1}`;
+    });
+  }
   saveStore(store);
 
   return {

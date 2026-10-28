@@ -36,7 +36,10 @@ module.exports = async function handler(req, res) {
     cardId: body.cardId,
     updatedDraftBody: body.updatedDraftBody,
     dispatchChannel: body.dispatchChannel || 'CLOUD_EMAIL',
-    upgradeTier: body.upgradeTier
+    upgradeTier: body.upgradeTier,
+    primaryTrade: body.primaryTrade,
+    territoryZip: body.territoryZip,
+    landmarkReference: body.landmarkReference
   });
 
   if (!result.ok) {

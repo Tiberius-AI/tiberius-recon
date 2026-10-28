@@ -373,18 +373,25 @@
   }
 
   async function sendCardAction(payload) {
+    const activeTrade = calibratorTradeSelect ? calibratorTradeSelect.value : undefined;
+    const activeZip = calibratorZipInput ? calibratorZipInput.value.trim() : undefined;
+    const activeLandmark = calibratorLandmarkInput ? calibratorLandmarkInput.value.trim() : undefined;
     try {
       const resp = await fetch('/api/recon/approve', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
           token: activeToken,
+          primaryTrade: activeTrade,
+          territoryZip: activeZip,
+          landmarkReference: activeLandmark,
           ...payload
         })
       });
       const data = await resp.json();
       if (data && data.ok && data.briefing) {
         state.briefing = data.briefing;
+        if (data.contractor) state.contractor = data.contractor;
         state.editingCardId = null;
         renderAll();
       }
@@ -527,37 +534,42 @@
     });
   }
 
-  if (calibratorApplyBtn) {
-    calibratorApplyBtn.addEventListener('click', async () => {
-      const primaryTrade = calibratorTradeSelect ? calibratorTradeSelect.value : 'Commercial Concrete';
-      const territoryZip = calibratorZipInput ? calibratorZipInput.value.trim() : '78130';
-      const landmarkReference = calibratorLandmarkInput ? calibratorLandmarkInput.value.trim() : '';
+  async function recalibrateBriefing() {
+    const primaryTrade = calibratorTradeSelect ? calibratorTradeSelect.value : 'Commercial Concrete';
+    const territoryZip = calibratorZipInput ? calibratorZipInput.value.trim() : '78130';
+    const landmarkReference = calibratorLandmarkInput ? calibratorLandmarkInput.value.trim() : '';
 
-      calibratorApplyBtn.textContent = 'Calibrating...';
-      try {
-        const resp = await fetch('/api/recon/briefing', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token: activeToken,
-            primaryTrade,
-            territoryZip,
-            landmarkReference
-          })
-        });
-        const data = await resp.json();
-        if (data && data.ok && data.briefing) {
-          state.briefing = data.briefing;
-          state.contractor = data.contractor;
-          state.availability = data.availability;
-          renderAll();
-        }
-      } catch (_err) {
-        // Ignore
-      } finally {
-        calibratorApplyBtn.textContent = 'Recalibrate Cards →';
+    if (calibratorApplyBtn) calibratorApplyBtn.textContent = 'Calibrating...';
+    try {
+      const resp = await fetch('/api/recon/briefing', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          token: activeToken,
+          primaryTrade,
+          territoryZip,
+          landmarkReference
+        })
+      });
+      const data = await resp.json();
+      if (data && data.ok && data.briefing) {
+        state.briefing = data.briefing;
+        state.contractor = data.contractor;
+        state.availability = data.availability;
+        renderAll();
       }
-    });
+    } catch (_err) {
+      // Ignore
+    } finally {
+      if (calibratorApplyBtn) calibratorApplyBtn.textContent = 'Recalibrate Cards →';
+    }
+  }
+
+  if (calibratorApplyBtn) {
+    calibratorApplyBtn.addEventListener('click', recalibrateBriefing);
+  }
+  if (calibratorTradeSelect) {
+    calibratorTradeSelect.addEventListener('change', recalibrateBriefing);
   }
 
   if (resetAllBtn) {
