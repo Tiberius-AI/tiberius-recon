@@ -96,10 +96,18 @@ async function dispatchViaResendEmail({
 }) {
   const replyToAddress = buildThreadReplyToAddress(token, threadId);
   const resendApiKey = String(
-    providerConfig.resendApiKey || process.env.RESEND_API_KEY || ''
+    providerConfig.resendApiKey ||
+      process.env.RESEND_API_KEY ||
+      process.env.RESEND_KEY ||
+      process.env.NEXT_PUBLIC_RESEND_API_KEY ||
+      ''
   ).trim();
   const fromEmail = String(
-    providerConfig.resendFromEmail || process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    providerConfig.resendFromEmail ||
+      process.env.RESEND_FROM_EMAIL ||
+      process.env.FROM_EMAIL ||
+      process.env.EMAIL_FROM ||
+      'onboarding@resend.dev'
   ).trim();
   const senderDisplay = `${contractor.ownerName || 'Estimator'} (${
     contractor.companyName || 'Tiberius Recon Partner'
@@ -226,9 +234,19 @@ function getContractorTwilioA2PState(contractor = {}) {
     contractorMobile: contractor.mobilePhone || '(830) 555-0194'
   };
 
+  const detectedEnvVarNames = Object.keys(process.env || {}).filter((k) =>
+    /RESEND|TWILIO|EMAIL|MAIL|SMS|PHONE|SMTP|SEND/i.test(k)
+  );
+
   const envStatus = {
-    hasResendEnvKey: Boolean(process.env.RESEND_API_KEY),
-    hasTwilioEnvKeys: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+    hasResendEnvKey: Boolean(
+      process.env.RESEND_API_KEY || process.env.RESEND_KEY || process.env.NEXT_PUBLIC_RESEND_API_KEY
+    ),
+    hasTwilioEnvKeys: Boolean(
+      (process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID) &&
+        (process.env.TWILIO_AUTH_TOKEN || process.env.TWILIO_TOKEN)
+    ),
+    detectedEnvVarNames
   };
 
   const twoStageProvisioning = {
@@ -296,14 +314,24 @@ function getContractorTwilioA2PState(contractor = {}) {
  * Master A2P 10DLC Twilio account (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MASTER_FROM_NUMBER`).
  */
 async function sendMasterTwilioSmsToContractor({ toPhone, bodyText, providerConfig = {} }) {
-  const sid = String(providerConfig.twilioAccountSid || process.env.TWILIO_ACCOUNT_SID || '').trim();
+  const sid = String(
+    providerConfig.twilioAccountSid ||
+      process.env.TWILIO_ACCOUNT_SID ||
+      process.env.TWILIO_SID ||
+      ''
+  ).trim();
   const authToken = String(
-    providerConfig.twilioAuthToken || process.env.TWILIO_AUTH_TOKEN || ''
+    providerConfig.twilioAuthToken ||
+      process.env.TWILIO_AUTH_TOKEN ||
+      process.env.TWILIO_TOKEN ||
+      ''
   ).trim();
   const rawFrom =
     providerConfig.twilioFromNumber ||
     process.env.TWILIO_MASTER_FROM_NUMBER ||
     process.env.TWILIO_FROM_NUMBER ||
+    process.env.TWILIO_PHONE_NUMBER ||
+    process.env.TWILIO_NUMBER ||
     process.env.SMS_AGENT_NUMBER ||
     '+18303608517';
   const fromNumber = normalizePhoneE164(rawFrom);
