@@ -326,6 +326,8 @@ async function runTests() {
     assert.strictEqual(resendWebhookData.ok, true);
     assert.strictEqual(resendWebhookData.cleanedBody, 'Perfect, see you Thursday at 9:00 AM at the job trailer.');
     assert.strictEqual(resendWebhookData.thread.stage, 'REPLIED_HOT');
+    assert.strictEqual(resendWebhookData.contractorAlertReceipt.alertType, 'HOT_PROSPECT_REPLY_SMS');
+    assert.strictEqual(resendWebhookData.contractorAlertReceipt.a2pCampaignModel, 'MASTER_TIBERIUS_A2P_10DLC');
 
     const twilioWebhookResp = await fetch(`${baseUrl}/api/webhooks/twilio`, {
       method: 'POST',
@@ -341,8 +343,41 @@ async function runTests() {
     assert.strictEqual(twilioWebhookData.ok, true);
     assert.strictEqual(twilioWebhookData.threadId, 'thread-deal-2');
     assert.strictEqual(twilioWebhookData.thread.stage, 'REPLIED_HOT');
+    assert.strictEqual(twilioWebhookData.contractorAlertReceipt.alertType, 'HOT_PROSPECT_REPLY_SMS');
 
-    console.log('\n✅ ALL 15 TIBERIUS RECON™ END-TO-END, RESEND/TWILIO WEBHOOK, NATIVE SIM & CONVERSATION ROOM TESTS PASSED.');
+    console.log('[16/17] Testing 6:45 AM Scout-to-Contractor Master Twilio SMS Alert (/api/recon/alerts)...');
+    const morningAlertResp = await fetch(`${baseUrl}/api/recon/alerts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        action: 'send_morning_briefing_sms'
+      })
+    });
+    const morningAlertData = await morningAlertResp.json();
+    assert.strictEqual(morningAlertData.ok, true);
+    assert.strictEqual(morningAlertData.receipt.alertType, 'MORNING_BRIEFING_7AM_SMS');
+    assert.strictEqual(morningAlertData.receipt.a2pCampaignModel, 'MASTER_TIBERIUS_A2P_10DLC');
+    assert.ok(morningAlertData.receipt.smsBody.includes('/recon/briefing?token='));
+
+    console.log('[17/17] Testing Two-Stage Twilio Bridge Pool -> Dedicated Subaccount Promotion...');
+    const stage2Resp = await fetch(`${baseUrl}/api/recon/alerts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        action: 'provision_twilio_subaccount',
+        stage: 'STAGE_2_DEDICATED_SUBACCOUNT'
+      })
+    });
+    const stage2Data = await stage2Resp.json();
+    assert.strictEqual(stage2Data.ok, true);
+    assert.strictEqual(
+      stage2Data.twilioA2PState.twoStageProvisioning.currentStage,
+      'STAGE_2_DEDICATED_SUBACCOUNT'
+    );
+
+    console.log('\n✅ ALL 17 TIBERIUS RECON™ END-TO-END, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS, NATIVE SIM & CONVERSATION ROOM TESTS PASSED.');
   } finally {
     server.close();
   }

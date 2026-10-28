@@ -83,6 +83,16 @@
   const kbDrawerWarrantyEl = document.getElementById('kb-drawer-warranty');
   const kbDrawerSignatureEl = document.getElementById('kb-drawer-signature');
 
+  // Step 3: Master Twilio A2P & Two-Stage Subaccount + Scout SMS Alert Log Elements
+  const testScout7amSmsBtn = document.getElementById('test-scout-7am-sms-btn');
+  const a2pStageBadgeEl = document.getElementById('a2p-stage-badge');
+  const a2pMasterSummaryEl = document.getElementById('a2p-master-summary');
+  const a2pSubaccountStagePillEl = document.getElementById('a2p-subaccount-stage-pill');
+  const a2pSubaccountDescEl = document.getElementById('a2p-subaccount-desc');
+  const btnToggleA2pStage = document.getElementById('btn-toggle-a2p-stage');
+  const scoutAlertCountPillEl = document.getElementById('scout-alert-count-pill');
+  const scoutAlertsLogListEl = document.getElementById('scout-alerts-log-list');
+
   let roomState = null;
   let selectedThreadId = null;
   let activeFilter = 'ALL';
@@ -323,8 +333,58 @@
     }
     renderMetrics(state.metrics);
     renderKnowledgeBaseDrawer(state.knowledgeBase);
+    renderTwilioAndScoutAlerts(state.twilioA2PState, state.scoutAlertLogs);
     renderThreadList();
     renderActiveThread();
+  }
+
+  function renderTwilioAndScoutAlerts(a2p = {}, logs = []) {
+    const master = a2p.scoutToContractorAlerts || {};
+    const twoStage = a2p.twoStageProvisioning || {};
+    if (a2pMasterSummaryEl && master.masterSenderNumber) {
+      a2pMasterSummaryEl.textContent = `Tiberius AI LLC Master 10DLC (${master.masterSenderNumber}) → ${
+        master.contractorMobile || '(830) 555-0194'
+      }`;
+    }
+    if (a2pSubaccountStagePillEl && twoStage.currentStage) {
+      a2pSubaccountStagePillEl.textContent = twoStage.currentStage;
+    }
+    if (a2pStageBadgeEl && twoStage.currentStage) {
+      a2pStageBadgeEl.textContent =
+        twoStage.currentStage === 'STAGE_2_DEDICATED_SUBACCOUNT'
+          ? 'STAGE 2 DEDICATED 10DLC'
+          : 'MASTER A2P + BRIDGE POOL';
+    }
+    if (a2pSubaccountDescEl && twoStage.stageLabel) {
+      a2pSubaccountDescEl.textContent = twoStage.stageLabel;
+    }
+    if (btnToggleA2pStage && twoStage.currentStage) {
+      btnToggleA2pStage.textContent =
+        twoStage.currentStage === 'STAGE_2_DEDICATED_SUBACCOUNT'
+          ? '↺ Switch Back to Stage 1 Bridge Pool'
+          : '⚡ Promote to Stage 2 Dedicated Subaccount';
+    }
+    if (scoutAlertCountPillEl) {
+      scoutAlertCountPillEl.textContent = `${Array.isArray(logs) ? logs.length : 0} sent`;
+    }
+    if (scoutAlertsLogListEl && Array.isArray(logs)) {
+      scoutAlertsLogListEl.innerHTML = logs
+        .slice(0, 6)
+        .map(
+          (entry) => `
+          <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 space-y-1">
+            <div class="flex items-center justify-between gap-1.5 text-[10px] font-mono-telemetry">
+              <span class="${
+                String(entry.alertType || '').includes('HOT') ? 'text-amber-300' : 'text-emerald-400'
+              } font-bold">${escapeHtml(entry.alertType)}</span>
+              <span class="text-slate-400">${escapeHtml(entry.timestamp)}</span>
+            </div>
+            <p class="text-[11px] text-slate-200 leading-snug">${escapeHtml(entry.smsBody)}</p>
+          </div>
+        `
+        )
+        .join('');
+    }
   }
 
   async function loadRoomState() {
@@ -500,6 +560,60 @@
     });
   }
 
+  if (testScout7amSmsBtn) {
+    testScout7amSmsBtn.addEventListener('click', async () => {
+      testScout7amSmsBtn.textContent = '📲 Sending 6:45 AM Scout SMS...';
+      try {
+        const resp = await fetch('/api/recon/alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: activeToken,
+            action: 'send_morning_briefing_sms'
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.roomState) {
+          renderFullRoom(data.roomState);
+        }
+      } catch (_err) {
+        // Ignore
+      } finally {
+        testScout7amSmsBtn.textContent = '✓ 6:45 AM Scout SMS Sent to Your Cell';
+        setTimeout(() => {
+          testScout7amSmsBtn.textContent = '📲 Test 6:45 AM Scout SMS Alert';
+        }, 3500);
+      }
+    });
+  }
+
+  if (btnToggleA2pStage) {
+    btnToggleA2pStage.addEventListener('click', async () => {
+      const currentStage = roomState?.twilioA2PState?.twoStageProvisioning?.currentStage;
+      const nextStage =
+        currentStage === 'STAGE_2_DEDICATED_SUBACCOUNT'
+          ? 'STAGE_1_BRIDGE_POOL'
+          : 'STAGE_2_DEDICATED_SUBACCOUNT';
+      try {
+        const resp = await fetch('/api/recon/alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: activeToken,
+            action: 'provision_twilio_subaccount',
+            stage: nextStage
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.roomState) {
+          renderFullRoom(data.roomState);
+        }
+      } catch (_err) {
+        // Ignore
+      }
+    });
+  }
+
   if (simulateReplyBtn) {
     simulateReplyBtn.addEventListener('click', async () => {
       if (!selectedThreadId) return;
@@ -515,8 +629,23 @@
           })
         });
         const data = await resp.json();
-        if (data && data.ok && data.roomState) {
-          renderFullRoom(data.roomState);
+        if (data && data.ok) {
+          // Also fire the automatic Scout-to-Contractor Hot Reply SMS Alert
+          const alertResp = await fetch('/api/recon/alerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: activeToken,
+              action: 'send_hot_reply_sms',
+              threadId: selectedThreadId
+            })
+          });
+          const alertData = await alertResp.json();
+          if (alertData && alertData.ok && alertData.roomState) {
+            renderFullRoom(alertData.roomState);
+          } else if (data.roomState) {
+            renderFullRoom(data.roomState);
+          }
         }
       } catch (_err) {
         // Ignore

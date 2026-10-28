@@ -20,7 +20,8 @@ const {
   buildThreadReplyToAddress,
   parseThreadReplyToAddress,
   stripQuotedEmailChain,
-  buildNativeSimSmsUri
+  buildNativeSimSmsUri,
+  getContractorTwilioA2PState
 } = require('../workers/comms-dispatcher');
 
 const LOCAL_STORE_PATH = path.join(__dirname, '.recon-store.json');
@@ -728,6 +729,32 @@ function createDefaultConversationThreads(contractor, cards = []) {
   ];
 }
 
+function createDefaultScoutAlertLogs(contractor, briefingToken) {
+  const firstName = String(contractor.ownerName || 'Shop Owner').trim().split(/\s+/)[0];
+  return [
+    {
+      id: `alert_hot_${briefingToken}_0819`,
+      alertType: 'HOT_PROSPECT_REPLY_SMS',
+      timestamp: 'Today • 08:19 AM',
+      toContractorPhone: contractor.mobilePhone,
+      fromMasterTwilioNumber: '+18305550100',
+      a2pCampaignModel: 'MASTER_TIBERIUS_A2P_10DLC',
+      deliveryStatus: 'DELIVERED',
+      smsBody: `🔥 TIBERIUS HOT REPLY: Marcus Vance (Sr. PM @ Apex Commercial Builders) just replied on #BP-2026-08941 ($240,000): "Hey ${firstName} — yes, we are finalizing our subs this week..." Tap to reply in 1 click: https://www.tiberius.ai/recon/inbox?token=${briefingToken}`
+    },
+    {
+      id: `alert_7am_${briefingToken}_0645`,
+      alertType: 'MORNING_BRIEFING_7AM_SMS',
+      timestamp: 'Today • 06:45 AM',
+      toContractorPhone: contractor.mobilePhone,
+      fromMasterTwilioNumber: '+18305550100',
+      a2pCampaignModel: 'MASTER_TIBERIUS_A2P_10DLC',
+      deliveryStatus: 'DELIVERED',
+      smsBody: `☕ TIBERIUS RECON 7:00 AM BRIEFING (${contractor.baseZip}): Morning ${firstName} — 3 verified ${contractor.primaryTrade} deals ($240,000 top permit) are unlocked & pre-drafted for ${contractor.companyName}. Tap to review & 1-tap send: https://www.tiberius.ai/recon/briefing?token=${briefingToken}`
+    }
+  ];
+}
+
 /* ==========================================================================
    DEFAULT INITIAL STORE SEED
    ========================================================================== */
@@ -946,6 +973,11 @@ function createDefaultStore() {
       'centex-roofing-78701': createDefaultConversationThreads(secondContractor, secondCards),
       'alamo-hvac-78258': createDefaultConversationThreads(thirdContractor, thirdCards)
     },
+    scoutAlertLogs: {
+      'demo-7am-briefing': createDefaultScoutAlertLogs(demoContractor, 'demo-7am-briefing'),
+      'centex-roofing-78701': createDefaultScoutAlertLogs(secondContractor, 'centex-roofing-78701'),
+      'alamo-hvac-78258': createDefaultScoutAlertLogs(thirdContractor, 'alamo-hvac-78258')
+    },
     sentOutreachLogs: [],
     workerRuns: [
       {
@@ -1000,6 +1032,10 @@ function loadStore() {
           parsed.conversationThreads = {
             ...defaultStore.conversationThreads,
             ...(parsed.conversationThreads || {})
+          };
+          parsed.scoutAlertLogs = {
+            ...defaultStore.scoutAlertLogs,
+            ...(parsed.scoutAlertLogs || {})
           };
           memoryStore = parsed;
           return memoryStore;
@@ -1985,17 +2021,27 @@ function getConversationRoomState(token) {
   const followUpDueCount = threads.filter((t) => t.stage === 'FOLLOWUP_DUE').length;
   const bookedWalksCount = threads.filter((t) => t.stage === 'SITE_WALK_BOOKED').length;
 
+  store.scoutAlertLogs = store.scoutAlertLogs || {};
+  if (!store.scoutAlertLogs[briefing.magicToken]) {
+    store.scoutAlertLogs[briefing.magicToken] = createDefaultScoutAlertLogs(
+      contractor,
+      briefing.magicToken
+    );
+  }
+
+  const twilioA2PState = getContractorTwilioA2PState(contractor);
+
   return {
     ok: true,
     token: briefing.magicToken,
     contractor: sanitizeContractor(contractor),
     knowledgeBase: contractor.knowledgeBase,
+    twilioA2PState,
+    scoutAlertLogs: store.scoutAlertLogs[briefing.magicToken],
     commsPolicy: {
       primaryOutboundChannel: 'RESEND_EMAIL_WITH_REPLY_TO',
       coldSmsPolicy: 'NATIVE_SIM_HANDOFF_ONLY',
-      twilioSubaccountStatus: contractor.includeSmartSiteBundle
-        ? 'BRIDGE_POOL_ACTIVE_FOR_OPTED_IN_SMART_SITE_LEADS'
-        : 'MASTER_A2P_7AM_ALERTS_ONLY'
+      twilioSubaccountStatus: twilioA2PState.twoStageProvisioning.currentStage
     },
     briefing: {
       magicToken: briefing.magicToken,
@@ -2360,10 +2406,99 @@ function ingestInboundWebhookReply({
     ok: true,
     provider,
     matchedToken: briefing.magicToken,
+    contractor: sanitizeContractor(contractor),
     threadId: matchedThread.id,
     cleanedBody,
     inboundMessage,
     thread: enrichThreadWithCommsMetadata(matchedThread, contractor, briefing.magicToken),
+    roomState: getConversationRoomState(briefing.magicToken)
+  };
+}
+
+/**
+ * Appends a Master Twilio Scout-to-Contractor SMS Alert receipt to `store.scoutAlertLogs[token]`
+ */
+function recordScoutAlertLog(token, alertReceipt = {}) {
+  const store = loadStore();
+  const cleanToken = String(token || 'demo-7am-briefing').trim();
+  const briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
+  const effectiveToken = briefing ? briefing.magicToken : cleanToken;
+  const contractor =
+    (briefing && store.contractors[briefing.contractorId]) ||
+    store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  store.scoutAlertLogs = store.scoutAlertLogs || {};
+  if (!store.scoutAlertLogs[effectiveToken]) {
+    store.scoutAlertLogs[effectiveToken] = createDefaultScoutAlertLogs(contractor, effectiveToken);
+  }
+
+  const nowLabel = new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const entry = {
+    id: `alert_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    alertType: alertReceipt.alertType || 'SCOUT_TO_CONTRACTOR_SMS',
+    timestamp: `Today • ${nowLabel}`,
+    toContractorPhone: alertReceipt.toPhone || contractor.mobilePhone,
+    fromMasterTwilioNumber: alertReceipt.fromMasterNumber || '+18305550100',
+    a2pCampaignModel: alertReceipt.a2pCampaignModel || 'MASTER_TIBERIUS_A2P_10DLC',
+    deliveryStatus: alertReceipt.deliveryStatus || 'SIMULATED_MASTER_A2P_DELIVERED',
+    providerMessageId: alertReceipt.providerMessageId,
+    deepLinkUrl: alertReceipt.deepLinkUrl,
+    smsBody: alertReceipt.smsBody || ''
+  };
+
+  store.scoutAlertLogs[effectiveToken].unshift(entry);
+  saveStore(store);
+
+  return {
+    ok: true,
+    entry,
+    scoutAlertLogs: store.scoutAlertLogs[effectiveToken]
+  };
+}
+
+/**
+ * Manages the Two-Stage Twilio A2P Subaccount & Bridge Pool Provisioning (`Communication Notes.txt` Section 3):
+ *   - Stage 1 (`STAGE_1_BRIDGE_POOL`): Day-1 instant activation using Tiberius AI's pre-verified Bridge Pool
+ *   - Stage 2 (`STAGE_2_DEDICATED_SUBACCOUNT`): Transitions client to their dedicated Twilio Subaccount once A2P clears
+ */
+function provisionContractorTwilioSubaccount({ token, stage, einNumber }) {
+  const store = loadStore();
+  const cleanToken = String(token || 'demo-7am-briefing').trim();
+  const briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
+  if (!briefing) return { ok: false, error: 'Briefing not found' };
+
+  const contractor =
+    store.contractors[briefing.contractorId] ||
+    store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  contractor.includeSmartSiteBundle = true;
+  briefing.includeSmartSiteBundle = true;
+
+  const targetStage =
+    stage === 'STAGE_2_DEDICATED_SUBACCOUNT'
+      ? 'STAGE_2_DEDICATED_SUBACCOUNT'
+      : 'STAGE_1_BRIDGE_POOL';
+
+  contractor.twilioSubaccount = {
+    stage: targetStage,
+    subaccountSid: `AC_sub_${contractor.id.slice(0, 8)}_${ contractor.baseZip }`,
+    bridgeNumber: `+1830555${String(contractor.baseZip || '78130').slice(-4)}`,
+    dedicatedNumber: `+1830555${String(contractor.baseZip || '78130').slice(-4)}`,
+    einNumber: einNumber || 'XX-XXXXXXX (Verified Sole Prop / LLC)',
+    a2pBrandStatus: targetStage === 'STAGE_2_DEDICATED_SUBACCOUNT' ? 'APPROVED_ACTIVE' : 'VETTING_IN_PROGRESS',
+    updatedAt: new Date().toISOString()
+  };
+
+  saveStore(store);
+
+  return {
+    ok: true,
+    contractor: sanitizeContractor(contractor),
+    twilioA2PState: getContractorTwilioA2PState(contractor),
     roomState: getConversationRoomState(briefing.magicToken)
   };
 }
@@ -2382,6 +2517,8 @@ module.exports = {
   getConversationRoomState,
   processConversationAction,
   ingestInboundWebhookReply,
+  recordScoutAlertLog,
+  provisionContractorTwilioSubaccount,
   authenticateAccount,
   hydrateAccountFromSession,
   getAdminAgencyOverview,

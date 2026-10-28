@@ -25,6 +25,7 @@ const adminHandler = require('./api/recon/admin');
 const knowledgeHandler = require('./api/recon/knowledge');
 const inboxHandler = require('./api/recon/inbox');
 const sendHandler = require('./api/recon/send');
+const alertsHandler = require('./api/recon/alerts');
 const resendWebhookHandler = require('./api/webhooks/resend');
 const twilioWebhookHandler = require('./api/webhooks/twilio');
 
@@ -41,6 +42,7 @@ const API_ROUTES = {
   '/api/recon/knowledge': knowledgeHandler,
   '/api/recon/inbox': inboxHandler,
   '/api/recon/send': sendHandler,
+  '/api/recon/alerts': alertsHandler,
   '/api/webhooks/resend': resendWebhookHandler,
   '/api/webhooks/twilio': twilioWebhookHandler
 };

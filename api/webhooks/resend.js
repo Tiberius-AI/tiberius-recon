@@ -7,7 +7,8 @@
  *   - Drops the reply directly into the 3-Pane Conversation Room chat view with a 🔥 HOT REPLY badge
  */
 
-const { ingestInboundWebhookReply } = require('../../db/store');
+const { ingestInboundWebhookReply, recordScoutAlertLog } = require('../../db/store');
+const { dispatchContractorHotReplyAlertSms } = require('../../workers/comms-dispatcher');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -45,6 +46,20 @@ module.exports = async function handler(req, res) {
       subject,
       rawBody
     });
+
+    // Automatically fire Master Twilio Hot-Reply SMS Alert to the contractor's cell phone
+    const contractorAlertReceipt = await dispatchContractorHotReplyAlertSms({
+      contractor: result.contractor,
+      thread: result.thread,
+      inboundMessage: result.inboundMessage,
+      token: result.matchedToken
+    });
+    const alertLogResult = recordScoutAlertLog(result.matchedToken, contractorAlertReceipt);
+    result.contractorAlertReceipt = contractorAlertReceipt;
+    result.scoutAlertLogs = alertLogResult.scoutAlertLogs;
+    if (result.roomState) {
+      result.roomState.scoutAlertLogs = alertLogResult.scoutAlertLogs;
+    }
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');

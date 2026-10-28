@@ -134,6 +134,13 @@
 
           <div class="flex flex-wrap items-center gap-2.5 shrink-0">
             <button
+              id="test-scout-7am-sms-btn"
+              type="button"
+              class="btn-outline-slate px-3.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span>📲 Test 6:45 AM Scout SMS Alert</span>
+            </button>
+            <button
               id="simulate-reply-btn"
               type="button"
               class="btn-executive-navy px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
@@ -488,6 +495,60 @@
                 </div>
                 <div id="kb-drawer-signature" class="font-mono-telemetry text-[11px] text-emerald-400 mt-1">
                   Travis Miller • Lone Star Commercial Concrete &amp; Paving • (830) 555-0194
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CARD C: MASTER TWILIO A2P & TWO-STAGE BRIDGE POOL + SCOUT SMS ALERT LOG -->
+          <section class="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-3.5">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+              <div>
+                <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">📲 SCOUT-TO-CONTRACTOR SMS &amp; A2P</div>
+                <h3 class="font-display font-bold text-base text-white">Master Twilio &amp; Bridge Pool Status</h3>
+              </div>
+              <span id="a2p-stage-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[10px] text-emerald-300 font-bold">
+                MASTER A2P + BRIDGE POOL
+              </span>
+            </div>
+
+            <div class="space-y-2.5 text-xs">
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700 space-y-1">
+                <div class="font-mono-telemetry text-[10px] text-amber-300">1. SCOUT-TO-CONTRACTOR 6:45 AM &amp; HOT-REPLY SMS</div>
+                <div id="a2p-master-summary" class="text-white font-semibold">
+                  Tiberius AI LLC Master 10DLC (+18305550100) → (830) 555-0194
+                </div>
+                <div class="text-[11px] text-slate-300">
+                  100% compliant under Tiberius AI's Master A2P Campaign (Zero client A2P registration required for 7am &amp; Hot-Reply contractor alerts).
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-mono-telemetry text-[10px] text-blue-300">2. SMART SITE TWO-STAGE SUBACCOUNT</span>
+                  <span id="a2p-subaccount-stage-pill" class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">
+                    STAGE_1_BRIDGE_POOL
+                  </span>
+                </div>
+                <div id="a2p-subaccount-desc" class="text-[11px] text-slate-200">
+                  Day-1 Instant Activation via Tiberius Bridge Pool while dedicated client A2P 10DLC clears carrier vetting in background.
+                </div>
+                <button
+                  id="btn-toggle-a2p-stage"
+                  type="button"
+                  class="btn-outline-slate w-full py-2 px-3 rounded-lg text-[11px] font-bold cursor-pointer"
+                >
+                  ⚡ Promote to Stage 2 Dedicated Subaccount
+                </button>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono-telemetry text-[10px] text-emerald-400">RECENT SCOUT SMS ALERTS TO YOUR CELL</span>
+                  <span id="scout-alert-count-pill" class="font-mono-telemetry text-[10px] text-slate-300">2 sent</span>
+                </div>
+                <div id="scout-alerts-log-list" class="space-y-2 max-h-[210px] overflow-y-auto pr-1">
+                  <!-- Populated dynamically by inbox.js -->
                 </div>
               </div>
             </div>

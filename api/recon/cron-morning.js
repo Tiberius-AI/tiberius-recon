@@ -6,6 +6,8 @@
  */
 
 const { runNightlyReconPipeline } = require('../../workers/orchestrator');
+const { getBriefingByToken, recordScoutAlertLog } = require('../../db/store');
+const { dispatchScoutMorningAlertSms } = require('../../workers/comms-dispatcher');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -21,14 +23,27 @@ module.exports = async function handler(req, res) {
   }
 
   const params = req.method === 'POST' ? req.body || {} : req.query || {};
+  const token = params.token || 'demo-7am-briefing';
   const summary = await runNightlyReconPipeline({
     zipCode: params.zipCode || params.zip || '78130',
     primaryTrade: params.primaryTrade || params.trade || 'Commercial Concrete',
     dryRun: true
   });
 
+  const briefingBundle = getBriefingByToken(token);
+  let scoutMorningSmsReceipt = null;
+  if (briefingBundle && briefingBundle.contractor && briefingBundle.briefing) {
+    scoutMorningSmsReceipt = await dispatchScoutMorningAlertSms({
+      contractor: briefingBundle.contractor,
+      briefing: briefingBundle.briefing,
+      token: briefingBundle.briefing.magicToken
+    });
+    recordScoutAlertLog(briefingBundle.briefing.magicToken, scoutMorningSmsReceipt);
+  }
+
   return res.status(200).json({
     ok: true,
-    ...summary
+    ...summary,
+    scoutMorningSmsReceipt
   });
 };
