@@ -599,10 +599,24 @@ body {
 }
 
 .redacted-preview-text {
-  filter: blur(4px);
+  filter: blur(3.5px);
   user-select: none;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.72;
+}
+
+.locked-vault-panel {
+  background: linear-gradient(135deg, #162038 0%, #11182B 100%) !important;
+  border: 1px solid rgba(99, 130, 255, 0.34) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 20px 44px -18px rgba(0, 0, 0, 0.75);
+}
+
+.locked-vault-pill {
+  background-color: rgba(30, 41, 66, 0.92) !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ==========================================================================
