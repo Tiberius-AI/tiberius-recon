@@ -24,6 +24,9 @@ const authHandler = require('./api/recon/auth');
 const adminHandler = require('./api/recon/admin');
 const knowledgeHandler = require('./api/recon/knowledge');
 const inboxHandler = require('./api/recon/inbox');
+const sendHandler = require('./api/recon/send');
+const resendWebhookHandler = require('./api/webhooks/resend');
+const twilioWebhookHandler = require('./api/webhooks/twilio');
 
 const API_ROUTES = {
   '/api/recon/availability': availabilityHandler,
@@ -36,7 +39,10 @@ const API_ROUTES = {
   '/api/recon/auth': authHandler,
   '/api/recon/admin': adminHandler,
   '/api/recon/knowledge': knowledgeHandler,
-  '/api/recon/inbox': inboxHandler
+  '/api/recon/inbox': inboxHandler,
+  '/api/recon/send': sendHandler,
+  '/api/webhooks/resend': resendWebhookHandler,
+  '/api/webhooks/twilio': twilioWebhookHandler
 };
 
 const MIME_TYPES = {
@@ -119,7 +125,11 @@ function readJsonBody(req) {
       try {
         resolve(JSON.parse(raw));
       } catch (_err) {
-        resolve({});
+        try {
+          resolve(Object.fromEntries(new URLSearchParams(raw).entries()));
+        } catch (_e2) {
+          resolve({});
+        }
       }
     });
     req.on('error', () => resolve({}));

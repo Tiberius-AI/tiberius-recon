@@ -16,6 +16,12 @@ const {
   verifyPassword,
   signSessionToken
 } = require('./auth');
+const {
+  buildThreadReplyToAddress,
+  parseThreadReplyToAddress,
+  stripQuotedEmailChain,
+  buildNativeSimSmsUri
+} = require('../workers/comms-dispatcher');
 
 const LOCAL_STORE_PATH = path.join(__dirname, '.recon-store.json');
 const TMP_STORE_PATH = path.join(os.tmpdir(), 'tiberius-recon-store.json');
@@ -1912,6 +1918,39 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
   };
 }
 
+function enrichThreadWithCommsMetadata(thread, contractor, briefingToken) {
+  const kb = contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor);
+  const prospectFirst = String(thread.contactShort || thread.contactName || 'there')
+    .trim()
+    .split(/\s+/)[0];
+  const ownerFirst = String(contractor.ownerName || 'Shop Owner').trim().split(/\s+/)[0];
+  const shortStreet = String(thread.propertyAddress || '').split(',')[0].trim();
+  const replyToAddress = buildThreadReplyToAddress(briefingToken, thread.id);
+  const topService = (kb.coreServices && kb.coreServices[0]) || contractor.primaryTrade || 'commercial work';
+
+  const nativeSimDraft = `Hey ${prospectFirst} — ${ownerFirst} w/ ${contractor.companyName} here. Just sent you a quick note on the ${thread.dealValuation} permit at ${shortStreet} (${thread.permitNumber}). We just wrapped ${kb.proofProjects} nearby — open to a quick 10-min site walk Thursday at 9am?`;
+  const nativeSimUri = buildNativeSimSmsUri(thread.contactPhone, nativeSimDraft);
+
+  const voicemailScript = `"Hey ${prospectFirst}, this is ${contractor.ownerName} with ${contractor.companyName} here in ${
+    resolveMetroProfile(contractor.baseZip).city
+  }. Saw the ${thread.dealValuation} filing (${thread.permitNumber}) at ${shortStreet}. Our ${
+    contractor.primaryTrade
+  } crew just wrapped ${kb.proofProjects}, and we carry ${
+    kb.certificationsAndBonding.split('•')[0].trim()
+  } with ${kb.warrantyAndGuarantee}. I just shot our COI and spec sheet to your email — call or text me back on my cell at ${
+    contractor.mobilePhone
+  } if Thursday at 9:00 AM works to drop off numbers."`;
+
+  return {
+    ...thread,
+    replyToAddress,
+    nativeSimDraft,
+    nativeSimUri,
+    voicemailScript,
+    topService
+  };
+}
+
 /**
  * Returns the full state for the 3-Pane Reply & Follow-Up Conversation Room (`inbox.html`).
  */
@@ -1938,7 +1977,10 @@ function getConversationRoomState(token) {
     saveStore(store);
   }
 
-  const threads = store.conversationThreads[briefing.magicToken];
+  const rawThreads = store.conversationThreads[briefing.magicToken];
+  const threads = rawThreads.map((t) =>
+    enrichThreadWithCommsMetadata(t, contractor, briefing.magicToken)
+  );
   const hotRepliesCount = threads.filter((t) => t.stage === 'REPLIED_HOT').length;
   const followUpDueCount = threads.filter((t) => t.stage === 'FOLLOWUP_DUE').length;
   const bookedWalksCount = threads.filter((t) => t.stage === 'SITE_WALK_BOOKED').length;
@@ -1948,6 +1990,13 @@ function getConversationRoomState(token) {
     token: briefing.magicToken,
     contractor: sanitizeContractor(contractor),
     knowledgeBase: contractor.knowledgeBase,
+    commsPolicy: {
+      primaryOutboundChannel: 'RESEND_EMAIL_WITH_REPLY_TO',
+      coldSmsPolicy: 'NATIVE_SIM_HANDOFF_ONLY',
+      twilioSubaccountStatus: contractor.includeSmartSiteBundle
+        ? 'BRIDGE_POOL_ACTIVE_FOR_OPTED_IN_SMART_SITE_LEADS'
+        : 'MASTER_A2P_7AM_ALERTS_ONLY'
+    },
     briefing: {
       magicToken: briefing.magicToken,
       territoryZip: briefing.territoryZip,
@@ -1973,6 +2022,9 @@ function getConversationRoomState(token) {
  * - 'draft_kb_reply': uses contractor.knowledgeBase + last prospect message to generate a smart reply
  * - 'draft_day3_bump': generates a 2-sentence Day-3 follow-up bump
  * - 'draft_site_walk': generates a Thursday 9:00 AM site-walk confirmation
+ * - 'draft_native_sim_sms': generates a 2-sentence Native SIM text + `sms:+1...` URI (Zero A2P risk)
+ * - 'draft_voicemail_script': generates a 20-second phone/voicemail script
+ * - 'log_voicemail_left': logs a phone call / voicemail touch in the thread timeline
  * - 'simulate_inbound_reply': injects a realistic incoming reply from the GC/PM/Homeowner
  * - 'update_stage': updates the thread stage pill
  */
@@ -1982,7 +2034,8 @@ function processConversationAction({
   threadId,
   messageBody,
   channel = 'CLOUD_EMAIL',
-  stage
+  stage,
+  providerReceipt
 }) {
   const store = loadStore();
   const cleanToken = String(token || 'demo-7am-briefing').trim();
@@ -2008,6 +2061,7 @@ function processConversationAction({
     return { ok: false, error: 'Conversation thread not found' };
   }
 
+  const enriched = enrichThreadWithCommsMetadata(thread, contractor, briefing.magicToken);
   const prospectFirst = String(thread.contactShort || thread.contactName || 'there')
     .trim()
     .split(/\s+/)[0];
@@ -2029,6 +2083,7 @@ function processConversationAction({
       action,
       threadId: thread.id,
       draftText: generatedDraft,
+      replyToAddress: enriched.replyToAddress,
       knowledgeFactsUsed: [
         kb.certificationsAndBonding,
         topServices,
@@ -2044,7 +2099,8 @@ function processConversationAction({
       ok: true,
       action,
       threadId: thread.id,
-      draftText: bumpDraft
+      draftText: bumpDraft,
+      replyToAddress: enriched.replyToAddress
     };
   }
 
@@ -2054,7 +2110,55 @@ function processConversationAction({
       ok: true,
       action,
       threadId: thread.id,
-      draftText: walkDraft
+      draftText: walkDraft,
+      replyToAddress: enriched.replyToAddress
+    };
+  }
+
+  if (action === 'draft_native_sim_sms') {
+    return {
+      ok: true,
+      action,
+      threadId: thread.id,
+      draftText: enriched.nativeSimDraft,
+      nativeSimUri: enriched.nativeSimUri,
+      contactPhone: thread.contactPhone
+    };
+  }
+
+  if (action === 'draft_voicemail_script') {
+    return {
+      ok: true,
+      action,
+      threadId: thread.id,
+      voicemailScript: enriched.voicemailScript,
+      contactPhone: thread.contactPhone
+    };
+  }
+
+  if (action === 'log_voicemail_left') {
+    const nowLabel = new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const vmMsg = {
+      id: `msg_${Date.now()}_vm`,
+      sender: 'CONTRACTOR',
+      senderName: `${contractor.ownerName} (📞 Call / Voicemail + Native SIM)`,
+      timestamp: `Today • ${nowLabel}`,
+      channel: 'VOICE_CALL',
+      body: `📞 Called ${thread.contactPhone} & left 20-second permit voicemail: ${enriched.voicemailScript}`
+    };
+    thread.messages.push(vmMsg);
+    thread.unread = false;
+    thread.lastActivityLabel = `Called & Left VM • ${nowLabel}`;
+    saveStore(store);
+    return {
+      ok: true,
+      action,
+      thread: enrichThreadWithCommsMetadata(thread, contractor, briefing.magicToken),
+      message: vmMsg,
+      roomState: getConversationRoomState(briefing.magicToken)
     };
   }
 
@@ -2067,12 +2171,16 @@ function processConversationAction({
       hour: '2-digit',
       minute: '2-digit'
     });
+    const effectiveChannel = channel || 'RESEND_EMAIL';
     const newMsg = {
       id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       sender: 'CONTRACTOR',
       senderName: `${contractor.ownerName} (${contractor.companyName})`,
       timestamp: `Today • ${nowLabel}`,
-      channel: channel || 'CLOUD_EMAIL',
+      channel: effectiveChannel,
+      replyToAddress: enriched.replyToAddress,
+      providerMessageId: providerReceipt?.providerMessageId || undefined,
+      deliveryStatus: providerReceipt?.deliveryStatus || 'DISPATCHED',
       body: cleanBody
     };
     thread.messages.push(newMsg);
@@ -2081,7 +2189,12 @@ function processConversationAction({
 
     if (stage) {
       thread.stage = stage;
-    } else if (cleanBody.toLowerCase().includes('thursday') || cleanBody.toLowerCase().includes('walk') || cleanBody.toLowerCase().includes('8:30') || cleanBody.toLowerCase().includes('9:00')) {
+    } else if (
+      cleanBody.toLowerCase().includes('thursday') ||
+      cleanBody.toLowerCase().includes('walk') ||
+      cleanBody.toLowerCase().includes('8:30') ||
+      cleanBody.toLowerCase().includes('9:00')
+    ) {
       thread.stage = 'SITE_WALK_BOOKED';
       thread.stageBadge = '📅 SITE WALK PROPOSED / CONFIRMED';
       thread.followUpDueLabel = 'Site Walk Scheduled • Bring COI & Bid Sheet';
@@ -2095,8 +2208,9 @@ function processConversationAction({
     return {
       ok: true,
       action,
-      thread,
+      thread: enrichThreadWithCommsMetadata(thread, contractor, briefing.magicToken),
       message: newMsg,
+      nativeSimUri: buildNativeSimSmsUri(thread.contactPhone, cleanBody),
       roomState: getConversationRoomState(briefing.magicToken)
     };
   }
@@ -2111,8 +2225,8 @@ function processConversationAction({
       sender: 'PROSPECT',
       senderName: thread.contactShort,
       timestamp: `Today • ${nowLabel}`,
-      channel: 'CLOUD_EMAIL',
-      body: `Sounds good ${(contractor.ownerName || '').split(' ')[0]} — Thursday at 9:00 AM at ${thread.propertyAddress.split(',')[0]} works for us. Please bring your COI, W-9, and any unit pricing on ${ (kb.coreServices || [])[0] || contractor.primaryTrade }. See you on site.`
+      channel: 'RESEND_INBOUND_WEBHOOK',
+      body: `Sounds good ${(contractor.ownerName || '').split(' ')[0]} — Thursday at 9:00 AM at ${thread.propertyAddress.split(',')[0]} works for us. Please bring your COI, W-9, and any unit pricing on ${(kb.coreServices || [])[0] || contractor.primaryTrade}. See you on site.`
     };
     thread.messages.push(inboundMsg);
     thread.stage = 'REPLIED_HOT';
@@ -2125,7 +2239,7 @@ function processConversationAction({
     return {
       ok: true,
       action,
-      thread,
+      thread: enrichThreadWithCommsMetadata(thread, contractor, briefing.magicToken),
       message: inboundMsg,
       roomState: getConversationRoomState(briefing.magicToken)
     };
@@ -2145,12 +2259,113 @@ function processConversationAction({
     return {
       ok: true,
       action,
-      thread,
+      thread: enrichThreadWithCommsMetadata(thread, contractor, briefing.magicToken),
       roomState: getConversationRoomState(briefing.magicToken)
     };
   }
 
   return { ok: false, error: `Unsupported conversation action: ${action}` };
+}
+
+/**
+ * Universal Inbound Webhook Receiver (`ingestInboundWebhookReply`):
+ * Processes real incoming email replies from `/api/webhooks/resend` and incoming SMS replies
+ * from `/api/webhooks/twilio`, strips quoted email chains, matches the exact contractor
+ * briefing & thread ID, appends the prospect reply to the Conversation Room, and flags it HOT.
+ */
+function ingestInboundWebhookReply({
+  provider = 'RESEND',
+  token,
+  threadId,
+  fromEmail,
+  fromPhone,
+  fromName,
+  toAddress,
+  subject,
+  rawBody
+}) {
+  const store = loadStore();
+  const parsedRouting = parseThreadReplyToAddress(toAddress);
+  const resolvedToken =
+    (parsedRouting && parsedRouting.token) ||
+    (token && String(token).trim()) ||
+    'demo-7am-briefing';
+  const resolvedThreadId = (parsedRouting && parsedRouting.threadId) || threadId || null;
+
+  const briefing = store.briefings[resolvedToken] || store.briefings['demo-7am-briefing'];
+  const contractor =
+    store.contractors[briefing.contractorId] ||
+    store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  store.conversationThreads = store.conversationThreads || {};
+  if (!store.conversationThreads[briefing.magicToken]) {
+    store.conversationThreads[briefing.magicToken] = createDefaultConversationThreads(
+      contractor,
+      briefing.cards
+    );
+  }
+
+  const threads = store.conversationThreads[briefing.magicToken];
+  let matchedThread = null;
+
+  if (resolvedThreadId) {
+    matchedThread = threads.find((t) => t.id === resolvedThreadId || t.cardId === resolvedThreadId);
+  }
+  if (!matchedThread && fromEmail) {
+    const cleanEmail = String(fromEmail).toLowerCase().trim();
+    matchedThread = threads.find((t) =>
+      cleanEmail.includes(String(t.contactEmail || '').toLowerCase().trim())
+    );
+  }
+  if (!matchedThread && fromPhone) {
+    const inDigits = String(fromPhone).replace(/\D/g, '').slice(-7);
+    if (inDigits.length >= 7) {
+      matchedThread = threads.find((t) =>
+        String(t.contactPhone || '').replace(/\D/g, '').endsWith(inDigits)
+      );
+    }
+  }
+  if (!matchedThread) {
+    matchedThread = threads[0];
+  }
+
+  const cleanedBody = stripQuotedEmailChain(rawBody || subject || 'Interested — please send bid details.');
+  const nowLabel = new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const inboundMessage = {
+    id: `msg_wh_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    sender: 'PROSPECT',
+    senderName: fromName || matchedThread.contactShort || matchedThread.contactName,
+    timestamp: `Today • ${nowLabel}`,
+    channel: provider === 'TWILIO' ? 'TWILIO_INBOUND_SMS' : 'RESEND_INBOUND_EMAIL',
+    body: cleanedBody
+  };
+
+  matchedThread.messages.push(inboundMessage);
+  matchedThread.stage = 'REPLIED_HOT';
+  matchedThread.stageBadge =
+    provider === 'TWILIO'
+      ? '🔥 INBOUND SMS REPLY — ACTION REQUIRED'
+      : '🔥 INBOUND EMAIL REPLY — ACTION REQUIRED';
+  matchedThread.unread = true;
+  matchedThread.lastActivityLabel = `Inbound ${provider} • ${nowLabel}`;
+  matchedThread.followUpDueLabel = 'Prospect Replied — Respond Now';
+
+  saveStore(store);
+
+  return {
+    ok: true,
+    provider,
+    matchedToken: briefing.magicToken,
+    threadId: matchedThread.id,
+    cleanedBody,
+    inboundMessage,
+    thread: enrichThreadWithCommsMetadata(matchedThread, contractor, briefing.magicToken),
+    roomState: getConversationRoomState(briefing.magicToken)
+  };
 }
 
 module.exports = {
@@ -2166,6 +2381,7 @@ module.exports = {
   updateContractorKnowledgeBase,
   getConversationRoomState,
   processConversationAction,
+  ingestInboundWebhookReply,
   authenticateAccount,
   hydrateAccountFromSession,
   getAdminAgencyOverview,

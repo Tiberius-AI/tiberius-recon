@@ -272,14 +272,77 @@ async function runTests() {
         action: 'send_message',
         threadId: firstThreadId,
         messageBody: draftReplyData.draftText,
-        channel: 'CLOUD_EMAIL'
+        channel: 'RESEND_EMAIL'
       })
     });
     const sendReplyData = await sendReplyResp.json();
     assert.strictEqual(sendReplyData.ok, true);
     assert.ok(sendReplyData.thread.messages.length >= 3);
+    assert.ok(sendReplyData.providerReceipt.replyToAddress.includes(`reply+${token}+${firstThreadId}@`));
 
-    console.log('\n✅ ALL 13 TIBERIUS RECON™ END-TO-END, KNOWLEDGE BASE, CONVERSATION ROOM & LIVE ZERO-API TESTS PASSED.');
+    console.log('[14/15] Testing Outbound Router (/api/recon/send), Native SIM SMS & 20-Sec Voicemail Script...');
+    const nativeSimDraftResp = await fetch(`${baseUrl}/api/recon/inbox`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        action: 'draft_native_sim_sms',
+        threadId: firstThreadId
+      })
+    });
+    const nativeSimDraftData = await nativeSimDraftResp.json();
+    assert.strictEqual(nativeSimDraftData.ok, true);
+    assert.ok(nativeSimDraftData.nativeSimUri.startsWith('sms:+1'));
+
+    const outboundSendResp = await fetch(`${baseUrl}/api/recon/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        threadId: firstThreadId,
+        channel: 'RESEND_EMAIL',
+        messageBody: 'Confirming our estimator will bring the COI and unit-price sheet Thursday at 9:00 AM.'
+      })
+    });
+    const outboundSendData = await outboundSendResp.json();
+    assert.strictEqual(outboundSendData.ok, true);
+    assert.ok(outboundSendData.providerReceipt.replyToAddress.includes('@inbound.tiberius.ai'));
+
+    console.log('[15/15] Testing Universal Inbound Webhooks (/api/webhooks/resend & /api/webhooks/twilio)...');
+    const resendWebhookResp = await fetch(`${baseUrl}/api/webhooks/resend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'email.received',
+        data: {
+          from: 'Marcus Vance <mvance@apexcommercialbuilders.com>',
+          to: outboundSendData.providerReceipt.replyToAddress,
+          subject: 'Re: Bid numbers for Industrial Pkwy',
+          text: 'Perfect, see you Thursday at 9:00 AM at the job trailer.\n\nOn Thu, Oct 27, 2026 wrote:\n> Old quoted email text that should be stripped'
+        }
+      })
+    });
+    const resendWebhookData = await resendWebhookResp.json();
+    assert.strictEqual(resendWebhookData.ok, true);
+    assert.strictEqual(resendWebhookData.cleanedBody, 'Perfect, see you Thursday at 9:00 AM at the job trailer.');
+    assert.strictEqual(resendWebhookData.thread.stage, 'REPLIED_HOT');
+
+    const twilioWebhookResp = await fetch(`${baseUrl}/api/webhooks/twilio`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        From: '+15125550182',
+        To: '+18305550194',
+        Body: 'Dana Sterling here — received your W-9 and COI, adding you to Thursday CapEx walk.',
+        token
+      }).toString()
+    });
+    const twilioWebhookData = await twilioWebhookResp.json();
+    assert.strictEqual(twilioWebhookData.ok, true);
+    assert.strictEqual(twilioWebhookData.threadId, 'thread-deal-2');
+    assert.strictEqual(twilioWebhookData.thread.stage, 'REPLIED_HOT');
+
+    console.log('\n✅ ALL 15 TIBERIUS RECON™ END-TO-END, RESEND/TWILIO WEBHOOK, NATIVE SIM & CONVERSATION ROOM TESTS PASSED.');
   } finally {
     server.close();
   }

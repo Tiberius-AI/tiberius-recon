@@ -9,6 +9,11 @@
  *   3. Generates a verifiable RFC-822 / SMS Dispatch Receipt for the Human-in-the-Loop Audit Log.
  */
 
+const {
+  buildThreadReplyToAddress,
+  buildNativeSimSmsUri
+} = require('../comms-dispatcher');
+
 /**
  * Dispatches an approved 4-sentence intro email on behalf of the contractor.
  * Never runs automatically — only invoked when the contractor taps `[ ✓ Approve & Send ]`.
@@ -17,6 +22,9 @@ async function dispatchApprovedOutreach({ card, contractor, briefing, channel = 
   const senderCompany = (contractor && contractor.companyName) || 'Lone Star Commercial Trades';
   const senderEmail = (contractor && contractor.workEmail) || 'dispatch@tiberius.ai';
   const senderPhone = (contractor && contractor.mobilePhone) || '(830) 555-0194';
+  const token = (briefing && briefing.magicToken) || (contractor && contractor.magicToken) || 'demo-7am-briefing';
+  const threadId = `thread-${card.id || 'deal-1'}`;
+  const threadReplyTo = buildThreadReplyToAddress(token, threadId);
 
   const cleanBody = String(card.draftBody || '')
     .replace(/^"|"$/g, '')
@@ -26,15 +34,22 @@ async function dispatchApprovedOutreach({ card, contractor, briefing, channel = 
     card.draftSubject || `Project Bid Inquiry — ${card.headline || 'Recent Permit Filing'}`;
 
   const fullTextBody = `${cleanBody}\n\n—\n${senderCompany}\nDirect: ${senderPhone} | ${senderEmail}`;
+  const nativeSimUri = buildNativeSimSmsUri(card.contactPhone, cleanBody);
 
   const dispatchReceipt = {
     receiptId: `rcpt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     channel,
     fromDisplay: `${senderCompany} <recon@tiberius.ai>`,
-    replyTo: senderEmail,
+    replyTo: threadReplyTo,
+    contractorReplyTo: senderEmail,
+    threadId,
     toName: card.contactShort || card.contactName,
     toEmail: card.contactEmail,
     toPhone: card.contactPhone,
+    nativeSimUri,
+    a2pComplianceMode: channel.includes('SMS')
+      ? 'NATIVE_SIM_HANDOFF_ZERO_A2P_RISK'
+      : 'RESEND_EMAIL_WITH_INBOUND_WEBHOOK_ROUTING',
     subject: emailSubject,
     bodyText: fullTextBody,
     permitReference: card.cardNumber,
@@ -55,10 +70,14 @@ async function dispatchApprovedOutreach({ card, contractor, briefing, channel = 
         },
         body: JSON.stringify({
           from: process.env.RECON_FROM_EMAIL || `${senderCompany} <recon@tiberius.ai>`,
-          reply_to: senderEmail,
+          reply_to: [threadReplyTo, senderEmail],
           to: [card.contactEmail],
           subject: emailSubject,
-          text: fullTextBody
+          text: fullTextBody,
+          headers: {
+            'X-Tiberius-Token': token,
+            'X-Tiberius-Thread-Id': threadId
+          }
         })
       });
       if (resp.ok) {

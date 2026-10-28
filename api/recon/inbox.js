@@ -2,12 +2,16 @@
  * TIBERIUS RECON™ — 3-PANE REPLY & FOLLOW-UP CONVERSATION ROOM API
  * (api/recon/inbox.js)
  *
- * GET  /api/recon/inbox?token=... -> Returns active deal threads, contractor profile & Knowledge Base
+ * GET  /api/recon/inbox?token=... -> Returns active deal threads, contractor profile, Knowledge Base,
+ *                                    thread-specific Reply-To addresses, 20-sec Voicemail scripts & Native SIM URIs
  * POST /api/recon/inbox           ->
  *   - action === 'draft_kb_reply': Generates a context-aware reply using the client's Knowledge Base
  *   - action === 'draft_day3_bump': Generates a 2-sentence Day-3 follow-up bump
  *   - action === 'draft_site_walk': Proposes/confirms a Thursday 9:00 AM site walk
- *   - action === 'send_message': Appends contractor outbound message & updates stage
+ *   - action === 'draft_native_sim_sms': Generates a 2-sentence Native SIM text (`sms:+1...`)
+ *   - action === 'draft_voicemail_script': Generates a 20-second phone/voicemail script
+ *   - action === 'log_voicemail_left': Logs a phone/voicemail touch into the timeline
+ *   - action === 'send_message': Dispatches via Resend API (with thread Reply-To routing) or Native SIM handoff
  *   - action === 'simulate_inbound_reply': Injects a live prospect reply to test the room
  *   - action === 'update_stage': Updates thread stage pill
  */
@@ -16,6 +20,7 @@ const {
   getConversationRoomState,
   processConversationAction
 } = require('../../db/store');
+const { dispatchViaResendEmail } = require('../../workers/comms-dispatcher');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -39,17 +44,52 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'POST') {
       const body = typeof req.body === 'object' && req.body ? req.body : {};
+      const token = body.token || 'demo-7am-briefing';
+      const action = body.action;
+      const threadId = body.threadId;
+      const channel = body.channel || 'RESEND_EMAIL';
+
+      let providerReceipt = null;
+      if (action === 'send_message' && body.messageBody) {
+        const currentState = getConversationRoomState(token);
+        const activeThread =
+          (currentState &&
+            Array.isArray(currentState.threads) &&
+            currentState.threads.find((t) => t.id === threadId)) ||
+          (currentState && currentState.threads && currentState.threads[0]) ||
+          {};
+
+        if (!String(channel).includes('SMS')) {
+          providerReceipt = await dispatchViaResendEmail({
+            contractor: currentState.contractor || {},
+            recipientEmail: activeThread.contactEmail,
+            recipientName: activeThread.contactShort || activeThread.contactName,
+            subject: `Re: ${activeThread.headline || 'Permit Bid'} (${activeThread.permitNumber || ''})`,
+            bodyText: body.messageBody,
+            token,
+            threadId: activeThread.id || threadId
+          });
+        }
+      }
+
       const result = processConversationAction({
-        token: body.token || 'demo-7am-briefing',
-        action: body.action,
-        threadId: body.threadId,
+        token,
+        action,
+        threadId,
         messageBody: body.messageBody,
-        channel: body.channel,
-        stage: body.stage
+        channel,
+        stage: body.stage,
+        providerReceipt
       });
+
       res.statusCode = result.ok ? 200 : 400;
       res.setHeader('Content-Type', 'application/json');
-      return res.end(JSON.stringify(result));
+      return res.end(
+        JSON.stringify({
+          ...result,
+          providerReceipt
+        })
+      );
     }
 
     res.statusCode = 405;

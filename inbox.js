@@ -49,11 +49,14 @@
   const activePropertyEl = document.getElementById('active-thread-property');
   const activePhoneEl = document.getElementById('active-thread-phone');
   const activeEmailEl = document.getElementById('active-thread-email');
+  const activeReplyToEl = document.getElementById('active-thread-replyto');
   const messagesContainerEl = document.getElementById('thread-messages-container');
 
   const btnDraftKbReply = document.getElementById('btn-draft-kb-reply');
   const btnDraftDay3Bump = document.getElementById('btn-draft-day3-bump');
   const btnDraftSiteWalk = document.getElementById('btn-draft-site-walk');
+  const btnDraftNativeSim = document.getElementById('btn-draft-native-sim');
+  const btnNativeSimLaunch = document.getElementById('btn-native-sim-launch');
   const drafterStatusPill = document.getElementById('drafter-status-pill');
 
   const replyForm = document.getElementById('reply-composer-form');
@@ -62,7 +65,10 @@
   const replySendFeedback = document.getElementById('reply-send-feedback');
   const simulateReplyBtn = document.getElementById('simulate-reply-btn');
 
-  // Pane 3 Dossier & Knowledge Base Elements
+  // Pane 3 Voicemail, Dossier & Knowledge Base Elements
+  const voicemailScriptTextEl = document.getElementById('voicemail-script-text');
+  const voicemailCallLinkEl = document.getElementById('voicemail-call-link');
+  const btnLogVoicemail = document.getElementById('btn-log-voicemail');
   const dossierValuationEl = document.getElementById('dossier-valuation-badge');
   const dossierHeadlineEl = document.getElementById('dossier-headline');
   const dossierAddressEl = document.getElementById('dossier-address');
@@ -230,12 +236,23 @@
     }
     if (activePhoneEl) {
       const digits = String(thread.contactPhone || '').replace(/\D/g, '');
-      activePhoneEl.href = `tel:${digits}`;
+      activePhoneEl.href = `tel:+1${digits.slice(-10)}`;
       activePhoneEl.textContent = `📞 ${thread.contactPhone}`;
     }
     if (activeEmailEl) {
       activeEmailEl.href = `mailto:${thread.contactEmail}`;
       activeEmailEl.textContent = `✉️ ${thread.contactEmail}`;
+    }
+    if (activeReplyToEl && thread.replyToAddress) {
+      activeReplyToEl.textContent = thread.replyToAddress;
+    }
+    if (voicemailScriptTextEl && thread.voicemailScript) {
+      voicemailScriptTextEl.textContent = thread.voicemailScript;
+    }
+    if (voicemailCallLinkEl) {
+      const digits = String(thread.contactPhone || '').replace(/\D/g, '');
+      voicemailCallLinkEl.href = `tel:+1${digits.slice(-10)}`;
+      voicemailCallLinkEl.textContent = `📞 Dial ${thread.contactPhone}`;
     }
 
     // Render messages timeline
@@ -363,6 +380,76 @@
       requestAiDraft('draft_site_walk', 'PROPOSING SITE WALK...')
     );
   }
+  if (btnDraftNativeSim) {
+    btnDraftNativeSim.addEventListener('click', async () => {
+      if (replyChannelSelect) replyChannelSelect.value = 'NATIVE_SIM_SMS';
+      await requestAiDraft('draft_native_sim_sms', 'DRAFTING NATIVE SIM TEXT...');
+    });
+  }
+
+  if (btnNativeSimLaunch) {
+    btnNativeSimLaunch.addEventListener('click', async () => {
+      if (!roomState || !selectedThreadId) return;
+      const activeThread =
+        roomState.threads.find((t) => t.id === selectedThreadId) || roomState.threads[0] || {};
+      const body =
+        (replyTextarea && replyTextarea.value.trim()) ||
+        activeThread.nativeSimDraft ||
+        'Hey — just sent you an email regarding your permit filing. Open to a quick site walk Thursday at 9am?';
+
+      try {
+        const resp = await fetch('/api/recon/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: activeToken,
+            threadId: selectedThreadId,
+            channel: 'NATIVE_SIM_SMS',
+            messageBody: body
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.roomState) {
+          if (replyTextarea) replyTextarea.value = '';
+          renderFullRoom(data.roomState);
+          if (replySendFeedback) {
+            replySendFeedback.textContent =
+              '✓ NATIVE SIM TEXT LOGGED & PRE-FILLED FOR YOUR PERSONAL PHONE SIM ($0 A2P RISK)';
+            replySendFeedback.classList.remove('hidden');
+            setTimeout(() => replySendFeedback.classList.add('hidden'), 4500);
+          }
+          if (data.nativeSimUri) {
+            window.location.href = data.nativeSimUri;
+          }
+        }
+      } catch (_err) {
+        // Ignore
+      }
+    });
+  }
+
+  if (btnLogVoicemail) {
+    btnLogVoicemail.addEventListener('click', async () => {
+      if (!selectedThreadId) return;
+      try {
+        const resp = await fetch('/api/recon/inbox', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: activeToken,
+            action: 'log_voicemail_left',
+            threadId: selectedThreadId
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.roomState) {
+          renderFullRoom(data.roomState);
+        }
+      } catch (_err) {
+        // Ignore
+      }
+    });
+  }
 
   if (replyForm) {
     replyForm.addEventListener('submit', async (e) => {
@@ -370,15 +457,14 @@
       const body = replyTextarea ? replyTextarea.value.trim() : '';
       if (!body || !selectedThreadId) return;
 
-      const channel = replyChannelSelect ? replyChannelSelect.value : 'CLOUD_EMAIL';
+      const channel = replyChannelSelect ? replyChannelSelect.value : 'RESEND_EMAIL';
 
       try {
-        const resp = await fetch('/api/recon/inbox', {
+        const resp = await fetch('/api/recon/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             token: activeToken,
-            action: 'send_message',
             threadId: selectedThreadId,
             messageBody: body,
             channel
@@ -389,16 +475,19 @@
           if (replyTextarea) replyTextarea.value = '';
           renderFullRoom(data.roomState);
           if (replySendFeedback) {
+            const replyTo = data.providerReceipt?.replyToAddress || '';
+            replySendFeedback.textContent = replyTo
+              ? `✓ SENT VIA RESEND (REPLY-TO: ${replyTo})`
+              : '✓ REPLY DISPATCHED & LOGGED IN CONVERSATION TIMELINE';
             replySendFeedback.classList.remove('hidden');
-            setTimeout(() => replySendFeedback.classList.add('hidden'), 3500);
+            setTimeout(() => replySendFeedback.classList.add('hidden'), 4500);
           }
 
-          // Optional native device handoff if contractor chose SMS or Native Mail
+          // Optional native device handoff if contractor chose Native SIM SMS or Native Mail
           const activeThread =
             roomState.threads.find((t) => t.id === selectedThreadId) || {};
-          if (channel === 'NATIVE_SMS' && activeThread.contactPhone) {
-            const digits = String(activeThread.contactPhone).replace(/\D/g, '');
-            window.location.href = `sms:${digits}?body=${encodeURIComponent(body)}`;
+          if (channel.includes('SMS') && data.nativeSimUri) {
+            window.location.href = data.nativeSimUri;
           } else if (channel === 'NATIVE_EMAIL' && activeThread.contactEmail) {
             window.location.href = `mailto:${activeThread.contactEmail}?subject=${encodeURIComponent(
               'Re: ' + (activeThread.headline || 'Permit Bid')
