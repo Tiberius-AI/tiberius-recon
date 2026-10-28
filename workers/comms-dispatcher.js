@@ -91,11 +91,16 @@ async function dispatchViaResendEmail({
   subject,
   bodyText,
   token = 'demo-7am-briefing',
-  threadId = 'thread-deal-1'
+  threadId = 'thread-deal-1',
+  providerConfig = {}
 }) {
   const replyToAddress = buildThreadReplyToAddress(token, threadId);
-  const resendApiKey = process.env.RESEND_API_KEY || '';
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'recon@tiberius.ai';
+  const resendApiKey = String(
+    providerConfig.resendApiKey || process.env.RESEND_API_KEY || ''
+  ).trim();
+  const fromEmail = String(
+    providerConfig.resendFromEmail || process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+  ).trim();
   const senderDisplay = `${contractor.ownerName || 'Estimator'} (${
     contractor.companyName || 'Tiberius Recon Partner'
   })`;
@@ -107,51 +112,64 @@ async function dispatchViaResendEmail({
     ? [replyToAddress, contractor.workEmail]
     : [replyToAddress];
 
+  let providerError = null;
+
   if (resendApiKey) {
-    try {
-      const resp = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: `${senderDisplay} <${fromEmail}>`,
-          to: [recipientEmail],
-          reply_to: replyToList,
-          subject: emailSubject,
-          text: cleanBody,
+    const candidateFromAddresses =
+      fromEmail !== 'onboarding@resend.dev'
+        ? [fromEmail, 'onboarding@resend.dev']
+        : ['onboarding@resend.dev'];
+
+    for (const candidateFrom of candidateFromAddresses) {
+      try {
+        const resp = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
           headers: {
-            'X-Tiberius-Token': String(token),
-            'X-Tiberius-Thread-Id': String(threadId)
-          }
-        }),
-        signal: AbortSignal.timeout(6000)
-      });
-      const data = await resp.json();
-      if (resp.ok && data && data.id) {
-        return {
-          ok: true,
-          provider: 'RESEND_LIVE',
-          deliveryStatus: 'SENT_VIA_RESEND_API',
-          providerMessageId: data.id,
-          from: `${senderDisplay} <${fromEmail}>`,
-          to: recipientEmail,
-          recipientName,
-          subject: emailSubject,
-          replyToAddress,
-          dispatchedAt: new Date().toISOString()
-        };
+            Authorization: `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: `${senderDisplay} <${candidateFrom}>`,
+            to: [recipientEmail],
+            reply_to: replyToList,
+            subject: emailSubject,
+            text: cleanBody,
+            headers: {
+              'X-Tiberius-Token': String(token),
+              'X-Tiberius-Thread-Id': String(threadId)
+            }
+          }),
+          signal: AbortSignal.timeout(8000)
+        });
+        const data = await resp.json();
+        if (resp.ok && data && data.id) {
+          return {
+            ok: true,
+            provider: 'RESEND_LIVE',
+            deliveryStatus: 'SENT_VIA_RESEND_API',
+            providerMessageId: data.id,
+            from: `${senderDisplay} <${candidateFrom}>`,
+            to: recipientEmail,
+            recipientName,
+            subject: emailSubject,
+            replyToAddress,
+            dispatchedAt: new Date().toISOString()
+          };
+        }
+        providerError = (data && (data.message || data.error)) || `HTTP ${resp.status}`;
+      } catch (err) {
+        providerError = err.message;
       }
-    } catch (_err) {
-      // Fall through to structured queue receipt if network/key fails
     }
   }
 
   return {
     ok: true,
     provider: 'RESEND_READY_QUEUE',
-    deliveryStatus: 'QUEUED_WITH_REPLY_TO_ROUTING',
+    deliveryStatus: providerError
+      ? `SIMULATED_FALLBACK (${providerError})`
+      : 'QUEUED_WITH_REPLY_TO_ROUTING',
+    providerError,
     providerMessageId: `re_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     from: `${senderDisplay} <${fromEmail}>`,
     to: recipientEmail || 'verified-prospect@contractor.com',
@@ -208,6 +226,11 @@ function getContractorTwilioA2PState(contractor = {}) {
     contractorMobile: contractor.mobilePhone || '(830) 555-0194'
   };
 
+  const envStatus = {
+    hasResendEnvKey: Boolean(process.env.RESEND_API_KEY),
+    hasTwilioEnvKeys: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+  };
+
   const twoStageProvisioning = {
     currentStage: subStage,
     stageLabel,
@@ -229,6 +252,7 @@ function getContractorTwilioA2PState(contractor = {}) {
       smartSiteInboundSmsMode: 'DEDICATED_SUBACCOUNT_2WAY_A2P',
       scoutToContractorAlerts,
       twoStageProvisioning,
+      envStatus,
       summary:
         'Morning 6:45 AM alerts run on Tiberius Master A2P. Cold permit texts use Native SIM. Warm Smart Site leads run on isolated Client Subaccount.'
     };
@@ -245,6 +269,7 @@ function getContractorTwilioA2PState(contractor = {}) {
       smartSiteInboundSmsMode: 'DAY_1_BRIDGE_POOL_NUMBER_ACTIVE',
       scoutToContractorAlerts,
       twoStageProvisioning,
+      envStatus,
       summary:
         'Pre-verified Tiberius Bridge Number handles Day-1 Smart Site missed-call & web chat texts immediately while TrustHub A2P 10DLC clears.'
     };
@@ -260,6 +285,7 @@ function getContractorTwilioA2PState(contractor = {}) {
     smartSiteInboundSmsMode: 'NOT_ENABLED (Upgrade to Smart Site Bundle for 2-Way Bridge Number)',
     scoutToContractorAlerts,
     twoStageProvisioning,
+    envStatus,
     summary:
       '6:45 AM Briefing & Hot-Reply alerts text your cell via Tiberius Master A2P. Prospect texts use your personal phone SIM (`sms:`) with $0 carrier fees.'
   };
@@ -269,16 +295,22 @@ function getContractorTwilioA2PState(contractor = {}) {
  * Low-level sender for "Scout-to-Contractor" SMS alerts using Tiberius AI LLC's single
  * Master A2P 10DLC Twilio account (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MASTER_FROM_NUMBER`).
  */
-async function sendMasterTwilioSmsToContractor({ toPhone, bodyText }) {
-  const sid = process.env.TWILIO_ACCOUNT_SID || '';
-  const authToken = process.env.TWILIO_AUTH_TOKEN || '';
-  const fromNumber =
+async function sendMasterTwilioSmsToContractor({ toPhone, bodyText, providerConfig = {} }) {
+  const sid = String(providerConfig.twilioAccountSid || process.env.TWILIO_ACCOUNT_SID || '').trim();
+  const authToken = String(
+    providerConfig.twilioAuthToken || process.env.TWILIO_AUTH_TOKEN || ''
+  ).trim();
+  const rawFrom =
+    providerConfig.twilioFromNumber ||
     process.env.TWILIO_MASTER_FROM_NUMBER ||
     process.env.TWILIO_FROM_NUMBER ||
-    '+18305550100';
+    process.env.SMS_AGENT_NUMBER ||
+    '+18303608517';
+  const fromNumber = normalizePhoneE164(rawFrom);
   const normalizedTo = normalizePhoneE164(toPhone);
+  let providerError = null;
 
-  if (sid && authToken && ( process.env.TWILIO_MASTER_FROM_NUMBER || process.env.TWILIO_FROM_NUMBER )) {
+  if (sid && authToken && fromNumber) {
     try {
       const basicAuth = Buffer.from(`${sid}:${authToken}`).toString('base64');
       const form = new URLSearchParams();
@@ -295,7 +327,7 @@ async function sendMasterTwilioSmsToContractor({ toPhone, bodyText }) {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
           body: form.toString(),
-          signal: AbortSignal.timeout(6000)
+          signal: AbortSignal.timeout(8000)
         }
       );
       const data = await resp.json();
@@ -311,15 +343,19 @@ async function sendMasterTwilioSmsToContractor({ toPhone, bodyText }) {
           dispatchedAt: new Date().toISOString()
         };
       }
-    } catch (_err) {
-      // Fall through to simulated receipt if offline or test credentials
+      providerError = (data && (data.message || data.error_message)) || `HTTP ${resp.status}`;
+    } catch (err) {
+      providerError = err.message;
     }
   }
 
   return {
     ok: true,
     provider: 'TWILIO_MASTER_A2P_READY_QUEUE',
-    deliveryStatus: 'QUEUED_UNDER_TIBERIUS_MASTER_A2P',
+    deliveryStatus: providerError
+      ? `SIMULATED_FALLBACK (${providerError})`
+      : 'QUEUED_UNDER_TIBERIUS_MASTER_A2P',
+    providerError,
     twilioSid: `SM_master_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     fromNumber,
     toPhone: normalizedTo,
@@ -336,7 +372,9 @@ async function sendMasterTwilioSmsToContractor({ toPhone, bodyText }) {
 async function dispatchScoutMorningAlertSms({
   contractor = {},
   briefing = {},
-  baseUrl = 'https://tiberius.ai'
+  baseUrl = 'https://tiberius.ai',
+  overridePhone,
+  providerConfig = {}
 }) {
   const token = briefing.magicToken || contractor.magicToken || 'demo-7am-briefing';
   const cleanBase = String(baseUrl || 'https://tiberius.ai').replace(/\/$/, '');
@@ -351,8 +389,9 @@ async function dispatchScoutMorningAlertSms({
   const bodyText = `☕ Good morning ${ownerFirst} — your Tiberius Digital Scout pulled ${unlockedCount} new ${trade} permits in ${zip} overnight ($240K–$410K). Tap here to review & 1-tap send: ${briefingUrl}`;
 
   const receipt = await sendMasterTwilioSmsToContractor({
-    toPhone: contractor.mobilePhone || '(830) 555-0194',
-    bodyText
+    toPhone: overridePhone || contractor.mobilePhone || '(830) 555-0194',
+    bodyText,
+    providerConfig
   });
 
   return {
@@ -376,7 +415,9 @@ async function dispatchContractorHotReplyAlertSms({
   thread = {},
   inboundMessage = {},
   token = 'demo-7am-briefing',
-  baseUrl = 'https://tiberius.ai'
+  baseUrl = 'https://tiberius.ai',
+  overridePhone,
+  providerConfig = {}
 }) {
   const cleanBase = String(baseUrl || 'https://tiberius.ai').replace(/\/$/, '');
   const inboxUrl = `${cleanBase}/recon/inbox?token=${encodeURIComponent(token)}`;
@@ -395,8 +436,9 @@ async function dispatchContractorHotReplyAlertSms({
   }" — Tap to reply in Conversation Room: ${inboxUrl}`;
 
   const receipt = await sendMasterTwilioSmsToContractor({
-    toPhone: contractor.mobilePhone || '(830) 555-0194',
-    bodyText
+    toPhone: overridePhone || contractor.mobilePhone || '(830) 555-0194',
+    bodyText,
+    providerConfig
   });
 
   return {

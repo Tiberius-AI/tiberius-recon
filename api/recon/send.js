@@ -12,6 +12,7 @@ const {
 } = require('../../db/store');
 const {
   dispatchViaResendEmail,
+  sendMasterTwilioSmsToContractor,
   buildNativeSimSmsUri
 } = require('../../workers/comms-dispatcher');
 
@@ -37,6 +38,9 @@ module.exports = async function handler(req, res) {
     const threadId = body.threadId || 'thread-deal-1';
     const channel = body.channel || 'RESEND_EMAIL';
     const messageBody = String(body.messageBody || body.draftBody || '').trim();
+    const overrideEmail = body.overrideEmail ? String(body.overrideEmail).trim() : '';
+    const overridePhone = body.overridePhone ? String(body.overridePhone).trim() : '';
+    const providerConfig = body.providerConfig && typeof body.providerConfig === 'object' ? body.providerConfig : {};
 
     if (!messageBody) {
       res.statusCode = 400;
@@ -52,27 +56,38 @@ module.exports = async function handler(req, res) {
       (currentState && currentState.threads && currentState.threads[0]) ||
       {};
 
+    const targetEmail = overrideEmail || activeThread.contactEmail;
+    const targetPhone = overridePhone || activeThread.contactPhone;
+
     let providerReceipt = null;
-    if (!String(channel).includes('SMS')) {
+    if (channel === 'TWILIO_TEST_SMS') {
+      providerReceipt = await sendMasterTwilioSmsToContractor({
+        toPhone: targetPhone,
+        bodyText: messageBody,
+        providerConfig
+      });
+    } else if (!String(channel).includes('SMS')) {
       providerReceipt = await dispatchViaResendEmail({
         contractor: currentState.contractor || {},
-        recipientEmail: activeThread.contactEmail,
+        recipientEmail: targetEmail,
         recipientName: activeThread.contactShort || activeThread.contactName,
         subject:
           body.subject ||
           `Re: ${activeThread.headline || 'Permit Bid'} (${activeThread.permitNumber || ''})`,
         bodyText: messageBody,
         token,
-        threadId: activeThread.id || threadId
+        threadId: activeThread.id || threadId,
+        providerConfig
       });
     } else {
       providerReceipt = {
         ok: true,
         provider: 'NATIVE_SIM_PROTOCOL',
         deliveryStatus: 'HANDOFF_TO_CONTRACTOR_PERSONAL_SIM',
+        toPhone: targetPhone,
         a2pComplianceNote:
           'Cold permit SMS routed via Native SIM (sms:+1...) to protect Twilio A2P 10DLC reputation.',
-        nativeSimUri: buildNativeSimSmsUri(activeThread.contactPhone, messageBody),
+        nativeSimUri: buildNativeSimSmsUri(targetPhone, messageBody),
         dispatchedAt: new Date().toISOString()
       };
     }
@@ -92,6 +107,7 @@ module.exports = async function handler(req, res) {
     return res.end(
       JSON.stringify({
         ...updated,
+        nativeSimUri: providerReceipt.nativeSimUri || updated.nativeSimUri,
         providerReceipt
       })
     );

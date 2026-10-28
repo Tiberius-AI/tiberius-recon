@@ -84,12 +84,17 @@ module.exports = async function handler(req, res) {
 
       const contractor = briefingBundle.contractor;
       const briefing = briefingBundle.briefing;
+      const overridePhone = body.overridePhone ? String(body.overridePhone).trim() : '';
+      const providerConfig =
+        body.providerConfig && typeof body.providerConfig === 'object' ? body.providerConfig : {};
 
       if (action === 'send_morning_briefing_sms') {
         const receipt = await dispatchScoutMorningAlertSms({
           contractor,
           briefing,
-          token: briefing.magicToken
+          token: briefing.magicToken,
+          overridePhone,
+          providerConfig
         });
         const logResult = recordScoutAlertLog(briefing.magicToken, receipt);
         const updatedRoom = getConversationRoomState(briefing.magicToken);
@@ -123,7 +128,9 @@ module.exports = async function handler(req, res) {
           contractor,
           thread: activeThread,
           inboundMessage: lastMsg,
-          token: briefing.magicToken
+          token: briefing.magicToken,
+          overridePhone,
+          providerConfig
         });
         const logResult = recordScoutAlertLog(briefing.magicToken, receipt);
         const updatedRoom = getConversationRoomState(briefing.magicToken);

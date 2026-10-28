@@ -326,6 +326,7 @@
                   class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs font-mono-telemetry"
                 >
                   <option value="RESEND_EMAIL">☁️ Resend Email (Auto Reply-To Routing)</option>
+                  <option value="TWILIO_TEST_SMS">📲 Twilio Programmable SMS (Live Test)</option>
                   <option value="NATIVE_SIM_SMS">📱 Native SIM Text (sms: Protocol • $0 A2P Risk)</option>
                   <option value="NATIVE_EMAIL">✉️ Native Mail App</option>
                 </select>
@@ -352,6 +353,146 @@
               ✓ REPLY DISPATCHED VIA RESEND &amp; LOGGED IN CONVERSATION TIMELINE
             </div>
           </form>
+
+          <!-- ================================================================
+               🧪 LIVE EMAIL (RESEND) & SMS (TWILIO) DELIVERY TESTER
+               ================================================================ -->
+          <div class="p-4 rounded-xl bg-slate-800/95 border border-emerald-500/40 space-y-3 mt-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">
+                  🧪 LIVE DELIVERY TESTER (SEND TO YOUR OWN EMAIL &amp; PHONE)
+                </div>
+                <p class="text-[11px] text-slate-300 mt-0.5">
+                  Enter your own email and cell phone below to test real delivery via Resend &amp; Twilio instead of messaging the demo lead.
+                </p>
+              </div>
+              <button
+                id="btn-toggle-api-keys"
+                type="button"
+                class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-600 text-[11px] font-mono-telemetry text-amber-300 hover:text-white cursor-pointer"
+              >
+                🔑 Configure Resend / Twilio Keys ▾
+              </button>
+            </div>
+
+            <!-- Test Recipient Email & Phone Inputs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label for="test-override-email" class="block font-mono-telemetry text-[10px] text-slate-300 mb-1">
+                  YOUR TEST EMAIL ADDRESS (TO:)
+                </label>
+                <input
+                  id="test-override-email"
+                  type="email"
+                  placeholder="your-email@gmail.com"
+                  class="enterprise-input text-xs py-2 px-3 w-full"
+                />
+              </div>
+              <div>
+                <label for="test-override-phone" class="block font-mono-telemetry text-[10px] text-slate-300 mb-1">
+                  YOUR TEST CELL NUMBER (TO:)
+                </label>
+                <input
+                  id="test-override-phone"
+                  type="tel"
+                  placeholder="(830) 555-1234"
+                  class="enterprise-input text-xs py-2 px-3 w-full"
+                />
+              </div>
+            </div>
+
+            <!-- Collapsible Resend & Twilio Credentials Drawer (Saved in Browser localStorage) -->
+            <div id="test-api-keys-drawer" class="hidden p-3.5 rounded-xl bg-slate-900 border border-slate-700 space-y-3">
+              <div class="text-[11px] text-slate-300">
+                If you haven't added <code class="text-emerald-300">RESEND_API_KEY</code> or <code class="text-emerald-300">TWILIO_ACCOUNT_SID</code> in Vercel Environment Variables yet, paste them here for instant live testing (stored only in your browser):
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label for="cfg-resend-key" class="block font-mono-telemetry text-[10px] text-amber-300 mb-1">
+                    RESEND API KEY (re_...)
+                  </label>
+                  <input
+                    id="cfg-resend-key"
+                    type="password"
+                    placeholder="re_123456789..."
+                    class="enterprise-input text-xs py-1.5 px-2.5 w-full"
+                  />
+                </div>
+                <div>
+                  <label for="cfg-resend-from" class="block font-mono-telemetry text-[10px] text-amber-300 mb-1">
+                    RESEND FROM EMAIL (OR onboarding@resend.dev)
+                  </label>
+                  <input
+                    id="cfg-resend-from"
+                    type="text"
+                    value="onboarding@resend.dev"
+                    placeholder="onboarding@resend.dev"
+                    class="enterprise-input text-xs py-1.5 px-2.5 w-full"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label for="cfg-twilio-sid" class="block font-mono-telemetry text-[10px] text-blue-300 mb-1">
+                    TWILIO ACCOUNT SID (AC...)
+                  </label>
+                  <input
+                    id="cfg-twilio-sid"
+                    type="text"
+                    placeholder="AC..."
+                    class="enterprise-input text-xs py-1.5 px-2.5 w-full"
+                  />
+                </div>
+                <div>
+                  <label for="cfg-twilio-token" class="block font-mono-telemetry text-[10px] text-blue-300 mb-1">
+                    TWILIO AUTH TOKEN
+                  </label>
+                  <input
+                    id="cfg-twilio-token"
+                    type="password"
+                    placeholder="Auth Token..."
+                    class="enterprise-input text-xs py-1.5 px-2.5 w-full"
+                  />
+                </div>
+                <div>
+                  <label for="cfg-twilio-from" class="block font-mono-telemetry text-[10px] text-blue-300 mb-1">
+                    TWILIO FROM NUMBER
+                  </label>
+                  <input
+                    id="cfg-twilio-from"
+                    type="text"
+                    value="+18303608517"
+                    placeholder="+18303608517"
+                    class="enterprise-input text-xs py-1.5 px-2.5 w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- 1-Click Test Dispatch Buttons -->
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                id="btn-send-live-test-email"
+                type="button"
+                class="btn-trust-emerald px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>📧 Send Live Test Email (Resend)</span>
+              </button>
+              <button
+                id="btn-send-live-test-sms"
+                type="button"
+                class="btn-executive-navy px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>📲 Send Live Test Text (Twilio SMS)</span>
+              </button>
+            </div>
+
+            <div id="live-test-receipt-box" class="hidden p-3 rounded-lg bg-slate-900 border border-slate-700 font-mono-telemetry text-[11px] text-slate-200 leading-relaxed">
+            </div>
+          </div>
         </section>
 
         <!-- PANE 3 (RIGHT): 1-TAP CALL/VOICEMAIL + PERMIT/CAD X-RAY + ACTIVE KNOWLEDGE BASE -->

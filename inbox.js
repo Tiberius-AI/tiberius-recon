@@ -93,6 +93,80 @@
   const scoutAlertCountPillEl = document.getElementById('scout-alert-count-pill');
   const scoutAlertsLogListEl = document.getElementById('scout-alerts-log-list');
 
+  // Live Delivery Tester Elements
+  const btnToggleApiKeys = document.getElementById('btn-toggle-api-keys');
+  const testApiKeysDrawer = document.getElementById('test-api-keys-drawer');
+  const testOverrideEmailEl = document.getElementById('test-override-email');
+  const testOverridePhoneEl = document.getElementById('test-override-phone');
+  const cfgResendKeyEl = document.getElementById('cfg-resend-key');
+  const cfgResendFromEl = document.getElementById('cfg-resend-from');
+  const cfgTwilioSidEl = document.getElementById('cfg-twilio-sid');
+  const cfgTwilioTokenEl = document.getElementById('cfg-twilio-token');
+  const cfgTwilioFromEl = document.getElementById('cfg-twilio-from');
+  const btnSendLiveTestEmail = document.getElementById('btn-send-live-test-email');
+  const btnSendLiveTestSms = document.getElementById('btn-send-live-test-sms');
+  const liveTestReceiptBox = document.getElementById('live-test-receipt-box');
+
+  const STORAGE_KEYS = {
+    overrideEmail: 'tiberius_test_override_email',
+    overridePhone: 'tiberius_test_override_phone',
+    resendKey: 'tiberius_cfg_resend_key',
+    resendFrom: 'tiberius_cfg_resend_from',
+    twilioSid: 'tiberius_cfg_twilio_sid',
+    twilioToken: 'tiberius_cfg_twilio_token',
+    twilioFrom: 'tiberius_cfg_twilio_from'
+  };
+
+  function initTestConfigFromStorage() {
+    const map = [
+      [testOverrideEmailEl, STORAGE_KEYS.overrideEmail],
+      [testOverridePhoneEl, STORAGE_KEYS.overridePhone],
+      [cfgResendKeyEl, STORAGE_KEYS.resendKey],
+      [cfgResendFromEl, STORAGE_KEYS.resendFrom],
+      [cfgTwilioSidEl, STORAGE_KEYS.twilioSid],
+      [cfgTwilioTokenEl, STORAGE_KEYS.twilioToken],
+      [cfgTwilioFromEl, STORAGE_KEYS.twilioFrom]
+    ];
+    map.forEach(([el, key]) => {
+      if (!el) return;
+      const saved = localStorage.getItem(key);
+      if (saved) el.value = saved;
+      el.addEventListener('input', () => {
+        localStorage.setItem(key, el.value.trim());
+      });
+    });
+  }
+  initTestConfigFromStorage();
+
+  function getTestOverridesAndConfig() {
+    return {
+      overrideEmail: testOverrideEmailEl ? testOverrideEmailEl.value.trim() : '',
+      overridePhone: testOverridePhoneEl ? testOverridePhoneEl.value.trim() : '',
+      providerConfig: {
+        resendApiKey: cfgResendKeyEl ? cfgResendKeyEl.value.trim() : '',
+        resendFromEmail: cfgResendFromEl ? cfgResendFromEl.value.trim() : '',
+        twilioAccountSid: cfgTwilioSidEl ? cfgTwilioSidEl.value.trim() : '',
+        twilioAuthToken: cfgTwilioTokenEl ? cfgTwilioTokenEl.value.trim() : '',
+        twilioFromNumber: cfgTwilioFromEl ? cfgTwilioFromEl.value.trim() : ''
+      }
+    };
+  }
+
+  function showLiveTestReceipt(htmlContent, isWarning = false) {
+    if (!liveTestReceiptBox) return;
+    liveTestReceiptBox.className = `p-3 rounded-lg bg-slate-900 border ${
+      isWarning ? 'border-amber-400/50 text-amber-300' : 'border-emerald-400/50 text-emerald-300'
+    } font-mono-telemetry text-[11px] leading-relaxed`;
+    liveTestReceiptBox.innerHTML = htmlContent;
+    liveTestReceiptBox.classList.remove('hidden');
+  }
+
+  if (btnToggleApiKeys && testApiKeysDrawer) {
+    btnToggleApiKeys.addEventListener('click', () => {
+      testApiKeysDrawer.classList.toggle('hidden');
+    });
+  }
+
   let roomState = null;
   let selectedThreadId = null;
   let activeFilter = 'ALL';
@@ -458,6 +532,7 @@
         'Hey — just sent you an email regarding your permit filing. Open to a quick site walk Thursday at 9am?';
 
       try {
+        const testCfg = getTestOverridesAndConfig();
         const resp = await fetch('/api/recon/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -465,7 +540,9 @@
             token: activeToken,
             threadId: selectedThreadId,
             channel: 'NATIVE_SIM_SMS',
-            messageBody: body
+            messageBody: body,
+            overridePhone: testCfg.overridePhone,
+            providerConfig: testCfg.providerConfig
           })
         });
         const data = await resp.json();
@@ -520,6 +597,7 @@
       const channel = replyChannelSelect ? replyChannelSelect.value : 'RESEND_EMAIL';
 
       try {
+        const testCfg = getTestOverridesAndConfig();
         const resp = await fetch('/api/recon/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -527,29 +605,39 @@
             token: activeToken,
             threadId: selectedThreadId,
             messageBody: body,
-            channel
+            channel,
+            overrideEmail: testCfg.overrideEmail,
+            overridePhone: testCfg.overridePhone,
+            providerConfig: testCfg.providerConfig
           })
         });
         const data = await resp.json();
         if (data && data.ok && data.roomState) {
           if (replyTextarea) replyTextarea.value = '';
           renderFullRoom(data.roomState);
+          const pr = data.providerReceipt || {};
           if (replySendFeedback) {
-            const replyTo = data.providerReceipt?.replyToAddress || '';
-            replySendFeedback.textContent = replyTo
-              ? `✓ SENT VIA RESEND (REPLY-TO: ${replyTo})`
-              : '✓ REPLY DISPATCHED & LOGGED IN CONVERSATION TIMELINE';
+            const replyTo = pr.replyToAddress || '';
+            replySendFeedback.textContent =
+              pr.provider === 'RESEND_LIVE'
+                ? `✅ DELIVERED LIVE VIA RESEND TO ${pr.to} (ID: ${pr.providerMessageId})`
+                : pr.provider === 'TWILIO_MASTER_A2P_LIVE'
+                ? `✅ DELIVERED LIVE VIA TWILIO SMS TO ${pr.toPhone} (SID: ${pr.twilioSid})`
+                : replyTo
+                ? `✓ SENT (${pr.deliveryStatus}) • REPLY-TO: ${replyTo}`
+                : '✓ REPLY DISPATCHED & LOGGED IN CONVERSATION TIMELINE';
             replySendFeedback.classList.remove('hidden');
-            setTimeout(() => replySendFeedback.classList.add('hidden'), 4500);
+            setTimeout(() => replySendFeedback.classList.add('hidden'), 6000);
           }
 
           // Optional native device handoff if contractor chose Native SIM SMS or Native Mail
           const activeThread =
             roomState.threads.find((t) => t.id === selectedThreadId) || {};
-          if (channel.includes('SMS') && data.nativeSimUri) {
+          const targetEmail = testCfg.overrideEmail || activeThread.contactEmail;
+          if (channel === 'NATIVE_SIM_SMS' && data.nativeSimUri) {
             window.location.href = data.nativeSimUri;
-          } else if (channel === 'NATIVE_EMAIL' && activeThread.contactEmail) {
-            window.location.href = `mailto:${activeThread.contactEmail}?subject=${encodeURIComponent(
+          } else if (channel === 'NATIVE_EMAIL' && targetEmail) {
+            window.location.href = `mailto:${targetEmail}?subject=${encodeURIComponent(
               'Re: ' + (activeThread.headline || 'Permit Bid')
             )}&body=${encodeURIComponent(body)}`;
           }
@@ -560,16 +648,149 @@
     });
   }
 
-  if (testScout7amSmsBtn) {
-    testScout7amSmsBtn.addEventListener('click', async () => {
-      testScout7amSmsBtn.textContent = '📲 Sending 6:45 AM Scout SMS...';
+  if (btnSendLiveTestEmail) {
+    btnSendLiveTestEmail.addEventListener('click', async () => {
+      const testCfg = getTestOverridesAndConfig();
+      if (!testCfg.overrideEmail) {
+        showLiveTestReceipt(
+          '⚠️ Please type your own email address in <strong>YOUR TEST EMAIL ADDRESS (TO:)</strong> above first.',
+          true
+        );
+        if (testOverrideEmailEl) testOverrideEmailEl.focus();
+        return;
+      }
+
+      const activeThread =
+        (roomState &&
+          Array.isArray(roomState.threads) &&
+          roomState.threads.find((t) => t.id === selectedThreadId)) ||
+        (roomState && roomState.threads && roomState.threads[0]) ||
+        {};
+      const messageBody =
+        (replyTextarea && replyTextarea.value.trim()) ||
+        `Hi — this is a live Tiberius Recon™ test email for ${
+          activeThread.headline || 'your commercial permit'
+        } (${
+          activeThread.propertyAddress || '78130'
+        }). Reply directly to this email to test the Conversation Room inbound webhook! — ${
+          roomState?.knowledgeBase?.signatureLine || 'Tiberius Recon'
+        }`;
+
+      btnSendLiveTestEmail.textContent = '📧 Sending Live Test Email...';
+      try {
+        const resp = await fetch('/api/recon/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: activeToken,
+            threadId: selectedThreadId || 'thread-deal-1',
+            channel: 'RESEND_EMAIL',
+            messageBody,
+            overrideEmail: testCfg.overrideEmail,
+            providerConfig: testCfg.providerConfig
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok) {
+          if (data.roomState) renderFullRoom(data.roomState);
+          const pr = data.providerReceipt || {};
+          if (pr.provider === 'RESEND_LIVE') {
+            showLiveTestReceipt(
+              `✅ <strong>LIVE EMAIL DELIVERED VIA RESEND!</strong><br/>To: ${escapeHtml(
+                pr.to
+              )}<br/>From: ${escapeHtml(pr.from)}<br/>Resend ID: ${escapeHtml(
+                pr.providerMessageId
+              )}<br/>Reply-To: ${escapeHtml(pr.replyToAddress)}`,
+              false
+            );
+          } else {
+            if (testApiKeysDrawer) testApiKeysDrawer.classList.remove('hidden');
+            showLiveTestReceipt(
+              `⚠️ <strong>QUEUED IN SIMULATION MODE (${escapeHtml(
+                pr.deliveryStatus
+              )})</strong><br/>To send a real email to <strong>${escapeHtml(
+                testCfg.overrideEmail
+              )}</strong>, paste your <code>RESEND_API_KEY</code> (starts with <code>re_</code>) in the <strong>Configure Resend / Twilio Keys</strong> box above (or in Vercel Env Vars) and click Send again.`,
+              true
+            );
+          }
+        }
+      } catch (err) {
+        showLiveTestReceipt(`❌ Error: ${escapeHtml(err.message)}`, true);
+      } finally {
+        btnSendLiveTestEmail.textContent = '📧 Send Live Test Email (Resend)';
+      }
+    });
+  }
+
+  if (btnSendLiveTestSms) {
+    btnSendLiveTestSms.addEventListener('click', async () => {
+      const testCfg = getTestOverridesAndConfig();
+      if (!testCfg.overridePhone) {
+        showLiveTestReceipt(
+          '⚠️ Please type your mobile number in <strong>YOUR TEST CELL NUMBER (TO:)</strong> above first.',
+          true
+        );
+        if (testOverridePhoneEl) testOverridePhoneEl.focus();
+        return;
+      }
+
+      btnSendLiveTestSms.textContent = '📲 Sending Live Test SMS...';
       try {
         const resp = await fetch('/api/recon/alerts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             token: activeToken,
-            action: 'send_morning_briefing_sms'
+            action: 'send_morning_briefing_sms',
+            overridePhone: testCfg.overridePhone,
+            providerConfig: testCfg.providerConfig
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok) {
+          if (data.roomState) renderFullRoom(data.roomState);
+          const r = data.receipt || {};
+          if (r.provider === 'TWILIO_MASTER_A2P_LIVE') {
+            showLiveTestReceipt(
+              `✅ <strong>LIVE SMS DELIVERED VIA TWILIO!</strong><br/>To: ${escapeHtml(
+                r.toPhone
+              )}<br/>From: ${escapeHtml(r.fromNumber)}<br/>Twilio SID: ${escapeHtml(r.twilioSid)}`,
+              false
+            );
+          } else {
+            if (testApiKeysDrawer) testApiKeysDrawer.classList.remove('hidden');
+            showLiveTestReceipt(
+              `⚠️ <strong>QUEUED IN SIMULATION MODE (${escapeHtml(
+                r.deliveryStatus
+              )})</strong><br/>To deliver a real Twilio SMS to <strong>${escapeHtml(
+                testCfg.overridePhone
+              )}</strong>, paste your <code>TWILIO_ACCOUNT_SID</code> and <code>TWILIO_AUTH_TOKEN</code> in the <strong>Configure Resend / Twilio Keys</strong> box above (or use the <strong>📱 Text from My Phone (Native SIM)</strong> button for $0 key-free texting).`,
+              true
+            );
+          }
+        }
+      } catch (err) {
+        showLiveTestReceipt(`❌ Error: ${escapeHtml(err.message)}`, true);
+      } finally {
+        btnSendLiveTestSms.textContent = '📲 Send Live Test Text (Twilio SMS)';
+      }
+    });
+  }
+
+  if (testScout7amSmsBtn) {
+    testScout7amSmsBtn.addEventListener('click', async () => {
+      testScout7amSmsBtn.textContent = '📲 Sending 6:45 AM Scout SMS...';
+      try {
+        const testCfg = getTestOverridesAndConfig();
+        const resp = await fetch('/api/recon/alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: activeToken,
+            action: 'send_morning_briefing_sms',
+            overridePhone: testCfg.overridePhone,
+            providerConfig: testCfg.providerConfig
           })
         });
         const data = await resp.json();
