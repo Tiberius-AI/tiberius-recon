@@ -98,15 +98,21 @@ async function dispatchViaResendEmail({
   providerConfig = {}
 }) {
   const replyToAddress = buildThreadReplyToAddress(token, threadId);
+  const customResendKey = String(providerConfig.resendApiKey || '').trim();
+  const validCustomResendKey = /^re_[A-Za-z0-9_]{15,}$/.test(customResendKey)
+    ? customResendKey
+    : '';
   const resendApiKey = String(
-    providerConfig.resendApiKey ||
+    validCustomResendKey ||
       process.env.RESEND_API_KEY ||
       process.env.RESEND_KEY ||
       process.env.NEXT_PUBLIC_RESEND_API_KEY ||
       DEFAULT_RESEND_KEY
   ).trim();
+  const customFrom = String(providerConfig.resendFromEmail || '').trim();
+  const validCustomFrom = customFrom.includes('@') ? customFrom : '';
   const fromEmail = String(
-    providerConfig.resendFromEmail ||
+    validCustomFrom ||
       process.env.RESEND_FROM_EMAIL ||
       process.env.FROM_EMAIL ||
       process.env.EMAIL_FROM ||

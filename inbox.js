@@ -118,6 +118,17 @@
   };
 
   function initTestConfigFromStorage() {
+    // Purge any browser-autofilled login password that doesn't start with 're_'
+    const existingResend = localStorage.getItem(STORAGE_KEYS.resendKey);
+    if (existingResend && !/^re_[A-Za-z0-9_]{15,}$/.test(existingResend)) {
+      localStorage.removeItem(STORAGE_KEYS.resendKey);
+    }
+    const existingTwilioSid = localStorage.getItem(STORAGE_KEYS.twilioSid);
+    if (existingTwilioSid && !/^AC[a-f0-9]{32}$/i.test(existingTwilioSid)) {
+      localStorage.removeItem(STORAGE_KEYS.twilioSid);
+      localStorage.removeItem(STORAGE_KEYS.twilioToken);
+    }
+
     const map = [
       [testOverrideEmailEl, STORAGE_KEYS.overrideEmail],
       [testOverridePhoneEl, STORAGE_KEYS.overridePhone],
