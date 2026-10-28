@@ -128,53 +128,53 @@
       const equityDollars = Math.round(Number(client.smartSiteEquityCents || 0) / 100);
       const card = document.createElement('div');
       card.className =
-        'p-5 rounded-2xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between gap-4';
+        'p-5 rounded-2xl border border-slate-700 bg-slate-800/90 hover:border-slate-500 transition-colors flex flex-col justify-between gap-4 shadow-sm';
 
       card.innerHTML = `
-        <div class="space-y-2">
+        <div class="space-y-2.5">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono-telemetry font-bold uppercase ${
               client.tierLevel && client.tierLevel.includes('Tier 3')
-                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                : 'bg-blue-100 text-blue-800 border border-blue-200'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
             }">
               ZIP ${client.baseZip} • ${client.tierLevel}
             </span>
-            <span class="text-xs font-mono-telemetry font-bold text-slate-700">
+            <span class="text-sm font-mono-telemetry font-bold text-amber-300">
               $${client.monthlyRate}/mo
             </span>
           </div>
-          <h4 class="font-display font-extrabold text-slate-900 text-base">${client.companyName}</h4>
-          <p class="text-xs text-slate-600">
-            <strong>Owner:</strong> ${client.ownerName} • <strong>Trade:</strong> ${client.primaryTrade}
+          <h4 class="font-display font-extrabold text-white text-lg tracking-tight">${client.companyName}</h4>
+          <p class="text-xs text-slate-200">
+            <strong class="text-white">Owner:</strong> ${client.ownerName} • <strong class="text-white">Trade:</strong> ${client.primaryTrade}
           </p>
-          <p class="text-[11px] font-mono-telemetry text-slate-500">
-            Login: ${client.workEmail} • Phone: ${client.mobilePhone} • PIN: ${client.accessPin || client.baseZip}
+          <p class="text-xs font-mono-telemetry text-slate-300">
+            Login: <span class="text-white">${client.workEmail}</span> • Phone: <span class="text-white">${client.mobilePhone}</span> • PIN: <span class="text-amber-300 font-bold">${client.accessPin || client.baseZip}</span>
           </p>
-          <div class="pt-1 flex flex-wrap items-center gap-2 text-[11px] font-mono-telemetry">
-            <span class="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">
+          <div class="pt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-mono-telemetry">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-700 text-slate-200">
               Queue: ${client.unlockedCount} Unlocked / ${client.totalCards} Total
             </span>
-            <span class="px-2 py-0.5 rounded bg-white border border-slate-200 text-emerald-700 font-semibold">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-700 text-emerald-400 font-semibold">
               Sent Today: ${client.approvedCount}
             </span>
-            <span class="px-2 py-0.5 rounded bg-white border border-slate-200 text-blue-700">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-700 text-blue-300">
               Smart Site Equity: $${equityDollars.toLocaleString()}
             </span>
           </div>
         </div>
-        <div class="pt-3 border-t border-slate-200/80 flex flex-wrap items-center gap-2">
+        <div class="pt-3.5 border-t border-slate-700/80 flex flex-wrap items-center gap-2">
           <a
             href="briefing.html?token=${encodeURIComponent(client.magicToken)}"
             data-switch-token="${client.magicToken}"
-            class="client-impersonate-link px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-bold text-xs transition-colors"
+            class="client-impersonate-link px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-display font-bold text-xs transition-colors"
           >
             Open 7:00 AM Briefing →
           </a>
           <a
             href="command.html?token=${encodeURIComponent(client.magicToken)}"
             data-switch-token="${client.magicToken}"
-            class="client-impersonate-link px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-bold text-xs transition-colors"
+            class="client-impersonate-link px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-display font-bold text-xs transition-colors"
           >
             Territory Command →
           </a>
@@ -183,7 +183,7 @@
             data-sweep-token="${client.magicToken}"
             data-sweep-trade="${client.primaryTrade}"
             data-sweep-company="${client.companyName}"
-            class="admin-sweep-client-btn px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-mono-telemetry font-bold text-[11px] transition-colors"
+            class="admin-sweep-client-btn px-3.5 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono-telemetry font-bold text-[11px] transition-colors cursor-pointer"
           >
             ⚡ Run Live Zero-API Sweep
           </button>

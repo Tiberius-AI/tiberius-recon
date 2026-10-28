@@ -144,18 +144,18 @@
         </form>
 
         <!-- Authenticated Contractor Quick Actions Card (Shown when signed in) -->
-        <div id="active-session-card" class="hidden pt-4 border-t border-slate-200/80 space-y-3">
-          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-1.5">
+        <div id="active-session-card" class="hidden pt-4 border-t border-slate-700/80 space-y-3">
+          <div class="p-4 rounded-xl bg-slate-800/90 border border-emerald-500/40 space-y-1.5">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-emerald-800">
+              <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-emerald-400">
                 ✓ ACTIVE AUTHENTICATED SESSION
               </span>
-              <span id="session-role-pill" class="px-2 py-0.5 rounded bg-emerald-700 text-white text-[10px] font-mono-telemetry font-bold uppercase">
+              <span id="session-role-pill" class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-mono-telemetry font-bold uppercase">
                 CONTRACTOR
               </span>
             </div>
-            <p id="session-company-name" class="font-display font-bold text-slate-900 text-base">--</p>
-            <p id="session-meta-line" class="text-xs font-mono-telemetry text-slate-600">--</p>
+            <p id="session-company-name" class="font-display font-bold text-white text-base">--</p>
+            <p id="session-meta-line" class="text-xs font-mono-telemetry text-slate-300">--</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -312,12 +312,12 @@
       </div>
 
       <!-- Client Accounts Roster Cards -->
-      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-4">
+      <div class="bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md p-6 sm:p-7 space-y-4">
         <div class="flex items-center justify-between">
-          <h3 class="font-display text-lg font-extrabold text-slate-900">
+          <h3 class="font-display text-lg font-extrabold text-white">
             Client Contractor Accounts
           </h3>
-          <span id="admin-action-status" class="text-xs font-mono-telemetry text-blue-600 font-semibold"></span>
+          <span id="admin-action-status" class="text-xs font-mono-telemetry text-emerald-400 font-semibold"></span>
         </div>
 
         <div id="admin-clients-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -326,49 +326,49 @@
       </div>
 
       <!-- Onboard New Client Account Form -->
-      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-4">
+      <div class="bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md p-6 sm:p-7 space-y-4">
         <div>
-          <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-blue-700">
+          <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-amber-400">
             + AGENCY CLIENT ONBOARDING
           </span>
-          <h3 class="font-display text-lg font-extrabold text-slate-900">
+          <h3 class="font-display text-lg font-extrabold text-white mt-1">
             Create Separate Contractor Account &amp; Lock Territory
           </h3>
         </div>
 
         <form id="admin-create-client-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Company Name</label>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Company Name</label>
             <input id="new-client-company" type="text" required placeholder="e.g. Brazos Commercial Electric" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
-            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Owner / Estimator Name</label>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Owner / Estimator Name</label>
             <input id="new-client-owner" type="text" required placeholder="e.g. Luke Garrison" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
-            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Primary Trade</label>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Primary Trade</label>
             <select id="new-client-trade" class="enterprise-select w-full px-3 py-2 rounded-xl text-sm">
               <option value="Commercial Concrete">Commercial Concrete</option>
-              <option value="Commercial Roofing">Commercial Roofing</option>
-              <option value="Commercial HVAC">Commercial HVAC</option>
-              <option value="Commercial Electrical">Commercial Electrical</option>
-              <option value="Site Work &amp; Excavation">Site Work &amp; Excavation</option>
+              <option value="Roofing / Exteriors">Roofing / Exteriors</option>
+              <option value="Electrical / HVAC">Electrical / HVAC</option>
+              <option value="Pools / Fencing / Custom Home">Pools / Fencing / Custom Home</option>
+              <option value="B2B / Commercial Services">B2B / Commercial Services</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Target Zip Code</label>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Target Zip Code</label>
             <input id="new-client-zip" type="text" required value="78666" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
-            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Work Email (Login ID)</label>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Work Email (Login ID)</label>
             <input id="new-client-email" type="email" required placeholder="luke@brazoselectric.com" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
-            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Mobile Phone</label>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Mobile Phone</label>
             <input id="new-client-phone" type="text" required placeholder="(512) 555-0144" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
-            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Intelligence Tier</label>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Intelligence Tier</label>
             <select id="new-client-tier" class="enterprise-select w-full px-3 py-2 rounded-xl text-sm">
               <option value="Tier 2: Commercial Permits">Tier 2: Commercial Permits ($597/mo)</option>
               <option value="Tier 3: Full Territory Exclusivity">Tier 3: 100% Zip Exclusive ($897/mo)</option>
@@ -376,7 +376,7 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs font-mono-telemetry font-bold text-slate-600 uppercase mb-1">Initial Account Password / PIN</label>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Initial Account Password / PIN</label>
             <input id="new-client-password" type="text" required value="recon2026" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div class="flex items-end">
