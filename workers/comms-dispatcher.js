@@ -132,7 +132,7 @@ async function dispatchViaResendEmail({
 
   let providerError = null;
   const isFictionalDemoRecipient =
-    /@(apexcommercialbuilders\.com|crestviewcommercial\.com|horizoncommercialgc\.com|contractor\.com|gmail-demo\.com|privateestate\.org|vantageretail\.com|prescotcapital\.com|medcorebuilders\.com|ironcladindustrial\.com|austinortho\.com|spawglass\.com|r-o\.com|arlucasconstruction\.com|tsbyrne\.com|joeris\.com|bartlettcocke\.com|guidoconstruction\.com|chasco\.com|sabrecommercial\.com)$/i.test(
+    /@(apexcommercialbuilders\.com|crestviewcommercial\.com|horizoncommercialgc\.com|contractor\.com|gmail-demo\.com|privateestate\.org|vantageretail\.com|prescotcapital\.com|medcorebuilders\.com|ironcladindustrial\.com|austinortho\.com|spawglass\.com|r-o\.com|arlucasconstruction\.com|tsbyrne\.com|joeris\.com|bartlettcocke\.com|guidoconstruction\.com|chasco\.com|sabrecommercial\.com|lottbrothers\.com|cadencemcshane\.com|streamrealty\.com|kellermartin\.com|vaughnconstruction\.com|rcpageconstruction\.com|structurainc\.com|gwmitchell\.com|browningconstruction\.com|catamountinc\.com|embreydc\.com|whiteconst\.com|aquilacommercial\.com|metrocontracting\.com|transwestern\.com|endeavor-re\.com|lpc\.com|cbre\.com)$/i.test(
       String(recipientEmail || '').trim()
     );
 

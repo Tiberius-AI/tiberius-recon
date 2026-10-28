@@ -3,5 +3,11 @@
     "*.js": {
       "includeFiles": "{*.html,*.css,*.js,images/**}"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/recon/cron-morning",
+      "schedule": "45 11 * * *"
+    }
+  ]
 }

@@ -6,7 +6,13 @@
  */
 
 const { runNightlyReconPipeline } = require('../../workers/orchestrator');
-const { getBriefingByToken, recordScoutAlertLog } = require('../../db/store');
+const {
+  getBriefingByToken,
+  recordScoutAlertLog,
+  rotateRealClientBriefing,
+  rotateAllRealClientBriefings,
+  ensureCloudAccountsSynced
+} = require('../../db/store');
 const { dispatchScoutMorningAlertSms } = require('../../workers/comms-dispatcher');
 
 module.exports = async function handler(req, res) {
@@ -23,16 +29,59 @@ module.exports = async function handler(req, res) {
   }
 
   const params = req.method === 'POST' ? req.body || {} : req.query || {};
+  await ensureCloudAccountsSynced({ token: params.token });
+
+  const isAutomatedDailyCron = !params.token;
   const token = params.token || 'demo-7am-briefing';
+
+  let rotationResult = null;
+  if (params.token) {
+    rotationResult = rotateRealClientBriefing({
+      token: params.token,
+      advanceOffset: Boolean(params.rotateBatch)
+    });
+  }
+
+  const briefingBundle = getBriefingByToken(token);
   const summary = await runNightlyReconPipeline({
-    zipCode: params.zipCode || params.zip || '78130',
-    primaryTrade: params.primaryTrade || params.trade || 'Commercial Concrete',
+    zipCode:
+      params.zipCode ||
+      params.zip ||
+      (briefingBundle && briefingBundle.briefing && briefingBundle.briefing.territoryZip) ||
+      '78130',
+    primaryTrade:
+      params.primaryTrade ||
+      params.trade ||
+      (briefingBundle && briefingBundle.briefing && briefingBundle.briefing.tradeName) ||
+      'Commercial Concrete',
     dryRun: true
   });
 
-  const briefingBundle = getBriefingByToken(token);
+  const dailyClientSmsDispatches = [];
   let scoutMorningSmsReceipt = null;
-  if (briefingBundle && briefingBundle.contractor && briefingBundle.briefing) {
+
+  if (isAutomatedDailyCron) {
+    // 6:45 AM Daily Automated Cron: rotate cards & send 6:45 AM SMS for all active real clients
+    const rotatedClients = rotateAllRealClientBriefings({ advanceOffset: false });
+    for (const item of rotatedClients) {
+      const receipt = await dispatchScoutMorningAlertSms({
+        contractor: item.contractor,
+        briefing: item.briefing,
+        token: item.token
+      });
+      recordScoutAlertLog(item.token, receipt);
+      dailyClientSmsDispatches.push({
+        token: item.token,
+        companyName: item.contractor.companyName,
+        toPhone: item.contractor.mobilePhone,
+        batchLabel: item.batchLabel,
+        receipt
+      });
+    }
+    scoutMorningSmsReceipt = dailyClientSmsDispatches[0]?.receipt || null;
+  }
+
+  if (!scoutMorningSmsReceipt && briefingBundle && briefingBundle.contractor && briefingBundle.briefing) {
     scoutMorningSmsReceipt = await dispatchScoutMorningAlertSms({
       contractor: briefingBundle.contractor,
       briefing: briefingBundle.briefing,
@@ -44,6 +93,10 @@ module.exports = async function handler(req, res) {
   return res.status(200).json({
     ok: true,
     ...summary,
-    scoutMorningSmsReceipt
+    rotated: Boolean(rotationResult && rotationResult.rotated),
+    batchLabel: rotationResult ? rotationResult.batchLabel : undefined,
+    briefing: briefingBundle ? briefingBundle.briefing : undefined,
+    scoutMorningSmsReceipt,
+    dailyClientSmsDispatches: dailyClientSmsDispatches.length ? dailyClientSmsDispatches : undefined
   });
 };

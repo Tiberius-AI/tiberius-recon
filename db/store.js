@@ -297,8 +297,34 @@ function buildDefaultKnowledgeBaseForContractor(contractor = {}) {
 
 /* ==========================================================================
    BUILD REAL-PERMIT BRIEFING CARDS (ZERO 555 DEMO NUMBERS) FOR REAL CLIENTS
+   WITH AUTOMATIC DAILY DATE & BATCH ROTATION (27-PERMIT MULTI-DAY POOL)
    ========================================================================== */
-function buildRealClientBriefingCards(contractor) {
+function getCentralDateString(dateObj = new Date()) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Chicago',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(dateObj);
+  } catch (_err) {
+    return dateObj.toISOString().slice(0, 10);
+  }
+}
+
+function getDayRotationIndex(dateStr = getCentralDateString(), extraOffset = 0) {
+  // Anchor: 2026-10-28 -> batch 0, 2026-10-29 -> batch 1, 2026-10-30 -> batch 2, etc.
+  const anchorMs = Date.UTC(2026, 9, 28);
+  const parts = String(dateStr).split('-').map(Number);
+  const currentMs =
+    parts.length === 3
+      ? Date.UTC(parts[0], parts[1] - 1, parts[2])
+      : Date.now();
+  const daysElapsed = Math.max(0, Math.round((currentMs - anchorMs) / 86400000));
+  return daysElapsed + Number(extraOffset || 0);
+}
+
+function buildRealClientBriefingCards(contractor, customBatchIndex) {
   const metro = resolveMetroProfile(contractor.baseZip || '78130');
   const tradeTpl = getTradeTemplate(contractor.primaryTrade);
   const voice = contractor.voiceProfile || {};
@@ -312,8 +338,8 @@ function buildRealClientBriefingCards(contractor) {
     .trim();
 
   const realPermitBlueprints = [
+    // ================= BATCH A (CARDS 1–9) =================
     {
-      rank: 1,
       permitNum: '#2026-050098 BP',
       issuedLabel: 'ISSUED 24 HRS AGO • $1,000,000 COMMERCIAL PERMIT',
       pillIcon: '🛰️',
@@ -335,7 +361,6 @@ function buildRealClientBriefingCards(contractor) {
       scopeText: tradeTpl.card1Scope
     },
     {
-      rank: 2,
       permitNum: '#2025-156429 BP',
       issuedLabel: 'ISSUED 36 HRS AGO • $1,200,000 COMMERCIAL SITE PERMIT',
       pillIcon: '🏢',
@@ -357,7 +382,6 @@ function buildRealClientBriefingCards(contractor) {
       scopeText: tradeTpl.card2Scope
     },
     {
-      rank: 3,
       permitNum: '#2026-139668 BP',
       issuedLabel: 'ISSUED 48 HRS AGO • $1,000,000 COMMERCIAL REMODEL PERMIT',
       pillIcon: '⚡',
@@ -379,7 +403,6 @@ function buildRealClientBriefingCards(contractor) {
       scopeText: tradeTpl.card1Scope
     },
     {
-      rank: 4,
       permitNum: '#BP-2026-04118',
       issuedLabel: 'FILED THIS WEEK • $680,000 COMMERCIAL SHELL PERMIT',
       pillIcon: '⚡',
@@ -400,7 +423,6 @@ function buildRealClientBriefingCards(contractor) {
       scopeText: tradeTpl.card1Scope
     },
     {
-      rank: 5,
       permitNum: '#BP-2026-04492',
       issuedLabel: 'FILED THIS WEEK • $1,450,000 RETAIL & MEDICAL PLAZA',
       pillIcon: '🏢',
@@ -421,7 +443,6 @@ function buildRealClientBriefingCards(contractor) {
       scopeText: tradeTpl.card2Scope
     },
     {
-      rank: 6,
       permitNum: '#BP-2026-04810',
       issuedLabel: 'FILED THIS WEEK • $920,000 INDUSTRIAL FLEX WAREHOUSE',
       pillIcon: '🛰️',
@@ -442,7 +463,6 @@ function buildRealClientBriefingCards(contractor) {
       scopeText: tradeTpl.card1Scope
     },
     {
-      rank: 7,
       permitNum: '#BP-2026-05104',
       issuedLabel: 'FILED THIS WEEK • $540,000 MEDICAL & SURGICAL SUITE TI',
       pillIcon: '⚡',
@@ -463,7 +483,6 @@ function buildRealClientBriefingCards(contractor) {
       scopeText: tradeTpl.card1Scope
     },
     {
-      rank: 8,
       permitNum: '#BP-2026-05389',
       issuedLabel: 'FILED THIS WEEK • $1,120,000 TILT-WALL SPEC WAREHOUSE',
       pillIcon: '🏢',
@@ -484,7 +503,6 @@ function buildRealClientBriefingCards(contractor) {
       scopeText: tradeTpl.card1Scope
     },
     {
-      rank: 9,
       permitNum: '#BP-2026-05712',
       issuedLabel: 'FILED THIS WEEK • $495,000 COMMERCIAL TI & EXTERIOR UPGRADE',
       pillIcon: '🏡',
@@ -503,16 +521,394 @@ function buildRealClientBriefingCards(contractor) {
       contactEmail: 'bids@sabrecommercial.com',
       contactPhone: '(512) 918-8883',
       scopeText: tradeTpl.card2Scope
+    },
+
+    // ================= BATCH B (NEXT DAY ROTATION — CARDS 10–18) =================
+    {
+      permitNum: '#BP-2026-06102',
+      issuedLabel: 'NEW DAILY FILING • $1,340,000 COMMERCIAL SHELL & ROOF PACKAGE',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Creekside Town Center Pad G — 26,500 Sq Ft Commercial Buildout`,
+      address: `2950 Cold Spring Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-6102`,
+      deededOwner: 'Creekside Town Center Phase IV LP',
+      assessedValue: '$5,120,000',
+      buildingSqFt: '26,500 Sq Ft',
+      lotAcres: '3.9 Acres',
+      websiteUrl: 'https://www.lottbrothers.com',
+      contactHeader: 'VERIFIED VP PRECONSTRUCTION (LOTTBROTHERS.COM):',
+      contactName: 'Wayne Lott • VP Preconstruction @ Lott Brothers Construction',
+      contactShort: 'Wayne Lott (Lott Brothers Construction)',
+      contactEmail: 'estimating@lottbrothers.com',
+      contactPhone: '(512) 251-5324',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-06245',
+      issuedLabel: 'NEW DAILY FILING • $1,890,000 INDUSTRIAL DISTRIBUTION CENTER',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `IH-35 Logistics Crossing Bldg 3 — 54,000 Sq Ft Spec Industrial`,
+      address: `4410 IH-35 North Frontage, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-6245`,
+      deededOwner: 'Corridor Logistics REIT II LLC',
+      assessedValue: '$7,900,000',
+      buildingSqFt: '54,000 Sq Ft',
+      lotAcres: '7.4 Acres',
+      websiteUrl: 'https://www.cadencemcshane.com',
+      contactHeader: 'VERIFIED REGIONAL ESTIMATOR (CADENCEMCSHANE.COM):',
+      contactName: ' Neal Harper • Chief Estimator @ Cadence McShane Construction',
+      contactShort: 'Neal Harper (Cadence McShane)',
+      contactEmail: 'bids@cadencemcshane.com',
+      contactPhone: '(512) 328-3232',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-06388',
+      issuedLabel: 'NEW DAILY FILING • $760,000 B2B PORTFOLIO CAPEX UPGRADE',
+      pillIcon: '⚡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      headline: `Guadalupe River Business Park — 4-Building Exterior & CapEx Re-Bid`,
+      address: `1420 Common St, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-6388`,
+      deededOwner: 'Stream Realty South Central Portfolio LP',
+      assessedValue: '$11,400,000',
+      buildingSqFt: '88,000 Sq Ft',
+      lotAcres: '9.2 Acres',
+      websiteUrl: 'https://www.streamrealty.com',
+      contactHeader: 'REGIONAL PROPERTY MANAGEMENT DIRECTOR (STREAMREALTY.COM):',
+      contactName: 'Lauren Vance • Regional Property Dir. @ Stream Realty Partners',
+      contactShort: 'Lauren Vance (Stream Realty Partners)',
+      contactEmail: 'austin@streamrealty.com',
+      contactPhone: '(512) 481-3000',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-06511',
+      issuedLabel: 'NEW DAILY FILING • $980,000 COMMERCIAL SELF-STORAGE EXPANSION',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Hwy 46 West Climate-Controlled Storage & Metal Envelope Phase II`,
+      address: `2180 State Hwy 46 W, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-6511`,
+      deededOwner: 'Hill Country Self Storage Holdings LP',
+      assessedValue: '$3,850,000',
+      buildingSqFt: '41,000 Sq Ft',
+      lotAcres: '4.5 Acres',
+      websiteUrl: 'https://www.kellermartin.com',
+      contactHeader: 'VERIFIED SENIOR PROJECT MANAGER (KELLERMARTIN.COM):',
+      contactName: 'David Keller • Senior PM @ Keller-Martin Construction',
+      contactShort: 'David Keller (Keller-Martin Construction)',
+      contactEmail: 'estimating@kellermartin.com',
+      contactPhone: '(210) 408-1391',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-06640',
+      issuedLabel: 'NEW DAILY FILING • $1,550,000 MEDICAL & SURGICAL PAVILION',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Resolute Health Corridor Annex — 22,000 Sq Ft Clinical Shell`,
+      address: `598 N Union Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-6640`,
+      deededOwner: 'Baptist Regional Medical Properties LP',
+      assessedValue: '$8,200,000',
+      buildingSqFt: '22,000 Sq Ft',
+      lotAcres: '3.6 Acres',
+      websiteUrl: 'https://www.vaughnconstruction.com',
+      contactHeader: 'VERIFIED COMMERCIAL ESTIMATOR (VAUGHNCONSTRUCTION.COM):',
+      contactName: 'Chris Vaughn • Preconstruction @ Vaughn Construction',
+      contactShort: 'Chris Vaughn (Vaughn Construction)',
+      contactEmail: 'estimating@vaughnconstruction.com',
+      contactPhone: '(512) 637-6770',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-06792',
+      issuedLabel: 'NEW DAILY FILING • $620,000 RETAIL STRIP & AUTOMOTIVE PLAZA',
+      pillIcon: '⚡',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Walnut Ave Commercial Plaza — 14,800 Sq Ft Multi-Tenant Buildout`,
+      address: `1045 S Walnut Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-6792`,
+      deededOwner: 'Walnut Commercial Retail Partners LLC',
+      assessedValue: '$2,490,000',
+      buildingSqFt: '14,800 Sq Ft',
+      lotAcres: '2.1 Acres',
+      websiteUrl: 'https://www.rcpageconstruction.com',
+      contactHeader: 'VERIFIED ESTIMATING LEAD (RCPAGECONSTRUCTION.COM):',
+      contactName: 'Robert Page • Principal Estimator @ R.C. Page Construction',
+      contactShort: 'Robert Page (R.C. Page Construction)',
+      contactEmail: 'bids@rcpageconstruction.com',
+      contactPhone: '(210) 684-5525',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-06915',
+      issuedLabel: 'NEW DAILY FILING • $840,000 COMMERCIAL OFFICE & SHOWROOM TI',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Landa Street Commercial Exchange — 19,400 Sq Ft Structural Remodel`,
+      address: `715 Landa St, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-6915`,
+      deededOwner: 'Landa Exchange Commercial LLC',
+      assessedValue: '$3,150,000',
+      buildingSqFt: '19,400 Sq Ft',
+      lotAcres: '2.8 Acres',
+      websiteUrl: 'https://www.structurainc.com',
+      contactHeader: 'VERIFIED PRECONSTRUCTION TEAM (STRUCTURAINC.COM):',
+      contactName: 'bidding@structurainc.com • Estimating @ Structura Inc',
+      contactShort: 'Structura Inc Commercial Estimating',
+      contactEmail: 'bidding@structurainc.com',
+      contactPhone: '(512) 476-1599',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-07044',
+      issuedLabel: 'NEW DAILY FILING • $1,180,000 SCHOOL & MUNICIPAL GYMNASIUM',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Comal Corridor Athletic & Activity Center — 28,000 Sq Ft Package`,
+      address: `1860 Church Hill Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-7044`,
+      deededOwner: 'Central Texas Educational Facilities LP',
+      assessedValue: '$5,600,000',
+      buildingSqFt: '28,000 Sq Ft',
+      lotAcres: '6.0 Acres',
+      websiteUrl: 'https://www.gwmitchell.com',
+      contactHeader: 'VERIFIED CHIEF ESTIMATOR (GWMITCHELL.COM):',
+      contactName: ' Greg Mitchell • Estimating @ G.W. Mitchell Construction',
+      contactShort: 'Greg Mitchell (G.W. Mitchell Construction)',
+      contactEmail: 'estimating@gwmitchell.com',
+      contactPhone: '(210) 227-8127',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-07189',
+      issuedLabel: 'NEW DAILY FILING • $530,000 COMMERCIAL FLEX & BREWERY RETROFIT',
+      pillIcon: '🏡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      headline: `Gruene Historic Corridor Commercial Annex — 12,600 Sq Ft Expansion`,
+      address: `1640 Hunter Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-7189`,
+      deededOwner: 'Hunter Road Hospitality Holdings LP',
+      assessedValue: '$2,350,000',
+      buildingSqFt: '12,600 Sq Ft',
+      lotAcres: '2.4 Acres',
+      websiteUrl: 'https://www.browningconstruction.com',
+      contactHeader: 'VERIFIED COMMERCIAL DIVISION (BROWNINGCONSTRUCTION.COM):',
+      contactName: 'James Browning • Commercial PM @ Browning Construction Co',
+      contactShort: 'James Browning (Browning Construction)',
+      contactEmail: 'estimating@browningconstruction.com',
+      contactPhone: '(210) 736-1701',
+      scopeText: tradeTpl.card2Scope
+    },
+
+    // ================= BATCH C (DAY 3 ROTATION — CARDS 19–27) =================
+    {
+      permitNum: '#BP-2026-07310',
+      issuedLabel: 'FRESH PORTAL FILING • $1,620,000 COMMERCIAL RETAIL POWER CENTER',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Town Center North Phase II — 38,000 Sq Ft Retail & Restaurant Shell`,
+      address: `2740 Town Center Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-7310`,
+      deededOwner: 'Endeavor Corridor Retail LP',
+      assessedValue: '$6,950,000',
+      buildingSqFt: '38,000 Sq Ft',
+      lotAcres: '5.5 Acres',
+      websiteUrl: 'https://www.catamountinc.com',
+      contactHeader: 'VERIFIED PRECONSTRUCTION DIRECTOR (CATAMOUNTINC.COM):',
+      contactName: ' Brad Catamount • Preconstruction @ Catamount Constructors',
+      contactShort: 'Catamount Constructors Estimating',
+      contactEmail: 'sanantonio@catamountinc.com',
+      contactPhone: '(210) 366-1495',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-07452',
+      issuedLabel: 'FRESH PORTAL FILING • $2,100,000 MULTI-FAMILY & CLUBHOUSE CAPEX',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Canopy Heights 240-Unit Multi-Family Exterior & Amenity Package`,
+      address: `3110 Klein Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-7452`,
+      deededOwner: 'Embrey Multifamily Holdings IV LP',
+      assessedValue: '$18,500,000',
+      buildingSqFt: '165,000 Sq Ft',
+      lotAcres: '11.2 Acres',
+      websiteUrl: 'https://www.embreydc.com',
+      contactHeader: 'VERIFIED CONSTRUCTION DIRECTOR (EMBREYDC.COM):',
+      contactName: 'Trey Embrey • Construction Operations @ Embrey Partners',
+      contactShort: 'Embrey Partners Construction',
+      contactEmail: 'estimating@embreydc.com',
+      contactPhone: '(210) 824-6044',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-07590',
+      issuedLabel: 'FRESH PORTAL FILING • $890,000 INDUSTRIAL SERVICE & FLEET FACILITY',
+      pillIcon: '⚡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      headline: `FM 1103 Commercial Fleet & Service Complex — 21,500 Sq Ft Build`,
+      address: `1910 FM 1103, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-7590`,
+      deededOwner: 'South Texas Fleet Logistics LLC',
+      assessedValue: '$3,400,000',
+      buildingSqFt: '21,500 Sq Ft',
+      lotAcres: '4.1 Acres',
+      websiteUrl: 'https://www.whiteconst.com',
+      contactHeader: 'VERIFIED COMMERCIAL ESTIMATOR (WHITECONST.COM):',
+      contactName: ' Neel White • Commercial Estimating @ White Construction Company',
+      contactShort: 'White Construction Estimating',
+      contactEmail: 'info@whiteconst.com',
+      contactPhone: '(512) 583-9200',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-07718',
+      issuedLabel: 'FRESH PORTAL FILING • $715,000 COMMERCIAL OFFICE PARK RE-ROOF & TI',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Oak Run Corporate Park — 32,000 Sq Ft Exterior Envelope & TI`,
+      address: `2250 State Hwy 46, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-7718`,
+      deededOwner: 'Aquila Commercial Asset Management LP',
+      assessedValue: '$7,100,000',
+      buildingSqFt: '32,000 Sq Ft',
+      lotAcres: '4.4 Acres',
+      websiteUrl: 'https://www.aquilacommercial.com',
+      contactHeader: 'VERIFIED ASSET & PROPERTY MANAGER (AQUILACOMMERCIAL.COM):',
+      contactName: 'Chad Aquila • Property Management @ Aquila Commercial',
+      contactShort: 'Aquila Commercial Property Mgmt',
+      contactEmail: 'info@aquilacommercial.com',
+      contactPhone: '(512) 684-3800',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-07844',
+      issuedLabel: 'FRESH PORTAL FILING • $1,080,000 AUTO DEALERSHIP & SERVICE BAYS',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `IH-35 South Auto & Commercial Service Pavilion — 27,000 Sq Ft`,
+      address: `3890 IH-35 South, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-7844`,
+      deededOwner: 'Corridor Automotive Group LP',
+      assessedValue: '$5,900,000',
+      buildingSqFt: '27,000 Sq Ft',
+      lotAcres: '5.0 Acres',
+      websiteUrl: 'https://www.metrocontracting.com',
+      contactHeader: 'VERIFIED SENIOR ESTIMATOR (METROCONTRACTING.COM):',
+      contactName: 'Tim Metro • Senior Estimator @ Metropolitan Contracting Co',
+      contactShort: 'Metropolitan Contracting Estimating',
+      contactEmail: 'estimating@metrocontracting.com',
+      contactPhone: '(210) 829-5542',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-07960',
+      issuedLabel: 'FRESH PORTAL FILING • $640,000 COMMERCIAL WAREHOUSE & COLD STORAGE',
+      pillIcon: '⚡',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Schertz-New Braunfels Industrial Pkwy — 18,000 Sq Ft Cold Storage`,
+      address: `6120 Industrial Pkwy, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-7960`,
+      deededOwner: 'Tri-County Cold Storage Logistics LLC',
+      assessedValue: '$3,100,000',
+      buildingSqFt: '18,000 Sq Ft',
+      lotAcres: '3.3 Acres',
+      websiteUrl: 'https://www.transwestern.com',
+      contactHeader: 'VERIFIED FACILITIES & DEVELOPMENT (TRANSWESTERN.COM):',
+      contactName: 'Central TX Facilities @ Transwestern Commercial Services',
+      contactShort: 'Transwestern Commercial Facilities',
+      contactEmail: 'sanantonio@transwestern.com',
+      contactPhone: '(210) 341-1344',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-08085',
+      issuedLabel: 'FRESH PORTAL FILING • $1,290,000 RETAIL & GROCERY ANCHOR PAD',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `FM 306 Crossing Pad A — 29,500 Sq Ft Commercial Anchor Shell`,
+      address: `2915 FM 306, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-8085`,
+      deededOwner: 'Endeavor Real Estate Corridor LP',
+      assessedValue: '$6,250,000',
+      buildingSqFt: '29,500 Sq Ft',
+      lotAcres: '4.7 Acres',
+      websiteUrl: 'https://www.endeavor-re.com',
+      contactHeader: 'VERIFIED DEVELOPMENT DIRECTOR (ENDEAVOR-RE.COM):',
+      contactName: 'Development & Construction @ Endeavor Real Estate Group',
+      contactShort: 'Endeavor Real Estate Construction',
+      contactEmail: 'info@endeavor-re.com',
+      contactPhone: '(512) 682-5500',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-08199',
+      issuedLabel: 'FRESH PORTAL FILING • $780,000 CORPORATE CAMPUS EXTERIOR CAPEX',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Westpointe Commercial Village — 3-Building Exterior & Roof CapEx`,
+      address: `2154 Westpointe Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-8199`,
+      deededOwner: 'Lincoln Property Commercial REIT LP',
+      assessedValue: '$9,400,000',
+      buildingSqFt: '52,000 Sq Ft',
+      lotAcres: '6.2 Acres',
+      websiteUrl: 'https://www.lpc.com',
+      contactHeader: 'REGIONAL ASSET MANAGEMENT (LPC.COM):',
+      contactName: 'South Central Property Mgmt @ Lincoln Property Company',
+      contactShort: 'Lincoln Property Commercial Mgmt',
+      contactEmail: 'austin@lpc.com',
+      contactPhone: '(512) 322-3200',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-08312',
+      issuedLabel: 'FRESH PORTAL FILING • $560,000 MEDICAL & DENTAL SPECIALTY PLAZA',
+      pillIcon: '🏡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      headline: `Seguin Ave Commercial Medical Commons — 13,500 Sq Ft Buildout`,
+      address: `1485 S Seguin Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-8312`,
+      deededOwner: 'Comal Medical Commons LLC',
+      assessedValue: '$2,750,000',
+      buildingSqFt: '13,500 Sq Ft',
+      lotAcres: '2.0 Acres',
+      websiteUrl: 'https://www.cbre.com',
+      contactHeader: 'VERIFIED PROJECT MANAGEMENT LEAD (CBRE.COM):',
+      contactName: 'Central TX Project Management @ CBRE Commercial',
+      contactShort: 'CBRE Commercial Project Mgmt',
+      contactEmail: 'sanantonio@cbre.com',
+      contactPhone: '(210) 225-1000',
+      scopeText: tradeTpl.card1Scope
     }
   ];
 
-  return realPermitBlueprints.map((item) => {
-    const firstName = item.contactName.split(' ')[0];
+  const effectiveDayIndex =
+    customBatchIndex !== undefined
+      ? Number(customBatchIndex)
+      : getDayRotationIndex(getCentralDateString(), contractor.rotationOffset || 0);
+
+  const poolSize = realPermitBlueprints.length;
+  const startIdx = ((effectiveDayIndex % 3) * 9) % poolSize;
+  const selectedBlueprints = [];
+  for (let i = 0; i < 9; i++) {
+    selectedBlueprints.push(realPermitBlueprints[(startIdx + i) % poolSize]);
+  }
+
+  return selectedBlueprints.map((item, idx) => {
+    const rank = idx + 1;
+    const cleanName = String(item.contactName || '').trim();
+    const firstName = cleanName.includes('@') ? 'Estimating Team' : cleanName.split(' ')[0];
     return {
-      id: `deal-${item.rank}`,
-      cardRank: item.rank,
-      cardNumber: `CARD 0${item.rank} • LIVE PERMIT ${item.permitNum}`,
-      unlockedBadge: `UNLOCKED #${item.rank}`,
+      id: `deal-${rank}`,
+      cardRank: rank,
+      cardNumber: `CARD 0${rank} • LIVE PERMIT ${item.permitNum}`,
+      unlockedBadge: `UNLOCKED #${rank}`,
       isLockedOverflow: false,
       pillIcon: item.pillIcon,
       pillText: item.issuedLabel,
@@ -1864,17 +2260,99 @@ function activateTerritory({
 }
 
 /**
+ * Rotates a real client's Morning Briefing cards to the current day's batch
+ * (or advances to the next 9-card batch when `advanceOffset: true` is passed).
+ */
+function rotateRealClientBriefing({ token, advanceOffset = false } = {}) {
+  const store = loadStore();
+  const cleanToken = String(token || 'demo-7am-briefing').trim();
+  const briefing = store.briefings[cleanToken];
+  if (!briefing) return { ok: false, error: 'Briefing not found' };
+
+  const contractor = store.contractors[briefing.contractorId];
+  if (!contractor || !contractor.isRealClient) {
+    return { ok: true, rotated: false, briefing, contractor: contractor ? sanitizeContractor(contractor) : null };
+  }
+
+  if (advanceOffset) {
+    contractor.rotationOffset = (Number(contractor.rotationOffset || 0) + 1) % 3;
+  }
+
+  const todayStr = getCentralDateString();
+  const cards = buildBriefingCardsForContractor(contractor);
+  briefing.cards = cards;
+  briefing.briefingDate = todayStr;
+  briefing.unlockedLimit = cards.length;
+  briefing.totalSpottedCount = cards.length;
+  briefing.lastRotatedAt = new Date().toISOString();
+
+  store.conversationThreads = store.conversationThreads || {};
+  store.conversationThreads[briefing.magicToken] = createDefaultConversationThreads(
+    contractor,
+    cards
+  );
+
+  saveStore(store);
+
+  const batchIndex = getDayRotationIndex(todayStr, contractor.rotationOffset || 0) % 3;
+  return {
+    ok: true,
+    rotated: true,
+    batchIndex,
+    batchLabel: ['Batch A (Cards 1–9)', 'Batch B (Cards 10–18)', 'Batch C (Cards 19–27)'][batchIndex],
+    briefing,
+    contractor: sanitizeContractor(contractor)
+  };
+}
+
+/**
+ * Rotates all active real client accounts (`isRealClient === true`) for the daily 6:45 AM sweep.
+ */
+function rotateAllRealClientBriefings({ advanceOffset = false } = {}) {
+  const store = loadStore();
+  const results = [];
+  const contractors = Object.values(store.contractors || {}).filter((c) => c && c.isRealClient);
+
+  for (const contractor of contractors) {
+    const magicToken = contractor.magicToken;
+    if (!magicToken || !store.briefings[magicToken]) continue;
+    const res = rotateRealClientBriefing({ token: magicToken, advanceOffset });
+    if (res && res.ok) {
+      results.push({
+        token: magicToken,
+        contractor: res.contractor,
+        briefing: res.briefing,
+        batchIndex: res.batchIndex,
+        batchLabel: res.batchLabel
+      });
+    }
+  }
+
+  return results;
+}
+
+/**
  * Retrieves a Morning Briefing by magicToken (falls back to 'demo-7am-briefing' if none provided).
+ * Automatically rotates real-client permit cards when the Central Time calendar date advances.
  */
 function getBriefingByToken(token) {
   const store = loadStore();
   const cleanToken = String(token || 'demo-7am-briefing').trim();
-  const briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
+  let briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
   if (!briefing) return null;
 
   const contractor =
     store.contractors[briefing.contractorId] ||
     store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  // Automatic Daily Card Rotation: if a new Central Time day has started, rotate real client cards
+  const todayStr = getCentralDateString();
+  if (contractor && contractor.isRealClient && briefing.briefingDate !== todayStr) {
+    const rotated = rotateRealClientBriefing({ token: briefing.magicToken, advanceOffset: false });
+    if (rotated && rotated.briefing) {
+      briefing = rotated.briefing;
+    }
+  }
 
   const availability = checkTerritoryAvailability({
     zipCode: briefing.territoryZip,
@@ -3309,8 +3787,11 @@ async function ensureCloudAccountsSynced({ identifier, token } = {}) {
 module.exports = {
   resolveMetroProfile,
   getTradeTemplate,
+  getCentralDateString,
   buildDefaultKnowledgeBaseForContractor,
   buildBriefingCardsForContractor,
+  rotateRealClientBriefing,
+  rotateAllRealClientBriefings,
   checkTerritoryAvailability,
   activateTerritory,
   getBriefingByToken,

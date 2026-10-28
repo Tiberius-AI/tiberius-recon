@@ -598,14 +598,26 @@
         const resp = await fetch('/api/recon/cron-morning', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ zipCode, primaryTrade })
+          body: JSON.stringify({
+            token: activeToken,
+            zipCode,
+            primaryTrade,
+            rotateBatch: true
+          })
         });
         const data = await resp.json();
-        if (data && data.ok && nightSweepBanner && nightSweepText) {
-          const scanned = data.stages.stage1_0200am_portalRecon.totalRowsScanned;
-          const matches = data.stages.stage2_0430am_cadXRayAndContacts.parcelsVerified;
-          nightSweepText.textContent = `✓ 02:00 AM SWEEP COMPLETE FOR ${zipCode}: ${scanned} PORTAL ROWS SCANNED • ${matches} CAD TAX ROLL PARCELS VERIFIED IN 12.6s`;
-          nightSweepBanner.classList.remove('hidden');
+        if (data && data.ok) {
+          if (data.briefing) {
+            state.briefing = data.briefing;
+            renderAll();
+          }
+          if (nightSweepBanner && nightSweepText) {
+            const scanned = data.stages.stage1_0200am_portalRecon.totalRowsScanned;
+            const matches = data.stages.stage2_0430am_cadXRayAndContacts.parcelsVerified;
+            const batchTag = data.batchLabel ? ` • ROTATED TO ${data.batchLabel.toUpperCase()}` : '';
+            nightSweepText.textContent = `✓ 02:00 AM SWEEP COMPLETE FOR ${zipCode}: ${scanned} PORTAL ROWS SCANNED • ${matches} CAD TAX ROLL PARCELS VERIFIED${batchTag}`;
+            nightSweepBanner.classList.remove('hidden');
+          }
         }
       } catch (_err) {
         // Ignore

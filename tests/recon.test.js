@@ -450,8 +450,29 @@ async function runTests() {
       alertBriefingData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
       'A-lert Roof Systems cards must not contain 555 demo numbers'
     );
+    const initialCard1Contact = alertBriefingData.briefing.cards[0].contactName;
 
-    console.log('\n✅ ALL 18 TIBERIUS RECON™ END-TO-END, POST-PAY ONBOARDING, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS & CONVERSATION ROOM TESTS PASSED.');
+    // 19. Verify Daily Card Rotation + 6:45 AM Sweep rotates A-lert Roof Systems to a fresh 9-card batch
+    const rotateResp = await fetch(`${baseUrl}/api/recon/cron-morning`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'recon-78130-2101s6',
+        rotateBatch: true
+      })
+    });
+    const rotateData = await rotateResp.json();
+    assert.strictEqual(rotateData.ok, true);
+    assert.strictEqual(rotateData.rotated, true);
+    assert.ok(rotateData.briefing && Array.isArray(rotateData.briefing.cards));
+    assert.strictEqual(rotateData.briefing.cards.length, 9);
+    assert.notStrictEqual(rotateData.briefing.cards[0].contactName, initialCard1Contact);
+    assert.ok(
+      rotateData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
+      'Rotated real client batch must have zero 555 demo numbers'
+    );
+
+    console.log('\n✅ ALL 19 TIBERIUS RECON™ END-TO-END, POST-PAY ONBOARDING, DAILY CARD ROTATION, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS & CONVERSATION ROOM TESTS PASSED.');
   } finally {
     server.close();
   }
