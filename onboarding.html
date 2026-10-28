@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Client Onboarding &amp; Territory Setup | Tiberius Recon™</title>
+  <meta name="description" content="Complete your Tiberius Recon™ post-checkout onboarding: lock your territory zip code, auto-scan your website to build your Shop Knowledge Base, and receive your login credentials." />
+
+  <!-- Google Fonts & Fontshare General Sans (21st.dev G3 Typography) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            ink: '#F4F4F5',
+            bodyInk: '#D4D4D8',
+            mutedInk: '#90909A',
+            stoneBg: '#070709',
+            alabasterBg: '#0B0B0E',
+            navyAccent: '#4F6FFF',
+            royalAccent: '#0034FF',
+            trustEmerald: '#10B981',
+            trustEmeraldDark: '#059669',
+            permitAmber: '#F59E0B'
+          },
+          fontFamily: {
+            display: ['General Sans', 'Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
+            sans: ['General Sans', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="/recon/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body class="g-root g3-root bg-subtle-grid text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
+
+  <!-- ========================================================================
+       STICKY NAVBAR
+       ======================================================================== -->
+  <header class="enterprise-navbar">
+    <div class="g3-glass-bar" aria-hidden="true">
+      <div class="g3-pb g3-pb-1"></div>
+      <div class="g3-pb g3-pb-2"></div>
+      <div class="g3-pb g3-pb-3"></div>
+      <div class="g3-pb g3-pb-4"></div>
+      <div class="g3-pb g3-pb-5"></div>
+      <div class="g3-pb g3-pb-6"></div>
+      <div class="g3-pb g3-pb-7"></div>
+      <div class="g3-dim"></div>
+    </div>
+    <div class="max-w-[1280px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-24 flex items-center justify-between gap-4">
+      <a href="/recon" class="brand-logo focus:outline-none" aria-label="Tiberius Recon Home">
+        <img
+          src="/images/logo4.png"
+          onerror="this.onerror=null;this.src='images/logo4.png';"
+          alt="Tiberius AI — The Bad Boys of AI."
+          class="brand-logo-img"
+        />
+      </a>
+
+      <div class="hidden md:flex items-center gap-4 text-xs font-mono-telemetry">
+        <span class="px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 font-bold">
+          ✓ PAYMENT CONFIRMED • STEP 1 OF 1: CLIENT ONBOARDING &amp; CREDENTIAL ISSUANCE
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <a
+          href="login.html"
+          class="btn-outline-slate px-4 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5"
+        >
+          <span>🔐 Already Set Up? Sign In →</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-8 sm:py-12">
+    <div class="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+      <!-- ====================================================================
+           HERO HEADER
+           ==================================================================== -->
+      <section class="enterprise-card g3-hero-stage bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8">
+        <div class="g3-hero-bg" aria-hidden="true" style="opacity: 0.24;">
+          <canvas class="g3-hero-bg-canvas" data-g3-shader="silk"></canvas>
+          <div class="g3-hero-vignette"></div>
+        </div>
+
+        <div class="max-w-3xl">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 font-mono-telemetry text-xs text-emerald-300 font-bold mb-3">
+            <span>🚀 WELCOME TO TIBERIUS RECON™ • NEW CLIENT ONBOARDING</span>
+          </div>
+          <h1 class="font-display font-extrabold text-2xl sm:text-4xl text-white tracking-tight">
+            Lock In Your Territory, Calibrate Your AI Scout &amp; Get Your Login Credentials.
+          </h1>
+          <p class="text-sm sm:text-base text-slate-300 mt-2.5 leading-relaxed">
+            Complete the 3-minute setup below once. Your dedicated Tiberius Scout will lock your zip code slot, scan your website to build your <strong class="text-white">Shop Knowledge Base</strong>, and immediately issue your login credentials via email and SMS.
+          </p>
+        </div>
+
+        <!-- 3-Step Progress Strip -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-slate-700/80">
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
+            <div class="font-mono-telemetry text-[11px] text-amber-300 font-bold">STEP 01 • ACCOUNT</div>
+            <div class="text-sm font-bold text-white mt-0.5">Company &amp; Login Password</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
+            <div class="font-mono-telemetry text-[11px] text-blue-300 font-bold">STEP 02 • TERRITORY</div>
+            <div class="text-sm font-bold text-white mt-0.5">Trade, Zip Lock &amp; Job Size</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
+            <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">STEP 03 • SHOP DOSSIER</div>
+            <div class="text-sm font-bold text-white mt-0.5">Website Scan &amp; AI Voice</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           ISSUED CREDENTIALS SUCCESS CARD (REVEALED ON COMPLETION)
+           ==================================================================== -->
+      <section
+        id="onboarding-success-panel"
+        class="hidden bg-slate-900 border-2 border-emerald-500 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl"
+      >
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-700">
+          <div>
+            <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+              ✓ TERRITORY LOCKED &amp; ACCOUNT ACTIVATED
+            </span>
+            <h2 id="success-company-headline" class="font-display font-extrabold text-2xl sm:text-3xl text-white mt-2">
+              Your Tiberius Recon™ Account Is Live!
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 mt-1">
+              Save your login credentials below. We have also dispatched a copy to your email and mobile phone.
+            </p>
+          </div>
+          <button
+            id="btn-copy-credentials"
+            type="button"
+            class="btn-executive-navy px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0"
+          >
+            📋 Copy Login Credentials
+          </button>
+        </div>
+
+        <!-- Credentials Box -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-xl bg-slate-800/95 border border-slate-700 space-y-2.5">
+            <div class="font-mono-telemetry text-xs text-amber-300 font-bold">
+              🔐 YOUR CLIENT LOGIN CREDENTIALS
+            </div>
+            <div class="space-y-1.5 text-xs sm:text-sm">
+              <div class="flex items-center justify-between gap-2 py-1 border-b border-slate-700/70">
+                <span class="text-slate-400">Client Login URL:</span>
+                <a id="cred-login-url" href="login.html" class="font-mono-telemetry text-blue-400 hover:underline font-bold">
+                  https://tiberius.ai/recon/login
+                </a>
+              </div>
+              <div class="flex items-center justify-between gap-2 py-1 border-b border-slate-700/70">
+                <span class="text-slate-400">Login Email:</span>
+                <span id="cred-login-email" class="font-mono-telemetry text-white font-bold">you@company.com</span>
+              </div>
+              <div class="flex items-center justify-between gap-2 py-1 border-b border-slate-700/70">
+                <span class="text-slate-400">Login Mobile Phone:</span>
+                <span id="cred-login-phone" class="font-mono-telemetry text-white font-bold">(830) 555-0199</span>
+              </div>
+              <div class="flex items-center justify-between gap-2 py-1 border-b border-slate-700/70">
+                <span class="text-slate-400">Account Password:</span>
+                <span id="cred-login-password" class="font-mono-telemetry text-emerald-400 font-bold">••••••••</span>
+              </div>
+              <div class="flex items-center justify-between gap-2 py-1">
+                <span class="text-slate-400">Backup Territory PIN:</span>
+                <span id="cred-login-pin" class="font-mono-telemetry text-amber-300 font-bold">78130</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-800/95 border border-slate-700 space-y-2.5">
+            <div class="font-mono-telemetry text-xs text-emerald-400 font-bold">
+              📡 TERRITORY &amp; WELCOME DISPATCH STATUS
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700">
+                <span class="text-slate-400 block text-[10px] font-mono-telemetry">LOCKED TERRITORY &amp; PORTALS</span>
+                <span id="cred-territory-summary" class="text-white font-semibold">
+                  78130 (New Braunfels, TX) • Comal CAD &amp; EnerGov
+                </span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700">
+                <span class="text-slate-400 block text-[10px] font-mono-telemetry">WELCOME EMAIL (RESEND)</span>
+                <span id="cred-email-status" class="text-emerald-400 font-mono-telemetry font-bold">
+                  ✓ Sent to your inbox via recon@send.tiberius.ai
+                </span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-700">
+                <span class="text-slate-400 block text-[10px] font-mono-telemetry">WELCOME SMS (TWILIO)</span>
+                <span id="cred-sms-status" class="text-emerald-400 font-mono-telemetry font-bold">
+                  ✓ Sent to your mobile phone
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Direct Workspace Launch Buttons -->
+        <div class="pt-2">
+          <div class="font-mono-telemetry text-xs text-slate-300 mb-3">
+            OPEN YOUR LIVE WORKSPACE NOW:
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <a
+              id="launch-briefing-btn"
+              href="briefing.html"
+              class="btn-trust-emerald py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-1.5"
+            >
+              <span>☕ 7:00 AM Briefing Cards →</span>
+            </a>
+            <a
+              id="launch-inbox-btn"
+              href="inbox.html"
+              class="btn-executive-navy py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-1.5"
+            >
+              <span>💬 Conversation Room →</span>
+            </a>
+            <a
+              id="launch-command-btn"
+              href="command.html"
+              class="btn-outline-slate py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-1.5"
+            >
+              <span>🧠 Shop Knowledge Base →</span>
+            </a>
+            <a
+              href="login.html"
+              class="btn-outline-slate py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-1.5"
+            >
+              <span>🔐 Client Login Portal →</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           MAIN 3-STEP ONBOARDING FORM
+           ==================================================================== -->
+      <form id="client-onboarding-form" class="space-y-8" novalidate>
+
+        <!-- STEP 1: ACCOUNT & LOGIN CREDENTIALS -->
+        <section class="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <div class="font-mono-telemetry text-xs text-amber-300 font-bold">STEP 01 OF 03 • ACCOUNT &amp; LOGIN CREDENTIALS</div>
+              <h2 class="font-display font-bold text-xl text-white mt-0.5">
+                Who Should Receive the 6:45 AM Recon Briefing &amp; Replies?
+              </h2>
+            </div>
+            <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono-telemetry text-xs text-slate-300">
+              REQUIRED
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label for="onb-company-name" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Company / Shop Name *
+              </label>
+              <input
+                id="onb-company-name"
+                type="text"
+                required
+                placeholder="e.g., Hill Country Commercial Concrete LLC"
+                class="enterprise-input"
+              />
+            </div>
+
+            <div>
+              <label for="onb-owner-name" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Owner or Lead Estimator Name (Signs Outbound Emails) *
+              </label>
+              <input
+                id="onb-owner-name"
+                type="text"
+                required
+                placeholder="e.g., Mike Reynolds"
+                class="enterprise-input"
+              />
+            </div>
+
+            <div>
+              <label for="onb-work-email" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Work Email Address (Your Login Username &amp; Reply Copy) *
+              </label>
+              <input
+                id="onb-work-email"
+                type="email"
+                required
+                placeholder="e.g., mike@hillcountryconcrete.com"
+                class="enterprise-input"
+              />
+            </div>
+
+            <div>
+              <label for="onb-mobile-phone" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Direct Cell Number (Receives 6:45 AM Scout Link &amp; Hot-Reply Alerts) *
+              </label>
+              <input
+                id="onb-mobile-phone"
+                type="tel"
+                required
+                placeholder="e.g., (830) 555-0199"
+                class="enterprise-input"
+              />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label for="onb-password" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Create Your Account Password (For https://tiberius.ai/recon/login) *
+              </label>
+              <input
+                id="onb-password"
+                type="text"
+                required
+                autocomplete="new-password"
+                placeholder="Choose a password (e.g., Concrete78130!)"
+                class="enterprise-input"
+              />
+              <p class="text-[11px] text-slate-400 mt-1">
+                Tip: We show your password in plain text here so you can verify it before we email and text your credentials.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 2: TERRITORY, TRADE & PLAN SELECTION -->
+        <section class="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <div class="font-mono-telemetry text-xs text-blue-400 font-bold">STEP 02 OF 03 • TERRITORY &amp; PERMIT FILTERS</div>
+              <h2 class="font-display font-bold text-xl text-white mt-0.5">
+                Which Trade, Zip Code &amp; Minimum Job Size Should Your Scout Hunt?
+              </h2>
+            </div>
+            <span id="onb-zip-live-badge" class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+              ✓ TERRITORY SLOT AVAILABLE
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label for="onb-primary-trade" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Primary Contracting Trade *
+              </label>
+              <select id="onb-primary-trade" class="enterprise-select">
+                <option value="Commercial Concrete">Commercial Concrete, Flatwork &amp; Paving</option>
+                <option value="Roofing / Exteriors">Commercial &amp; Residential Roofing / Exteriors</option>
+                <option value="Electrical / HVAC">Electrical, Mechanical &amp; Commercial HVAC</option>
+                <option value="General Contracting">General Contracting, TI Buildouts &amp; Custom Additions</option>
+                <option value="Landscaping / Grounds">Commercial Landscaping, Tree Care &amp; Grounds</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="onb-territory-zip" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Primary Headquarters / Target Zip Code *
+              </label>
+              <input
+                id="onb-territory-zip"
+                type="text"
+                maxlength="10"
+                value="78130"
+                required
+                placeholder="e.g., 78130"
+                class="enterprise-input font-mono-telemetry"
+              />
+              <p id="onb-zip-portal-detail" class="text-[11px] text-emerald-400 font-mono-telemetry mt-1">
+                ✓ Sweeps City of New Braunfels EnerGov &amp; Comal Appraisal District (Comal CAD) + 25-Mile Radius
+              </p>
+            </div>
+
+            <div>
+              <label for="onb-min-valuation" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Minimum Permit / Project Valuation Filter
+              </label>
+              <select id="onb-min-valuation" class="enterprise-select">
+                <option value="75000">$75,000+ Permits &amp; Commercial Jobs</option>
+                <option value="100000" selected>$100,000+ Commercial Permits &amp; High-End Residential</option>
+                <option value="150000">$150,000+ Mid-Size Commercial Buildouts</option>
+                <option value="250000">$250,000+ Major Commercial &amp; Industrial</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="onb-tier-level" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Active Subscription Tier
+              </label>
+              <select id="onb-tier-level" class="enterprise-select">
+                <option value="Tier 2: Commercial Permits" selected>Tier 2: Commercial &amp; Permit Recon ($597/mo • Max 2/Zip)</option>
+                <option value="Tier 3: Full Territory Exclusivity">Tier 3: Full Zip Code Dominion ($897/mo • 100% Exclusive)</option>
+                <option value="Tier 1: B2B Deal Scout">Tier 1: B2B Property Manager &amp; GC Scout ($297/mo)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700 flex items-start gap-3">
+            <input
+              id="onb-smart-site-bundle"
+              type="checkbox"
+              checked
+              class="mt-1 w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+            />
+            <label for="onb-smart-site-bundle" class="text-xs sm:text-sm text-slate-200 cursor-pointer">
+              <strong class="text-white">Include Tiberius Rent-to-Own Smart Site Bundle (+$250/mo):</strong> Accrues $200/mo toward 100% website ownership equity + activates Stage 1 Twilio Bridge Pool for 2-way inbound web &amp; missed-call text-backs.
+            </label>
+          </div>
+        </section>
+
+        <!-- STEP 3: AUTONOMOUS CLIENT KNOWLEDGE BASE ("SHOP DOSSIER") -->
+        <section class="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700 pb-4">
+            <div>
+              <div class="font-mono-telemetry text-xs text-emerald-400 font-bold">STEP 03 OF 03 • AUTONOMOUS SHOP KNOWLEDGE BASE</div>
+              <h2 class="font-display font-bold text-xl text-white mt-0.5">
+                Teach Your AI Scout Your Services, Licenses &amp; Local Proof Projects
+              </h2>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Enter your website below and click <strong class="text-white">Auto-Scan Website</strong>—or type your details directly. Your AI uses these exact facts to write your 7:00 AM bid intros and Conversation Room replies.
+              </p>
+            </div>
+            <span id="onb-scan-status-pill" class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-xs text-blue-300 shrink-0">
+              🧠 READY TO SCAN
+            </span>
+          </div>
+
+          <!-- Website Auto-Scanner Bar -->
+          <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700 space-y-2">
+            <label for="onb-website-url" class="block text-xs font-bold text-amber-300">
+              Have an Existing Website? Auto-Extract Your Services &amp; Credentials:
+            </label>
+            <div class="flex flex-col sm:flex-row gap-2.5">
+              <input
+                id="onb-website-url"
+                type="url"
+                placeholder="https://www.yourcompanywebsite.com"
+                class="enterprise-input flex-1"
+              />
+              <button
+                id="btn-onb-scan-website"
+                type="button"
+                class="btn-executive-navy px-5 py-3 rounded-xl text-xs font-bold cursor-pointer whitespace-nowrap"
+              >
+                🔍 Auto-Scan My Website
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="sm:col-span-2">
+              <label for="onb-core-services" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Core Services &amp; High-Margin Specialties (Comma-Separated)
+              </label>
+              <input
+                id="onb-core-services"
+                type="text"
+                value="Commercial Tilt-Wall & Structural Slabs, Heavy-Duty Truck Aprons & Loading Docks, ADA Ramp & Sidewalk Compliance, Post-Tension Foundations"
+                class="enterprise-input"
+              />
+            </div>
+
+            <div>
+              <label for="onb-certs-bonding" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Licenses, Certifications, Bonding &amp; Insurance
+              </label>
+              <input
+                id="onb-certs-bonding"
+                type="text"
+                value="ACI-Certified Finishers • $2M/$5M Commercial GL + Workers Comp • Bonded up to $1.5M"
+                class="enterprise-input"
+              />
+            </div>
+
+            <div>
+              <label for="onb-years-in-biz" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Years in Business / Local Track Record
+              </label>
+              <input
+                id="onb-years-in-biz"
+                type="text"
+                value="15+ Years Serving Central & South Texas"
+                class="enterprise-input"
+              />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label for="onb-proof-project" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Recent Local Completed Proof Project (Referenced in Sentence #2 of Your Morning Drafts)
+              </label>
+              <input
+                id="onb-proof-project"
+                type="text"
+                value="a 22,000 sq ft commercial tilt-wall & dock apron project that passed city inspection ahead of schedule"
+                class="enterprise-input"
+              />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label for="onb-guarantee" class="block text-xs font-bold text-slate-200 mb-1.5">
+                Shop Guarantee / Why GCs &amp; Property Managers Pick You Over Rivals
+              </label>
+              <input
+                id="onb-guarantee"
+                type="text"
+                value="zero day-labor subs, in-house equipment, and a 100% clean-site schedule guarantee"
+                class="enterprise-input"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- SUBMIT BAR -->
+        <section class="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div class="space-y-1.5">
+            <label class="inline-flex items-center gap-2.5 text-xs sm:text-sm text-white font-semibold cursor-pointer">
+              <input
+                id="onb-send-welcome-creds"
+                type="checkbox"
+                checked
+                class="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+              />
+              <span>📧📲 Email &amp; Text My Login Credentials and Workspace Links Immediately</span>
+            </label>
+            <p class="text-xs text-slate-400">
+              Dispatches your login credentials via Resend (<code class="text-slate-300">recon@send.tiberius.ai</code>) and Twilio SMS to your cell.
+            </p>
+          </div>
+
+          <button
+            id="btn-submit-onboarding"
+            type="submit"
+            class="btn-trust-emerald px-6 py-4 rounded-xl text-sm sm:text-base font-extrabold cursor-pointer whitespace-nowrap inline-flex items-center justify-center gap-2 shadow-lg"
+          >
+            <span>🚀 Complete Onboarding &amp; Issue Login Credentials →</span>
+          </button>
+        </section>
+
+      </form>
+
+    </div>
+  </main>
+
+  <footer class="section-bg-white border-t border-slate-800 py-8 px-4 sm:px-6 lg:px-8 mt-12">
+    <div class="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-mono-telemetry">
+      <span>TIBERIUS RECON™ • NEW CLIENT ONBOARDING &amp; TERRITORY LOCK</span>
+      <div class="flex items-center gap-5">
+        <a href="/recon" class="text-slate-300 hover:underline">← Recon Sales Page</a>
+        <a href="login.html" class="text-emerald-400 hover:underline">Client Sign-In Portal →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/recon/onboarding.js"></script>
+  <script src="onboarding.js"></script>
+</body>
+</html>

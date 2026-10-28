@@ -360,7 +360,7 @@ async function runTests() {
     assert.strictEqual(morningAlertData.receipt.a2pCampaignModel, 'MASTER_TIBERIUS_A2P_10DLC');
     assert.ok(morningAlertData.receipt.smsBody.includes('/recon/briefing?token='));
 
-    console.log('[17/17] Testing Two-Stage Twilio Bridge Pool -> Dedicated Subaccount Promotion...');
+    console.log('[17/18] Testing Two-Stage Twilio Bridge Pool -> Dedicated Subaccount Promotion...');
     const stage2Resp = await fetch(`${baseUrl}/api/recon/alerts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -377,7 +377,46 @@ async function runTests() {
       'STAGE_2_DEDICATED_SUBACCOUNT'
     );
 
-    console.log('\n✅ ALL 17 TIBERIUS RECON™ END-TO-END, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS, NATIVE SIM & CONVERSATION ROOM TESTS PASSED.');
+    console.log('[18/18] Testing Post-Pay Client Onboarding Portal (/onboarding) & Credential Issuance...');
+    const onbPageResp = await fetch(`${baseUrl}/onboarding`);
+    assert.strictEqual(onbPageResp.status, 200);
+    const onbHtml = await onbPageResp.text();
+    assert.ok(onbHtml.includes('id="client-onboarding-form"'));
+
+    const onbActivateResp = await fetch(`${baseUrl}/api/recon/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        companyName: 'Hill Country Commercial Concrete LLC',
+        ownerName: 'Mike Reynolds',
+        workEmail: 'mike@apexcommercialbuilders.com',
+        mobilePhone: '(830) 555-0177',
+        password: 'HillCountry78666!',
+        primaryTrade: 'Commercial Concrete',
+        territoryZip: '78666',
+        minValuation: 150000,
+        tierLevel: 'Tier 2: Commercial Permits',
+        smartSiteBundle: true,
+        isPaidOnboarding: true,
+        sendWelcomeCredentials: true,
+        knowledgeBase: {
+          coreServices: ['Commercial Tilt-Wall', 'Heavy-Duty Truck Aprons'],
+          certsAndBonding: 'ACI Certified • $2M GL',
+          yearsInBusiness: '15+ Years',
+          recentCompletedProof: 'a 30,000 sq ft industrial slab in San Marcos',
+          uniqueGuarantee: 'zero day-labor subs and on-time pour schedule'
+        }
+      })
+    });
+    const onbActivateData = await onbActivateResp.json();
+    assert.strictEqual(onbActivateData.ok, true);
+    assert.strictEqual(onbActivateData.issuedCredentials.loginEmail, 'mike@apexcommercialbuilders.com');
+    assert.strictEqual(onbActivateData.issuedCredentials.password, 'HillCountry78666!');
+    assert.strictEqual(onbActivateData.issuedCredentials.territoryPin, '78666');
+    assert.ok(onbActivateData.welcomeEmailReceipt);
+    assert.ok(onbActivateData.welcomeSmsReceipt);
+
+    console.log('\n✅ ALL 18 TIBERIUS RECON™ END-TO-END, POST-PAY ONBOARDING, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS & CONVERSATION ROOM TESTS PASSED.');
   } finally {
     server.close();
   }

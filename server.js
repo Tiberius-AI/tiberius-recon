@@ -68,6 +68,7 @@ const NFT_BUNDLED_FILES = {
   '/command.html': path.join(__dirname, 'command.html'),
   '/login.html': path.join(__dirname, 'login.html'),
   '/inbox.html': path.join(__dirname, 'inbox.html'),
+  '/onboarding.html': path.join(__dirname, 'onboarding.html'),
   '/styles.css': path.join(__dirname, 'styles.css'),
   '/app.js': path.join(__dirname, 'recon-app.js'),
   '/recon-app.js': path.join(__dirname, 'recon-app.js'),
@@ -75,6 +76,7 @@ const NFT_BUNDLED_FILES = {
   '/command.js': path.join(__dirname, 'command.js'),
   '/login.js': path.join(__dirname, 'login.js'),
   '/inbox.js': path.join(__dirname, 'inbox.js'),
+  '/onboarding.js': path.join(__dirname, 'onboarding.js'),
   '/images/logo4.png': path.join(__dirname, 'images', 'logo4.png'),
   '/images/tiberius-ai.png': path.join(__dirname, 'images', 'tiberius-ai.png')
 };
@@ -168,6 +170,9 @@ async function handleRequest(req, res) {
     if (pathname === '/command') pathname = '/command.html';
     if (pathname === '/login' || pathname === '/admin') pathname = '/login.html';
     if (pathname === '/inbox' || pathname === '/conversations') pathname = '/inbox.html';
+    if (pathname === '/onboarding' || pathname === '/welcome' || pathname === '/afterpay' || pathname === '/setup') {
+      pathname = '/onboarding.html';
+    }
 
     const relPath = pathname.replace(/^\/+/, '');
     let safeFilePath = NFT_BUNDLED_FILES[pathname] || path.join(ROOT_DIR, relPath);
