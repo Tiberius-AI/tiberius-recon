@@ -234,8 +234,9 @@ function getContractorTwilioA2PState(contractor = {}) {
     contractorMobile: contractor.mobilePhone || '(830) 555-0194'
   };
 
-  const detectedEnvVarNames = Object.keys(process.env || {}).filter((k) =>
-    /RESEND|TWILIO|EMAIL|MAIL|SMS|PHONE|SMTP|SEND/i.test(k)
+  const detectedEnvVarNames = Object.keys(process.env || {}).filter(
+    (k) =>
+      !/^(VERCEL|AWS_|LAMBDA_|NODE_|PATH|HOME|TZ|LANG|LD_|SHLVL|PWD|_)/i.test(k)
   );
 
   const envStatus = {
@@ -244,8 +245,9 @@ function getContractorTwilioA2PState(contractor = {}) {
     ),
     hasTwilioEnvKeys: Boolean(
       (process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID) &&
-        (process.env.TWILIO_AUTH_TOKEN || process.env.TWILIO_TOKEN)
+        (process.env.TWILIO_AUTH_TOKEN || process.env.TWILIO_TOKEN || process.env.TWILIO_API_SECRET)
     ),
+    hasTwilioMessagingService: Boolean(process.env.TWILIO_MESSAGING_SERVICE_SID),
     detectedEnvVarNames
   };
 
@@ -326,6 +328,12 @@ async function sendMasterTwilioSmsToContractor({ toPhone, bodyText, providerConf
       process.env.TWILIO_TOKEN ||
       ''
   ).trim();
+  const apiKey = String(process.env.TWILIO_API_KEY || '').trim();
+  const apiSecret = String(process.env.TWILIO_API_SECRET || '').trim();
+  const messagingServiceSid = String(
+    providerConfig.twilioMessagingServiceSid || process.env.TWILIO_MESSAGING_SERVICE_SID || ''
+  ).trim();
+
   const rawFrom =
     providerConfig.twilioFromNumber ||
     process.env.TWILIO_MASTER_FROM_NUMBER ||
@@ -338,12 +346,19 @@ async function sendMasterTwilioSmsToContractor({ toPhone, bodyText, providerConf
   const normalizedTo = normalizePhoneE164(toPhone);
   let providerError = null;
 
-  if (sid && authToken && fromNumber) {
+  const canAuth = Boolean(sid && (authToken || (apiKey && apiSecret)));
+
+  if (canAuth && (messagingServiceSid || fromNumber)) {
     try {
-      const basicAuth = Buffer.from(`${sid}:${authToken}`).toString('base64');
+      const authPair = authToken ? `${sid}:${authToken}` : `${apiKey}:${apiSecret}`;
+      const basicAuth = Buffer.from(authPair).toString('base64');
       const form = new URLSearchParams();
       form.append('To', normalizedTo);
-      form.append('From', fromNumber);
+      if (messagingServiceSid && !providerConfig.twilioFromNumber) {
+        form.append('MessagingServiceSid', messagingServiceSid);
+      } else {
+        form.append('From', fromNumber);
+      }
       form.append('Body', bodyText);
 
       const resp = await fetch(
@@ -365,7 +380,7 @@ async function sendMasterTwilioSmsToContractor({ toPhone, bodyText, providerConf
           provider: 'TWILIO_MASTER_A2P_LIVE',
           deliveryStatus: 'SENT_VIA_TWILIO_MASTER_A2P',
           twilioSid: data.sid,
-          fromNumber,
+          fromNumber: data.from || messagingServiceSid || fromNumber,
           toPhone: normalizedTo,
           bodyText,
           dispatchedAt: new Date().toISOString()

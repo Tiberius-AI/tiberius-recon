@@ -441,6 +441,16 @@
     if (scoutAlertCountPillEl) {
       scoutAlertCountPillEl.textContent = `${Array.isArray(logs) ? logs.length : 0} sent`;
     }
+    if (btnToggleApiKeys && a2p.envStatus) {
+      const twReady = a2p.envStatus.hasTwilioEnvKeys;
+      const reReady = a2p.envStatus.hasResendEnvKey;
+      btnToggleApiKeys.textContent =
+        twReady && reReady
+          ? '✓ Twilio & Resend Server Keys Active ▾'
+          : twReady
+          ? '✓ Twilio Active on Server • Add Resend Key ▾'
+          : '🔑 Configure Resend / Twilio Keys ▾';
+    }
     if (scoutAlertsLogListEl && Array.isArray(logs)) {
       scoutAlertsLogListEl.innerHTML = logs
         .slice(0, 6)
