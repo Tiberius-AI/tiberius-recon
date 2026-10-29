@@ -67,6 +67,10 @@ module.exports = async function handler(req, res) {
     const kbIn = body.knowledgeBase;
     const normalizedKb = {
       ...kbIn,
+      tradeCategory: kbIn.tradeCategory || body.primaryTrade || undefined,
+      coreCapabilities: kbIn.coreCapabilities || kbIn.coreServices || undefined,
+      coreServices: kbIn.coreServices || kbIn.coreCapabilities || undefined,
+      proofAngles: Array.isArray(kbIn.proofAngles) ? kbIn.proofAngles : undefined,
       certificationsAndBonding:
         kbIn.certificationsAndBonding || kbIn.certsAndBonding || undefined,
       proofProjects:

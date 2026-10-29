@@ -15,9 +15,62 @@
   if (window.__TIBERIUS_BRIEFING_APP_INITIALIZED__) return;
   window.__TIBERIUS_BRIEFING_APP_INITIALIZED__ = true;
 
+  const ENGINE_SCHEMA_VERSION = '2.4';
   const urlParams = new URLSearchParams(window.location.search);
   const activeToken = urlParams.get('token') || urlParams.get('t') || localStorage.getItem('tiberius_recon_token') || 'demo-7am-briefing';
   localStorage.setItem('tiberius_recon_token', activeToken);
+
+  /**
+   * Invalidates any cached localStorage pitches, Shop Dossiers, or account objects
+   * saved under an older schema so fresh v2.4 cards and dossiers always render.
+   */
+  function invalidateStaleLocalStorageCache(force = false) {
+    try {
+      const savedSchema = localStorage.getItem('tiberius_recon_schema_version');
+      const rawAccount = localStorage.getItem('tiberius_recon_account') || '';
+      const rawProfile = localStorage.getItem('tiberius_recon_profile') || '';
+      const rawBriefing = localStorage.getItem('tiberius_recon_briefing') || '';
+      const rawCards = localStorage.getItem('tiberius_recon_cards') || '';
+      const combinedCache = `${rawAccount} ${rawProfile} ${rawBriefing} ${rawCards}`;
+
+      const hasLegacyStrings =
+        combinedCache.includes('multi-family roof preventative maintenance') ||
+        combinedCache.includes('bidding@structurainc.com •') ||
+        combinedCache.includes('Hey Estimating Team') ||
+        combinedCache.includes('right here in New Braunfels off IH-35 & FM 306');
+
+      if (force || savedSchema !== ENGINE_SCHEMA_VERSION || hasLegacyStrings) {
+        [
+          'tiberius_recon_account',
+          'tiberius_recon_profile',
+          'tiberius_recon_dossier',
+          'tiberius_recon_knowledge_base',
+          'tiberius_recon_briefing',
+          'tiberius_recon_cards'
+        ].forEach((key) => localStorage.removeItem(key));
+        localStorage.setItem('tiberius_recon_schema_version', ENGINE_SCHEMA_VERSION);
+      }
+    } catch (_err) {
+      // Ignore storage access errors in private browsing
+    }
+  }
+
+  function syncFreshDossierToLocalStorage(contractor) {
+    if (!contractor) return;
+    try {
+      const stamped = {
+        ...contractor,
+        schemaVersion: ENGINE_SCHEMA_VERSION
+      };
+      localStorage.setItem('tiberius_recon_account', JSON.stringify(stamped));
+      localStorage.setItem('tiberius_recon_profile', JSON.stringify(stamped));
+      localStorage.setItem('tiberius_recon_schema_version', ENGINE_SCHEMA_VERSION);
+    } catch (_err) {
+      // Ignore storage access errors
+    }
+  }
+
+  invalidateStaleLocalStorageCache(false);
 
   const navCommandLink = document.getElementById('nav-command-link');
   const mobileCommandLink = document.getElementById('mobile-command-link');
@@ -76,6 +129,22 @@
     return `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent(subject || 'Project Bid Inquiry')}&body=${encodeURIComponent(cleanBody)}`;
   }
 
+  function sanitizeContactNameDisplay(rawContactName) {
+    const raw = String(rawContactName || '').trim();
+    if (!raw) return 'Preconstruction Desk • Commercial Estimating';
+    if (raw.includes('•')) {
+      const parts = raw.split('•').map((s) => s.trim());
+      if (parts[0].includes('@')) {
+        return `Preconstruction Desk • ${parts.slice(1).join(' • ')}`;
+      }
+      return `${parts[0]} • ${parts.slice(1).join(' • ')}`;
+    }
+    if (raw.includes('@') && /^[^\s@]+@[^\s@]+\.[^\s@]+/.test(raw)) {
+      return 'Preconstruction Desk • Commercial Estimating';
+    }
+    return raw;
+  }
+
   function renderAll() {
     if (!state.briefing) return;
 
@@ -85,8 +154,15 @@
     const lockedCards = (b.cards || []).filter((card) => card.isLockedOverflow);
     const approvedCount = unlockedCards.filter((card) => card.approvalStatus === 'sent').length;
 
+    const isNewBraunfelsCorridor =
+      b.territoryZip === '78130' ||
+      b.territoryZip === '78132' ||
+      /new braunfels/i.test(String(b.metroCity || ''));
+
     if (navTerritoryPill) {
-      navTerritoryPill.textContent = `${b.territoryZip} (${b.metroCity || 'Local Metro'}) • ${b.tradeName}`;
+      navTerritoryPill.textContent = isNewBraunfelsCorridor
+        ? `78130 / 78132 (New Braunfels) • ${b.tradeName}`
+        : `${b.territoryZip} (${b.metroCity || 'Local Metro'}) • ${b.tradeName}`;
     }
     if (briefingTierBadge) {
       briefingTierBadge.textContent = (b.tierLevel || 'TIER 2: COMMERCIAL PERMITS').toUpperCase();
@@ -95,7 +171,8 @@
       briefingExclusivityBadge.textContent = state.availability.statusBadge;
     }
     if (briefingMainTitle) {
-      briefingMainTitle.textContent = `07:00 AM Briefing: ${unlockedCards.length} Verified ${b.tradeName} Deals in ${b.territoryZip}.`;
+      const zipLabel = isNewBraunfelsCorridor ? '78130 / 78132' : b.territoryZip;
+      briefingMainTitle.textContent = `07:00 AM Briefing: ${unlockedCards.length} Verified ${b.tradeName} Deals in ${zipLabel}.`;
     }
     if (briefingSubtitle) {
       briefingSubtitle.textContent = `Swept at 2:04 AM from ${b.portalName || 'Municipal Portals'} & verified at 4:30 AM against ${b.countyCad || 'County Appraisal District Tax Rolls'}. Nothing sends without your tap.`;
@@ -110,7 +187,11 @@
     if (calibratorZipInput && b.territoryZip) {
       calibratorZipInput.value = b.territoryZip;
     }
-    if (calibratorLandmarkInput && c.voiceProfile && c.voiceProfile.landmarkReference) {
+    if (
+      calibratorLandmarkInput &&
+      c.voiceProfile &&
+      typeof c.voiceProfile.landmarkReference === 'string'
+    ) {
       calibratorLandmarkInput.value = c.voiceProfile.landmarkReference;
     }
 
@@ -202,7 +283,7 @@
               <!-- Decision-Maker Contact Box -->
               <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-4">
                 <div class="font-mono-telemetry text-[10px] text-[#1E40AF] mb-0.5">${escapeHtml(card.contactHeader)}</div>
-                <div class="text-xs sm:text-sm font-bold text-[#0F172A]">${escapeHtml(card.contactName)}</div>
+                <div class="text-xs sm:text-sm font-bold text-[#0F172A]">${escapeHtml(sanitizeContactNameDisplay(card.contactName))}</div>
                 <div class="text-[11px] text-[#64748B] mt-0.5">${escapeHtml(card.contactMeta)}</div>
                 <div class="mt-2 pt-2 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-1 text-[11px] font-mono-telemetry text-slate-700">
                   <span>📞 ${escapeHtml(card.contactPhone)}</span>
@@ -356,10 +437,15 @@
   }
 
   async function loadBriefing() {
+    invalidateStaleLocalStorageCache(false);
     try {
-      const resp = await fetch(`/api/recon/briefing?token=${encodeURIComponent(activeToken)}`, {
-        headers: getAuthHeaders()
-      });
+      const resp = await fetch(
+        `/api/recon/briefing?token=${encodeURIComponent(activeToken)}&fresh=1&v=${ENGINE_SCHEMA_VERSION}`,
+        {
+          headers: getAuthHeaders(),
+          cache: 'no-store'
+        }
+      );
       if (!resp.ok) throw new Error('API non-200');
       const data = await resp.json();
       if (data && data.ok && data.briefing) {
@@ -367,6 +453,7 @@
         state.contractor = data.contractor;
         state.availability = data.availability;
         state.sentLogs = data.sentLogs || [];
+        syncFreshDossierToLocalStorage(data.contractor);
         renderAll();
       }
     } catch (_err) {
@@ -537,6 +624,7 @@
   }
 
   async function recalibrateBriefing() {
+    invalidateStaleLocalStorageCache(true);
     const primaryTrade = calibratorTradeSelect ? calibratorTradeSelect.value : 'Commercial Concrete';
     const territoryZip = calibratorZipInput ? calibratorZipInput.value.trim() : '78130';
     const landmarkReference = calibratorLandmarkInput ? calibratorLandmarkInput.value.trim() : '';
@@ -546,11 +634,14 @@
       const resp = await fetch('/api/recon/briefing', {
         method: 'POST',
         headers: getAuthHeaders(),
+        cache: 'no-store',
         body: JSON.stringify({
           token: activeToken,
           primaryTrade,
           territoryZip,
-          landmarkReference
+          landmarkReference,
+          forceRegenerate: true,
+          schemaVersion: ENGINE_SCHEMA_VERSION
         })
       });
       const data = await resp.json();
@@ -558,6 +649,7 @@
         state.briefing = data.briefing;
         state.contractor = data.contractor;
         state.availability = data.availability;
+        syncFreshDossierToLocalStorage(data.contractor);
         renderAll();
       }
     } catch (_err) {

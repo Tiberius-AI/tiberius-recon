@@ -7,7 +7,7 @@
  *   Sentence 4: Low-friction yes/no micro-CTA
  */
 
-const { getTradeTemplate } = require('../../db/store');
+const { getTradeTemplate, resolvePermitScope } = require('../../db/store');
 
 function verifyFourSentenceContract(text, trigger) {
   const cleaned = String(text || '').trim();
@@ -36,7 +36,12 @@ async function generateShopVoiceDraft({ trigger, cadRecord, contact, contractor 
     draftBody = `"Hi ${firstName} — congrats to the ${contact.companyName} team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads at ${trigger.propertyAddress}. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage and specialize in weekend phased work on ${tradeTpl.card2Scope} so zero tenants lose access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"`;
   } else {
     const valStr = `$${Number(trigger.estimatedValuation || 240000).toLocaleString()}`;
-    draftBody = `"Hey ${firstName} — saw the ${valStr} commercial TI buildout permit filed yesterday at ${trigger.propertyAddress}. Our commercial crew just wrapped ${tradeTpl.card1CompletedJob} ${landmark} and passed city inspection ahead of schedule. We have a crew opening up next month and would love to drop off numbers on the ${tradeTpl.card1Scope}. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"`;
+    const resolvedScope = resolvePermitScope(
+      { headline: trigger.title || '', description: trigger.scopeDescription || '' },
+      contractor.knowledgeBase,
+      contractor.primaryTrade || 'Commercial Concrete'
+    );
+    draftBody = `"Hey ${firstName} — saw the ${valStr} commercial TI buildout permit filed yesterday at ${trigger.propertyAddress}. Our commercial crew just wrapped ${tradeTpl.card1CompletedJob} ${landmark} and passed city inspection ahead of schedule. We have a crew opening up next month and would love to drop off numbers on the ${resolvedScope}. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"`;
   }
 
   const verification = verifyFourSentenceContract(draftBody, trigger);

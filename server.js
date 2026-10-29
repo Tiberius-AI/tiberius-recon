@@ -190,9 +190,10 @@ async function handleRequest(req, res) {
     if (fs.existsSync(safeFilePath) && fs.statSync(safeFilePath).isFile()) {
       const ext = path.extname(safeFilePath).toLowerCase();
       const content = fs.readFileSync(safeFilePath);
+      const noCacheExts = ['.html', '.js', '.css'];
       res.writeHead(200, {
         'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
-        'Cache-Control': ext === '.html' ? 'public, max-age=0, must-revalidate' : 'public, max-age=3600'
+        'Cache-Control': noCacheExts.includes(ext) ? 'public, max-age=0, must-revalidate' : 'public, max-age=3600'
       });
       res.end(content);
       return;

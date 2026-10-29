@@ -15,6 +15,17 @@
     'Commercial Concrete': {
       coreServices:
         'Commercial Tilt-Wall & Structural Slabs, Heavy-Duty Truck Aprons & Loading Docks, ADA Ramp & Sidewalk Compliance, Post-Tension Foundations',
+      coreCapabilities: [
+        'Commercial Tilt-Wall & Structural Slabs',
+        'Heavy-Duty Truck Aprons & Loading Docks',
+        'ADA Ramp & Sidewalk Compliance',
+        'Post-Tension Foundations'
+      ],
+      proofAngles: [
+        'a 28,000 sq ft ground-up commercial tilt-wall & structural slab package that passed city inspection ahead of schedule',
+        'a multi-building commercial dock apron, heavy-duty paving & ADA ramp CapEx retrofit with zero tenant disruption',
+        'an engineered post-tension foundation, structural grade-beam & containment pad package'
+      ],
       certsAndBonding:
         'ACI-Certified Finishers • $2M/$5M Commercial GL + Workers Comp • Bonded up to $1.5M',
       yearsInBusiness: '15+ Years Serving Central & South Texas',
@@ -25,7 +36,18 @@
     },
     'Roofing / Exteriors': {
       coreServices:
-        'TPO & PVC Flat Commercial Roofs, Standing-Seam Metal Retrofits, Elastomeric Roof Coatings, Hail & Wind Insurance Claims',
+        'Standing-Seam Commercial Metal Roof Systems, Commercial Flat-to-Pitched Metal Retrofits, TPO & PVC Flat Commercial Roofs, Elastomeric Roof Coatings',
+      coreCapabilities: [
+        'Standing-Seam Commercial Metal Roof Systems',
+        'Commercial Flat-to-Pitched Metal Retrofits',
+        'TPO & PVC Flat Commercial Roofs',
+        'Elastomeric Roof Coatings'
+      ],
+      proofAngles: [
+        'a 38,000 sq ft ground-up commercial shell standing-seam metal & membrane roof package that passed inspection ahead of schedule',
+        'a 45,000 sq ft commercial standing-seam metal & elastomeric roof retrofit with a 20-year NDL manufacturer warranty',
+        'a structural standing-seam metal envelope, self-storage & custom architectural sheet-metal package'
+      ],
       certsAndBonding:
         'RCAT Licensed Commercial Roofer • GAF Master Select & Carlisle Certified • $2M Umbrella GL',
       yearsInBusiness: '18+ Years Commercial & Industrial Roofing',
@@ -37,6 +59,17 @@
     'Electrical / HVAC': {
       coreServices:
         'Commercial RTU Replacements & Curb Adapters, 3-Phase Tenant Finish-Out Electrical, VRF/Chiller Controls, MEP Value Engineering',
+      coreCapabilities: [
+        'Commercial RTU Replacements & Curb Adapters',
+        '3-Phase Tenant Finish-Out Electrical',
+        'VRF/Chiller Controls',
+        'MEP Value Engineering'
+      ],
+      proofAngles: [
+        'a ground-up commercial shell 3-phase electrical distribution & high-efficiency RTU mechanical package',
+        'a multi-unit commercial RTU crane swap and 800A 3-phase panel upgrade completed over a single weekend',
+        'a specialized structural MEP remodel, high-bay lighting & spiral ductwork retrofit'
+      ],
       certsAndBonding:
         'TDLR Licensed TACLA & Master Electrician • $2M Commercial GL • EPA Universal Certified',
       yearsInBusiness: '14+ Years Commercial MEP & Tenant Buildouts',
@@ -48,6 +81,17 @@
     'General Contracting': {
       coreServices:
         'Medical, Retail & Office Tenant Finish-Outs (TI), Ground-Up Commercial Shell Buildouts, Structural Remodels, Fast-Track Permitting',
+      coreCapabilities: [
+        'Medical, Retail & Office Tenant Finish-Outs (TI)',
+        'Ground-Up Commercial Shell Buildouts',
+        'Structural Remodels',
+        'Fast-Track Permitting'
+      ],
+      proofAngles: [
+        'a 24,000 sq ft ground-up commercial shell & retail pad buildout delivered ahead of CO inspection',
+        'a 12,500 sq ft multi-building commercial exterior & tenant finish-out CapEx upgrade',
+        'a 19,400 sq ft structural commercial remodel & specialty facility expansion'
+      ],
       certsAndBonding:
         'Fully Bonded & Insured Commercial GC • OSHA-30 Superintendents • $5M Aggregate Commercial GL',
       yearsInBusiness: '16+ Years Commercial TI & Ground-Up Construction',
@@ -59,6 +103,17 @@
     'Landscaping / Grounds': {
       coreServices:
         'Commercial HOA & Retail Grounds Maintenance, Large-Caliper Tree Installs & Clearing, Commercial Irrigation & Drainage, Hardscapes',
+      coreCapabilities: [
+        'Commercial HOA & Retail Grounds Maintenance',
+        'Large-Caliper Tree Installs & Clearing',
+        'Commercial Irrigation & Drainage',
+        'Commercial Hardscapes & Perimeter Fencing'
+      ],
+      proofAngles: [
+        'a 14-acre ground-up commercial business park irrigation, detention pond, and native tree installation package',
+        'a 4-building commercial campus hardscape, drainage & exterior grounds CapEx refresh',
+        'a custom structural retaining wall, ornamental perimeter fencing & outdoor amenity package'
+      ],
       certsAndBonding:
         'TCEQ Licensed Irrigator • ISA Certified Arborist on Staff • $2M Commercial GL & Fleet Coverage',
       yearsInBusiness: '12+ Years Commercial Grounds & Site Development',
@@ -70,6 +125,7 @@
   };
 
   let userCustomizedDossier = false;
+  let scannedProofAngles = null;
   let lastIssuedCredentialsCopyText = '';
 
   function $(id) {
@@ -172,22 +228,26 @@
       const kb = (data && (data.knowledgeBase || data.extractedProfile)) || null;
       if (kb) {
         userCustomizedDossier = true;
-        if (Array.isArray(kb.coreServices) && kb.coreServices.length && $('onb-core-services')) {
-          $('onb-core-services').value = kb.coreServices.join(', ');
-        } else if (typeof kb.coreServices === 'string' && kb.coreServices && $('onb-core-services')) {
-          $('onb-core-services').value = kb.coreServices;
+        const caps = kb.coreCapabilities || kb.coreServices;
+        if (Array.isArray(caps) && caps.length && $('onb-core-services')) {
+          $('onb-core-services').value = caps.join(', ');
+        } else if (typeof caps === 'string' && caps && $('onb-core-services')) {
+          $('onb-core-services').value = caps;
         }
-        if (kb.certsAndBonding && $('onb-certs-bonding')) {
-          $('onb-certs-bonding').value = kb.certsAndBonding;
+        if (Array.isArray(kb.proofAngles) && kb.proofAngles.length >= 3) {
+          scannedProofAngles = kb.proofAngles;
+        }
+        if ((kb.certsAndBonding || kb.certificationsAndBonding) && $('onb-certs-bonding')) {
+          $('onb-certs-bonding').value = kb.certsAndBonding || kb.certificationsAndBonding;
         }
         if (kb.yearsInBusiness && $('onb-years-in-biz')) {
           $('onb-years-in-biz').value = kb.yearsInBusiness;
         }
-        if (kb.recentCompletedProof && $('onb-proof-project')) {
-          $('onb-proof-project').value = kb.recentCompletedProof;
+        if ((kb.recentCompletedProof || kb.proofProjects) && $('onb-proof-project')) {
+          $('onb-proof-project').value = kb.recentCompletedProof || kb.proofProjects;
         }
-        if (kb.uniqueGuarantee && $('onb-guarantee')) {
-          $('onb-guarantee').value = kb.uniqueGuarantee;
+        if ((kb.uniqueGuarantee || kb.warrantyAndGuarantee) && $('onb-guarantee')) {
+          $('onb-guarantee').value = kb.uniqueGuarantee || kb.warrantyAndGuarantee;
         }
         if (pill) {
           pill.textContent = '✓ WEBSITE SCANNED & DOSSIER POPULATED';
@@ -238,10 +298,15 @@
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
+    const preset = TRADE_DOSSIER_DEFAULTS[primaryTrade] || TRADE_DOSSIER_DEFAULTS['Commercial Concrete'];
+    const proofAngles = scannedProofAngles || preset.proofAngles;
 
     const knowledgeBase = {
       websiteUrl,
+      tradeCategory: primaryTrade,
       coreServices,
+      coreCapabilities: coreServices,
+      proofAngles,
       certsAndBonding: ($('onb-certs-bonding')?.value || '').trim(),
       yearsInBusiness: ($('onb-years-in-biz')?.value || '').trim(),
       recentCompletedProof: ($('onb-proof-project')?.value || '').trim(),

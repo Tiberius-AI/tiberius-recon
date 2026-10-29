@@ -450,9 +450,160 @@ async function runTests() {
       alertBriefingData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
       'A-lert Roof Systems cards must not contain 555 demo numbers'
     );
+
+    console.log('[19/20] Testing Shop Dossier -> 9-Card Generation Pipeline (Greetings, Proof Rotation, Scope Matching, CTAs & ZIP/Office Polish)...');
+    const kbDossier = alertBriefingData.contractor.knowledgeBase;
+    assert.ok(Array.isArray(kbDossier.coreCapabilities) && kbDossier.coreCapabilities.length >= 3, 'shopDossier.coreCapabilities must be populated');
+    assert.ok(Array.isArray(kbDossier.proofAngles) && kbDossier.proofAngles.length >= 3, 'shopDossier.proofAngles must contain 3 distinct variations');
+    assert.notStrictEqual(kbDossier.proofAngles[0], kbDossier.proofAngles[1]);
+    assert.notStrictEqual(kbDossier.proofAngles[1], kbDossier.proofAngles[2]);
+
+    const cards = alertBriefingData.briefing.cards;
+    assert.strictEqual(cards.length, 9);
+
+    // 1. Kill the "multi-family" fallback bug across all 9 commercial cards
+    cards.forEach((c) => {
+      assert.ok(
+        !String(c.draftBody || '').toLowerCase().includes('multi-family roof preventative maintenance'),
+        `Card ${c.cardNumber} must never output hardcoded "multi-family roof preventative maintenance"`
+      );
+    });
+
+    // 2. Verify Sentence #1 persona-aware greeting & contact sanitization on Batch B (Cards 01-09)
+    // Card 01: Wayne Lott @ Lott Brothers Construction (Case A - Named GC Estimator/Precon)
+    const card01 = cards.find((c) => c.cardNumber.includes('#BP-2026-06102')) || cards[0];
+    assert.ok(
+      card01.draftBody.includes('Hey Wayne & the Lott Brothers team — saw the commercial permit (#BP-2026-06102) filed for 2950 Cold Spring Dr in New Braunfels.'),
+      `Unexpected Card 01 greeting: ${card01.draftBody}`
+    );
+    assert.ok(
+      card01.contactMeta.includes('GC Office: Austin, TX | Jobsite: New Braunfels'),
+      `Card 01 (512) contactMeta should distinguish Austin GC office vs New Braunfels jobsite: ${card01.contactMeta}`
+    );
+
+    // Card 03: Lauren Vance @ Stream Realty Partners (Case B - Property Management / Ownership Persona)
+    const card03 = cards.find((c) => c.cardNumber.includes('#BP-2026-06388'));
+    assert.ok(card03, 'Card 03 (#BP-2026-06388) should be present');
+    assert.ok(
+      card03.draftBody.includes('Hey Lauren — saw the commercial CapEx permit (#BP-2026-06388) filed for Guadalupe River Business Park at 1420 Common St in New Braunfels.'),
+      `Unexpected Card 03 PM greeting: ${card03.draftBody}`
+    );
+    assert.ok(
+      card03.draftBody.includes('Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? — Jack Williams • A-lert Roof Systems • (830) 481-0653'),
+      `Card 03 PM closing CTA should use CapEx comparison numbers: ${card03.draftBody}`
+    );
+
+    // Card 04: David Keller @ Keller-Martin Construction (Self-Storage & Metal Envelope, 78132 ZIP, (210) San Antonio Office)
+    const card04 = cards.find((c) => c.cardNumber.includes('#BP-2026-06511'));
+    assert.ok(card04, 'Card 04 (#BP-2026-06511) should be present');
+    assert.ok(
+      card04.draftBody.includes('Hey David & the Keller-Martin team — saw the commercial permit (#BP-2026-06511) filed for 2180 State Hwy 46 W in New Braunfels.'),
+      `Unexpected Card 04 greeting: ${card04.draftBody}`
+    );
+    assert.ok(
+      /standing-seam metal|metal roof/i.test(card04.draftBody) && !/60-mil mechanically attached tpo/i.test(card04.draftBody),
+      `Card 04 (Metal Envelope) must pitch standing-seam metal roof envelope, not 60-mil TPO: ${card04.draftBody}`
+    );
+    assert.strictEqual(card04.cadDetails.parcelId, 'CAD-78132-6511');
+    assert.ok(card04.subMeta.includes('78132'), `Card 04 address should use 78132 ZIP: ${card04.subMeta}`);
+    assert.ok(
+      card04.contactMeta.includes('GC Office: San Antonio, TX | Jobsite: New Braunfels'),
+      `Card 04 (210) contactMeta should distinguish San Antonio GC office: ${card04.contactMeta}`
+    );
+
+    // Card 07: Structura Inc (Case C - Generic Inbox fallback & Sanitized UI Contact Badge, 78132 ZIP)
+    const card07 = cards.find((c) => c.cardNumber.includes('#BP-2026-06915'));
+    assert.ok(card07, 'Card 07 (#BP-2026-06915) should be present');
+    assert.strictEqual(
+      card07.contactName,
+      'Preconstruction Desk • Estimating @ Structura Inc',
+      'Card 07 contactName must sanitize raw email address into Preconstruction Desk label'
+    );
+    assert.ok(
+      card07.draftBody.includes('Hey Structura Inc Estimating Team — saw the commercial permit (#BP-2026-06915) filed for 715 Landa St in New Braunfels.'),
+      `Unexpected Card 07 generic desk greeting: ${card07.draftBody}`
+    );
+    assert.strictEqual(card07.cadDetails.parcelId, 'CAD-78132-6915');
+
+    // Card 08: Gymnasium (#BP-2026-07044) prioritizes structural standing-seam metal roof
+    const card08 = cards.find((c) => c.cardNumber.includes('#BP-2026-07044'));
+    assert.ok(card08, 'Card 08 (#BP-2026-07044) should be present');
+    assert.ok(
+      /standing-seam metal/i.test(card08.draftBody),
+      `Card 08 (Gymnasium) must prioritize standing-seam metal capability: ${card08.draftBody}`
+    );
+
+    // 3. Verify Sentence #2 rotates through 3 distinct proof angles when landmarkReference is blank
+    const sentence2Set = new Set(
+      cards.map((c) => {
+        const parts = String(c.draftBody || '').split('. ');
+        return parts[1] || '';
+      })
+    );
+    assert.ok(
+      sentence2Set.size >= 3,
+      `When landmarkReference is blank, Sentence #2 must rotate through 3 distinct proof variations across the 9 cards (found ${sentence2Set.size})`
+    );
+
+    // 4. Verify Landmark Override when NEARBY JOB LANDMARK (SENTENCE #2) is populated
+    const landmarkOverrideResp = await fetch(`${baseUrl}/api/recon/briefing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'recon-78130-2101s6',
+        primaryTrade: 'Roofing / Exteriors',
+        territoryZip: '78130',
+        landmarkReference: 'two miles east off FM 306 & Hunter Rd'
+      })
+    });
+    const landmarkOverrideData = await landmarkOverrideResp.json();
+    assert.strictEqual(landmarkOverrideData.ok, true);
+    assert.ok(
+      landmarkOverrideData.briefing.cards.every((c) =>
+        c.draftBody.includes('two miles east off FM 306 & Hunter Rd')
+      ),
+      'Populating NEARBY JOB LANDMARK must inject the landmark phrase into Sentence #2 across all cards'
+    );
+
+    // 5. Verify Trade Calibration Pills across all 5 trades dynamically update Sentence #2 & Sentence #3 without leaking roofing or multi-family strings
+    const tradePills = [
+      'Commercial Concrete',
+      'Electrical / HVAC',
+      'Pools / Fencing / Custom Home',
+      'B2B / Commercial Services',
+      'Roofing / Exteriors'
+    ];
+    for (const pillTrade of tradePills) {
+      const pillResp = await fetch(`${baseUrl}/api/recon/briefing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: 'recon-78130-2101s6',
+          primaryTrade: pillTrade,
+          territoryZip: '78130',
+          landmarkReference: ''
+        })
+      });
+      const pillData = await pillResp.json();
+      assert.strictEqual(pillData.ok, true);
+      pillData.briefing.cards.forEach((c) => {
+        assert.ok(
+          !c.draftBody.toLowerCase().includes('multi-family roof preventative maintenance'),
+          `Trade ${pillTrade} must never contain multi-family roof preventative maintenance`
+        );
+        if (pillTrade !== 'Roofing / Exteriors') {
+          assert.ok(
+            !c.draftBody.toLowerCase().includes('60-mil mechanically attached tpo'),
+            `Non-roofing trade ${pillTrade} must not fall back to TPO roofing scope`
+          );
+        }
+      });
+    }
+
     const initialCard1Contact = alertBriefingData.briefing.cards[0].contactName;
 
-    // 19. Verify Daily Card Rotation + 6:45 AM Sweep rotates A-lert Roof Systems to a fresh 9-card batch
+    console.log('[20/20] Testing Daily Card Rotation + 6:45 AM Sweep (/api/recon/cron-morning)...');
+    // 20. Verify Daily Card Rotation + 6:45 AM Sweep rotates A-lert Roof Systems to a fresh 9-card batch
     const rotateResp = await fetch(`${baseUrl}/api/recon/cron-morning`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -472,7 +623,7 @@ async function runTests() {
       'Rotated real client batch must have zero 555 demo numbers'
     );
 
-    console.log('\n✅ ALL 19 TIBERIUS RECON™ END-TO-END, POST-PAY ONBOARDING, DAILY CARD ROTATION, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS & CONVERSATION ROOM TESTS PASSED.');
+    console.log('\n✅ ALL 20 TIBERIUS RECON™ END-TO-END, SHOP DOSSIER PIPELINE, POST-PAY ONBOARDING, DAILY CARD ROTATION, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS & CONVERSATION ROOM TESTS PASSED.');
   } finally {
     server.close();
   }

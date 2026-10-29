@@ -26,6 +26,7 @@ const {
 
 const LOCAL_STORE_PATH = path.join(__dirname, '.recon-store.json');
 const TMP_STORE_PATH = path.join(os.tmpdir(), 'tiberius-recon-store.json');
+const ENGINE_SCHEMA_VERSION = '2.4';
 
 /* ==========================================================================
    METRO & COUNTY APPRAISAL DISTRICT (CAD) DIRECTORY
@@ -35,7 +36,7 @@ const METRO_PROFILES = {
     city: 'New Braunfels',
     state: 'TX',
     countyCad: 'Comal Appraisal District (Comal CAD)',
-    portalName: 'City of New Braunfels EnerGov Portal',
+    portalName: 'City of New Braunfels EnerGov & Regional Corridor Portal',
     industrialCorridor: 'IH-35 Corridor & FM 306 Commercial Pkwy',
     commercialAvenue: 'Gruene Rd & Loop 337',
     estateNeighborhood: 'Havenwood at Hunters Crossing',
@@ -91,6 +92,13 @@ const METRO_PROFILES = {
 function resolveMetroProfile(zipOrCityRaw) {
   const cleaned = String(zipOrCityRaw || '75024').trim();
   if (METRO_PROFILES[cleaned]) return { zip: cleaned, ...METRO_PROFILES[cleaned] };
+
+  if (cleaned === '78132' || cleaned.startsWith('781')) {
+    return {
+      zip: /^\d{5}$/.test(cleaned) ? cleaned : '78130',
+      ...METRO_PROFILES['78130']
+    };
+  }
 
   const prefix3 = cleaned.slice(0, 3);
   if (METRO_PROFILES[prefix3]) {
@@ -152,7 +160,7 @@ const TRADE_TEMPLATES = {
     card1Scope: '60-mil mechanically attached TPO membrane, tapered insulation & sheet metal coping scope',
     card1CompletedJob: 'a 24,000 sq ft commercial TPO re-roof and curb package',
     card2Headline: 'Oakridge Commons & 3 Adjacent Retail Pads',
-    card2Scope: 'multi-family roof preventative maintenance, elastomeric coating & leak warranty transfers',
+    card2Scope: 'commercial CapEx roof restoration, elastomeric coating & 20-year NDL leak warranty transfers',
     card3Headline: 'Custom Estate Addition & Standing-Seam Metal Roof',
     card3Scope: '24-gauge standing-seam architectural metal roofing and custom copper flashing package'
   },
@@ -172,7 +180,7 @@ const TRADE_TEMPLATES = {
     card1Scope: 'commercial architectural perimeter fencing, automated security gates & hardscape plaza',
     card1CompletedJob: 'a multi-pad commercial hardscape and controlled-access perimeter package',
     card2Headline: 'Oakridge Commons & 3 Adjacent Retail Pads',
-    card2Scope: 'community pool plaster/equipment modernization and wrought-iron perimeter enclosure',
+    card2Scope: 'commercial amenity equipment modernization and wrought-iron perimeter security enclosure',
     card3Headline: 'Custom Estate Addition, Negative-Edge Pool & Cabana',
     card3Scope: 'custom negative-edge gunite pool, outdoor kitchen pavilion & estate privacy masonry'
   },
@@ -188,20 +196,646 @@ const TRADE_TEMPLATES = {
   }
 };
 
-function getTradeTemplate(trade) {
-  if (TRADE_TEMPLATES[trade]) return TRADE_TEMPLATES[trade];
+function normalizeTradeKey(trade) {
+  if (TRADE_TEMPLATES[trade]) return trade;
   const lower = String(trade || '').toLowerCase();
-  if (lower.includes('roof') || lower.includes('exterior')) return TRADE_TEMPLATES['Roofing / Exteriors'];
+  if (lower.includes('roof') || lower.includes('exterior') || lower.includes('storm')) {
+    return 'Roofing / Exteriors';
+  }
   if (lower.includes('hvac') || lower.includes('electr') || lower.includes('mep') || lower.includes('mech')) {
-    return TRADE_TEMPLATES['Electrical / HVAC'];
+    return 'Electrical / HVAC';
   }
-  if (lower.includes('pool') || lower.includes('fenc') || lower.includes('outdoor')) {
-    return TRADE_TEMPLATES['Pools / Fencing / Custom Home'];
+  if (
+    lower.includes('pool') ||
+    lower.includes('fenc') ||
+    lower.includes('outdoor') ||
+    lower.includes('general contracting') ||
+    lower.includes('build') ||
+    lower.includes('remodel') ||
+    lower.includes('landscap') ||
+    lower.includes('ground')
+  ) {
+    return 'Pools / Fencing / Custom Home';
   }
-  if (lower.includes('b2b') || lower.includes('facility')) {
-    return TRADE_TEMPLATES['B2B / Commercial Services'];
+  if (lower.includes('b2b') || lower.includes('facility') || lower.includes('property services') || lower.includes('plumb')) {
+    return 'B2B / Commercial Services';
   }
-  return TRADE_TEMPLATES['Commercial Concrete'];
+  return 'Commercial Concrete';
+}
+
+function getTradeTemplate(trade) {
+  return TRADE_TEMPLATES[normalizeTradeKey(trade)] || TRADE_TEMPLATES['Commercial Concrete'];
+}
+
+/**
+ * Checks whether a contractor's saved Shop Dossier capabilities match the currently active trade pill.
+ * When a user switches the Live Trade Calibration dropdown on briefing.html to a different trade,
+ * this detects the trade switch so Sentence #2 and Sentence #3 recalibrate cleanly to the active trade.
+ */
+function doesDossierMatchTrade(shopDossier, activeTrade) {
+  if (!shopDossier) return false;
+  const canonicalTrade = normalizeTradeKey(activeTrade);
+  if (shopDossier.tradeCategory && normalizeTradeKey(shopDossier.tradeCategory) === canonicalTrade) {
+    return true;
+  }
+  const caps = Array.isArray(shopDossier.coreCapabilities)
+    ? shopDossier.coreCapabilities
+    : Array.isArray(shopDossier.coreServices)
+    ? shopDossier.coreServices
+    : [];
+  const combined = `${caps.join(' ')} ${shopDossier.certificationsAndBonding || ''}`.toLowerCase();
+  if (!combined.trim()) return false;
+
+  if (canonicalTrade === 'Roofing / Exteriors') {
+    return /roof|standing[- ]seam|tpo|pvc|epdm|elastomeric|ndl|rcat|gaf|shingle|flashing/i.test(combined);
+  }
+  if (canonicalTrade === 'Commercial Concrete') {
+    return /concrete|tilt[- ]wall|slab|apron|flatwork|paving|post[- ]tension|aci/i.test(combined);
+  }
+  if (canonicalTrade === 'Electrical / HVAC') {
+    return /hvac|rtu|electr|mep|switchgear|panel|tacla|tdlr|chiller|vrf|duct|generator/i.test(combined);
+  }
+  if (canonicalTrade === 'Pools / Fencing / Custom Home') {
+    return /pool|fenc|gate|hardscape|outdoor|pavilion|casita|estate|custom|arborist|irrigat/i.test(combined);
+  }
+  if (canonicalTrade === 'B2B / Commercial Services') {
+    return /facility|sla|hydro[- ]jet|backflow|porter|maintenance|vendor[- ]compliance|turnover/i.test(combined);
+  }
+  return false;
+}
+
+/**
+ * Generates 3 distinct Sentence #2 proof variations from the Shop Dossier:
+ *   [0] Ground-Up Shell / Industrial
+ *   [1] Commercial Retrofit / CapEx
+ *   [2] Specialty / Structural Envelope
+ */
+function buildShopDossierProofAngles(shopDossier = {}, activeTrade = 'Commercial Concrete', metro = {}) {
+  const canonicalTrade = normalizeTradeKey(activeTrade);
+  const cityLabel = metro.city || 'Central Texas';
+  const caps = Array.isArray(shopDossier.coreCapabilities) && shopDossier.coreCapabilities.length
+    ? shopDossier.coreCapabilities
+    : Array.isArray(shopDossier.coreServices) && shopDossier.coreServices.length
+    ? shopDossier.coreServices
+    : [];
+  const capText = caps.join(' | ').toLowerCase();
+  const hasMetal = /metal|standing[- ]seam|roll[- ]form/i.test(capText);
+  const customProof = String(shopDossier.proofProjects || '').trim();
+  const customProofMatchesTrade = doesDossierMatchTrade(
+    { ...shopDossier, coreCapabilities: [customProof, ...caps] },
+    canonicalTrade
+  );
+  const isCustomProofRetrofit = /retrofit|re-roof|reroof|capex|restoration/i.test(customProof);
+
+  let angles = [];
+
+  if (canonicalTrade === 'Roofing / Exteriors') {
+    if (hasMetal) {
+      angles = [
+        !isCustomProofRetrofit && customProofMatchesTrade && customProof
+          ? customProof
+          : `a 52,000 sq ft ground-up commercial shell & engineered standing-seam metal roof system in the ${cityLabel} corridor that passed inspection ahead of schedule`,
+        isCustomProofRetrofit && customProofMatchesTrade && customProof
+          ? customProof
+          : `a 45,000 sq ft commercial standing-seam metal roof & flat-to-pitched CapEx retrofit completed with zero tenant disruption`,
+        `a 38,000 sq ft climate-controlled self-storage & long-span structural metal roof envelope delivered ahead of framing schedule`
+      ];
+    } else {
+      angles = [
+        !isCustomProofRetrofit && customProofMatchesTrade && customProof
+          ? customProof
+          : `a 48,000 sq ft ground-up commercial shell & 60-mil TPO roof package in ${cityLabel} that passed inspection ahead of schedule`,
+        isCustomProofRetrofit && customProofMatchesTrade && customProof
+          ? customProof
+          : `a 42,000 sq ft commercial plaza CapEx reroof & elastomeric membrane restoration completed with zero tenant disruption`,
+        `a 32,000 sq ft structural deck, architectural standing-seam metal & custom coping envelope delivered ahead of schedule`
+      ];
+    }
+  } else if (canonicalTrade === 'Electrical / HVAC') {
+    angles = [
+      !isCustomProofRetrofit && customProofMatchesTrade && customProof
+        ? customProof
+        : `a 40,000 sq ft commercial shell 800A 3-phase switchgear distribution & multi-unit RTU mechanical buildout that passed city inspection ahead of schedule`,
+      isCustomProofRetrofit && customProofMatchesTrade && customProof
+        ? customProof
+        : `a multi-building commercial CapEx RTU crane swap, VRF controls upgrade & LED retrofit completed with zero tenant downtime`,
+      `a 26,000 sq ft high-bay climate-controlled mechanical, custom sheet-metal duct & 480V structural power distribution package`
+    ];
+  } else if (canonicalTrade === 'Pools / Fencing / Custom Home') {
+    angles = [
+      !isCustomProofRetrofit && customProofMatchesTrade && customProof
+        ? customProof
+        : `a 35,000 sq ft commercial campus perimeter security fencing, automated cantilever gate & site hardscape package that passed inspection ahead of schedule`,
+      isCustomProofRetrofit && customProofMatchesTrade && customProof
+        ? customProof
+        : `a multi-pad commercial plaza exterior hardscape, bollard & ornamental iron enclosure CapEx upgrade completed with zero tenant disruption`,
+      `a custom structural steel shade pavilion, masonry screening wall & commercial amenity plaza buildout delivered ahead of schedule`
+    ];
+  } else if (canonicalTrade === 'B2B / Commercial Services') {
+    angles = [
+      !isCustomProofRetrofit && customProofMatchesTrade && customProof
+        ? customProof
+        : `a 45,000 sq ft commercial shell post-construction final spec detailing, window & pressure restoration turnover package delivered ahead of CO`,
+      isCustomProofRetrofit && customProofMatchesTrade && customProof
+        ? customProof
+        : `a 4-building commercial portfolio exterior CapEx restoration, hydro-jetting & weekend common-area upgrade with zero tenant disruption`,
+      `a 30,000 sq ft specialty commercial facility envelope sealing, exterior restoration & preventative SLA commissioning package`
+    ];
+  } else {
+    // Commercial Concrete
+    angles = [
+      !isCustomProofRetrofit && customProofMatchesTrade && customProof
+        ? customProof
+        : `a 36,000 sq ft industrial tilt-wall foundation, laser-screed slab & heavy-duty truck apron project that passed city inspection ahead of schedule`,
+      isCustomProofRetrofit && customProofMatchesTrade && customProof
+        ? customProof
+        : `a 4-pad commercial retail CapEx flatwork, ADA ramp compliance & reinforced dumpster pad retrofit completed over a single weekend`,
+      `a 28,000 sq ft engineered post-tension structural slab, grade-beam & machine-foundation package delivered ahead of framing schedule`
+    ];
+  }
+
+  return angles;
+}
+
+/**
+ * Classifies a permit into one of the 3 proof rotation archetypes:
+ *   0 -> Ground-Up Shell / Industrial
+ *   1 -> Commercial Retrofit / CapEx
+ *   2 -> Specialty / Structural Envelope
+ */
+function resolvePermitArchetype(permit = {}) {
+  const text = `${permit.issuedLabel || ''} ${permit.pillText || ''} ${permit.headline || ''} ${permit.subMeta || ''}`.toLowerCase();
+  if (
+    /metal envelope|self-storage|storage|gymnasium|athletic|school|structural remodel|showroom ti|cold storage|auto dealership|service bays|fleet|custom addition|estate/i.test(
+      text
+    )
+  ) {
+    return 2;
+  }
+  if (
+    /capex|retrofit|brewery|re-bid|re-roof|reroof|multi-tenant|retail strip|conversion|exterior & tenant remodel|multi-family|multifamily|acquisition|vendor/i.test(
+      text
+    )
+  ) {
+    return 1;
+  }
+  return 0;
+}
+
+/**
+ * Cross-references permit title/description keywords ("Metal Envelope", "Self-Storage", "Industrial",
+ * "Medical", "Retail", "CapEx", "Structural Remodel / TI", "Gymnasium", "Brewery Retrofit") with
+ * shopDossier.coreCapabilities and activeTrade to produce a cohesive, non-contradictory Sentence #3 scope.
+ */
+function resolvePermitScope(permit = {}, shopDossier = {}, activeTrade = 'Commercial Concrete') {
+  const p = permit || {};
+  const dossier = shopDossier || {};
+  const canonicalTrade = normalizeTradeKey(activeTrade);
+  const text = `${p.issuedLabel || ''} ${p.pillText || ''} ${p.headline || ''} ${p.subMeta || ''} ${p.description || ''}`.toLowerCase();
+  const dossierMatches = doesDossierMatchTrade(dossier, canonicalTrade);
+  const caps = dossierMatches
+    ? Array.isArray(dossier.coreCapabilities) && dossier.coreCapabilities.length
+      ? dossier.coreCapabilities
+      : Array.isArray(dossier.coreServices)
+      ? dossier.coreServices
+      : []
+    : [];
+  const capText = caps.join(' | ').toLowerCase();
+  const hasMetalCapability =
+    /metal|standing[- ]seam|roll[- ]form/i.test(capText) ||
+    /metal|standing[- ]seam/i.test(String(dossier.proofProjects || ''));
+
+  const isMetalOrStorage = /metal envelope|self-storage|climate-controlled storage/i.test(text);
+  const isGymOrSchool = /gymnasium|athletic|school|activity center/i.test(text);
+  const isBreweryOrFlexRetrofit = /brewery|flex & brewery|historic corridor/i.test(text);
+  const isGenuineMultiFamily = /multi-family|multifamily|240-unit|apartment/i.test(text);
+  const isCapExOrPortfolio = /capex|re-bid|portfolio|corporate campus|office park re-roof|4-building|3-building/i.test(text);
+  const isRetailOrMultiTenant = /retail|multi-tenant|automotive plaza|grocery anchor|power center|strip/i.test(text);
+  const isStructuralRemodelOrTi = /structural remodel|showroom ti|office & showroom|conversion|exterior & tenant remodel/i.test(text);
+  const isMedical = /medical|surgical|clinical|dental|health/i.test(text);
+  const isIndustrialOrWarehouse = /industrial|distribution center|warehouse|cold storage|logistics|tilt-wall|fleet/i.test(text);
+
+  if (canonicalTrade === 'Roofing / Exteriors') {
+    if (isMetalOrStorage) {
+      return 'engineered standing-seam metal roof envelope, climate-controlled storage deck & weather-tight trim package';
+    }
+    if (isGymOrSchool) {
+      return hasMetalCapability
+        ? 'long-span structural standing-seam metal roof system, high-bay thermal insulation & custom perimeter flashing scope'
+        : 'long-span structural gymnasium roof assembly, tapered polyiso insulation & pre-finished sheet metal coping scope';
+    }
+    if (isBreweryOrFlexRetrofit) {
+      return hasMetalCapability
+        ? 'commercial standing-seam metal roof retrofit, architectural fascia & high-thermal envelope upgrade'
+        : 'commercial flex roof retrofit, elastomeric membrane restoration & custom sheet metal flashing scope';
+    }
+    if (isGenuineMultiFamily) {
+      return hasMetalCapability
+        ? 'phased multi-family CapEx standing-seam metal & TPO re-roofing package with 20-year NDL warranties'
+        : 'phased multi-family CapEx roof replacement, elastomeric coating & 20-year NDL warranty package';
+    }
+    if (isCapExOrPortfolio) {
+      return hasMetalCapability
+        ? 'phased commercial CapEx standing-seam metal roof retrofit, elastomeric restoration & 20-year NDL warranty package'
+        : 'phased commercial portfolio CapEx roof restoration, elastomeric coating & 20-year NDL warranty package';
+    }
+    if (isRetailOrMultiTenant) {
+      return hasMetalCapability
+        ? 'multi-tenant commercial standing-seam metal canopy, parapet coping & TPO/elastomeric roof package'
+        : 'multi-tenant commercial plaza TPO roof assembly, parapet sheet metal coping & elastomeric waterproof membrane scope';
+    }
+    if (isStructuralRemodelOrTi) {
+      return hasMetalCapability
+        ? 'structural roof remodel, architectural standing-seam metal envelope & custom curb/flashing retrofit'
+        : 'commercial structural roof remodel, rooftop curb flashing modifications & weather-tight membrane upgrade';
+    }
+    if (isMedical) {
+      return hasMetalCapability
+        ? 'clinical shell standing-seam metal & high-R TPO roof assembly, rooftop MEP curb flashing & 20-year NDL warranty scope'
+        : 'clinical shell high-R TPO roof assembly, surgical rooftop equipment curb flashing & 20-year NDL warranty scope';
+    }
+    if (isIndustrialOrWarehouse) {
+      return hasMetalCapability
+        ? 'industrial standing-seam metal & high-wind roof system, expansion joint flashing & 20-year NDL warranty scope'
+        : 'industrial warehouse mechanically attached TPO roof system, tapered insulation & high-wind perimeter coping scope';
+    }
+    return hasMetalCapability
+      ? 'commercial shell standing-seam metal & TPO roof package, tapered insulation & custom architectural sheet metal scope'
+      : 'commercial shell 60-mil mechanically attached TPO membrane, tapered insulation & sheet metal coping scope';
+  }
+
+  if (canonicalTrade === 'Electrical / HVAC') {
+    if (isMetalOrStorage) {
+      return 'climate-controlled storage multi-zone dehumidification HVAC, LED corridor lighting & 3-phase power distribution scope';
+    }
+    if (isGymOrSchool) {
+      return 'high-bay gymnasium package RTU mechanical system, exposed spiral ductwork & high-output LED sports lighting scope';
+    }
+    if (isBreweryOrFlexRetrofit) {
+      return 'brewery process chiller/glycol mechanical piping, high-load 3-phase electrical panels & commercial exhaust ventilation retrofit';
+    }
+    if (isCapExOrPortfolio || isGenuineMultiFamily) {
+      return 'phased commercial portfolio RTU package replacements, building automation controls & exterior LED parking lot retrofits';
+    }
+    if (isRetailOrMultiTenant) {
+      return 'multi-tenant retail meter-bank distribution, individual tenant RTU curb sets & commercial rough-in MEP package';
+    }
+    if (isStructuralRemodelOrTi) {
+      return 'commercial showroom 480V/208V electrical service upgrade, VRF multi-zone HVAC & architectural lighting finish-out';
+    }
+    if (isMedical) {
+      return 'medical-grade HEPA rooftop air-handling units, redundant emergency power transfer switches & clinical MEP rough-in';
+    }
+    if (isIndustrialOrWarehouse) {
+      return '800A–1200A 3-phase industrial switchgear, high-bay LED motion lighting & warehouse make-up air mechanical scope';
+    }
+    return '800A 3-phase switchgear distribution, LED high-bay package & 25-ton RTU mechanical scope';
+  }
+
+  if (canonicalTrade === 'Pools / Fencing / Custom Home') {
+    if (isMetalOrStorage) {
+      return 'automated keypad cantilever security gates, 8-ft commercial ornamental perimeter fencing & retention pond hardscape';
+    }
+    if (isGymOrSchool) {
+      return 'athletic complex perimeter security fencing, masonry monument enclosures & commercial site hardscape plaza';
+    }
+    if (isBreweryOrFlexRetrofit) {
+      return 'custom outdoor beer-garden pavilion, structural steel shade canopies, masonry fire-pit court & perimeter iron fencing';
+    }
+    if (isCapExOrPortfolio || isGenuineMultiFamily) {
+      return 'commercial business park perimeter security fencing, monument masonry upgrades & common-area hardscape CapEx package';
+    }
+    if (isRetailOrMultiTenant) {
+      return 'commercial plaza masonry dumpster enclosures, decorative steel bollards & outdoor patio dining trellis structures';
+    }
+    if (isStructuralRemodelOrTi) {
+      return 'structural steel showroom mezzanine, architectural glazing partitions & exterior courtyard hardscape remodel';
+    }
+    if (isMedical) {
+      return 'clinical campus privacy masonry screening walls, healing-garden hardscape plaza & controlled-access staff gate systems';
+    }
+    if (isIndustrialOrWarehouse) {
+      return 'industrial laydown yard 8-ft security fencing, motorized dual-slide truck gates & heavy-duty perimeter bollards';
+    }
+    return 'commercial architectural perimeter fencing, automated security gates & exterior hardscape plaza scope';
+  }
+
+  if (canonicalTrade === 'B2B / Commercial Services') {
+    if (isMetalOrStorage) {
+      return 'post-construction storage facility final detail, exterior metal envelope pressure prep & ongoing commercial facility maintenance';
+    }
+    if (isGymOrSchool) {
+      return 'municipal athletic center post-construction final clean, high-bay surface detailing & preventative facility maintenance';
+    }
+    if (isBreweryOrFlexRetrofit) {
+      return 'commercial brewery & flex annex hydro-jetting, grease-trap/backflow compliance & exterior pressure restoration';
+    }
+    if (isCapExOrPortfolio || isGenuineMultiFamily) {
+      return 'phased commercial portfolio exterior CapEx restoration, night/weekend common-area maintenance & consolidated vendor SLA';
+    }
+    if (isRetailOrMultiTenant) {
+      return 'multi-tenant retail plaza day-1 turnover detailing, storefront pressure washing & recurring common-area porter contract';
+    }
+    if (isStructuralRemodelOrTi) {
+      return 'commercial showroom post-remodel final spec detailing, glass/floor restoration & turnkey facility commissioning';
+    }
+    if (isMedical) {
+      return 'clinical-grade post-construction terminal detailing, backflow/MEP compliance testing & 24/7 medical facility SLA support';
+    }
+    if (isIndustrialOrWarehouse) {
+      return 'industrial warehouse slab scrubbing, dock-leveler commissioning & post-construction facility turnover package';
+    }
+    return 'post-construction final spec detailing, exterior pressure restoration & ongoing commercial facility contract';
+  }
+
+  // Default: Commercial Concrete
+  if (isMetalOrStorage) {
+    return 'monolithic climate-controlled storage slab-on-grade, perimeter grade beams & heavy-duty drive-aisle paving scope';
+  }
+  if (isGymOrSchool) {
+    return 'structural gymnasium foundation slab, depressed athletic floor pour & site ADA sidewalk/curb package';
+  }
+  if (isBreweryOrFlexRetrofit) {
+    return 'sloped brewery trench-drain floor slab retrofit, heavy-equipment housekeeping pads & exterior patio flatwork';
+  }
+  if (isCapExOrPortfolio || isGenuineMultiFamily) {
+    return 'phased commercial CapEx parking lot panel replacement, ADA ramp compliance & reinforced dumpster pad upgrades';
+  }
+  if (isRetailOrMultiTenant) {
+    return 'multi-tenant retail foundation slab, storefront ADA sidewalk approaches & heavy-duty service drive paving';
+  }
+  if (isStructuralRemodelOrTi) {
+    return 'structural slab saw-cutting, interior footing reinforcements & architectural concrete floor finish-out';
+  }
+  if (isMedical) {
+    return 'clinical shell structural slab-on-grade, ambulance drop-off canopy paving & precision medical imaging floor foundations';
+  }
+  if (isIndustrialOrWarehouse) {
+    return 'high-tolerance laser-screed industrial warehouse slab, tilt-wall panels & reinforced 8-inch truck dock aprons';
+  }
+  return 'structural concrete foundation, loading dock apron & heavy-duty flatwork scope';
+}
+
+/**
+ * Sanitizes a card's contact display name so raw email addresses (like `bidding@structurainc.com`)
+ * never render as a person's name in the UI badge.
+ */
+function sanitizeContactDisplayName(rawContactName = '') {
+  const trimmed = String(rawContactName || '').replace(/\s+/g, ' ').trim();
+  if (!trimmed) return 'Preconstruction Desk • Commercial Estimating';
+
+  if (trimmed.includes('•')) {
+    const parts = trimmed.split('•').map((p) => p.trim());
+    const leftPart = parts[0] || '';
+    const rightPart = parts.slice(1).join(' • ');
+    if (leftPart.includes('@')) {
+      return `Preconstruction Desk • ${rightPart || 'Commercial Estimating'}`;
+    }
+    return `${leftPart} • ${rightPart}`;
+  }
+
+  // If no bullet separator and begins with an email address
+  if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(trimmed)) {
+    return trimmed.replace(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/, 'Preconstruction Desk');
+  }
+
+  return trimmed;
+}
+
+/**
+ * Extracts clean company short name from full company string (e.g., "Lott Brothers Construction" -> "Lott Brothers",
+ * "Structura Inc" -> "Structura Inc", "Stream Realty Partners" -> "Stream Realty").
+ */
+function extractCompanyShortName(rawCompany = '') {
+  const cleaned = String(rawCompany || '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return 'Commercial';
+
+  // Keep "Structura Inc" intact as a 2-word brand with "Inc"
+  if (/^structura\s+inc$/i.test(cleaned)) {
+    return 'Structura Inc';
+  }
+
+  const stripped = cleaned
+    .replace(
+      /\s+\b(General\s+Contractors|Contractors\s+Inc|Construction\s+Services|Construction\s+Company|Construction\s+Co|Construction\s+LLC|Construction|Constructors|Contracting\s+Co|Commercial\s+Services|Real\s+Estate\s+Group|Partners|Company|Corp|LLC|Inc|LP|Ltd)\b\.?$/i,
+      ''
+    )
+    .replace(
+      /\s+\b(General\s+Contractors|Contractors|Construction|Constructors|Partners|Company|LLC|Inc)\b\.?$/i,
+      ''
+    )
+    .trim();
+
+  return stripped || cleaned;
+}
+
+/**
+ * Parses a card's contact metadata into structured persona fields for Sentence #1 and Sentence #4.
+ */
+function parseCardContact(card = {}) {
+  const rawName = String(card.contactName || '').replace(/\s+/g, ' ').trim();
+  const displayName = sanitizeContactDisplayName(rawName);
+  const contactHeader = String(card.contactHeader || '');
+
+  let leftSegment = displayName;
+  let rightSegment = '';
+  if (displayName.includes('•')) {
+    const bulletParts = displayName.split('•').map((s) => s.trim());
+    leftSegment = bulletParts[0] || '';
+    rightSegment = bulletParts.slice(1).join(' • ');
+  }
+
+  let rolePart = rightSegment;
+  let companyFull = '';
+  const sourceForAt = rightSegment || leftSegment;
+  if (sourceForAt.includes('@')) {
+    const atParts = sourceForAt.split('@').map((s) => s.trim());
+    rolePart = rightSegment ? atParts[0] : leftSegment.split('@')[0].trim();
+    companyFull = atParts.slice(1).join(' @ ').trim();
+  }
+
+  if (!companyFull && card.contactShort) {
+    const parenMatch = String(card.contactShort).match(/\(([^)]+)\)/);
+    if (parenMatch) {
+      companyFull = parenMatch[1].trim();
+    } else {
+      companyFull = String(card.contactShort)
+        .replace(/\b(Commercial\s+Estimating|Estimating|Property\s+Mgmt|Construction|Facilities)\b/gi, '')
+        .trim();
+    }
+  }
+
+  const companyShortName = extractCompanyShortName(companyFull || 'Commercial');
+
+  // Check if leftSegment is a generic desk/department rather than a human person's name
+  const rawLeftBeforeSanitize = rawName.includes('•') ? rawName.split('•')[0].trim() : rawName.split('@')[0].trim();
+  const isGenericDesk =
+    rawLeftBeforeSanitize.includes('@') ||
+    /^(preconstruction|estimating|bidding|central\s+tx|south\s+central|development|commercial\s+desk|general\s+inquiries|info|office)/i.test(
+      leftSegment
+    ) ||
+    /\b(desk|team|department|facilities|management|mgmt|construction|operations)\b/i.test(leftSegment);
+
+  const firstName = isGenericDesk
+    ? null
+    : leftSegment
+        .replace(/^(Dr\.|Mr\.|Ms\.|Mrs\.)\s+/i, '')
+        .trim()
+        .split(/\s+/)[0] || null;
+
+  const combinedRoleText = `${rolePart} ${contactHeader} ${leftSegment}`;
+  const isPropertyOrOwnerPersona = /\b(property|asset|facilities|owner|owners|portfolio|reit)\b/i.test(combinedRoleText);
+
+  return {
+    displayName,
+    firstName,
+    companyFull,
+    companyShortName,
+    rolePart,
+    isGenericDesk,
+    isPropertyOrOwnerPersona
+  };
+}
+
+/**
+ * Sentence #1 Dynamic Contact Parser & Persona-Aware Greeting:
+ * - Case A (Named GC Estimator / Precon / PM):
+ *   "Hey [First Name] & the [Company Short Name] team — saw the commercial permit (#[Permit ID]) filed for [Address] in [City]."
+ * - Case B (Property Management / Ownership Persona):
+ *   "Hey [First Name] — saw the commercial CapEx permit (#[Permit ID]) filed for [Project Name] at [Address] in [City]."
+ * - Case C (Generic Inbox / No Named Person):
+ *   "Hey [Company Short Name] Estimating Team — saw the commercial permit (#[Permit ID]) filed for [Address] in [City]."
+ */
+function resolveGreeting(card = {}) {
+  const parsed = parseCardContact(card);
+  const rawPermit = String(card.permitNum || card.permitNumber || card.cardNumber || 'BP-2026')
+    .replace(/^.*LIVE PERMIT\s+/i, '')
+    .replace(/^#+/, '')
+    .trim();
+  const fullAddress = String(card.address || card.propertyAddress || '').trim();
+  const addressParts = fullAddress.split(',').map((s) => s.trim());
+  const streetAddress = addressParts[0] || String(card.headline || 'the project site').split('—')[0].trim();
+  const city = card.city || addressParts[1] || 'New Braunfels';
+  const projectName = String(card.headline || streetAddress)
+    .split('—')[0]
+    .trim();
+
+  if (parsed.isPropertyOrOwnerPersona) {
+    const salutation = parsed.firstName || `${parsed.companyShortName} Property Team`;
+    return `Hey ${salutation} — saw the commercial CapEx permit (#${rawPermit}) filed for ${projectName} at ${streetAddress} in ${city}.`;
+  }
+
+  if (parsed.isGenericDesk || !parsed.firstName) {
+    return `Hey ${parsed.companyShortName} Estimating Team — saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
+  }
+
+  return `Hey ${parsed.firstName} & the ${parsed.companyShortName} team — saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
+}
+
+/**
+ * Sentence #2 Proof Rotation + Landmark Override:
+ * - When landmarkReference is blank, rotates through 3 archetype-matched proof variations from shopDossier.proofAngles.
+ * - When landmarkReference is populated, dynamically injects that landmark phrase into Sentence #2 across the cards.
+ */
+function resolveProofSentence(permit = {}, shopDossier = {}, activeTrade = 'Commercial Concrete', contractor = {}, metro = {}) {
+  const canonicalTrade = normalizeTradeKey(activeTrade);
+  const tradeTpl = getTradeTemplate(canonicalTrade);
+  const dossierMatches = doesDossierMatchTrade(shopDossier, canonicalTrade);
+  const effectiveDossier = dossierMatches
+    ? shopDossier
+    : buildDefaultKnowledgeBaseForContractor({
+        ...contractor,
+        primaryTrade: canonicalTrade,
+        voiceProfile: {
+          ...(contractor.voiceProfile || {}),
+          recentWin: '',
+          differentiator: ''
+        }
+      });
+
+  const angles =
+    Array.isArray(effectiveDossier.proofAngles) && effectiveDossier.proofAngles.length >= 3
+      ? effectiveDossier.proofAngles
+      : buildShopDossierProofAngles(effectiveDossier, canonicalTrade, metro);
+
+  const archetypeIdx = resolvePermitArchetype(permit);
+  let selectedProof = angles[archetypeIdx] || angles[0];
+
+  const customLandmark = String(
+    (contractor.voiceProfile && contractor.voiceProfile.landmarkReference) || ''
+  ).trim();
+
+  if (customLandmark && !selectedProof.toLowerCase().includes(customLandmark.toLowerCase())) {
+    if (/\b(that passed|completed with|delivered ahead)\b/i.test(selectedProof)) {
+      selectedProof = selectedProof.replace(
+        /\s+\b(that passed|completed with|delivered ahead)\b/i,
+        ` ${customLandmark} $1`
+      );
+    } else {
+      selectedProof = `${selectedProof} ${customLandmark}`;
+    }
+  }
+
+  const certsSnippet = String(effectiveDossier.certificationsAndBonding || 'Full Commercial GL & Bonding')
+    .split('•')[0]
+    .trim();
+  const guaranteeSnippet =
+    effectiveDossier.warrantyAndGuarantee || 'zero day-labor subs and a 100% clean-site schedule guarantee';
+  const companyName = contractor.companyName || 'Our Commercial Team';
+
+  return `Here at ${companyName}, our ${tradeTpl.shortTrade} crew (${certsSnippet}) just wrapped ${selectedProof} with ${guaranteeSnippet}.`;
+}
+
+/**
+ * Sentence #4 Persona-Aware Closing CTA:
+ * - For Property Management / Ownership (Card 03 archetype):
+ *   "Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? — [Sender Name] • [Company Name] • [Phone]"
+ * - For GC Estimators / PMs:
+ *   "Mind if I send over our COI, spec sheet, and unit pricing this afternoon? — [Sender Name] • [Company Name] • [Phone]"
+ */
+function resolveClosingCta(card = {}, signatureLine = '') {
+  const parsed = parseCardContact(card);
+  const cleanSig = String(signatureLine || 'Shop Owner • Commercial Pros').trim();
+  if (parsed.isPropertyOrOwnerPersona) {
+    return `Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? — ${cleanSig}`;
+  }
+  return `Mind if I send over our COI, spec sheet, and unit pricing this afternoon? — ${cleanSig}`;
+}
+
+/**
+ * Resolves the contact sub-line distinguishing Out-of-Town GC Regional Offices ((512) Austin / (210) San Antonio)
+ * from the Local Jobsite location ((830) New Braunfels).
+ */
+function resolveContactSubline(phone = '', websiteUrl = '', metro = {}) {
+  const domain = String(websiteUrl || '')
+    .replace(/^https?:\/\/(www\.)?/i, '')
+    .replace(/\/.*$/, '')
+    .trim();
+  const digits = String(phone || '').replace(/\D/g, '');
+  const areaCode =
+    digits.length === 11 && digits.startsWith('1') ? digits.slice(1, 4) : digits.slice(0, 3);
+  const jobsiteCity = metro.city || 'New Braunfels';
+  const jobsiteState = metro.state || 'TX';
+
+  if (areaCode === '512') {
+    if (jobsiteCity.toLowerCase().includes('austin')) {
+      return `Direct Permit Phone + Verified Domain (${domain}) • Local Office & Jobsite: ${jobsiteCity}, ${jobsiteState}`;
+    }
+    return `Direct Permit Phone + Verified Domain (${domain}) • GC Office: Austin, TX | Jobsite: ${jobsiteCity}`;
+  }
+  if (areaCode === '210') {
+    if (jobsiteCity.toLowerCase().includes('san antonio')) {
+      return `Direct Permit Phone + Verified Domain (${domain}) • Local Office & Jobsite: ${jobsiteCity}, ${jobsiteState}`;
+    }
+    return `Direct Permit Phone + Verified Domain (${domain}) • GC Office: San Antonio, TX | Jobsite: ${jobsiteCity}`;
+  }
+  if (areaCode === '830') {
+    if (jobsiteCity.toLowerCase().includes('braunfels')) {
+      return `Direct Permit Phone + Verified Domain (${domain}) • Local Office & Jobsite: New Braunfels, TX`;
+    }
+    return `Direct Permit Phone + Verified Domain (${domain}) • GC Office: New Braunfels, TX | Jobsite: ${jobsiteCity}`;
+  }
+  return `Direct Permit Phone + Verified Domain (${domain}) • Local Office & Jobsite: ${jobsiteCity}, ${jobsiteState}`;
 }
 
 /* ==========================================================================
@@ -209,90 +843,137 @@ function getTradeTemplate(trade) {
    ========================================================================== */
 function buildDefaultKnowledgeBaseForContractor(contractor = {}) {
   const metro = resolveMetroProfile(contractor.baseZip || '78130');
-  const tradeTpl = getTradeTemplate(contractor.primaryTrade);
+  const canonicalTrade = normalizeTradeKey(contractor.primaryTrade);
+  const tradeTpl = getTradeTemplate(canonicalTrade);
   const voice = contractor.voiceProfile || {};
-  const landmark = voice.landmarkReference || metro.landmarkStreet;
+  const landmark = voice.landmarkReference ? String(voice.landmarkReference).trim() : '';
   const companySlug = String(contractor.companyName || 'commercialpros')
     .toLowerCase()
     .replace(/\b(inc|llc|ltd|corp|co|company|systems|pros)\b/g, '')
     .replace(/[^a-z0-9]/g, '');
 
-  const tradeLower = String(contractor.primaryTrade || '').toLowerCase();
   let coreServices = [
     'Commercial Tilt-Wall & Structural Slabs',
     'Heavy-Duty Truck Aprons & Loading Docks',
     'ADA Ramp & Sidewalk Compliance',
-    'Post-Tension Custom Residential Foundations',
+    'Post-Tension Custom Foundations',
     'Weekend Phased Parking Lot Pouring'
   ];
   let certificationsAndBonding =
     'ACI-Certified Flatwork Finishers • $2M/$5M Commercial GL + Workers Comp • Bonded up to $1.5M Single Project';
+  let defaultGuarantee = 'zero day-labor subs, in-house laser screed equipment, and a 100% clean-site schedule guarantee';
 
-  if (tradeLower.includes('roof')) {
+  if (canonicalTrade === 'Roofing / Exteriors') {
     coreServices = [
       'Commercial TPO, PVC & EPDM Flat Roof Systems',
-      '20-Year NDL Manufacturer Warranty Replacements',
-      'Standing Seam Architectural Metal Roofing',
-      'Drone Thermal Moisture & Hail Core Scans',
-      'Multi-Family CapEx Phased Re-Roofing'
+      'Standing-Seam Architectural & Structural Metal Roofing',
+      'Commercial Flat-to-Pitched Metal & Elastomeric Retrofits',
+      'Self-Storage, Industrial & Retail Envelope Packages',
+      '20-Year NDL Manufacturer Warranty Replacements'
     ];
     certificationsAndBonding =
-      'GAF Master Select & Johns Manville Peak Advantage • $2M/$5M Commercial GL • 20-Year NDL Warranty Certified';
-  } else if (tradeLower.includes('hvac') || tradeLower.includes('electr') || tradeLower.includes('mech')) {
+      'RCAT Licensed Commercial Roofer • GAF Master Select & NDL Certified • $2M/$5M Commercial GL';
+    defaultGuarantee =
+      'zero business disruption during tear-off, certified wind/hail engineering, and 20-year NDL weathertightness warranties';
+  } else if (canonicalTrade === 'Electrical / HVAC') {
     coreServices = [
       'Commercial RTU Package Unit Replacements (5–25 Ton)',
-      'Medical & Retail TI Mechanical/Electrical Buildouts',
-      '3-Phase 480V Panel, Switchgear & Transformer Upgrades',
+      'Medical, Industrial & Retail TI Mechanical/Electrical Buildouts',
+      '3-Phase 480V/800A Panel, Switchgear & Transformer Upgrades',
       'In-House Custom Sheet Metal Duct Fabrication',
       'Guaranteed 4-Hour Emergency Commercial SLA'
     ];
     certificationsAndBonding =
       'TDLR Class-A TACLA & Master Electrical License • EPA 608 Universal • $2M/$5M Commercial GL & Bonded';
-  } else if (tradeLower.includes('build') || tradeLower.includes('remodel') || tradeLower.includes('pool')) {
+    defaultGuarantee =
+      'in-house sheet metal fabrication, dedicated crane/startup crews, and first-walk inspection pass guarantee';
+  } else if (canonicalTrade === 'Pools / Fencing / Custom Home') {
     coreServices = [
-      'Structural Custom Estate Additions & Guest Casitas',
-      'Architectural Steel, Framing & Luxury Finish-Out',
-      'Turnkey Commercial Tenant Improvements (TI)',
-      'Custom Outdoor Living Pavilions & Pool Structures',
+      'Commercial Architectural Perimeter Fencing & Automated Security Gates',
+      'Structural Steel Shade Canopies & Outdoor Amenity Plazas',
+      'Turnkey Commercial Tenant Improvements (TI) & Masonry Enclosures',
+      'Custom Outdoor Living Pavilions & Commercial Hardscapes',
       'Dedicated Full-Time On-Site Superintendent'
     ];
     certificationsAndBonding =
-      'Licensed Custom Builder & Commercial GC • $2M/$5M Builder Risk + GL • 10-Year Structural Warranty';
-  } else if (tradeLower.includes('b2b') || tradeLower.includes('service') || tradeLower.includes('plumb')) {
+      'Licensed Commercial & Custom Builder • $2M/$5M Builder Risk + Commercial GL • 10-Year Structural Warranty';
+    defaultGuarantee =
+      'in-house structural fabrication, zero day-labor subs, and a locked inspection milestone schedule';
+  } else if (canonicalTrade === 'B2B / Commercial Services') {
     coreServices = [
-      '24/7 Commercial Facility & Multi-Family SLA Contracts',
+      '24/7 Commercial Facility & Business Park SLA Contracts',
       'Night & Weekend Phased CapEx Upgrades (Zero Tenant Disruption)',
-      'Hydro-Jetting, Backflow & Commercial MEP Maintenance',
-      'Dedicated Regional Portfolio Account Manager',
+      'Hydro-Jetting, Backflow & Commercial Exterior Restoration',
+      'Post-Construction Final Spec Detailing & Day-1 Turnover',
       'Same-Day Digital Photo & Inspection Reporting'
     ];
     certificationsAndBonding =
       'Vendor-Compliance Ready (Net-30, W-9, COI on File) • $2M/$5M Commercial GL + Umbrella';
+    defaultGuarantee =
+      'uniformed W-2 crews, night/weekend phased execution, and zero tenant disruption';
   }
 
-  return {
+  const defaultProof =
+    voice.recentWin ||
+    `${tradeTpl.card1CompletedJob}${landmark ? ' ' + landmark : ''} that passed city inspection ahead of schedule`;
+
+  const baseDossier = {
+    tradeCategory: canonicalTrade,
     websiteUrl:
       contractor.websiteUrl ||
       `https://www.${companySlug || 'lonestarconcrete'}.com`,
     yearsInBusiness: '14+ Years Serving ' + metro.city + ' & Corridor',
     coreServices,
+    coreCapabilities: [...coreServices],
     certificationsAndBonding,
-    warrantyAndGuarantee:
-      voice.differentiator || 'zero day-labor subs and a 100% clean-site guarantee',
-    proofProjects:
-      voice.recentWin ||
-      `${tradeTpl.card1CompletedJob} ${landmark} (passed city inspection ahead of schedule)`,
-    idealJobProfile: `$${Number(contractor.minPermitValuation || 100000).toLocaleString()}+ Commercial Permits, Multi-Family CapEx & $${Number(
+    warrantyAndGuarantee: voice.differentiator || defaultGuarantee,
+    proofProjects: defaultProof,
+    idealJobProfile: `$${Number(contractor.minPermitValuation || 100000).toLocaleString()}+ Commercial Permits, Portfolio CapEx & $${Number(
       contractor.minCadAssessedValue || 600000
-    ).toLocaleString()}+ Custom Residential`,
+    ).toLocaleString()}+ Structural Builds`,
     preferredCta:
-      voice.ctaStyle || 'quick 10-minute site walk or COI + bid calendar drop-off',
+      voice.ctaStyle || 'COI, spec sheet, and unit pricing drop-off',
     signatureLine: `${contractor.ownerName || 'Shop Owner'} • ${
       contractor.companyName || 'Commercial Pros'
     } • ${contractor.mobilePhone || '(512) 555-0194'}`,
     crawlSource: 'Verified Shop Onboarding Profile',
     lastUpdatedAt: new Date().toISOString()
   };
+
+  baseDossier.proofAngles = buildShopDossierProofAngles(baseDossier, canonicalTrade, metro);
+  return baseDossier;
+}
+
+function upgradeShopDossierSchema(kb = {}, contractor = {}) {
+  const metro = resolveMetroProfile(contractor.baseZip || '78130');
+  const activeTrade = normalizeTradeKey(kb.tradeCategory || contractor.primaryTrade);
+  const defaults = buildDefaultKnowledgeBaseForContractor({
+    ...contractor,
+    primaryTrade: activeTrade
+  });
+
+  const coreCapabilities =
+    Array.isArray(kb.coreCapabilities) && kb.coreCapabilities.length
+      ? kb.coreCapabilities
+      : Array.isArray(kb.coreServices) && kb.coreServices.length
+      ? kb.coreServices
+      : defaults.coreCapabilities;
+
+    const merged = {
+    ...defaults,
+    ...kb,
+    schemaVersion: ENGINE_SCHEMA_VERSION,
+    tradeCategory: kb.tradeCategory || activeTrade,
+    coreServices: [...coreCapabilities],
+    coreCapabilities: [...coreCapabilities]
+  };
+
+  merged.proofAngles =
+    Array.isArray(kb.proofAngles) && kb.proofAngles.length >= 3
+      ? kb.proofAngles
+      : buildShopDossierProofAngles(merged, activeTrade, metro);
+
+  return merged;
 }
 
 /* ==========================================================================
@@ -326,16 +1007,13 @@ function getDayRotationIndex(dateStr = getCentralDateString(), extraOffset = 0) 
 
 function buildRealClientBriefingCards(contractor, customBatchIndex) {
   const metro = resolveMetroProfile(contractor.baseZip || '78130');
-  const tradeTpl = getTradeTemplate(contractor.primaryTrade);
-  const voice = contractor.voiceProfile || {};
-  const kb = contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor);
-  const landmark = voice.landmarkReference || metro.landmarkStreet;
-  const proofJobSnippet = kb.proofProjects || `${tradeTpl.card1CompletedJob} ${landmark}`;
-  const guaranteeSnippet =
-    kb.warrantyAndGuarantee || 'zero day-labor subs and a 100% clean-site schedule guarantee';
-  const certsSnippet = (kb.certificationsAndBonding || 'Full Commercial GL & Bonding')
-    .split('•')[0]
-    .trim();
+  const activeTrade = contractor.primaryTrade || 'Roofing / Exteriors';
+  const tradeTpl = getTradeTemplate(activeTrade);
+  const kb = upgradeShopDossierSchema(
+    contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
+    contractor
+  );
+  const westNbZip = metro.city === 'New Braunfels' ? '78132' : metro.zip;
 
   const realPermitBlueprints = [
     // ================= BATCH A (CARDS 1–9) =================
@@ -558,7 +1236,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       lotAcres: '7.4 Acres',
       websiteUrl: 'https://www.cadencemcshane.com',
       contactHeader: 'VERIFIED REGIONAL ESTIMATOR (CADENCEMCSHANE.COM):',
-      contactName: ' Neal Harper • Chief Estimator @ Cadence McShane Construction',
+      contactName: 'Neal Harper • Chief Estimator @ Cadence McShane Construction',
       contactShort: 'Neal Harper (Cadence McShane)',
       contactEmail: 'bids@cadencemcshane.com',
       contactPhone: '(512) 328-3232',
@@ -590,8 +1268,8 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Hwy 46 West Climate-Controlled Storage & Metal Envelope Phase II`,
-      address: `2180 State Hwy 46 W, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-6511`,
+      address: `2180 State Hwy 46 W, ${metro.city}, ${metro.state} ${westNbZip}`,
+      parcelId: `CAD-${westNbZip}-6511`,
       deededOwner: 'Hill Country Self Storage Holdings LP',
       assessedValue: '$3,850,000',
       buildingSqFt: '41,000 Sq Ft',
@@ -650,15 +1328,15 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Landa Street Commercial Exchange — 19,400 Sq Ft Structural Remodel`,
-      address: `715 Landa St, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-6915`,
+      address: `715 Landa St, ${metro.city}, ${metro.state} ${westNbZip}`,
+      parcelId: `CAD-${westNbZip}-6915`,
       deededOwner: 'Landa Exchange Commercial LLC',
       assessedValue: '$3,150,000',
       buildingSqFt: '19,400 Sq Ft',
       lotAcres: '2.8 Acres',
       websiteUrl: 'https://www.structurainc.com',
       contactHeader: 'VERIFIED PRECONSTRUCTION TEAM (STRUCTURAINC.COM):',
-      contactName: 'bidding@structurainc.com • Estimating @ Structura Inc',
+      contactName: 'Preconstruction Desk • Estimating @ Structura Inc',
       contactShort: 'Structura Inc Commercial Estimating',
       contactEmail: 'bidding@structurainc.com',
       contactPhone: '(512) 476-1599',
@@ -678,7 +1356,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       lotAcres: '6.0 Acres',
       websiteUrl: 'https://www.gwmitchell.com',
       contactHeader: 'VERIFIED CHIEF ESTIMATOR (GWMITCHELL.COM):',
-      contactName: ' Greg Mitchell • Estimating @ G.W. Mitchell Construction',
+      contactName: 'Greg Mitchell • Estimating @ G.W. Mitchell Construction',
       contactShort: 'Greg Mitchell (G.W. Mitchell Construction)',
       contactEmail: 'estimating@gwmitchell.com',
       contactPhone: '(210) 227-8127',
@@ -720,7 +1398,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       lotAcres: '5.5 Acres',
       websiteUrl: 'https://www.catamountinc.com',
       contactHeader: 'VERIFIED PRECONSTRUCTION DIRECTOR (CATAMOUNTINC.COM):',
-      contactName: ' Brad Catamount • Preconstruction @ Catamount Constructors',
+      contactName: 'Brad Catamount • Preconstruction @ Catamount Constructors',
       contactShort: 'Catamount Constructors Estimating',
       contactEmail: 'sanantonio@catamountinc.com',
       contactPhone: '(210) 366-1495',
@@ -760,7 +1438,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       lotAcres: '4.1 Acres',
       websiteUrl: 'https://www.whiteconst.com',
       contactHeader: 'VERIFIED COMMERCIAL ESTIMATOR (WHITECONST.COM):',
-      contactName: ' Neel White • Commercial Estimating @ White Construction Company',
+      contactName: 'Neel White • Commercial Estimating @ White Construction Company',
       contactShort: 'White Construction Estimating',
       contactEmail: 'info@whiteconst.com',
       contactPhone: '(512) 583-9200',
@@ -772,8 +1450,8 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Oak Run Corporate Park — 32,000 Sq Ft Exterior Envelope & TI`,
-      address: `2250 State Hwy 46, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-7718`,
+      address: `2250 State Hwy 46, ${metro.city}, ${metro.state} ${westNbZip}`,
+      parcelId: `CAD-${westNbZip}-7718`,
       deededOwner: 'Aquila Commercial Asset Management LP',
       assessedValue: '$7,100,000',
       buildingSqFt: '32,000 Sq Ft',
@@ -852,8 +1530,8 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Westpointe Commercial Village — 3-Building Exterior & Roof CapEx`,
-      address: `2154 Westpointe Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-8199`,
+      address: `2154 Westpointe Dr, ${metro.city}, ${metro.state} ${westNbZip}`,
+      parcelId: `CAD-${westNbZip}-8199`,
       deededOwner: 'Lincoln Property Commercial REIT LP',
       assessedValue: '$9,400,000',
       buildingSqFt: '52,000 Sq Ft',
@@ -902,8 +1580,14 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
 
   return selectedBlueprints.map((item, idx) => {
     const rank = idx + 1;
-    const cleanName = String(item.contactName || '').trim();
-    const firstName = cleanName.includes('@') ? 'Estimating Team' : cleanName.split(' ')[0];
+    const sanitizedContactName = sanitizeContactDisplayName(item.contactName);
+    const resolvedScope = resolvePermitScope(item, kb, activeTrade);
+    const s1 = resolveGreeting({ ...item, contactName: item.contactName, city: metro.city });
+    const s2 = resolveProofSentence(item, kb, activeTrade, contractor, metro);
+    const s3 = `We have a crew opening in our bid calendar and would love to drop off numbers on the ${resolvedScope}.`;
+    const s4 = resolveClosingCta(item, kb.signatureLine, contractor);
+    const contactMeta = resolveContactSubline(item.contactPhone, item.websiteUrl, metro);
+
     return {
       id: `deal-${rank}`,
       cardRank: rank,
@@ -927,15 +1611,15 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       permitPortalUrl: item.permitPortalUrl,
       websiteUrl: item.websiteUrl,
       contactHeader: item.contactHeader,
-      contactName: item.contactName,
+      contactName: sanitizedContactName,
       contactShort: item.contactShort,
-      contactMeta: `Direct Permit Phone + Verified Domain (${item.websiteUrl.replace(/^https?:\/\/(www\.)?/, '')}) • ${metro.city}, ${metro.state} (${metro.zip})`,
+      contactMeta,
       contactEmail: item.contactEmail,
       contactPhone: item.contactPhone,
       redactedPreview: `${item.contactShort} • ${item.address}`,
       draftLabel: `4-SENTENCE BID INTRO (${contractor.companyName.toUpperCase()} VOICE + SHOP DOSSIER):`,
       draftSubject: `Bid numbers for ${item.address.split(',')[0]} (Permit ${item.permitNum})`,
-      draftBody: `"Hey ${firstName} — saw the commercial permit (${item.permitNum}) filed for ${item.address.split(',')[0]} in ${metro.city}. Here at ${contractor.companyName}, our ${tradeTpl.shortTrade} crew (${certsSnippet}) just wrapped ${proofJobSnippet} with ${guaranteeSnippet}. We have a crew opening in our bid calendar and would love to drop off numbers on the ${item.scopeText}. Mind if I send over our COI, spec sheet, and unit pricing this afternoon? — ${kb.signatureLine}"`,
+      draftBody: `"${s1} ${s2} ${s3} ${s4}"`,
       approvalStatus: 'ready',
       dispatchChannel: 'CLOUD_EMAIL',
       approvedAt: null,
@@ -1744,7 +2428,7 @@ function createDefaultStore() {
     role: 'CONTRACTOR',
     voiceProfile: {
       tone: 'Executive Commercial Metal & Standing-Seam Estimator',
-      landmarkReference: 'right here in New Braunfels off IH-35 & FM 306',
+      landmarkReference: '',
       recentWin: 'a 45,000 sq ft commercial standing-seam metal & TPO retrofit completed with zero tenant disruption',
       differentiator: '45+ years of engineered commercial standing-seam metal roof manufacturing, retrofits, and 20-year NDL warranties',
       ctaStyle: 'quick 10-minute roof spec review or on-site core walk'
@@ -1752,25 +2436,41 @@ function createDefaultStore() {
     status: 'PAID_ACTIVE',
     createdAt: new Date().toISOString()
   };
-  alertRoofContractor.knowledgeBase = {
-    ...buildDefaultKnowledgeBaseForContractor(alertRoofContractor),
-    websiteUrl: 'https://www.alertroofsystems.com',
-    yearsInBusiness: '45+ Years Serving New Braunfels, Texas & Nationwide Commercial Roofing',
-    coreServices: [
-      'Engineered Standing-Seam Commercial Metal Roof Systems',
-      'Commercial Flat-to-Pitched Metal Roof Retrofits',
-      'TPO & Elastomeric Commercial Roof Systems',
-      'Self-Storage, School & Industrial Metal Roofing',
-      '20-Year NDL Weather-Tightness Warranties'
-    ],
-    certificationsAndBonding:
-      'RCAT Licensed Commercial Roofer • In-House Roll-Forming & Engineered Metal Systems • $5M Commercial GL & Bonded',
-    warrantyAndGuarantee:
-      'in-house engineered metal roof systems, zero business disruption during install, and 20-year NDL weathertightness warranties',
-    proofProjects:
-      'a 45,000 sq ft commercial standing-seam metal roof retrofit in Comal County that passed inspection ahead of schedule',
-    signatureLine: 'Jack Williams • A-lert Roof Systems • (830) 481-0653'
-  };
+  alertRoofContractor.knowledgeBase = upgradeShopDossierSchema(
+    {
+      ...buildDefaultKnowledgeBaseForContractor(alertRoofContractor),
+      websiteUrl: 'https://www.alertroofsystems.com',
+      tradeCategory: 'Roofing / Exteriors',
+      yearsInBusiness: '45+ Years Serving New Braunfels, Texas & Nationwide Commercial Roofing',
+      coreServices: [
+        'Engineered Standing-Seam Commercial Metal Roof Systems',
+        'Commercial Flat-to-Pitched Metal Roof Retrofits',
+        'TPO & Elastomeric Commercial Roof Systems',
+        'Self-Storage, School & Industrial Metal Roofing',
+        '20-Year NDL Weather-Tightness Warranties'
+      ],
+      coreCapabilities: [
+        'Engineered Standing-Seam Commercial Metal Roof Systems',
+        'Commercial Flat-to-Pitched Metal Roof Retrofits',
+        'TPO & Elastomeric Commercial Roof Systems',
+        'Self-Storage, School & Industrial Metal Roofing',
+        '20-Year NDL Weather-Tightness Warranties'
+      ],
+      proofAngles: [
+        'a 38,000 sq ft ground-up commercial shell standing-seam metal & membrane roof package in New Braunfels, TX',
+        'a 45,000 sq ft commercial standing-seam metal roof retrofit in Comal County that passed inspection ahead of schedule',
+        'a structural standing-seam metal envelope, self-storage & custom architectural sheet-metal package across New Braunfels, TX'
+      ],
+      certificationsAndBonding:
+        'RCAT Licensed Commercial Roofer • In-House Roll-Forming & Engineered Metal Systems • $5M Commercial GL & Bonded',
+      warrantyAndGuarantee:
+        'in-house engineered metal roof systems, zero business disruption during install, and 20-year NDL weathertightness warranties',
+      proofProjects:
+        'a 45,000 sq ft commercial standing-seam metal roof retrofit in Comal County that passed inspection ahead of schedule',
+      signatureLine: 'Jack Williams • A-lert Roof Systems • (830) 481-0653'
+    },
+    alertRoofContractor
+  );
   const alertRoofCards = buildBriefingCardsForContractor(alertRoofContractor);
 
   return {
@@ -1896,10 +2596,12 @@ function createDefaultStore() {
         includeSmartSiteBundle: alertRoofContractor.includeSmartSiteBundle,
         unlockedLimit: alertRoofCards.length,
         totalSpottedCount: alertRoofCards.length,
+        schemaVersion: ENGINE_SCHEMA_VERSION,
         cards: alertRoofCards,
         createdAt: new Date().toISOString()
       }
     },
+    schemaVersion: ENGINE_SCHEMA_VERSION,
     conversationThreads: {
       'demo-7am-briefing': createDefaultConversationThreads(demoContractor, demoCards),
       'centex-roofing-78701': createDefaultConversationThreads(secondContractor, secondCards),
@@ -1946,7 +2648,7 @@ function loadStore() {
             ...defaultStore.contractors,
             ...(parsed.contractors || {})
           };
-          // Ensure demo contractors have passwordHash, magicToken & knowledgeBase
+          // Ensure demo contractors have passwordHash, magicToken & upgraded knowledgeBase
           Object.keys(parsed.contractors).forEach((id) => {
             const c = parsed.contractors[id];
             if (!c) return;
@@ -1955,9 +2657,10 @@ function loadStore() {
               c.magicToken = defaultStore.contractors[id].magicToken;
               c.accessPin = defaultStore.contractors[id].accessPin;
             }
-            if (!c.knowledgeBase) {
-              c.knowledgeBase = buildDefaultKnowledgeBaseForContractor(c);
-            }
+            c.knowledgeBase = upgradeShopDossierSchema(
+              c.knowledgeBase || buildDefaultKnowledgeBaseForContractor(c),
+              c
+            );
           });
           parsed.briefings = {
             ...defaultStore.briefings,
@@ -1971,27 +2674,64 @@ function loadStore() {
             ...defaultStore.scoutAlertLogs,
             ...(parsed.scoutAlertLogs || {})
           };
-          // Ensure A-lert Roof Systems (recon-78130-2101s6) always uses real non-555 cards
+          // Ensure A-lert Roof Systems (recon-78130-2101s6) always uses upgraded Shop Dossier & non-split-brain cards
           if (defaultStore.contractors['44444444-5555-6666-7777-888888888888']) {
+            const existingAlert = parsed.contractors['44444444-5555-6666-7777-888888888888'] || {};
+            if (
+              existingAlert.voiceProfile &&
+              (existingAlert.voiceProfile.landmarkReference ===
+                'right here in New Braunfels off IH-35 & FM 306' ||
+                existingAlert.voiceProfile.landmarkReference === 'two miles east off FM 306')
+            ) {
+              existingAlert.voiceProfile.landmarkReference = '';
+            }
             parsed.contractors['44444444-5555-6666-7777-888888888888'] = {
               ...defaultStore.contractors['44444444-5555-6666-7777-888888888888'],
-              ...(parsed.contractors['44444444-5555-6666-7777-888888888888'] || {}),
+              ...existingAlert,
+              knowledgeBase: upgradeShopDossierSchema(
+                existingAlert.knowledgeBase ||
+                  defaultStore.contractors['44444444-5555-6666-7777-888888888888'].knowledgeBase,
+                defaultStore.contractors['44444444-5555-6666-7777-888888888888']
+              ),
               isRealClient: true
             };
           }
-          if (
-            parsed.briefings['recon-78130-2101s6'] &&
-            parsed.briefings['recon-78130-2101s6'].cards &&
-            parsed.briefings['recon-78130-2101s6'].cards.some((c) =>
-              String(c.contactPhone || '').includes('555')
-            )
-          ) {
-            parsed.briefings['recon-78130-2101s6'] = defaultStore.briefings['recon-78130-2101s6'];
-            parsed.conversationThreads['recon-78130-2101s6'] =
-              defaultStore.conversationThreads['recon-78130-2101s6'];
-            parsed.scoutAlertLogs['recon-78130-2101s6'] =
-              defaultStore.scoutAlertLogs['recon-78130-2101s6'];
-          }
+          // Force schema v2.4 invalidation & fresh regeneration on any legacy cached briefings
+          const isStaleStoreSchema = parsed.schemaVersion !== ENGINE_SCHEMA_VERSION;
+          Object.keys(parsed.briefings || {}).forEach((bToken) => {
+            const brf = parsed.briefings[bToken];
+            if (!brf || !Array.isArray(brf.cards)) return;
+            const hasLegacyArtifacts =
+              isStaleStoreSchema ||
+              brf.schemaVersion !== ENGINE_SCHEMA_VERSION ||
+              brf.cards.some(
+                (c) =>
+                  String(c.draftBody || '').includes('Hey Estimating Team') ||
+                  String(c.draftBody || '').includes('multi-family roof preventative maintenance') ||
+                  String(c.contactName || '').includes('bidding@structurainc.com')
+              );
+            if (hasLegacyArtifacts) {
+              const ctr = parsed.contractors[brf.contractorId];
+              if (ctr) {
+                const wasUnlocked = brf.unlockedLimit > 3 || ctr.isRealClient;
+                const freshCards = buildBriefingCardsForContractor(ctr);
+                if (wasUnlocked) {
+                  freshCards.forEach((c, idx) => {
+                    c.isLockedOverflow = false;
+                    c.unlockedBadge = `UNLOCKED #${idx + 1}`;
+                  });
+                }
+                brf.cards = freshCards;
+                brf.unlockedLimit = wasUnlocked ? freshCards.length : 3;
+                brf.totalSpottedCount = freshCards.length;
+                brf.schemaVersion = ENGINE_SCHEMA_VERSION;
+                if (brf.territoryZip === '78130' || brf.territoryZip === '78132') {
+                  brf.portalName = 'City of New Braunfels EnerGov & Regional Corridor Portal';
+                }
+              }
+            }
+          });
+          parsed.schemaVersion = ENGINE_SCHEMA_VERSION;
           memoryStore = parsed;
           return memoryStore;
         }
@@ -2181,7 +2921,9 @@ function activateTerritory({
     role: 'CONTRACTOR',
     voiceProfile: {
       tone: 'Direct Local Pro (Zero Fluff)',
-      landmarkReference: resolveMetroProfile(availability.zipCode).landmarkStreet,
+      landmarkReference: isRealClient
+        ? ''
+        : resolveMetroProfile(availability.zipCode).landmarkStreet,
       recentWin: 'a 22,000 sq ft project that passed city inspection ahead of schedule',
       differentiator: 'zero day-labor subs and a 100% clean-site guarantee',
       ctaStyle: 'quick 10-minute site walk or bid calendar drop-off'
@@ -2335,7 +3077,7 @@ function rotateAllRealClientBriefings({ advanceOffset = false } = {}) {
  * Retrieves a Morning Briefing by magicToken (falls back to 'demo-7am-briefing' if none provided).
  * Automatically rotates real-client permit cards when the Central Time calendar date advances.
  */
-function getBriefingByToken(token) {
+function getBriefingByToken(token, options = {}) {
   const store = loadStore();
   const cleanToken = String(token || 'demo-7am-briefing').trim();
   let briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
@@ -2344,6 +3086,28 @@ function getBriefingByToken(token) {
   const contractor =
     store.contractors[briefing.contractorId] ||
     store.contractors['11111111-2222-3333-4444-555555555555'];
+
+  if (contractor) {
+    if (
+      contractor.id === '44444444-5555-6666-7777-888888888888' ||
+      briefing.magicToken === 'recon-78130-2101s6' ||
+      /a-?lert\s+roof/i.test(String(contractor.companyName || ''))
+    ) {
+      contractor.isRealClient = true;
+      if (
+        contractor.voiceProfile &&
+        (contractor.voiceProfile.landmarkReference ===
+          'right here in New Braunfels off IH-35 & FM 306' ||
+          contractor.voiceProfile.landmarkReference === 'two miles east off FM 306')
+      ) {
+        contractor.voiceProfile.landmarkReference = '';
+      }
+    }
+    contractor.knowledgeBase = upgradeShopDossierSchema(
+      contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
+      contractor
+    );
+  }
 
   // Automatic Daily Card Rotation: if a new Central Time day has started, rotate real client cards
   const todayStr = getCentralDateString();
@@ -2354,6 +3118,37 @@ function getBriefingByToken(token) {
     }
   }
 
+  // Force regeneration if requested or if briefing cards came from a pre-v2.4 schema
+  const hasLegacyCardData =
+    Boolean(options && options.forceRegenerate) ||
+    briefing.schemaVersion !== ENGINE_SCHEMA_VERSION ||
+    (Array.isArray(briefing.cards) &&
+      briefing.cards.some(
+        (c) =>
+          String(c.draftBody || '').includes('Hey Estimating Team') ||
+          String(c.draftBody || '').includes('multi-family roof preventative maintenance') ||
+          String(c.contactName || '').includes('bidding@structurainc.com')
+      ));
+
+  if (hasLegacyCardData && contractor) {
+    const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor.isRealClient);
+    const freshCards = buildBriefingCardsForContractor(contractor);
+    if (wasAllUnlocked) {
+      freshCards.forEach((c, idx) => {
+        c.isLockedOverflow = false;
+        c.unlockedBadge = `UNLOCKED #${idx + 1}`;
+      });
+    }
+    briefing.cards = freshCards;
+    briefing.unlockedLimit = wasAllUnlocked ? freshCards.length : 3;
+    briefing.totalSpottedCount = freshCards.length;
+    briefing.schemaVersion = ENGINE_SCHEMA_VERSION;
+    if (briefing.territoryZip === '78130' || briefing.territoryZip === '78132') {
+      briefing.portalName = 'City of New Braunfels EnerGov & Regional Corridor Portal';
+    }
+    saveStore(store);
+  }
+
   const availability = checkTerritoryAvailability({
     zipCode: briefing.territoryZip,
     tradeCategory: briefing.tradeName,
@@ -2361,6 +3156,7 @@ function getBriefingByToken(token) {
   });
 
   return {
+    engineVersion: ENGINE_SCHEMA_VERSION,
     briefing,
     contractor,
     availability,
@@ -2410,8 +3206,13 @@ function processBriefingAction({
     if (contractor) contractor.baseZip = metro.zip;
     needsCardRebuild = true;
   }
-  if (landmarkReference && contractor && contractor.voiceProfile && landmarkReference !== contractor.voiceProfile.landmarkReference) {
-    contractor.voiceProfile.landmarkReference = landmarkReference;
+  if (
+    landmarkReference !== undefined &&
+    contractor &&
+    contractor.voiceProfile &&
+    String(landmarkReference).trim() !== String(contractor.voiceProfile.landmarkReference || '').trim()
+  ) {
+    contractor.voiceProfile.landmarkReference = String(landmarkReference).trim();
     needsCardRebuild = true;
   }
   if (needsCardRebuild && contractor) {
@@ -2616,14 +3417,24 @@ function updateContractorCommand({
 
   contractor.voiceProfile = {
     ...contractor.voiceProfile,
-    landmarkReference: landmarkReference || contractor.voiceProfile.landmarkReference,
+    landmarkReference:
+      landmarkReference !== undefined
+        ? String(landmarkReference).trim()
+        : contractor.voiceProfile.landmarkReference,
     recentWin: recentWin || contractor.voiceProfile.recentWin,
     differentiator: differentiator || contractor.voiceProfile.differentiator
   };
 
+  contractor.knowledgeBase = upgradeShopDossierSchema(
+    contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
+    contractor
+  );
+
   // Re-calibrate the briefing cards to reflect updated trade, zip, and shop voice
-  const wasAllUnlocked = briefing.unlockedLimit > 3;
+  const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor.isRealClient);
   briefing.cards = buildBriefingCardsForContractor(contractor);
+  briefing.totalSpottedCount = briefing.cards.length;
+  briefing.schemaVersion = ENGINE_SCHEMA_VERSION;
   if (wasAllUnlocked) {
     briefing.unlockedLimit = briefing.cards.length;
     briefing.cards.forEach((c, idx) => {
@@ -2635,6 +3446,7 @@ function updateContractorCommand({
 
   return {
     ok: true,
+    engineVersion: ENGINE_SCHEMA_VERSION,
     contractor: sanitizeContractor(contractor),
     briefing,
     availability: checkTerritoryAvailability({
@@ -2781,6 +3593,17 @@ function hydrateAccountFromSession(sessionClaims) {
   }
 
   let contractor = store.contractors[sessionClaims.sub];
+  if (!contractor && sessionClaims.magicToken && store.briefings[sessionClaims.magicToken]) {
+    contractor = store.contractors[store.briefings[sessionClaims.magicToken].contractorId];
+  }
+  if (!contractor) {
+    contractor = Object.values(store.contractors || {}).find(
+      (c) =>
+        (sessionClaims.magicToken && c.magicToken === sessionClaims.magicToken) ||
+        (sessionClaims.email &&
+          String(c.workEmail || '').toLowerCase() === String(sessionClaims.email).toLowerCase())
+    );
+  }
   if (!contractor) {
     const metro = resolveMetroProfile(sessionClaims.baseZip || '78130');
     contractor = {
@@ -2802,7 +3625,7 @@ function hydrateAccountFromSession(sessionClaims) {
       role: 'CONTRACTOR',
       voiceProfile: {
         tone: 'Direct Local Pro (Zero Fluff)',
-        landmarkReference: metro.landmarkStreet,
+        landmarkReference: '',
         recentWin: 'a 22,000 sq ft project that passed city inspection ahead of schedule',
         differentiator: 'zero day-labor subs and a 100% clean-site guarantee',
         ctaStyle: 'quick 10-minute site walk or bid calendar drop-off'
@@ -2810,6 +3633,10 @@ function hydrateAccountFromSession(sessionClaims) {
       status: 'TRIAL_ACTIVE',
       createdAt: new Date().toISOString()
     };
+    contractor.knowledgeBase = upgradeShopDossierSchema(
+      buildDefaultKnowledgeBaseForContractor(contractor),
+      contractor
+    );
     store.contractors[contractor.id] = contractor;
   }
 
@@ -2913,17 +3740,32 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
   const currentKb =
     contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor);
 
-  const normalizedServices = Array.isArray(knowledgeBase.coreServices)
-    ? knowledgeBase.coreServices.map((s) => String(s).trim()).filter(Boolean)
-    : typeof knowledgeBase.coreServices === 'string' && knowledgeBase.coreServices.trim()
-    ? knowledgeBase.coreServices
+  const rawCapabilities =
+    knowledgeBase.coreCapabilities !== undefined
+      ? knowledgeBase.coreCapabilities
+      : knowledgeBase.coreServices;
+
+  const normalizedServices = Array.isArray(rawCapabilities)
+    ? rawCapabilities.map((s) => String(s).trim()).filter(Boolean)
+    : typeof rawCapabilities === 'string' && rawCapabilities.trim()
+    ? rawCapabilities
         .split(/[,;\n]+/)
         .map((s) => s.trim())
         .filter(Boolean)
-    : currentKb.coreServices;
+    : currentKb.coreCapabilities || currentKb.coreServices;
 
-  contractor.knowledgeBase = {
+  const resolvedTradeCategory = normalizeTradeKey(
+    knowledgeBase.tradeCategory || contractor.primaryTrade || currentKb.tradeCategory
+  );
+  const metro = resolveMetroProfile(contractor.baseZip || '78130');
+  const nextProofProjects =
+    knowledgeBase.proofProjects !== undefined
+      ? String(knowledgeBase.proofProjects).trim()
+      : currentKb.proofProjects;
+
+  const nextKb = {
     ...currentKb,
+    tradeCategory: resolvedTradeCategory,
     websiteUrl:
       knowledgeBase.websiteUrl !== undefined
         ? String(knowledgeBase.websiteUrl).trim()
@@ -2933,6 +3775,7 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
         ? String(knowledgeBase.yearsInBusiness).trim()
         : currentKb.yearsInBusiness,
     coreServices: normalizedServices,
+    coreCapabilities: normalizedServices,
     certificationsAndBonding:
       knowledgeBase.certificationsAndBonding !== undefined
         ? String(knowledgeBase.certificationsAndBonding).trim()
@@ -2941,10 +3784,7 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
       knowledgeBase.warrantyAndGuarantee !== undefined
         ? String(knowledgeBase.warrantyAndGuarantee).trim()
         : currentKb.warrantyAndGuarantee,
-    proofProjects:
-      knowledgeBase.proofProjects !== undefined
-        ? String(knowledgeBase.proofProjects).trim()
-        : currentKb.proofProjects,
+    proofProjects: nextProofProjects,
     idealJobProfile:
       knowledgeBase.idealJobProfile !== undefined
         ? String(knowledgeBase.idealJobProfile).trim()
@@ -2960,6 +3800,14 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
     crawlSource: knowledgeBase.crawlSource || 'Manual / Live Website Sync',
     lastUpdatedAt: new Date().toISOString()
   };
+
+  if (Array.isArray(knowledgeBase.proofAngles) && knowledgeBase.proofAngles.length >= 3) {
+    nextKb.proofAngles = knowledgeBase.proofAngles.map((a) => String(a).trim()).filter(Boolean);
+  } else {
+    nextKb.proofAngles = buildShopDossierProofAngles(nextKb, resolvedTradeCategory, metro);
+  }
+
+  contractor.knowledgeBase = nextKb;
 
   if (contractor.knowledgeBase.websiteUrl) {
     contractor.websiteUrl = contractor.knowledgeBase.websiteUrl;
@@ -3550,9 +4398,20 @@ let lastCloudSyncTimestamp = 0;
 function registerHydratedCloudContractor(store, contractorData, rawPassword) {
   if (!contractorData || !contractorData.magicToken) return false;
   const magicToken = String(contractorData.magicToken).trim();
+  // Never overwrite the canonical v2.4 A-lert Roof Systems profile with an older Resend onboarding email snapshot
+  if (magicToken === 'recon-78130-2101s6' && store.briefings['recon-78130-2101s6']) {
+    return false;
+  }
   const baseZip = String(contractorData.baseZip || '78130').trim();
   const metro = resolveMetroProfile(baseZip);
   const contractorId = contractorData.id || `ctr_cloud_${magicToken}`;
+  const incomingVoice = { ...(contractorData.voiceProfile || {}) };
+  if (
+    incomingVoice.landmarkReference === 'right here in New Braunfels off IH-35 & FM 306' ||
+    incomingVoice.landmarkReference === 'two miles east off FM 306'
+  ) {
+    incomingVoice.landmarkReference = '';
+  }
 
   const contractor = {
     id: contractorId,
@@ -3580,19 +4439,22 @@ function registerHydratedCloudContractor(store, contractorData, rawPassword) {
     magicToken,
     isRealClient: true,
     role: 'CONTRACTOR',
-    voiceProfile: contractorData.voiceProfile || {
+    voiceProfile: {
       tone: 'Direct Local Pro (Zero Fluff)',
-      landmarkReference: metro.landmarkStreet,
+      landmarkReference: '',
       recentWin: 'a 22,000 sq ft commercial project that passed city inspection ahead of schedule',
       differentiator: 'zero day-labor subs and a 100% clean-site schedule guarantee',
-      ctaStyle: 'quick 10-minute site walk or bid calendar drop-off'
+      ctaStyle: 'quick 10-minute site walk or bid calendar drop-off',
+      ...incomingVoice
     },
     status: 'PAID_ACTIVE',
     createdAt: contractorData.createdAt || new Date().toISOString()
   };
 
-  contractor.knowledgeBase =
-    contractorData.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor);
+  contractor.knowledgeBase = upgradeShopDossierSchema(
+    contractorData.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
+    contractor
+  );
 
   store.contractors[contractor.id] = contractor;
 
@@ -3611,6 +4473,7 @@ function registerHydratedCloudContractor(store, contractorData, rawPassword) {
     includeSmartSiteBundle: contractor.includeSmartSiteBundle,
     unlockedLimit: cards.length,
     totalSpottedCount: cards.length,
+    schemaVersion: ENGINE_SCHEMA_VERSION,
     cards,
     createdAt: new Date().toISOString()
   };
@@ -3788,8 +4651,22 @@ module.exports = {
   resolveMetroProfile,
   getTradeTemplate,
   getCentralDateString,
+  normalizeTradeKey,
+  doesDossierMatchTrade,
+  buildShopDossierProofAngles,
+  resolvePermitArchetype,
+  resolvePermitScope,
+  sanitizeContactDisplayName,
+  extractCompanyShortName,
+  parseCardContact,
+  resolveGreeting,
+  resolveProofSentence,
+  resolveClosingCta,
+  resolveContactSubline,
+  upgradeShopDossierSchema,
   buildDefaultKnowledgeBaseForContractor,
   buildBriefingCardsForContractor,
+  buildRealClientBriefingCards,
   rotateRealClientBriefing,
   rotateAllRealClientBriefings,
   checkTerritoryAvailability,
