@@ -41,9 +41,8 @@
     };
   </script>
 
-  <!-- Enterprise Light-Mode Design System Stylesheet (Supports both /recon and local root) -->
-  <link rel="stylesheet" href="/recon/styles.css" />
-  <link rel="stylesheet" href="styles.css" />
+  <!-- Enterprise Dark Glass Design System Stylesheet (Supports both /recon and local root) -->
+  <link rel="stylesheet" href="/recon/styles.css?v=2.5" onerror="this.onerror=null;this.href='styles.css?v=2.5';" />
 
   <!-- Complete SoftwareApplication + ProfessionalService JSON-LD Schema -->
   <script type="application/ld+json">
@@ -130,12 +129,12 @@
       <div class="g3-pb g3-pb-7"></div>
       <div class="g3-dim"></div>
     </div>
-    <div class="max-w-[1280px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-28 flex items-center justify-center md:justify-between gap-4">
-      <!-- Left (Full-Width Centered on Mobile): logo4.png with "THE BAD BOYS OF AI." slogan -->
+    <div class="max-w-[1280px] mx-auto px-2 sm:px-6 lg:px-8 py-2.5 md:py-0 md:h-28 flex items-center justify-center md:justify-between gap-4">
+      <!-- Left (Full-Width Centered on Mobile): Plain White logo4.png with "THE BAD BOYS OF AI." slogan -->
       <a href="/" class="brand-logo focus:outline-none" aria-label="Tiberius AI Home">
         <img
-          src="/images/logo4.png"
-          onerror="this.onerror=null;this.src='images/logo4.png';"
+          src="/recon/images/logo4.png?v=white"
+          onerror="this.onerror=null;this.src='images/logo4.png?v=white';"
           alt="Tiberius AI — The Bad Boys of AI."
           class="brand-logo-img"
         />
@@ -1581,8 +1580,8 @@
       <div>
         <a href="/" class="brand-logo mb-3 focus:outline-none" aria-label="Tiberius AI Home">
           <img
-            src="/images/logo4.png"
-            onerror="this.onerror=null;this.src='images/logo4.png';"
+            src="/recon/images/logo4.png?v=white"
+            onerror="this.onerror=null;this.src='images/logo4.png?v=white';"
             alt="Tiberius AI — The Bad Boys of AI."
             class="footer-logo-img"
           />
@@ -1614,7 +1613,6 @@
   </footer>
 
   <!-- Application Logic (Supports both /recon and local root) -->
-  <script src="/recon/app.js"></script>
-  <script src="app.js"></script>
+  <script src="/recon/app.js?v=2.5" onerror="this.onerror=null;this.src='app.js?v=2.5';"></script>
 </body>
 </html>

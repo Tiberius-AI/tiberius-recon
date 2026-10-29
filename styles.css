@@ -265,39 +265,57 @@ body {
   z-index: 10;
 }
 
-.brand-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.brand-logo,
+.enterprise-navbar .brand-logo,
+#command-navbar .brand-logo {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   text-decoration: none;
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
-/* Pure White Logo Treatment (tiberius-ai.png / logo4.png — 100% Crisp White) */
-.brand-logo-img {
-  width: 100%;
-  max-width: 345px;
-  height: auto;
-  max-height: none;
-  object-fit: contain;
-  display: block;
-  filter: none;
+/* Pure White Logo Treatment (logo4.png — 100% Crisp White with "THE BAD BOYS OF AI." under it)
+   Mobile (<768px): Full length across the entire mobile header */
+.brand-logo-img,
+.enterprise-navbar .brand-logo-img,
+#command-navbar .brand-logo-img {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  display: block !important;
+  filter: none !important;
 }
 
 @media (min-width: 768px) {
-  .brand-logo {
-    display: inline-flex;
-    width: auto;
-    justify-content: flex-start;
-    flex-shrink: 0;
+  .brand-logo,
+  .enterprise-navbar .brand-logo,
+  #command-navbar .brand-logo {
+    display: inline-flex !important;
+    width: auto !important;
+    max-width: none !important;
+    justify-content: flex-start !important;
+    flex-shrink: 0 !important;
   }
 
-  .brand-logo-img {
-    height: 86px;
-    max-height: 86px;
-    width: auto;
-    max-width: 360px;
+  .brand-logo-img,
+  .enterprise-navbar .brand-logo-img,
+  #command-navbar .brand-logo-img {
+    height: 86px !important;
+    max-height: 86px !important;
+    width: auto !important;
+    max-width: 360px !important;
   }
+}
+
+footer .brand-logo {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: 100% !important;
+  justify-content: flex-start !important;
 }
 
 .footer-logo-img {
