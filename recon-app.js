@@ -423,9 +423,36 @@
   const priceSub1El = document.getElementById('price-sub-tier-1');
   const priceSub2El = document.getElementById('price-sub-tier-2');
   const priceSub3El = document.getElementById('price-sub-tier-3');
+  const stripeCta1El = document.getElementById('stripe-cta-tier-1');
+  const stripeCta2El = document.getElementById('stripe-cta-tier-2');
+  const stripeCta3El = document.getElementById('stripe-cta-tier-3');
+  const stripeLabel1El = document.getElementById('stripe-label-tier-1');
+  const stripeLabel2El = document.getElementById('stripe-label-tier-2');
+  const stripeLabel3El = document.getElementById('stripe-label-tier-3');
   const bundleSavingsBadges = Array.from(document.querySelectorAll('.bundle-savings-badge'));
   const smartSiteBonusPanels = Array.from(document.querySelectorAll('.smart-site-bonus-panel'));
   const vaultSmartSiteCheckbox = document.getElementById('vault-smart-site-checkbox');
+
+  const STRIPE_PAYMENT_LINKS = {
+    standalone: {
+      tier1: 'https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k',
+      tier2: 'https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l',
+      tier3: 'https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m'
+    },
+    bundle: {
+      tier1: 'https://buy.stripe.com/bJebJ2e8Pb1hdzg77f2sM0n',
+      tier2: 'https://buy.stripe.com/8x228s7Kr4CT3YG63b2sM0o',
+      tier3: 'https://buy.stripe.com/7sY3cwggXc5l3YGdvD2sM0p'
+    }
+  };
+
+  function getStripeLinkForSelection(tierString, isBundle) {
+    const modeLinks = isBundle ? STRIPE_PAYMENT_LINKS.bundle : STRIPE_PAYMENT_LINKS.standalone;
+    const t = String(tierString || '').toLowerCase();
+    if (t.includes('tier 1')) return modeLinks.tier1;
+    if (t.includes('tier 3')) return modeLinks.tier3;
+    return modeLinks.tier2;
+  }
 
   function setPricingMode(mode) {
     const isBundle = mode === 'bundle';
@@ -450,6 +477,31 @@
     if (priceTier1El) priceTier1El.textContent = isBundle ? '$547' : '$297';
     if (priceTier2El) priceTier2El.textContent = isBundle ? '$847' : '$597';
     if (priceTier3El) priceTier3El.textContent = isBundle ? '$1,147' : '$897';
+
+    if (stripeCta1El) {
+      stripeCta1El.href = isBundle ? STRIPE_PAYMENT_LINKS.bundle.tier1 : STRIPE_PAYMENT_LINKS.standalone.tier1;
+    }
+    if (stripeCta2El) {
+      stripeCta2El.href = isBundle ? STRIPE_PAYMENT_LINKS.bundle.tier2 : STRIPE_PAYMENT_LINKS.standalone.tier2;
+    }
+    if (stripeCta3El) {
+      stripeCta3El.href = isBundle ? STRIPE_PAYMENT_LINKS.bundle.tier3 : STRIPE_PAYMENT_LINKS.standalone.tier3;
+    }
+    if (stripeLabel1El) {
+      stripeLabel1El.textContent = isBundle
+        ? 'Lock In Tier 1 + Smart Site ($547/mo) →'
+        : 'Lock In Tier 1 ($297/mo) →';
+    }
+    if (stripeLabel2El) {
+      stripeLabel2El.textContent = isBundle
+        ? 'Lock In Tier 2 + Smart Site ($847/mo) →'
+        : 'Lock In Tier 2 ($597/mo) →';
+    }
+    if (stripeLabel3El) {
+      stripeLabel3El.textContent = isBundle
+        ? 'Claim Zip Exclusivity + Smart Site ($1,147/mo) →'
+        : 'Claim Zip Exclusivity ($897/mo) →';
+    }
 
     if (priceSub1El) {
       priceSub1El.textContent = isBundle
@@ -635,6 +687,15 @@
       }
       if (confirmContactVal) {
         confirmContactVal.textContent = `DISPATCH ARMED FOR: ${phoneVal.toUpperCase()} • ${emailVal.toUpperCase()}`;
+      }
+
+      const confirmStripeUpgradeLink = document.getElementById('confirm-stripe-upgrade-link');
+      if (confirmStripeUpgradeLink) {
+        const baseStripeUrl = getStripeLinkForSelection(selectedTier, includeSmartSite);
+        confirmStripeUpgradeLink.href =
+          emailVal && emailVal.includes('@')
+            ? `${baseStripeUrl}?prefilled_email=${encodeURIComponent(emailVal)}`
+            : baseStripeUrl;
       }
 
       if (vaultFormView && vaultConfirmationView) {

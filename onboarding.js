@@ -13,119 +13,169 @@
 
   const TRADE_DOSSIER_DEFAULTS = {
     'Commercial Concrete': {
+      crewAndLicenseBadge: 'ACI-Certified Commercial Concrete Crew',
       coreServices:
-        'Commercial Tilt-Wall & Structural Slabs, Heavy-Duty Truck Aprons & Loading Docks, ADA Ramp & Sidewalk Compliance, Post-Tension Foundations',
+        'Commercial Tilt-Wall & Monolithic Structural Slabs, Laser-Screed Warehouse Slabs & Dock Leveler Pits, Commercial Parking Lot Mill/Overlay & ADA Ramp Retrofits, High-PSI Service Bay Slabs & Trench Drains',
       coreCapabilities: [
-        'Commercial Tilt-Wall & Structural Slabs',
-        'Heavy-Duty Truck Aprons & Loading Docks',
-        'ADA Ramp & Sidewalk Compliance',
-        'Post-Tension Foundations'
+        'Commercial Tilt-Wall & Monolithic Structural Slabs',
+        'Laser-Screed Warehouse Slabs & Dock Leveler Pits',
+        'Commercial Parking Lot Mill/Overlay & ADA Ramp Retrofits',
+        'High-PSI Service Bay Slabs & Trench Drains'
       ],
+      proofByArchetype: {
+        groundUpShell:
+          'a 36,000 sq ft commercial shell foundation, laser-screed slab & heavy-duty truck apron package in New Braunfels',
+        commercialRetrofit:
+          'a 48,000 sq ft commercial plaza parking lot mill/overlay, ADA ramp retrofit & structural curb replacement in New Braunfels',
+        specialtyStructural:
+          'a 28,000 sq ft engineered structural slab, recessed foundation & heavy-load pier cap package in New Braunfels'
+      },
       proofAngles: [
-        'a 28,000 sq ft ground-up commercial tilt-wall & structural slab package that passed city inspection ahead of schedule',
-        'a multi-building commercial dock apron, heavy-duty paving & ADA ramp CapEx retrofit with zero tenant disruption',
-        'an engineered post-tension foundation, structural grade-beam & containment pad package'
+        'a 36,000 sq ft commercial shell foundation, laser-screed slab & heavy-duty truck apron package in New Braunfels',
+        'a 48,000 sq ft commercial plaza parking lot mill/overlay, ADA ramp retrofit & structural curb replacement in New Braunfels',
+        'a 28,000 sq ft engineered structural slab, recessed foundation & heavy-load pier cap package in New Braunfels'
       ],
       certsAndBonding:
-        'ACI-Certified Finishers • $2M/$5M Commercial GL + Workers Comp • Bonded up to $1.5M',
+        'ACI-Certified Commercial Concrete Crew • $2M/$5M Commercial GL + Workers Comp • Bonded up to $1.5M',
       yearsInBusiness: '15+ Years Serving Central & South Texas',
       recentCompletedProof:
-        'a 22,000 sq ft commercial tilt-wall & dock apron project that passed city inspection ahead of schedule',
-      uniqueGuarantee:
-        'zero day-labor subs, in-house laser screed equipment, and a 100% clean-site schedule guarantee'
+        'a 36,000 sq ft commercial shell foundation, laser-screed slab & heavy-duty truck apron package in New Braunfels',
+      signatureGuarantee: 'laser-screed Ff/Fl flatness compliance',
+      uniqueGuarantee: 'laser-screed Ff/Fl flatness compliance'
     },
     'Roofing / Exteriors': {
+      crewAndLicenseBadge: 'RCAT Licensed Commercial Roofer',
       coreServices:
-        'Standing-Seam Commercial Metal Roof Systems, Commercial Flat-to-Pitched Metal Retrofits, TPO & PVC Flat Commercial Roofs, Elastomeric Roof Coatings',
+        'Engineered Standing-Seam Commercial Metal Roof Systems, Commercial Flat-to-Pitched Metal Retrofits, TPO & PVC Flat Commercial Roofs, Elastomeric Roof Coatings',
       coreCapabilities: [
-        'Standing-Seam Commercial Metal Roof Systems',
+        'Engineered Standing-Seam Commercial Metal Roof Systems',
         'Commercial Flat-to-Pitched Metal Retrofits',
         'TPO & PVC Flat Commercial Roofs',
         'Elastomeric Roof Coatings'
       ],
+      proofByArchetype: {
+        groundUpShell:
+          'a 38,000 sq ft ground-up commercial shell standing-seam metal & membrane roof package in New Braunfels',
+        commercialRetrofit:
+          'a 45,000 sq ft commercial standing-seam metal roof & elastomeric CapEx retrofit in New Braunfels',
+        specialtyStructural:
+          'a 32,000 sq ft long-span structural standing-seam metal roof & custom architectural flashing package in New Braunfels'
+      },
       proofAngles: [
-        'a 38,000 sq ft ground-up commercial shell standing-seam metal & membrane roof package that passed inspection ahead of schedule',
-        'a 45,000 sq ft commercial standing-seam metal & elastomeric roof retrofit with a 20-year NDL manufacturer warranty',
-        'a structural standing-seam metal envelope, self-storage & custom architectural sheet-metal package'
+        'a 38,000 sq ft ground-up commercial shell standing-seam metal & membrane roof package in New Braunfels',
+        'a 45,000 sq ft commercial standing-seam metal roof & elastomeric CapEx retrofit in New Braunfels',
+        'a 32,000 sq ft long-span structural standing-seam metal roof & custom architectural flashing package in New Braunfels'
       ],
       certsAndBonding:
         'RCAT Licensed Commercial Roofer • GAF Master Select & Carlisle Certified • $2M Umbrella GL',
       yearsInBusiness: '18+ Years Commercial & Industrial Roofing',
       recentCompletedProof:
-        'a 45,000 sq ft TPO & standing-seam metal reroof with a 20-year NDL manufacturer warranty',
-      uniqueGuarantee:
-        '24-hour emergency leak response, zero business disruption during tear-off, and full NDL warranty documentation'
+        'a 45,000 sq ft commercial standing-seam metal roof & elastomeric CapEx retrofit in New Braunfels',
+      signatureGuarantee: '20-year NDL weathertightness warranties',
+      uniqueGuarantee: '20-year NDL weathertightness warranties'
     },
     'Electrical / HVAC': {
+      crewAndLicenseBadge: 'TDLR Licensed Electrical & MEP Contractor',
       coreServices:
-        'Commercial RTU Replacements & Curb Adapters, 3-Phase Tenant Finish-Out Electrical, VRF/Chiller Controls, MEP Value Engineering',
+        'Commercial 3-Phase Switchgear & 1200A Power Distribution, High-SEER Packaged RTU & Make-Up Air Installations, Hospital-Grade Clinical MEP Rough-In, Exposed Spiral Ductwork & EMS Controls',
       coreCapabilities: [
-        'Commercial RTU Replacements & Curb Adapters',
-        '3-Phase Tenant Finish-Out Electrical',
-        'VRF/Chiller Controls',
-        'MEP Value Engineering'
+        'Commercial 3-Phase Switchgear & 1200A Power Distribution',
+        'High-SEER Packaged RTU & Make-Up Air Installations',
+        'Hospital-Grade Clinical MEP Rough-In',
+        'Exposed Spiral Ductwork & EMS Controls'
       ],
+      proofByArchetype: {
+        groundUpShell:
+          'a 40,000 sq ft commercial shell 3-phase switchgear distribution & packaged RTU mechanical buildout in New Braunfels',
+        commercialRetrofit:
+          'a 44,000 sq ft multi-building CapEx high-SEER RTU replacement, EMS controls & LED retrofit in New Braunfels',
+        specialtyStructural:
+          'a 28,000 sq ft high-bay mechanical air-handling, custom spiral ductwork & 480V power distribution package in New Braunfels'
+      },
       proofAngles: [
-        'a ground-up commercial shell 3-phase electrical distribution & high-efficiency RTU mechanical package',
-        'a multi-unit commercial RTU crane swap and 800A 3-phase panel upgrade completed over a single weekend',
-        'a specialized structural MEP remodel, high-bay lighting & spiral ductwork retrofit'
+        'a 40,000 sq ft commercial shell 3-phase switchgear distribution & packaged RTU mechanical buildout in New Braunfels',
+        'a 44,000 sq ft multi-building CapEx high-SEER RTU replacement, EMS controls & LED retrofit in New Braunfels',
+        'a 28,000 sq ft high-bay mechanical air-handling, custom spiral ductwork & 480V power distribution package in New Braunfels'
       ],
       certsAndBonding:
-        'TDLR Licensed TACLA & Master Electrician • $2M Commercial GL • EPA Universal Certified',
+        'TDLR Licensed Electrical & MEP Contractor • Class-A TACLA • $2M/$5M Commercial GL & Bonded',
       yearsInBusiness: '14+ Years Commercial MEP & Tenant Buildouts',
       recentCompletedProof:
-        'a multi-unit commercial RTU crane swap and 800A 3-phase panel upgrade completed over a single weekend',
-      uniqueGuarantee:
-        'guaranteed city rough-in & final inspection pass on the first walk-through with dedicated crane & startup crews'
+        'a 40,000 sq ft commercial shell 3-phase switchgear distribution & packaged RTU mechanical buildout in New Braunfels',
+      signatureGuarantee: 'turnkey Title 24 / IECC commissioning',
+      uniqueGuarantee: 'turnkey Title 24 / IECC commissioning'
     },
-    'General Contracting': {
+    'Pools / Fencing / Custom Home': {
+      crewAndLicenseBadge: 'AWS-Certified Commercial Site & Perimeter Crew',
       coreServices:
-        'Medical, Retail & Office Tenant Finish-Outs (TI), Ground-Up Commercial Shell Buildouts, Structural Remodels, Fast-Track Permitting',
+        'Commercial Chain-Link & Ornamental Steel Security Fencing, Automated Cantilever Slide Gates & Keypad Pedestals, Structural Steel Shade Canopies & Entry Canopies, Commercial Masonry Dumpster Enclosures & Site Bollards',
       coreCapabilities: [
-        'Medical, Retail & Office Tenant Finish-Outs (TI)',
-        'Ground-Up Commercial Shell Buildouts',
-        'Structural Remodels',
-        'Fast-Track Permitting'
+        'Commercial Chain-Link & Ornamental Steel Security Fencing',
+        'Automated Cantilever Slide Gates & Keypad Pedestals',
+        'Structural Steel Shade Canopies & Entry Canopies',
+        'Commercial Masonry Dumpster Enclosures & Site Bollards'
       ],
+      proofByArchetype: {
+        groundUpShell:
+          'a 35,000 sq ft commercial site security fencing, cantilever slide gate & masonry enclosure package in New Braunfels',
+        commercialRetrofit:
+          'a 42,000 sq ft commercial campus perimeter fence upgrade, shade pergola & automated gate operator retrofit in New Braunfels',
+        specialtyStructural:
+          'a 26,000 sq ft architectural steel shade canopy, ornamental perimeter fencing & commercial patio hardscape package in New Braunfels'
+      },
       proofAngles: [
-        'a 24,000 sq ft ground-up commercial shell & retail pad buildout delivered ahead of CO inspection',
-        'a 12,500 sq ft multi-building commercial exterior & tenant finish-out CapEx upgrade',
-        'a 19,400 sq ft structural commercial remodel & specialty facility expansion'
+        'a 35,000 sq ft commercial site security fencing, cantilever slide gate & masonry enclosure package in New Braunfels',
+        'a 42,000 sq ft commercial campus perimeter fence upgrade, shade pergola & automated gate operator retrofit in New Braunfels',
+        'a 26,000 sq ft architectural steel shade canopy, ornamental perimeter fencing & commercial patio hardscape package in New Braunfels'
       ],
       certsAndBonding:
-        'Fully Bonded & Insured Commercial GC • OSHA-30 Superintendents • $5M Aggregate Commercial GL',
-      yearsInBusiness: '16+ Years Commercial TI & Ground-Up Construction',
+        'AWS-Certified Commercial Site & Perimeter Crew • $2M/$5M Commercial GL • UL-325 Gate Compliance',
+      yearsInBusiness: '16+ Years Commercial Site Amenities & Perimeter Security',
       recentCompletedProof:
-        'a 12,500 sq ft medical & retail finish-out delivered 10 days ahead of CO inspection',
-      uniqueGuarantee:
-        'open-book sub pricing, daily Procore photo logs, and a locked Certificate of Occupancy milestone schedule'
+        'a 35,000 sq ft commercial site security fencing, cantilever slide gate & masonry enclosure package in New Braunfels',
+      signatureGuarantee: 'engineered wind-load & UL-325 gate compliance',
+      uniqueGuarantee: 'engineered wind-load & UL-325 gate compliance'
     },
-    'Landscaping / Grounds': {
+    'B2B / Commercial Services': {
+      crewAndLicenseBadge: 'OSHA-Certified Commercial Turnover & Facility Crew',
       coreServices:
-        'Commercial HOA & Retail Grounds Maintenance, Large-Caliper Tree Installs & Clearing, Commercial Irrigation & Drainage, Hardscapes',
+        'Post-Construction Final Clean & Pre-Occupancy Turnover Detailing, Commercial Parking Lot Striping & Sealcoating, Multi-Building Exterior Elastomeric Facade & Window Washing, Terminal Clinical-Grade Post-Construction Sanitization',
       coreCapabilities: [
-        'Commercial HOA & Retail Grounds Maintenance',
-        'Large-Caliper Tree Installs & Clearing',
-        'Commercial Irrigation & Drainage',
-        'Commercial Hardscapes & Perimeter Fencing'
+        'Post-Construction Final Clean & Pre-Occupancy Turnover Detailing',
+        'Commercial Parking Lot Striping & Sealcoating',
+        'Multi-Building Exterior Elastomeric Facade & Window Washing',
+        'Terminal Clinical-Grade Post-Construction Sanitization'
       ],
+      proofByArchetype: {
+        groundUpShell:
+          'a 45,000 sq ft commercial shell post-construction final clean, glass detailing & lot striping turnover in New Braunfels',
+        commercialRetrofit:
+          'a 4-building, 60,000 sq ft commercial portfolio exterior facade wash, sealcoating/striping & common-area refresh in New Braunfels',
+        specialtyStructural:
+          'a 30,000 sq ft specialty commercial facility post-construction deep clean, high-bay detailing & floor prep package in New Braunfels'
+      },
       proofAngles: [
-        'a 14-acre ground-up commercial business park irrigation, detention pond, and native tree installation package',
-        'a 4-building commercial campus hardscape, drainage & exterior grounds CapEx refresh',
-        'a custom structural retaining wall, ornamental perimeter fencing & outdoor amenity package'
+        'a 45,000 sq ft commercial shell post-construction final clean, glass detailing & lot striping turnover in New Braunfels',
+        'a 4-building, 60,000 sq ft commercial portfolio exterior facade wash, sealcoating/striping & common-area refresh in New Braunfels',
+        'a 30,000 sq ft specialty commercial facility post-construction deep clean, high-bay detailing & floor prep package in New Braunfels'
       ],
       certsAndBonding:
-        'TCEQ Licensed Irrigator • ISA Certified Arborist on Staff • $2M Commercial GL & Fleet Coverage',
-      yearsInBusiness: '12+ Years Commercial Grounds & Site Development',
+        'OSHA-Certified Commercial Turnover & Facility Crew • Vendor-Compliance Ready (W-9, COI, $2M/$5M GL)',
+      yearsInBusiness: '12+ Years Commercial Turnover & Facility Services',
       recentCompletedProof:
-        'a 14-acre commercial business park irrigation, detention pond, and native tree installation package',
-      uniqueGuarantee:
-        'uniformed W-2 crews, proactive monthly irrigation audits, and a 100% plant & turf survival warranty'
+        'a 45,000 sq ft commercial shell post-construction final clean, glass detailing & lot striping turnover in New Braunfels',
+      signatureGuarantee: 'bonded day-1 CO turnover & SLA compliance',
+      uniqueGuarantee: 'bonded day-1 CO turnover & SLA compliance'
     }
   };
+  TRADE_DOSSIER_DEFAULTS['General Contracting'] = TRADE_DOSSIER_DEFAULTS['Pools / Fencing / Custom Home'];
+  TRADE_DOSSIER_DEFAULTS['Landscaping / Grounds'] = TRADE_DOSSIER_DEFAULTS['B2B / Commercial Services'];
 
   let userCustomizedDossier = false;
+  let scannedCrewBadge = null;
+  let scannedProofByArchetype = null;
   let scannedProofAngles = null;
+  let scannedSignatureGuarantee = null;
   let lastIssuedCredentialsCopyText = '';
 
   function $(id) {
@@ -228,6 +278,15 @@
       const kb = (data && (data.knowledgeBase || data.extractedProfile)) || null;
       if (kb) {
         userCustomizedDossier = true;
+        if (kb.tradeCategory && $('onb-primary-trade')) {
+          $('onb-primary-trade').value = kb.tradeCategory;
+        }
+        if (kb.crewAndLicenseBadge) {
+          scannedCrewBadge = kb.crewAndLicenseBadge;
+        }
+        if (kb.proofByArchetype && typeof kb.proofByArchetype === 'object') {
+          scannedProofByArchetype = kb.proofByArchetype;
+        }
         const caps = kb.coreCapabilities || kb.coreServices;
         if (Array.isArray(caps) && caps.length && $('onb-core-services')) {
           $('onb-core-services').value = caps.join(', ');
@@ -246,8 +305,9 @@
         if ((kb.recentCompletedProof || kb.proofProjects) && $('onb-proof-project')) {
           $('onb-proof-project').value = kb.recentCompletedProof || kb.proofProjects;
         }
-        if ((kb.uniqueGuarantee || kb.warrantyAndGuarantee) && $('onb-guarantee')) {
-          $('onb-guarantee').value = kb.uniqueGuarantee || kb.warrantyAndGuarantee;
+        if ((kb.signatureGuarantee || kb.uniqueGuarantee || kb.warrantyAndGuarantee) && $('onb-guarantee')) {
+          scannedSignatureGuarantee = kb.signatureGuarantee || kb.uniqueGuarantee || kb.warrantyAndGuarantee;
+          $('onb-guarantee').value = scannedSignatureGuarantee;
         }
         if (pill) {
           pill.textContent = '✓ WEBSITE SCANNED & DOSSIER POPULATED';
@@ -300,17 +360,23 @@
       .filter(Boolean);
     const preset = TRADE_DOSSIER_DEFAULTS[primaryTrade] || TRADE_DOSSIER_DEFAULTS['Commercial Concrete'];
     const proofAngles = scannedProofAngles || preset.proofAngles;
+    const proofByArchetype = scannedProofByArchetype || preset.proofByArchetype;
+    const crewAndLicenseBadge = scannedCrewBadge || preset.crewAndLicenseBadge;
+    const guaranteeValue = ($('onb-guarantee')?.value || '').trim() || scannedSignatureGuarantee || preset.signatureGuarantee;
 
     const knowledgeBase = {
       websiteUrl,
       tradeCategory: primaryTrade,
+      crewAndLicenseBadge,
       coreServices,
       coreCapabilities: coreServices,
+      proofByArchetype,
       proofAngles,
       certsAndBonding: ($('onb-certs-bonding')?.value || '').trim(),
       yearsInBusiness: ($('onb-years-in-biz')?.value || '').trim(),
       recentCompletedProof: ($('onb-proof-project')?.value || '').trim(),
-      uniqueGuarantee: ($('onb-guarantee')?.value || '').trim(),
+      signatureGuarantee: guaranteeValue,
+      uniqueGuarantee: guaranteeValue,
       idealProjectTypes: `${primaryTrade} projects over $${minValuation.toLocaleString()} in ${territoryZip}`
     };
 
@@ -483,7 +549,16 @@
       applyTradeDefaults(params.get('trade'));
     }
     if (params.get('tier') && $('onb-tier-level')) {
-      $('onb-tier-level').value = params.get('tier');
+      const rawTier = params.get('tier').toLowerCase();
+      if (rawTier === 'tier1' || rawTier.includes('tier 1')) {
+        $('onb-tier-level').value = 'Tier 1: B2B Deal Scout';
+      } else if (rawTier === 'tier2' || rawTier.includes('tier 2')) {
+        $('onb-tier-level').value = 'Tier 2: Commercial Permits';
+      } else if (rawTier === 'tier3' || rawTier.includes('tier 3')) {
+        $('onb-tier-level').value = 'Tier 3: Full Territory Exclusivity';
+      } else {
+        $('onb-tier-level').value = params.get('tier');
+      }
     }
   }
 
