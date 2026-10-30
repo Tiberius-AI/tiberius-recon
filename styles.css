@@ -277,14 +277,15 @@ body {
 }
 
 /* Pure White Logo Treatment (logo4.png — 100% Crisp White with "THE BAD BOYS OF AI." under it)
-   Mobile (<768px): Full length across the entire mobile header */
+   Mobile (<768px): 85% width (15% reduced from 100% full-bleed) centered across the mobile header */
 .brand-logo-img,
 .enterprise-navbar .brand-logo-img,
 #command-navbar .brand-logo-img {
-  width: 100% !important;
-  max-width: 100% !important;
+  width: 85% !important;
+  max-width: 85% !important;
   height: auto !important;
   max-height: none !important;
+  margin: 0 auto !important;
   object-fit: contain !important;
   display: block !important;
   filter: none !important;
@@ -304,10 +305,11 @@ body {
   .brand-logo-img,
   .enterprise-navbar .brand-logo-img,
   #command-navbar .brand-logo-img {
-    height: 86px !important;
-    max-height: 86px !important;
+    height: 73px !important;
+    max-height: 73px !important;
     width: auto !important;
-    max-width: 360px !important;
+    max-width: 306px !important;
+    margin: 0 !important;
   }
 }
 
@@ -319,9 +321,9 @@ footer .brand-logo {
 }
 
 .footer-logo-img {
-  height: 64px;
+  height: 54px;
   width: auto;
-  max-width: 280px;
+  max-width: 238px;
   object-fit: contain;
   display: block;
   filter: none;
