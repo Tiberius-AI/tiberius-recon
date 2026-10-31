@@ -206,9 +206,23 @@ function normalizeTradeKey(trade) {
     return 'Electrical / HVAC';
   }
   if (
+    lower.includes('b2b') ||
+    lower.includes('facility') ||
+    lower.includes('property services') ||
+    lower.includes('property maintenance') ||
+    lower.includes('janitor') ||
+    lower.includes('porter') ||
+    lower.includes('final clean') ||
+    lower.includes('plumb')
+  ) {
+    return 'B2B / Commercial Services';
+  }
+  if (
     lower.includes('pool') ||
     lower.includes('fenc') ||
     lower.includes('outdoor') ||
+    lower.includes('perimeter') ||
+    lower.includes('canop') ||
     lower.includes('general contracting') ||
     lower.includes('build') ||
     lower.includes('remodel') ||
@@ -216,9 +230,6 @@ function normalizeTradeKey(trade) {
     lower.includes('ground')
   ) {
     return 'Pools / Fencing / Custom Home';
-  }
-  if (lower.includes('b2b') || lower.includes('facility') || lower.includes('property services') || lower.includes('plumb')) {
-    return 'B2B / Commercial Services';
   }
   return 'Commercial Concrete';
 }
@@ -235,44 +246,60 @@ function getTradeTemplate(trade) {
 function doesDossierMatchTrade(shopDossier, activeTrade) {
   if (!shopDossier) return false;
   const canonicalTrade = normalizeTradeKey(activeTrade);
-  if (shopDossier.tradeCategory && normalizeTradeKey(shopDossier.tradeCategory) === canonicalTrade) {
-    return true;
+  if (shopDossier.tradeCategory) {
+    return normalizeTradeKey(shopDossier.tradeCategory) === canonicalTrade;
   }
   const caps = Array.isArray(shopDossier.coreCapabilities)
     ? shopDossier.coreCapabilities
     : Array.isArray(shopDossier.coreServices)
     ? shopDossier.coreServices
     : [];
-  const combined = `${caps.join(' ')} ${shopDossier.certificationsAndBonding || ''}`.toLowerCase();
+  const combined = `${caps.join(' ')} ${shopDossier.crewAndLicenseBadge || ''} ${shopDossier.certificationsAndBonding || ''} ${shopDossier.signatureGuarantee || ''}`.toLowerCase();
   if (!combined.trim()) return false;
 
   if (canonicalTrade === 'Roofing / Exteriors') {
     return /roof|standing[- ]seam|tpo|pvc|epdm|elastomeric|ndl|rcat|gaf|shingle|flashing/i.test(combined);
   }
   if (canonicalTrade === 'Commercial Concrete') {
-    return /concrete|tilt[- ]wall|slab|apron|flatwork|paving|post[- ]tension|aci/i.test(combined);
+    return /concrete|tilt[- ]wall|slab|apron|flatwork|paving|post[- ]tension|aci|screed/i.test(combined);
   }
   if (canonicalTrade === 'Electrical / HVAC') {
-    return /hvac|rtu|electr|mep|switchgear|panel|tacla|tdlr|chiller|vrf|duct|generator/i.test(combined);
+    return /hvac|rtu|electr|mep|switchgear|panel|tacla|tdlr|chiller|vrf|duct|generator|iecc/i.test(combined);
   }
   if (canonicalTrade === 'Pools / Fencing / Custom Home') {
-    return /pool|fenc|gate|hardscape|outdoor|pavilion|casita|estate|custom|arborist|irrigat/i.test(combined);
+    return /pool|fenc|gate|hardscape|outdoor|pavilion|casita|estate|custom|arborist|irrigat|bollard|canop/i.test(combined);
   }
   if (canonicalTrade === 'B2B / Commercial Services') {
-    return /facility|sla|hydro[- ]jet|backflow|porter|maintenance|vendor[- ]compliance|turnover/i.test(combined);
+    return /facility|sla|hydro[- ]jet|backflow|porter|maintenance|vendor[- ]compliance|turnover|final clean|striping|sealcoat|sanitiz/i.test(combined);
   }
   return false;
 }
 
 /**
- * Generates 3 distinct Sentence #2 proof variations from the Shop Dossier:
- *   [0] Ground-Up Shell / Industrial
- *   [1] Commercial Retrofit / CapEx
- *   [2] Specialty / Structural Envelope
+ * Strips any legacy trailing schedule/disruption/guarantee clauses from a custom proof string
+ * so Sentence #2 Slot 2 (proofByArchetype) never duplicates Slot 3 (operationalBenefit) or Slot 4 (signatureGuarantee).
  */
-function buildShopDossierProofAngles(shopDossier = {}, activeTrade = 'Commercial Concrete', metro = {}) {
+function sanitizeProofProjectReference(rawProof = '') {
+  return String(rawProof || '')
+    .replace(/\s+that\s+passed\s+(?:city\s+)?inspection\s+ahead\s+of\s+[^.,;]+/gi, '')
+    .replace(/\s+completed\s+with\s+zero\s+(?:tenant|business)[^.,;]+/gi, '')
+    .replace(/\s+delivered\s+ahead\s+of\s+[^.,;]+/gi, '')
+    .replace(/\s+with\s+zero\s+(?:tenant|business)[^.,;]+/gi, '')
+    .replace(/[.,;\s]+$/, '')
+    .trim();
+}
+
+/**
+ * Generates the 3 archetype-matched past-project proof variations for Sentence #2 Slot 2:
+ *   - groundUpShell
+ *   - commercialRetrofit
+ *   - specialtyStructural
+ * Written as natural past-project references with square footage and zero keyword-stuffed lists
+ * (e.g., never putting "self-storage" on a school gymnasium).
+ */
+function buildShopDossierProofByArchetype(shopDossier = {}, activeTrade = 'Commercial Concrete', metro = {}) {
   const canonicalTrade = normalizeTradeKey(activeTrade);
-  const cityLabel = metro.city || 'Central Texas';
+  const cityLabel = metro.city || 'New Braunfels';
   const caps = Array.isArray(shopDossier.coreCapabilities) && shopDossier.coreCapabilities.length
     ? shopDossier.coreCapabilities
     : Array.isArray(shopDossier.coreServices) && shopDossier.coreServices.length
@@ -280,300 +307,307 @@ function buildShopDossierProofAngles(shopDossier = {}, activeTrade = 'Commercial
     : [];
   const capText = caps.join(' | ').toLowerCase();
   const hasMetal = /metal|standing[- ]seam|roll[- ]form/i.test(capText);
-  const customProof = String(shopDossier.proofProjects || '').trim();
-  const customProofMatchesTrade = doesDossierMatchTrade(
-    { ...shopDossier, coreCapabilities: [customProof, ...caps] },
-    canonicalTrade
-  );
-  const isCustomProofRetrofit = /retrofit|re-roof|reroof|capex|restoration/i.test(customProof);
+  const rawCustomProof = sanitizeProofProjectReference(shopDossier.proofProjects || '');
+  const customProofMatchesTrade =
+    Boolean(rawCustomProof) &&
+    !/self-storage.*sheet-metal/i.test(rawCustomProof) &&
+    !/a 22,000 sq ft commercial tilt-wall & dock apron project/i.test(rawCustomProof) &&
+    doesDossierMatchTrade(
+      { coreCapabilities: [rawCustomProof] },
+      canonicalTrade
+    );
+  const isCustomProofRetrofit = /retrofit|re-roof|reroof|capex|restoration|remodel/i.test(rawCustomProof);
 
-  let angles = [];
+  let proofByArchetype;
 
   if (canonicalTrade === 'Roofing / Exteriors') {
     if (hasMetal) {
-      angles = [
-        !isCustomProofRetrofit && customProofMatchesTrade && customProof
-          ? customProof
-          : `a 52,000 sq ft ground-up commercial shell & engineered standing-seam metal roof system in the ${cityLabel} corridor that passed inspection ahead of schedule`,
-        isCustomProofRetrofit && customProofMatchesTrade && customProof
-          ? customProof
-          : `a 45,000 sq ft commercial standing-seam metal roof & flat-to-pitched CapEx retrofit completed with zero tenant disruption`,
-        `a 38,000 sq ft climate-controlled self-storage & long-span structural metal roof envelope delivered ahead of framing schedule`
-      ];
+      proofByArchetype = {
+        groundUpShell:
+          !isCustomProofRetrofit && customProofMatchesTrade
+            ? rawCustomProof
+            : `a 38,000 sq ft ground-up commercial shell standing-seam metal & membrane roof package in ${cityLabel}`,
+        commercialRetrofit:
+          isCustomProofRetrofit && customProofMatchesTrade
+            ? rawCustomProof
+            : `a 45,000 sq ft commercial standing-seam metal roof & elastomeric CapEx retrofit in ${cityLabel}`,
+        specialtyStructural: `a 32,000 sq ft long-span structural standing-seam metal roof & custom architectural flashing package in ${cityLabel}`
+      };
     } else {
-      angles = [
-        !isCustomProofRetrofit && customProofMatchesTrade && customProof
-          ? customProof
-          : `a 48,000 sq ft ground-up commercial shell & 60-mil TPO roof package in ${cityLabel} that passed inspection ahead of schedule`,
-        isCustomProofRetrofit && customProofMatchesTrade && customProof
-          ? customProof
-          : `a 42,000 sq ft commercial plaza CapEx reroof & elastomeric membrane restoration completed with zero tenant disruption`,
-        `a 32,000 sq ft structural deck, architectural standing-seam metal & custom coping envelope delivered ahead of schedule`
-      ];
+      proofByArchetype = {
+        groundUpShell:
+          !isCustomProofRetrofit && customProofMatchesTrade
+            ? rawCustomProof
+            : `a 48,000 sq ft ground-up commercial shell 60-mil TPO & sheet-metal roof package in ${cityLabel}`,
+        commercialRetrofit:
+          isCustomProofRetrofit && customProofMatchesTrade
+            ? rawCustomProof
+            : `a 42,000 sq ft commercial plaza CapEx reroof & elastomeric membrane restoration in ${cityLabel}`,
+        specialtyStructural: `a 32,000 sq ft long-span structural roof deck, tapered polyiso insulation & custom perimeter coping package in ${cityLabel}`
+      };
     }
   } else if (canonicalTrade === 'Electrical / HVAC') {
-    angles = [
-      !isCustomProofRetrofit && customProofMatchesTrade && customProof
-        ? customProof
-        : `a 40,000 sq ft commercial shell 800A 3-phase switchgear distribution & multi-unit RTU mechanical buildout that passed city inspection ahead of schedule`,
-      isCustomProofRetrofit && customProofMatchesTrade && customProof
-        ? customProof
-        : `a multi-building commercial CapEx RTU crane swap, VRF controls upgrade & LED retrofit completed with zero tenant downtime`,
-      `a 26,000 sq ft high-bay climate-controlled mechanical, custom sheet-metal duct & 480V structural power distribution package`
-    ];
+    proofByArchetype = {
+      groundUpShell:
+        !isCustomProofRetrofit && customProofMatchesTrade
+          ? rawCustomProof
+          : `a 40,000 sq ft commercial shell 3-phase switchgear distribution & packaged RTU mechanical buildout in ${cityLabel}`,
+      commercialRetrofit:
+        isCustomProofRetrofit && customProofMatchesTrade
+          ? rawCustomProof
+          : `a 44,000 sq ft multi-building CapEx high-SEER RTU replacement, EMS controls & LED retrofit in ${cityLabel}`,
+      specialtyStructural: `a 28,000 sq ft high-bay mechanical air-handling, custom spiral ductwork & 480V power distribution package in ${cityLabel}`
+    };
   } else if (canonicalTrade === 'Pools / Fencing / Custom Home') {
-    angles = [
-      !isCustomProofRetrofit && customProofMatchesTrade && customProof
-        ? customProof
-        : `a 35,000 sq ft commercial campus perimeter security fencing, automated cantilever gate & site hardscape package that passed inspection ahead of schedule`,
-      isCustomProofRetrofit && customProofMatchesTrade && customProof
-        ? customProof
-        : `a multi-pad commercial plaza exterior hardscape, bollard & ornamental iron enclosure CapEx upgrade completed with zero tenant disruption`,
-      `a custom structural steel shade pavilion, masonry screening wall & commercial amenity plaza buildout delivered ahead of schedule`
-    ];
+    proofByArchetype = {
+      groundUpShell:
+        !isCustomProofRetrofit && customProofMatchesTrade
+          ? rawCustomProof
+          : `a 35,000 sq ft commercial site security fencing, cantilever slide gate & masonry enclosure package in ${cityLabel}`,
+      commercialRetrofit:
+        isCustomProofRetrofit && customProofMatchesTrade
+          ? rawCustomProof
+          : `a 42,000 sq ft commercial campus perimeter fence upgrade, shade pergola & automated gate operator retrofit in ${cityLabel}`,
+      specialtyStructural: `a 26,000 sq ft architectural steel shade canopy, ornamental perimeter fencing & commercial patio hardscape package in ${cityLabel}`
+    };
   } else if (canonicalTrade === 'B2B / Commercial Services') {
-    angles = [
-      !isCustomProofRetrofit && customProofMatchesTrade && customProof
-        ? customProof
-        : `a 45,000 sq ft commercial shell post-construction final spec detailing, window & pressure restoration turnover package delivered ahead of CO`,
-      isCustomProofRetrofit && customProofMatchesTrade && customProof
-        ? customProof
-        : `a 4-building commercial portfolio exterior CapEx restoration, hydro-jetting & weekend common-area upgrade with zero tenant disruption`,
-      `a 30,000 sq ft specialty commercial facility envelope sealing, exterior restoration & preventative SLA commissioning package`
-    ];
+    proofByArchetype = {
+      groundUpShell:
+        !isCustomProofRetrofit && customProofMatchesTrade
+          ? rawCustomProof
+          : `a 45,000 sq ft commercial shell post-construction final clean, glass detailing & lot striping turnover in ${cityLabel}`,
+      commercialRetrofit:
+        isCustomProofRetrofit && customProofMatchesTrade
+          ? rawCustomProof
+          : `a 4-building, 60,000 sq ft commercial portfolio exterior facade wash, sealcoating/striping & common-area refresh in ${cityLabel}`,
+      specialtyStructural: `a 30,000 sq ft specialty commercial facility post-construction deep clean, high-bay detailing & floor prep package in ${cityLabel}`
+    };
   } else {
-    // Commercial Concrete
-    angles = [
-      !isCustomProofRetrofit && customProofMatchesTrade && customProof
-        ? customProof
-        : `a 36,000 sq ft industrial tilt-wall foundation, laser-screed slab & heavy-duty truck apron project that passed city inspection ahead of schedule`,
-      isCustomProofRetrofit && customProofMatchesTrade && customProof
-        ? customProof
-        : `a 4-pad commercial retail CapEx flatwork, ADA ramp compliance & reinforced dumpster pad retrofit completed over a single weekend`,
-      `a 28,000 sq ft engineered post-tension structural slab, grade-beam & machine-foundation package delivered ahead of framing schedule`
-    ];
+    // Commercial Concrete & Paving
+    proofByArchetype = {
+      groundUpShell:
+        !isCustomProofRetrofit && customProofMatchesTrade
+          ? rawCustomProof
+          : `a 36,000 sq ft commercial shell foundation, laser-screed slab & heavy-duty truck apron package in ${cityLabel}`,
+      commercialRetrofit:
+        isCustomProofRetrofit && customProofMatchesTrade
+          ? rawCustomProof
+          : `a 48,000 sq ft commercial plaza parking lot mill/overlay, ADA ramp retrofit & structural curb replacement in ${cityLabel}`,
+      specialtyStructural: `a 28,000 sq ft engineered structural slab, recessed foundation & heavy-load pier cap package in ${cityLabel}`
+    };
   }
 
-  return angles;
+  if (
+    shopDossier.proofByArchetype &&
+    typeof shopDossier.proofByArchetype === 'object' &&
+    doesDossierMatchTrade(shopDossier, canonicalTrade)
+  ) {
+    const customArch = shopDossier.proofByArchetype;
+    if (customArch.groundUpShell && !/self-storage.*sheet-metal/i.test(customArch.groundUpShell)) {
+      proofByArchetype.groundUpShell = sanitizeProofProjectReference(customArch.groundUpShell);
+    }
+    if (customArch.commercialRetrofit && !/self-storage.*sheet-metal/i.test(customArch.commercialRetrofit)) {
+      proofByArchetype.commercialRetrofit = sanitizeProofProjectReference(customArch.commercialRetrofit);
+    }
+    if (customArch.specialtyStructural && !/self-storage.*sheet-metal/i.test(customArch.specialtyStructural)) {
+      proofByArchetype.specialtyStructural = sanitizeProofProjectReference(customArch.specialtyStructural);
+    }
+  }
+
+  return proofByArchetype;
 }
 
 /**
- * Classifies a permit into one of the 3 proof rotation archetypes:
- *   0 -> Ground-Up Shell / Industrial
- *   1 -> Commercial Retrofit / CapEx
- *   2 -> Specialty / Structural Envelope
+ * Generates the 3-element array mirror of proofByArchetype for backward compatibility:
+ *   [0] groundUpShell
+ *   [1] commercialRetrofit
+ *   [2] specialtyStructural
+ */
+function buildShopDossierProofAngles(shopDossier = {}, activeTrade = 'Commercial Concrete', metro = {}) {
+  const byArch = buildShopDossierProofByArchetype(shopDossier, activeTrade, metro);
+  return [byArch.groundUpShell, byArch.commercialRetrofit, byArch.specialtyStructural];
+}
+
+/**
+ * Classifies a permit into one of the 3 proof rotation archetype keys:
+ *   'groundUpShell' | 'commercialRetrofit' | 'specialtyStructural'
  */
 function resolvePermitArchetype(permit = {}) {
-  const text = `${permit.issuedLabel || ''} ${permit.pillText || ''} ${permit.headline || ''} ${permit.subMeta || ''}`.toLowerCase();
+  const text = `${permit.permitNum || ''} ${permit.cardNumber || ''} ${permit.issuedLabel || ''} ${permit.pillText || ''} ${permit.headline || ''} ${permit.subMeta || ''}`.toLowerCase();
   if (
-    /metal envelope|self-storage|storage|gymnasium|athletic|school|structural remodel|showroom ti|cold storage|auto dealership|service bays|fleet|custom addition|estate/i.test(
+    /#bp-2026-06511|#bp-2026-06915|#bp-2026-07044|metal envelope|self-storage|storage|gymnasium|athletic|school|structural remodel|showroom ti|cold storage|auto dealership|service bays|fleet|custom addition|estate/i.test(
       text
     )
   ) {
-    return 2;
+    return 'specialtyStructural';
   }
   if (
-    /capex|retrofit|brewery|re-bid|re-roof|reroof|multi-tenant|retail strip|conversion|exterior & tenant remodel|multi-family|multifamily|acquisition|vendor/i.test(
+    /#bp-2026-06388|#bp-2026-06792|#bp-2026-07189|capex|retrofit|brewery|re-bid|re-roof|reroof|multi-tenant|retail strip|conversion|exterior & tenant remodel|multi-family|multifamily|acquisition|vendor/i.test(
       text
     )
   ) {
-    return 1;
+    return 'commercialRetrofit';
   }
-  return 0;
+  return 'groundUpShell';
 }
 
 /**
- * Cross-references permit title/description keywords ("Metal Envelope", "Self-Storage", "Industrial",
- * "Medical", "Retail", "CapEx", "Structural Remodel / TI", "Gymnasium", "Brewery Retrofit") with
- * shopDossier.coreCapabilities and activeTrade to produce a cohesive, non-contradictory Sentence #3 scope.
+ * Determines Sentence #2 Slot 3 (operationalBenefit) dynamically from the permit type:
+ * - Ground-Up / New Shell / Spec Industrial / New Storage / Gym (Cards 01, 02, 04, 05, 08):
+ *   "passing inspection ahead of the GC's turnover schedule"
+ * - CapEx / Multi-Tenant / TI / Retrofit (Cards 03, 06, 07, 09):
+ *   "with zero tenant or business disruption during work"
+ */
+function resolveOperationalBenefit(permit = {}) {
+  const text = `${permit.permitNum || ''} ${permit.cardNumber || ''} ${permit.issuedLabel || ''} ${permit.pillText || ''} ${permit.headline || ''} ${permit.subMeta || ''}`.toLowerCase();
+  const isCapExOrTenantRetrofit =
+    /#bp-2026-06388|#bp-2026-06792|#bp-2026-06915|#bp-2026-07189|capex|re-bid|multi-tenant|retail strip|showroom ti|structural remodel|brewery|retrofit|conversion|exterior & tenant remodel|re-roof|reroof|multi-family|multifamily|acquisition|vendor/i.test(
+      text
+    );
+  if (isCapExOrTenantRetrofit) {
+    return 'with zero tenant or business disruption during work';
+  }
+  return "passing inspection ahead of the GC's turnover schedule";
+}
+
+/**
+ * Classifies any of the 9 New Braunfels permits (or general commercial permits) into one of the
+ * 9 canonical commercial building archetypes for the 5-Trade × 9-Permit Matrix in Sentence #3.
+ */
+function resolvePermitMatrixKey(permit = {}) {
+  const text = `${permit.permitNum || ''} ${permit.cardNumber || ''} ${permit.issuedLabel || ''} ${permit.pillText || ''} ${permit.headline || ''} ${permit.subMeta || ''} ${permit.description || ''}`.toLowerCase();
+
+  if (/#bp-2026-06102|creekside town center pad g|cold spring dr/i.test(text)) {
+    return 'card01_retailShell';
+  }
+  if (/#bp-2026-06245|logistics crossing|54,000 sq ft spec industrial/i.test(text)) {
+    return 'card02_industrial54k';
+  }
+  if (/#bp-2026-06388|guadalupe river business park|4-building exterior & capex/i.test(text)) {
+    return 'card03_capex4Bldg';
+  }
+  if (/#bp-2026-06511|climate-controlled storage|metal envelope|self-storage/i.test(text)) {
+    return 'card04_selfStorage';
+  }
+  if (/#bp-2026-06640|resolute health|medical|surgical|clinical|dental/i.test(text)) {
+    return 'card05_medicalPavilion';
+  }
+  if (/#bp-2026-06792|walnut ave commercial plaza|retail strip & automotive|multi-tenant buildout|auto dealership|service bays/i.test(text)) {
+    return 'card06_retailAutoStrip';
+  }
+  if (/#bp-2026-06915|landa street commercial exchange|office & showroom ti|structural remodel|conversion|exterior & tenant remodel/i.test(text)) {
+    return 'card07_officeShowroomTi';
+  }
+  if (/#bp-2026-07044|athletic & activity center|gymnasium|school/i.test(text)) {
+    return 'card08_municipalGym';
+  }
+  if (/#bp-2026-07189|gruene historic corridor|brewery retrofit|flex & brewery/i.test(text)) {
+    return 'card09_breweryRetrofit';
+  }
+
+  // Fallback classification for Batch A / Batch C permits
+  if (/capex|re-bid|portfolio|corporate campus|office park re-roof|4-building|3-building|multi-family|multifamily/i.test(text)) {
+    return 'card03_capex4Bldg';
+  }
+  if (/industrial|distribution center|warehouse|cold storage|logistics|tilt-wall|fleet/i.test(text)) {
+    return 'card02_industrial54k';
+  }
+  if (/retail|multi-tenant|grocery anchor|power center|strip/i.test(text)) {
+    return 'card01_retailShell';
+  }
+  return 'card01_retailShell';
+}
+
+const PERMIT_SCOPE_MATRIX = {
+  'Commercial Concrete': {
+    card01_retailShell: 'monolithic slab-on-grade, storefront sidewalk aprons & heavy-duty dumpster pad scope',
+    card02_industrial54k: 'laser-screed reinforced warehouse slab, dock leveler pits & heavy truck apron paving',
+    card03_capex4Bldg: 'commercial parking lot mill/overlay, ADA ramp retrofits & structural curb replacement',
+    card04_selfStorage: 'vapor-barrier climate-controlled foundation slab, grade beams & concrete drive aisles',
+    card05_medicalPavilion: 'vibration-isolated clinical slab, covered ambulance/drop-off canopy flatwork & site curbing',
+    card06_retailAutoStrip: 'high-PSI automotive service bay slabs, trench drains & multi-tenant parking flatwork',
+    card07_officeShowroomTi: 'interior structural slab saw-cutting, trenching pour-backs & polished concrete showroom floors',
+    card08_municipalGym: 'long-span recessed athletic floor slab, structural pier caps & exterior site flatwork',
+    card09_breweryRetrofit: 'sloped chemical-resistant trench drain slabs, heavy fermentation tank pads & patio flatwork'
+  },
+  'Electrical / HVAC': {
+    card01_retailShell: 'commercial shell 3-phase switchgear, packaged RTU installation & tenant sub-metering scope',
+    card02_industrial54k: '1200A industrial power distribution, high-bay LED lighting & warehouse make-up air units',
+    card03_capex4Bldg: 'multi-building high-SEER RTU replacement, exterior LED retrofit & EMS controls upgrade',
+    card04_selfStorage: 'climate-controlled dehumidification/HVAC package, corridor motion LEDs & low-voltage access rough-in',
+    card05_medicalPavilion: 'hospital-grade electrical rough-in, redundant clinical HVAC zoning & backup generator transfer switch',
+    card06_retailAutoStrip: 'multi-tenant meter banks, automotive bay exhaust ventilation & high-output canopy lighting',
+    card07_officeShowroomTi: 'exposed spiral ductwork, architectural showroom lighting & commercial panel re-work',
+    card08_municipalGym: 'high-volume gymnasium air handlers, high-bay impact-rated LED fixtures & fire alarm rough-in',
+    card09_breweryRetrofit: 'process chiller electrical feeds, high-capacity taproom HVAC & commercial exhaust hood makeup air'
+  },
+  'Pools / Fencing / Custom Home': {
+    card01_retailShell: 'architectural steel patio enclosures, decorative site bollards & commercial masonry dumpster enclosures',
+    card02_industrial54k: '8-foot industrial chain-link & barbed-wire perimeter security fencing, cantilever slide gates & card-reader pedestals',
+    card03_capex4Bldg: 'commercial perimeter fence replacement, tenant courtyard pergolas & automated gate operator upgrades',
+    card04_selfStorage: 'ornamental steel security fencing, dual keypad-controlled cantilever slide gates & perimeter bollards',
+    card05_medicalPavilion: 'healing garden shade structures, privacy screening walls & commercial site furnishings',
+    card06_retailAutoStrip: 'rear service-yard security fencing, double-swing utility gates & storefront bike/patio rails',
+    card07_officeShowroomTi: 'custom architectural entry canopies, exterior lounge decking & ornamental railing package',
+    card08_municipalGym: 'athletic complex perimeter fencing, monument sign masonry & heavy-duty pedestrian gates',
+    card09_breweryRetrofit: 'custom structural steel beer-garden shade canopies, cedar/steel perimeter fencing & outdoor patio hardscaping'
+  },
+  'B2B / Commercial Services': {
+    card01_retailShell: 'post-construction final clean, storefront glass detailing & parking lot striping/pressure washing',
+    card02_industrial54k: 'industrial warehouse floor scrubbing, dock apron striping & pre-occupancy construction turnover clean',
+    card03_capex4Bldg: '4-building exterior elastomeric facade wash, parking lot sealcoating/striping & ongoing porter contract',
+    card04_selfStorage: 'multi-phase post-construction debris haul-off, roll-up door detailing & drive-aisle sweeping',
+    card05_medicalPavilion: 'terminal clinical-grade post-construction sanitization, bio-clean floor prep & exterior window washing',
+    card06_retailAutoStrip: 'multi-tenant buildout final clean, parking lot striping/fire-lane painting & exterior pressure washing',
+    card07_officeShowroomTi: 'showroom floor polishing/waxing, interior glass partition detailing & TI turnover clean',
+    card08_municipalGym: 'athletic facility post-construction top-to-bottom clean, high-bay dusting & parking lot striping',
+    card09_breweryRetrofit: 'hospitality turnover deep clean, exterior facade washing & ongoing commercial property maintenance'
+  },
+  'Roofing / Exteriors': {
+    card01_retailShell: 'commercial shell standing-seam metal & TPO roof package, tapered insulation & custom architectural sheet metal scope',
+    card02_industrial54k: 'industrial standing-seam metal & high-wind TPO roof system, expansion joint flashing & perimeter coping scope',
+    card03_capex4Bldg: '4-building commercial CapEx standing-seam metal roof retrofit, elastomeric restoration & weather-tight curb flashing',
+    card04_selfStorage: 'engineered standing-seam metal roof envelope, climate-controlled storage deck & weather-tight trim package',
+    card05_medicalPavilion: 'clinical shell standing-seam metal & high-R TPO roof assembly, surgical rooftop MEP curb flashing & coping scope',
+    card06_retailAutoStrip: 'multi-tenant commercial standing-seam metal canopy, parapet coping & high-durability TPO roof assembly',
+    card07_officeShowroomTi: 'structural roof remodel, architectural standing-seam metal envelope & custom rooftop curb/flashing retrofit',
+    card08_municipalGym: 'long-span structural standing-seam metal roof system, high-bay thermal insulation & custom perimeter flashing scope',
+    card09_breweryRetrofit: 'commercial standing-seam metal roof retrofit, architectural taproom fascia & high-thermal envelope upgrade'
+  }
+};
+
+/**
+ * 5-Trade × 9-Permit Matrix in resolvePermitScope (Sentence #3):
+ * Maps each of the 9 New Braunfels permits to an authentic commercial scope for the active trade,
+ * and blends custom website capabilities when a company with custom specialty offerings is onboarded.
  */
 function resolvePermitScope(permit = {}, shopDossier = {}, activeTrade = 'Commercial Concrete') {
-  const p = permit || {};
   const dossier = shopDossier || {};
-  const canonicalTrade = normalizeTradeKey(activeTrade);
-  const text = `${p.issuedLabel || ''} ${p.pillText || ''} ${p.headline || ''} ${p.subMeta || ''} ${p.description || ''}`.toLowerCase();
-  const dossierMatches = doesDossierMatchTrade(dossier, canonicalTrade);
-  const caps = dossierMatches
-    ? Array.isArray(dossier.coreCapabilities) && dossier.coreCapabilities.length
-      ? dossier.coreCapabilities
-      : Array.isArray(dossier.coreServices)
-      ? dossier.coreServices
-      : []
-    : [];
-  const capText = caps.join(' | ').toLowerCase();
-  const hasMetalCapability =
-    /metal|standing[- ]seam|roll[- ]form/i.test(capText) ||
-    /metal|standing[- ]seam/i.test(String(dossier.proofProjects || ''));
-
-  const isMetalOrStorage = /metal envelope|self-storage|climate-controlled storage/i.test(text);
-  const isGymOrSchool = /gymnasium|athletic|school|activity center/i.test(text);
-  const isBreweryOrFlexRetrofit = /brewery|flex & brewery|historic corridor/i.test(text);
-  const isGenuineMultiFamily = /multi-family|multifamily|240-unit|apartment/i.test(text);
-  const isCapExOrPortfolio = /capex|re-bid|portfolio|corporate campus|office park re-roof|4-building|3-building/i.test(text);
-  const isRetailOrMultiTenant = /retail|multi-tenant|automotive plaza|grocery anchor|power center|strip/i.test(text);
-  const isStructuralRemodelOrTi = /structural remodel|showroom ti|office & showroom|conversion|exterior & tenant remodel/i.test(text);
-  const isMedical = /medical|surgical|clinical|dental|health/i.test(text);
-  const isIndustrialOrWarehouse = /industrial|distribution center|warehouse|cold storage|logistics|tilt-wall|fleet/i.test(text);
+  const canonicalTrade = normalizeTradeKey(activeTrade || dossier.tradeCategory);
+  const matrixKey = resolvePermitMatrixKey(permit);
+  const tradeMatrix = PERMIT_SCOPE_MATRIX[canonicalTrade] || PERMIT_SCOPE_MATRIX['Commercial Concrete'];
+  const baseScope = tradeMatrix[matrixKey] || tradeMatrix.card01_retailShell;
 
   if (canonicalTrade === 'Roofing / Exteriors') {
-    if (isMetalOrStorage) {
-      return 'engineered standing-seam metal roof envelope, climate-controlled storage deck & weather-tight trim package';
+    const dossierMatches = doesDossierMatchTrade(dossier, canonicalTrade);
+    const caps = dossierMatches
+      ? Array.isArray(dossier.coreCapabilities) && dossier.coreCapabilities.length
+        ? dossier.coreCapabilities
+        : Array.isArray(dossier.coreServices)
+        ? dossier.coreServices
+        : []
+      : [];
+    const capText = caps.join(' | ').toLowerCase();
+    const hasMetalCapability =
+      !caps.length ||
+      /metal|standing[- ]seam|roll[- ]form/i.test(capText) ||
+      /metal|standing[- ]seam/i.test(String(dossier.proofProjects || ''));
+    if (!hasMetalCapability && matrixKey !== 'card04_selfStorage') {
+      return baseScope.replace(/standing-seam metal & /gi, '').replace(/standing-seam metal /gi, 'commercial membrane ');
     }
-    if (isGymOrSchool) {
-      return hasMetalCapability
-        ? 'long-span structural standing-seam metal roof system, high-bay thermal insulation & custom perimeter flashing scope'
-        : 'long-span structural gymnasium roof assembly, tapered polyiso insulation & pre-finished sheet metal coping scope';
-    }
-    if (isBreweryOrFlexRetrofit) {
-      return hasMetalCapability
-        ? 'commercial standing-seam metal roof retrofit, architectural fascia & high-thermal envelope upgrade'
-        : 'commercial flex roof retrofit, elastomeric membrane restoration & custom sheet metal flashing scope';
-    }
-    if (isGenuineMultiFamily) {
-      return hasMetalCapability
-        ? 'phased multi-family CapEx standing-seam metal & TPO re-roofing package with 20-year NDL warranties'
-        : 'phased multi-family CapEx roof replacement, elastomeric coating & 20-year NDL warranty package';
-    }
-    if (isCapExOrPortfolio) {
-      return hasMetalCapability
-        ? 'phased commercial CapEx standing-seam metal roof retrofit, elastomeric restoration & 20-year NDL warranty package'
-        : 'phased commercial portfolio CapEx roof restoration, elastomeric coating & 20-year NDL warranty package';
-    }
-    if (isRetailOrMultiTenant) {
-      return hasMetalCapability
-        ? 'multi-tenant commercial standing-seam metal canopy, parapet coping & TPO/elastomeric roof package'
-        : 'multi-tenant commercial plaza TPO roof assembly, parapet sheet metal coping & elastomeric waterproof membrane scope';
-    }
-    if (isStructuralRemodelOrTi) {
-      return hasMetalCapability
-        ? 'structural roof remodel, architectural standing-seam metal envelope & custom curb/flashing retrofit'
-        : 'commercial structural roof remodel, rooftop curb flashing modifications & weather-tight membrane upgrade';
-    }
-    if (isMedical) {
-      return hasMetalCapability
-        ? 'clinical shell standing-seam metal & high-R TPO roof assembly, rooftop MEP curb flashing & 20-year NDL warranty scope'
-        : 'clinical shell high-R TPO roof assembly, surgical rooftop equipment curb flashing & 20-year NDL warranty scope';
-    }
-    if (isIndustrialOrWarehouse) {
-      return hasMetalCapability
-        ? 'industrial standing-seam metal & high-wind roof system, expansion joint flashing & 20-year NDL warranty scope'
-        : 'industrial warehouse mechanically attached TPO roof system, tapered insulation & high-wind perimeter coping scope';
-    }
-    return hasMetalCapability
-      ? 'commercial shell standing-seam metal & TPO roof package, tapered insulation & custom architectural sheet metal scope'
-      : 'commercial shell 60-mil mechanically attached TPO membrane, tapered insulation & sheet metal coping scope';
   }
 
-  if (canonicalTrade === 'Electrical / HVAC') {
-    if (isMetalOrStorage) {
-      return 'climate-controlled storage multi-zone dehumidification HVAC, LED corridor lighting & 3-phase power distribution scope';
-    }
-    if (isGymOrSchool) {
-      return 'high-bay gymnasium package RTU mechanical system, exposed spiral ductwork & high-output LED sports lighting scope';
-    }
-    if (isBreweryOrFlexRetrofit) {
-      return 'brewery process chiller/glycol mechanical piping, high-load 3-phase electrical panels & commercial exhaust ventilation retrofit';
-    }
-    if (isCapExOrPortfolio || isGenuineMultiFamily) {
-      return 'phased commercial portfolio RTU package replacements, building automation controls & exterior LED parking lot retrofits';
-    }
-    if (isRetailOrMultiTenant) {
-      return 'multi-tenant retail meter-bank distribution, individual tenant RTU curb sets & commercial rough-in MEP package';
-    }
-    if (isStructuralRemodelOrTi) {
-      return 'commercial showroom 480V/208V electrical service upgrade, VRF multi-zone HVAC & architectural lighting finish-out';
-    }
-    if (isMedical) {
-      return 'medical-grade HEPA rooftop air-handling units, redundant emergency power transfer switches & clinical MEP rough-in';
-    }
-    if (isIndustrialOrWarehouse) {
-      return '800A–1200A 3-phase industrial switchgear, high-bay LED motion lighting & warehouse make-up air mechanical scope';
-    }
-    return '800A 3-phase switchgear distribution, LED high-bay package & 25-ton RTU mechanical scope';
-  }
-
-  if (canonicalTrade === 'Pools / Fencing / Custom Home') {
-    if (isMetalOrStorage) {
-      return 'automated keypad cantilever security gates, 8-ft commercial ornamental perimeter fencing & retention pond hardscape';
-    }
-    if (isGymOrSchool) {
-      return 'athletic complex perimeter security fencing, masonry monument enclosures & commercial site hardscape plaza';
-    }
-    if (isBreweryOrFlexRetrofit) {
-      return 'custom outdoor beer-garden pavilion, structural steel shade canopies, masonry fire-pit court & perimeter iron fencing';
-    }
-    if (isCapExOrPortfolio || isGenuineMultiFamily) {
-      return 'commercial business park perimeter security fencing, monument masonry upgrades & common-area hardscape CapEx package';
-    }
-    if (isRetailOrMultiTenant) {
-      return 'commercial plaza masonry dumpster enclosures, decorative steel bollards & outdoor patio dining trellis structures';
-    }
-    if (isStructuralRemodelOrTi) {
-      return 'structural steel showroom mezzanine, architectural glazing partitions & exterior courtyard hardscape remodel';
-    }
-    if (isMedical) {
-      return 'clinical campus privacy masonry screening walls, healing-garden hardscape plaza & controlled-access staff gate systems';
-    }
-    if (isIndustrialOrWarehouse) {
-      return 'industrial laydown yard 8-ft security fencing, motorized dual-slide truck gates & heavy-duty perimeter bollards';
-    }
-    return 'commercial architectural perimeter fencing, automated security gates & exterior hardscape plaza scope';
-  }
-
-  if (canonicalTrade === 'B2B / Commercial Services') {
-    if (isMetalOrStorage) {
-      return 'post-construction storage facility final detail, exterior metal envelope pressure prep & ongoing commercial facility maintenance';
-    }
-    if (isGymOrSchool) {
-      return 'municipal athletic center post-construction final clean, high-bay surface detailing & preventative facility maintenance';
-    }
-    if (isBreweryOrFlexRetrofit) {
-      return 'commercial brewery & flex annex hydro-jetting, grease-trap/backflow compliance & exterior pressure restoration';
-    }
-    if (isCapExOrPortfolio || isGenuineMultiFamily) {
-      return 'phased commercial portfolio exterior CapEx restoration, night/weekend common-area maintenance & consolidated vendor SLA';
-    }
-    if (isRetailOrMultiTenant) {
-      return 'multi-tenant retail plaza day-1 turnover detailing, storefront pressure washing & recurring common-area porter contract';
-    }
-    if (isStructuralRemodelOrTi) {
-      return 'commercial showroom post-remodel final spec detailing, glass/floor restoration & turnkey facility commissioning';
-    }
-    if (isMedical) {
-      return 'clinical-grade post-construction terminal detailing, backflow/MEP compliance testing & 24/7 medical facility SLA support';
-    }
-    if (isIndustrialOrWarehouse) {
-      return 'industrial warehouse slab scrubbing, dock-leveler commissioning & post-construction facility turnover package';
-    }
-    return 'post-construction final spec detailing, exterior pressure restoration & ongoing commercial facility contract';
-  }
-
-  // Default: Commercial Concrete
-  if (isMetalOrStorage) {
-    return 'monolithic climate-controlled storage slab-on-grade, perimeter grade beams & heavy-duty drive-aisle paving scope';
-  }
-  if (isGymOrSchool) {
-    return 'structural gymnasium foundation slab, depressed athletic floor pour & site ADA sidewalk/curb package';
-  }
-  if (isBreweryOrFlexRetrofit) {
-    return 'sloped brewery trench-drain floor slab retrofit, heavy-equipment housekeeping pads & exterior patio flatwork';
-  }
-  if (isCapExOrPortfolio || isGenuineMultiFamily) {
-    return 'phased commercial CapEx parking lot panel replacement, ADA ramp compliance & reinforced dumpster pad upgrades';
-  }
-  if (isRetailOrMultiTenant) {
-    return 'multi-tenant retail foundation slab, storefront ADA sidewalk approaches & heavy-duty service drive paving';
-  }
-  if (isStructuralRemodelOrTi) {
-    return 'structural slab saw-cutting, interior footing reinforcements & architectural concrete floor finish-out';
-  }
-  if (isMedical) {
-    return 'clinical shell structural slab-on-grade, ambulance drop-off canopy paving & precision medical imaging floor foundations';
-  }
-  if (isIndustrialOrWarehouse) {
-    return 'high-tolerance laser-screed industrial warehouse slab, tilt-wall panels & reinforced 8-inch truck dock aprons';
-  }
-  return 'structural concrete foundation, loading dock apron & heavy-duty flatwork scope';
+  return baseScope;
 }
 
 /**
@@ -733,16 +767,18 @@ function resolveGreeting(card = {}) {
 }
 
 /**
- * Sentence #2 Proof Rotation + Landmark Override:
- * - When landmarkReference is blank, rotates through 3 archetype-matched proof variations from shopDossier.proofAngles.
- * - When landmarkReference is populated, dynamically injects that landmark phrase into Sentence #2 across the cards.
+ * Sentence #2 Trade-Agnostic 4-Slot Proof Builder + Landmark Override:
+ * Assembles Sentence #2 dynamically from 4 slots populated by the onboarded shopDossier (or active trade default):
+ *   1. shopDossier.crewAndLicenseBadge (e.g., TDLR Licensed Electrical Contractor, ACI-Certified Commercial Concrete Crew, RCAT Licensed Commercial Roofer)
+ *   2. shopDossier.proofByArchetype[permitArchetype] (groundUpShell, commercialRetrofit, specialtyStructural)
+ *   3. operationalBenefit (determined by permit type: schedule/inspection milestone for Ground-Up/Shell/Industrial/Storage/Gym vs. zero tenant or business disruption for CapEx/Multi-Tenant/TI/Retrofit)
+ *   4. shopDossier.signatureGuarantee (e.g., "20-year NDL weathertightness warranties", "laser-screed Ff/Fl flatness compliance", "turnkey Title 24 / IECC commissioning")
  */
 function resolveProofSentence(permit = {}, shopDossier = {}, activeTrade = 'Commercial Concrete', contractor = {}, metro = {}) {
   const canonicalTrade = normalizeTradeKey(activeTrade);
-  const tradeTpl = getTradeTemplate(canonicalTrade);
   const dossierMatches = doesDossierMatchTrade(shopDossier, canonicalTrade);
   const effectiveDossier = dossierMatches
-    ? shopDossier
+    ? upgradeShopDossierSchema(shopDossier, { ...contractor, primaryTrade: canonicalTrade })
     : buildDefaultKnowledgeBaseForContractor({
         ...contractor,
         primaryTrade: canonicalTrade,
@@ -753,37 +789,41 @@ function resolveProofSentence(permit = {}, shopDossier = {}, activeTrade = 'Comm
         }
       });
 
-  const angles =
-    Array.isArray(effectiveDossier.proofAngles) && effectiveDossier.proofAngles.length >= 3
-      ? effectiveDossier.proofAngles
-      : buildShopDossierProofAngles(effectiveDossier, canonicalTrade, metro);
+  const crewAndLicenseBadge =
+    effectiveDossier.crewAndLicenseBadge ||
+    String(effectiveDossier.certificationsAndBonding || 'Licensed Commercial Trade Crew')
+      .split('•')[0]
+      .trim();
 
-  const archetypeIdx = resolvePermitArchetype(permit);
-  let selectedProof = angles[archetypeIdx] || angles[0];
+  const proofByArchetype =
+    effectiveDossier.proofByArchetype && typeof effectiveDossier.proofByArchetype === 'object'
+      ? effectiveDossier.proofByArchetype
+      : buildShopDossierProofByArchetype(effectiveDossier, canonicalTrade, metro);
+
+  const permitArchetype = resolvePermitArchetype(permit);
+  let selectedProof = sanitizeProofProjectReference(
+    proofByArchetype[permitArchetype] || proofByArchetype.groundUpShell
+  );
 
   const customLandmark = String(
     (contractor.voiceProfile && contractor.voiceProfile.landmarkReference) || ''
   ).trim();
 
   if (customLandmark && !selectedProof.toLowerCase().includes(customLandmark.toLowerCase())) {
-    if (/\b(that passed|completed with|delivered ahead)\b/i.test(selectedProof)) {
-      selectedProof = selectedProof.replace(
-        /\s+\b(that passed|completed with|delivered ahead)\b/i,
-        ` ${customLandmark} $1`
-      );
-    } else {
-      selectedProof = `${selectedProof} ${customLandmark}`;
-    }
+    selectedProof = `${selectedProof} ${customLandmark}`;
   }
 
-  const certsSnippet = String(effectiveDossier.certificationsAndBonding || 'Full Commercial GL & Bonding')
-    .split('•')[0]
-    .trim();
-  const guaranteeSnippet =
-    effectiveDossier.warrantyAndGuarantee || 'zero day-labor subs and a 100% clean-site schedule guarantee';
+  const operationalBenefit = resolveOperationalBenefit(permit);
+  const signatureGuarantee =
+    effectiveDossier.signatureGuarantee ||
+    effectiveDossier.warrantyAndGuarantee ||
+    'full commercial QA/QC compliance';
   const companyName = contractor.companyName || 'Our Commercial Team';
 
-  return `Here at ${companyName}, our ${tradeTpl.shortTrade} crew (${certsSnippet}) just wrapped ${selectedProof} with ${guaranteeSnippet}.`;
+  if (operationalBenefit.startsWith('with ')) {
+    return `Here at ${companyName}, our ${crewAndLicenseBadge} just wrapped ${selectedProof} ${operationalBenefit} and backed by ${signatureGuarantee}.`;
+  }
+  return `Here at ${companyName}, our ${crewAndLicenseBadge} just wrapped ${selectedProof}, ${operationalBenefit} with ${signatureGuarantee}.`;
 }
 
 /**
@@ -853,69 +893,85 @@ function buildDefaultKnowledgeBaseForContractor(contractor = {}) {
     .replace(/[^a-z0-9]/g, '');
 
   let coreServices = [
-    'Commercial Tilt-Wall & Structural Slabs',
-    'Heavy-Duty Truck Aprons & Loading Docks',
-    'ADA Ramp & Sidewalk Compliance',
-    'Post-Tension Custom Foundations',
-    'Weekend Phased Parking Lot Pouring'
+    'Commercial Tilt-Wall & Monolithic Structural Slabs',
+    'Laser-Screed Warehouse Slabs & Dock Leveler Pits',
+    'Commercial Parking Lot Mill/Overlay & ADA Ramp Retrofits',
+    'High-PSI Service Bay Slabs, Trench Drains & Pier Caps',
+    'Polished Concrete Showroom Floors & Trench Pour-Backs'
   ];
+  let crewAndLicenseBadge = 'ACI-Certified Commercial Concrete Crew';
   let certificationsAndBonding =
-    'ACI-Certified Flatwork Finishers • $2M/$5M Commercial GL + Workers Comp • Bonded up to $1.5M Single Project';
-  let defaultGuarantee = 'zero day-labor subs, in-house laser screed equipment, and a 100% clean-site schedule guarantee';
+    'ACI-Certified Commercial Concrete Crew • $2M/$5M Commercial GL + Workers Comp • Bonded up to $1.5M Single Project';
+  let signatureGuarantee = 'laser-screed Ff/Fl flatness compliance';
 
   if (canonicalTrade === 'Roofing / Exteriors') {
     coreServices = [
-      'Commercial TPO, PVC & EPDM Flat Roof Systems',
-      'Standing-Seam Architectural & Structural Metal Roofing',
+      'Engineered Standing-Seam Commercial Metal Roof Systems',
+      'Commercial TPO, PVC & EPDM Membrane Roof Systems',
       'Commercial Flat-to-Pitched Metal & Elastomeric Retrofits',
-      'Self-Storage, Industrial & Retail Envelope Packages',
+      'Custom Architectural Sheet Metal Coping & Curb Flashing',
       '20-Year NDL Manufacturer Warranty Replacements'
     ];
+    crewAndLicenseBadge = 'RCAT Licensed Commercial Roofer';
     certificationsAndBonding =
       'RCAT Licensed Commercial Roofer • GAF Master Select & NDL Certified • $2M/$5M Commercial GL';
-    defaultGuarantee =
-      'zero business disruption during tear-off, certified wind/hail engineering, and 20-year NDL weathertightness warranties';
+    signatureGuarantee = '20-year NDL weathertightness warranties';
   } else if (canonicalTrade === 'Electrical / HVAC') {
     coreServices = [
-      'Commercial RTU Package Unit Replacements (5–25 Ton)',
-      'Medical, Industrial & Retail TI Mechanical/Electrical Buildouts',
-      '3-Phase 480V/800A Panel, Switchgear & Transformer Upgrades',
-      'In-House Custom Sheet Metal Duct Fabrication',
-      'Guaranteed 4-Hour Emergency Commercial SLA'
+      'Commercial 3-Phase Switchgear & 1200A Power Distribution',
+      'High-SEER Packaged RTU & Make-Up Air Unit Installations',
+      'Hospital-Grade Clinical MEP Rough-In & Redundant HVAC Zoning',
+      'Exposed Spiral Ductwork, EMS Controls & High-Bay LED Retrofits',
+      'Process Chiller Feeds & Backup Generator Transfer Switches'
     ];
+    crewAndLicenseBadge = 'TDLR Licensed Electrical & MEP Contractor';
     certificationsAndBonding =
-      'TDLR Class-A TACLA & Master Electrical License • EPA 608 Universal • $2M/$5M Commercial GL & Bonded';
-    defaultGuarantee =
-      'in-house sheet metal fabrication, dedicated crane/startup crews, and first-walk inspection pass guarantee';
+      'TDLR Licensed Electrical & MEP Contractor • Class-A TACLA • $2M/$5M Commercial GL & Bonded';
+    signatureGuarantee = 'turnkey Title 24 / IECC commissioning';
   } else if (canonicalTrade === 'Pools / Fencing / Custom Home') {
     coreServices = [
-      'Commercial Architectural Perimeter Fencing & Automated Security Gates',
-      'Structural Steel Shade Canopies & Outdoor Amenity Plazas',
-      'Turnkey Commercial Tenant Improvements (TI) & Masonry Enclosures',
-      'Custom Outdoor Living Pavilions & Commercial Hardscapes',
-      'Dedicated Full-Time On-Site Superintendent'
+      'Commercial Chain-Link, Ornamental Steel & Perimeter Security Fencing',
+      'Automated Cantilever Slide Gates & Keypad Access Pedestals',
+      'Structural Steel Shade Canopies, Entry Canopies & Pergolas',
+      'Commercial Masonry Dumpster Enclosures & Site Bollards',
+      'Outdoor Patio Hardscaping, Privacy Screening Walls & Railings'
     ];
+    crewAndLicenseBadge = 'AWS-Certified Commercial Site & Perimeter Crew';
     certificationsAndBonding =
-      'Licensed Commercial & Custom Builder • $2M/$5M Builder Risk + Commercial GL • 10-Year Structural Warranty';
-    defaultGuarantee =
-      'in-house structural fabrication, zero day-labor subs, and a locked inspection milestone schedule';
+      'AWS-Certified Commercial Site & Perimeter Crew • $2M/$5M Commercial GL • UL-325 Gate Compliance';
+    signatureGuarantee = 'engineered wind-load & UL-325 gate compliance';
   } else if (canonicalTrade === 'B2B / Commercial Services') {
     coreServices = [
-      '24/7 Commercial Facility & Business Park SLA Contracts',
-      'Night & Weekend Phased CapEx Upgrades (Zero Tenant Disruption)',
-      'Hydro-Jetting, Backflow & Commercial Exterior Restoration',
-      'Post-Construction Final Spec Detailing & Day-1 Turnover',
-      'Same-Day Digital Photo & Inspection Reporting'
+      'Post-Construction Final Clean & Pre-Occupancy Turnover Detailing',
+      'Commercial Parking Lot Striping, Sealcoating & Fire-Lane Painting',
+      'Multi-Building Exterior Elastomeric Facade & Window Washing',
+      'Terminal Clinical-Grade Post-Construction Sanitization & Bio-Clean Prep',
+      'Industrial Floor Scrubbing, Polishing/Waxing & Ongoing Porter Contracts'
     ];
+    crewAndLicenseBadge = 'OSHA-Certified Commercial Turnover & Facility Crew';
     certificationsAndBonding =
-      'Vendor-Compliance Ready (Net-30, W-9, COI on File) • $2M/$5M Commercial GL + Umbrella';
-    defaultGuarantee =
-      'uniformed W-2 crews, night/weekend phased execution, and zero tenant disruption';
+      'OSHA-Certified Commercial Turnover & Facility Crew • Vendor-Compliance Ready (W-9, COI, $2M/$5M GL)';
+    signatureGuarantee = 'bonded day-1 CO turnover & SLA compliance';
   }
 
-  const defaultProof =
-    voice.recentWin ||
-    `${tradeTpl.card1CompletedJob}${landmark ? ' ' + landmark : ''} that passed city inspection ahead of schedule`;
+  const rawDifferentiator = String(voice.differentiator || '').trim();
+  const differentiatorMatchesTrade =
+    Boolean(rawDifferentiator) &&
+    !/in-house engineered metal roof|zero business disruption during install|zero day-labor subs/i.test(rawDifferentiator) &&
+    doesDossierMatchTrade(
+      { coreCapabilities: [rawDifferentiator] },
+      canonicalTrade
+    );
+  const resolvedGuarantee = differentiatorMatchesTrade ? rawDifferentiator : signatureGuarantee;
+
+  const recentWinMatchesTrade =
+    Boolean(voice.recentWin) &&
+    doesDossierMatchTrade({ coreCapabilities: [voice.recentWin] }, canonicalTrade);
+
+  const defaultProof = sanitizeProofProjectReference(
+    (recentWinMatchesTrade ? voice.recentWin : '') ||
+      `${tradeTpl.card1CompletedJob}${landmark ? ' ' + landmark : ''}`
+  );
 
   const baseDossier = {
     tradeCategory: canonicalTrade,
@@ -923,10 +979,12 @@ function buildDefaultKnowledgeBaseForContractor(contractor = {}) {
       contractor.websiteUrl ||
       `https://www.${companySlug || 'lonestarconcrete'}.com`,
     yearsInBusiness: '14+ Years Serving ' + metro.city + ' & Corridor',
+    crewAndLicenseBadge,
     coreServices,
     coreCapabilities: [...coreServices],
     certificationsAndBonding,
-    warrantyAndGuarantee: voice.differentiator || defaultGuarantee,
+    signatureGuarantee: resolvedGuarantee,
+    warrantyAndGuarantee: resolvedGuarantee,
     proofProjects: defaultProof,
     idealJobProfile: `$${Number(contractor.minPermitValuation || 100000).toLocaleString()}+ Commercial Permits, Portfolio CapEx & $${Number(
       contractor.minCadAssessedValue || 600000
@@ -940,38 +998,67 @@ function buildDefaultKnowledgeBaseForContractor(contractor = {}) {
     lastUpdatedAt: new Date().toISOString()
   };
 
-  baseDossier.proofAngles = buildShopDossierProofAngles(baseDossier, canonicalTrade, metro);
+  baseDossier.proofByArchetype = buildShopDossierProofByArchetype(baseDossier, canonicalTrade, metro);
+  baseDossier.proofAngles = [
+    baseDossier.proofByArchetype.groundUpShell,
+    baseDossier.proofByArchetype.commercialRetrofit,
+    baseDossier.proofByArchetype.specialtyStructural
+  ];
   return baseDossier;
 }
 
 function upgradeShopDossierSchema(kb = {}, contractor = {}) {
   const metro = resolveMetroProfile(contractor.baseZip || '78130');
-  const activeTrade = normalizeTradeKey(kb.tradeCategory || contractor.primaryTrade);
+  const activeTrade = normalizeTradeKey(contractor.primaryTrade || kb.tradeCategory);
   const defaults = buildDefaultKnowledgeBaseForContractor({
     ...contractor,
     primaryTrade: activeTrade
   });
 
+  const kbMatchesActiveTrade = doesDossierMatchTrade(kb, activeTrade);
+  const sourceKb = kbMatchesActiveTrade ? kb : {};
+
   const coreCapabilities =
-    Array.isArray(kb.coreCapabilities) && kb.coreCapabilities.length
-      ? kb.coreCapabilities
-      : Array.isArray(kb.coreServices) && kb.coreServices.length
-      ? kb.coreServices
+    Array.isArray(sourceKb.coreCapabilities) && sourceKb.coreCapabilities.length
+      ? sourceKb.coreCapabilities
+      : Array.isArray(sourceKb.coreServices) && sourceKb.coreServices.length
+      ? sourceKb.coreServices
       : defaults.coreCapabilities;
 
-    const merged = {
+  const rawGuarantee = String(
+    sourceKb.signatureGuarantee || sourceKb.warrantyAndGuarantee || ''
+  ).trim();
+  const cleanGuarantee =
+    rawGuarantee &&
+    !/in-house engineered metal roof systems, zero business disruption during install/i.test(rawGuarantee)
+      ? rawGuarantee
+      : defaults.signatureGuarantee;
+
+  const rawBadge = String(sourceKb.crewAndLicenseBadge || '').trim();
+  const cleanBadge =
+    rawBadge ||
+    (sourceKb.certificationsAndBonding
+      ? String(sourceKb.certificationsAndBonding).split('•')[0].trim()
+      : defaults.crewAndLicenseBadge);
+
+  const merged = {
     ...defaults,
-    ...kb,
+    ...sourceKb,
     schemaVersion: ENGINE_SCHEMA_VERSION,
-    tradeCategory: kb.tradeCategory || activeTrade,
+    tradeCategory: activeTrade,
+    crewAndLicenseBadge: cleanBadge,
+    signatureGuarantee: cleanGuarantee,
+    warrantyAndGuarantee: cleanGuarantee,
     coreServices: [...coreCapabilities],
     coreCapabilities: [...coreCapabilities]
   };
 
-  merged.proofAngles =
-    Array.isArray(kb.proofAngles) && kb.proofAngles.length >= 3
-      ? kb.proofAngles
-      : buildShopDossierProofAngles(merged, activeTrade, metro);
+  merged.proofByArchetype = buildShopDossierProofByArchetype(merged, activeTrade, metro);
+  merged.proofAngles = [
+    merged.proofByArchetype.groundUpShell,
+    merged.proofByArchetype.commercialRetrofit,
+    merged.proofByArchetype.specialtyStructural
+  ];
 
   return merged;
 }
@@ -993,16 +1080,10 @@ function getCentralDateString(dateObj = new Date()) {
   }
 }
 
-function getDayRotationIndex(dateStr = getCentralDateString(), extraOffset = 0) {
-  // Anchor: 2026-10-28 -> batch 0, 2026-10-29 -> batch 1, 2026-10-30 -> batch 2, etc.
-  const anchorMs = Date.UTC(2026, 9, 28);
-  const parts = String(dateStr).split('-').map(Number);
-  const currentMs =
-    parts.length === 3
-      ? Date.UTC(parts[0], parts[1] - 1, parts[2])
-      : Date.now();
-  const daysElapsed = Math.max(0, Math.round((currentMs - anchorMs) / 86400000));
-  return daysElapsed + Number(extraOffset || 0);
+function getDayRotationIndex(_dateStr = getCentralDateString(), extraOffset = 0) {
+  // Default (offset 0) anchors to Batch B (the 9 flagship New Braunfels commercial permits: #BP-2026-06102 through #BP-2026-07189).
+  // Advancing rotationOffset via /api/recon/cron-morning cycles through Batch C and Batch A.
+  return 1 + Number(extraOffset || 0);
 }
 
 function buildRealClientBriefingCards(contractor, customBatchIndex) {
@@ -1204,7 +1285,10 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
     // ================= BATCH B (NEXT DAY ROTATION — CARDS 10–18) =================
     {
       permitNum: '#BP-2026-06102',
-      issuedLabel: 'NEW DAILY FILING • $1,340,000 COMMERCIAL SHELL & ROOF PACKAGE',
+      issuedLabel:
+        normalizeTradeKey(activeTrade) === 'Roofing / Exteriors'
+          ? 'NEW DAILY FILING • $1,340,000 COMMERCIAL SHELL & ROOF PACKAGE'
+          : 'NEW DAILY FILING • $1,340,000 COMMERCIAL SHELL & SITE PACKAGE',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Creekside Town Center Pad G — 26,500 Sq Ft Commercial Buildout`,
@@ -2429,8 +2513,8 @@ function createDefaultStore() {
     voiceProfile: {
       tone: 'Executive Commercial Metal & Standing-Seam Estimator',
       landmarkReference: '',
-      recentWin: 'a 45,000 sq ft commercial standing-seam metal & TPO retrofit completed with zero tenant disruption',
-      differentiator: '45+ years of engineered commercial standing-seam metal roof manufacturing, retrofits, and 20-year NDL warranties',
+      recentWin: 'a 45,000 sq ft commercial standing-seam metal roof & elastomeric CapEx retrofit in New Braunfels, TX',
+      differentiator: '20-year NDL weathertightness warranties',
       ctaStyle: 'quick 10-minute roof spec review or on-site core walk'
     },
     status: 'PAID_ACTIVE',
@@ -2442,6 +2526,7 @@ function createDefaultStore() {
       websiteUrl: 'https://www.alertroofsystems.com',
       tradeCategory: 'Roofing / Exteriors',
       yearsInBusiness: '45+ Years Serving New Braunfels, Texas & Nationwide Commercial Roofing',
+      crewAndLicenseBadge: 'RCAT Licensed Commercial Roofer',
       coreServices: [
         'Engineered Standing-Seam Commercial Metal Roof Systems',
         'Commercial Flat-to-Pitched Metal Roof Retrofits',
@@ -2456,17 +2541,25 @@ function createDefaultStore() {
         'Self-Storage, School & Industrial Metal Roofing',
         '20-Year NDL Weather-Tightness Warranties'
       ],
+      proofByArchetype: {
+        groundUpShell:
+          'a 38,000 sq ft ground-up commercial shell standing-seam metal & membrane roof package in New Braunfels, TX',
+        commercialRetrofit:
+          'a 45,000 sq ft commercial standing-seam metal roof & elastomeric CapEx retrofit in Comal County',
+        specialtyStructural:
+          'a 32,000 sq ft long-span structural standing-seam metal roof & custom architectural sheet-metal package in New Braunfels, TX'
+      },
       proofAngles: [
         'a 38,000 sq ft ground-up commercial shell standing-seam metal & membrane roof package in New Braunfels, TX',
-        'a 45,000 sq ft commercial standing-seam metal roof retrofit in Comal County that passed inspection ahead of schedule',
-        'a structural standing-seam metal envelope, self-storage & custom architectural sheet-metal package across New Braunfels, TX'
+        'a 45,000 sq ft commercial standing-seam metal roof & elastomeric CapEx retrofit in Comal County',
+        'a 32,000 sq ft long-span structural standing-seam metal roof & custom architectural sheet-metal package in New Braunfels, TX'
       ],
       certificationsAndBonding:
         'RCAT Licensed Commercial Roofer • In-House Roll-Forming & Engineered Metal Systems • $5M Commercial GL & Bonded',
-      warrantyAndGuarantee:
-        'in-house engineered metal roof systems, zero business disruption during install, and 20-year NDL weathertightness warranties',
+      signatureGuarantee: '20-year NDL weathertightness warranties',
+      warrantyAndGuarantee: '20-year NDL weathertightness warranties',
       proofProjects:
-        'a 45,000 sq ft commercial standing-seam metal roof retrofit in Comal County that passed inspection ahead of schedule',
+        'a 45,000 sq ft commercial standing-seam metal roof & elastomeric CapEx retrofit in Comal County',
       signatureLine: 'Jack Williams • A-lert Roof Systems • (830) 481-0653'
     },
     alertRoofContractor
@@ -2708,6 +2801,12 @@ function loadStore() {
                 (c) =>
                   String(c.draftBody || '').includes('Hey Estimating Team') ||
                   String(c.draftBody || '').includes('multi-family roof preventative maintenance') ||
+                  String(c.draftBody || '').includes(
+                    'in-house engineered metal roof systems, zero business disruption during install'
+                  ) ||
+                  String(c.draftBody || '').includes(
+                    'self-storage & custom architectural sheet-metal package'
+                  ) ||
                   String(c.contactName || '').includes('bidding@structurainc.com')
               );
             if (hasLegacyArtifacts) {
@@ -2966,7 +3065,7 @@ function activateTerritory({
     tradeName: availability.tradeCategory,
     tierLevel: availability.tierLevel,
     includeSmartSiteBundle: Boolean(includeSmartSiteBundle),
-    unlockedLimit: 3,
+    unlockedLimit: isRealClient ? cards.length : 3,
     totalSpottedCount: cards.length,
     cards,
     createdAt: new Date().toISOString()
@@ -3127,6 +3226,12 @@ function getBriefingByToken(token, options = {}) {
         (c) =>
           String(c.draftBody || '').includes('Hey Estimating Team') ||
           String(c.draftBody || '').includes('multi-family roof preventative maintenance') ||
+          String(c.draftBody || '').includes(
+            'in-house engineered metal roof systems, zero business disruption during install'
+          ) ||
+          String(c.draftBody || '').includes(
+            'self-storage & custom architectural sheet-metal package'
+          ) ||
           String(c.contactName || '').includes('bidding@structurainc.com')
       ));
 
@@ -3388,6 +3493,14 @@ function updateContractorCommand({
     store.contractors[briefing.contractorId] ||
     store.contractors['11111111-2222-3333-4444-555555555555'];
 
+  contractor.dossierByTrade = contractor.dossierByTrade || {};
+  if (contractor.knowledgeBase && contractor.primaryTrade) {
+    const prevTradeKey = normalizeTradeKey(contractor.primaryTrade);
+    if (doesDossierMatchTrade(contractor.knowledgeBase, prevTradeKey)) {
+      contractor.dossierByTrade[prevTradeKey] = contractor.knowledgeBase;
+    }
+  }
+
   if (primaryTrade) {
     contractor.primaryTrade = primaryTrade;
     briefing.tradeName = primaryTrade;
@@ -3425,10 +3538,16 @@ function updateContractorCommand({
     differentiator: differentiator || contractor.voiceProfile.differentiator
   };
 
-  contractor.knowledgeBase = upgradeShopDossierSchema(
-    contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
-    contractor
-  );
+  const targetTradeKey = normalizeTradeKey(contractor.primaryTrade);
+  const candidateDossier =
+    (contractor.knowledgeBase &&
+    doesDossierMatchTrade(contractor.knowledgeBase, targetTradeKey)
+      ? contractor.knowledgeBase
+      : contractor.dossierByTrade[targetTradeKey]) ||
+    buildDefaultKnowledgeBaseForContractor(contractor);
+
+  contractor.knowledgeBase = upgradeShopDossierSchema(candidateDossier, contractor);
+  contractor.dossierByTrade[targetTradeKey] = contractor.knowledgeBase;
 
   // Re-calibrate the briefing cards to reflect updated trade, zip, and shop voice
   const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor.isRealClient);
@@ -3757,15 +3876,43 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
   const resolvedTradeCategory = normalizeTradeKey(
     knowledgeBase.tradeCategory || contractor.primaryTrade || currentKb.tradeCategory
   );
+  if (knowledgeBase.tradeCategory) {
+    contractor.primaryTrade = resolvedTradeCategory;
+    briefing.tradeName = resolvedTradeCategory;
+  }
+  const tradeDefaults = buildDefaultKnowledgeBaseForContractor({
+    ...contractor,
+    primaryTrade: resolvedTradeCategory
+  });
   const metro = resolveMetroProfile(contractor.baseZip || '78130');
   const nextProofProjects =
     knowledgeBase.proofProjects !== undefined
-      ? String(knowledgeBase.proofProjects).trim()
+      ? sanitizeProofProjectReference(knowledgeBase.proofProjects)
       : currentKb.proofProjects;
+
+  const resolvedGuarantee =
+    knowledgeBase.signatureGuarantee !== undefined && String(knowledgeBase.signatureGuarantee).trim()
+      ? String(knowledgeBase.signatureGuarantee).trim()
+      : knowledgeBase.warrantyAndGuarantee !== undefined && String(knowledgeBase.warrantyAndGuarantee).trim()
+      ? String(knowledgeBase.warrantyAndGuarantee).trim()
+      : doesDossierMatchTrade(currentKb, resolvedTradeCategory) && currentKb.signatureGuarantee
+      ? currentKb.signatureGuarantee
+      : tradeDefaults.signatureGuarantee;
+
+  const resolvedCrewBadge =
+    knowledgeBase.crewAndLicenseBadge !== undefined && String(knowledgeBase.crewAndLicenseBadge).trim()
+      ? String(knowledgeBase.crewAndLicenseBadge).trim()
+      : knowledgeBase.certificationsAndBonding !== undefined && String(knowledgeBase.certificationsAndBonding).trim()
+      ? String(knowledgeBase.certificationsAndBonding).split('•')[0].trim()
+      : doesDossierMatchTrade(currentKb, resolvedTradeCategory) && currentKb.crewAndLicenseBadge
+      ? currentKb.crewAndLicenseBadge
+      : tradeDefaults.crewAndLicenseBadge;
 
   const nextKb = {
     ...currentKb,
+    schemaVersion: ENGINE_SCHEMA_VERSION,
     tradeCategory: resolvedTradeCategory,
+    crewAndLicenseBadge: resolvedCrewBadge,
     websiteUrl:
       knowledgeBase.websiteUrl !== undefined
         ? String(knowledgeBase.websiteUrl).trim()
@@ -3779,11 +3926,11 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
     certificationsAndBonding:
       knowledgeBase.certificationsAndBonding !== undefined
         ? String(knowledgeBase.certificationsAndBonding).trim()
-        : currentKb.certificationsAndBonding,
-    warrantyAndGuarantee:
-      knowledgeBase.warrantyAndGuarantee !== undefined
-        ? String(knowledgeBase.warrantyAndGuarantee).trim()
-        : currentKb.warrantyAndGuarantee,
+        : doesDossierMatchTrade(currentKb, resolvedTradeCategory)
+        ? currentKb.certificationsAndBonding
+        : tradeDefaults.certificationsAndBonding,
+    signatureGuarantee: resolvedGuarantee,
+    warrantyAndGuarantee: resolvedGuarantee,
     proofProjects: nextProofProjects,
     idealJobProfile:
       knowledgeBase.idealJobProfile !== undefined
@@ -3801,13 +3948,38 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
     lastUpdatedAt: new Date().toISOString()
   };
 
-  if (Array.isArray(knowledgeBase.proofAngles) && knowledgeBase.proofAngles.length >= 3) {
-    nextKb.proofAngles = knowledgeBase.proofAngles.map((a) => String(a).trim()).filter(Boolean);
+  if (
+    knowledgeBase.proofByArchetype &&
+    typeof knowledgeBase.proofByArchetype === 'object' &&
+    knowledgeBase.proofByArchetype.groundUpShell &&
+    knowledgeBase.proofByArchetype.commercialRetrofit &&
+    knowledgeBase.proofByArchetype.specialtyStructural
+  ) {
+    nextKb.proofByArchetype = {
+      groundUpShell: sanitizeProofProjectReference(knowledgeBase.proofByArchetype.groundUpShell),
+      commercialRetrofit: sanitizeProofProjectReference(knowledgeBase.proofByArchetype.commercialRetrofit),
+      specialtyStructural: sanitizeProofProjectReference(knowledgeBase.proofByArchetype.specialtyStructural)
+    };
+  } else if (Array.isArray(knowledgeBase.proofAngles) && knowledgeBase.proofAngles.length >= 3) {
+    const cleanedAngles = knowledgeBase.proofAngles.map((a) => sanitizeProofProjectReference(a)).filter(Boolean);
+    nextKb.proofByArchetype = {
+      groundUpShell: cleanedAngles[0],
+      commercialRetrofit: cleanedAngles[1],
+      specialtyStructural: cleanedAngles[2]
+    };
   } else {
-    nextKb.proofAngles = buildShopDossierProofAngles(nextKb, resolvedTradeCategory, metro);
+    nextKb.proofByArchetype = buildShopDossierProofByArchetype(nextKb, resolvedTradeCategory, metro);
   }
 
+  nextKb.proofAngles = [
+    nextKb.proofByArchetype.groundUpShell,
+    nextKb.proofByArchetype.commercialRetrofit,
+    nextKb.proofByArchetype.specialtyStructural
+  ];
+
   contractor.knowledgeBase = nextKb;
+  contractor.dossierByTrade = contractor.dossierByTrade || {};
+  contractor.dossierByTrade[resolvedTradeCategory] = nextKb;
 
   if (contractor.knowledgeBase.websiteUrl) {
     contractor.websiteUrl = contractor.knowledgeBase.websiteUrl;
@@ -3817,12 +3989,13 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
   contractor.voiceProfile = {
     ...(contractor.voiceProfile || {}),
     recentWin: contractor.knowledgeBase.proofProjects,
-    differentiator: contractor.knowledgeBase.warrantyAndGuarantee,
+    differentiator: contractor.knowledgeBase.signatureGuarantee,
     ctaStyle: contractor.knowledgeBase.preferredCta
   };
 
-  const wasAllUnlocked = briefing.unlockedLimit > 3;
+  const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor.isRealClient);
   briefing.cards = buildBriefingCardsForContractor(contractor);
+  briefing.schemaVersion = ENGINE_SCHEMA_VERSION;
   if (wasAllUnlocked) {
     briefing.unlockedLimit = briefing.cards.length;
     briefing.cards.forEach((c, idx) => {
@@ -4653,8 +4826,12 @@ module.exports = {
   getCentralDateString,
   normalizeTradeKey,
   doesDossierMatchTrade,
+  buildShopDossierProofByArchetype,
   buildShopDossierProofAngles,
   resolvePermitArchetype,
+  resolveOperationalBenefit,
+  resolvePermitMatrixKey,
+  PERMIT_SCOPE_MATRIX,
   resolvePermitScope,
   sanitizeContactDisplayName,
   extractCompanyShortName,

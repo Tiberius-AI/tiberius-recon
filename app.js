@@ -488,35 +488,29 @@
       stripeCta3El.href = isBundle ? STRIPE_PAYMENT_LINKS.bundle.tier3 : STRIPE_PAYMENT_LINKS.standalone.tier3;
     }
     if (stripeLabel1El) {
-      stripeLabel1El.textContent = isBundle
-        ? 'Lock In Tier 1 + Smart Site ($547/mo) →'
-        : 'Lock In Tier 1 ($297/mo) →';
+      stripeLabel1El.textContent = 'Start 7-Day Free Trial ($0 Today) →';
     }
     if (stripeLabel2El) {
-      stripeLabel2El.textContent = isBundle
-        ? 'Lock In Tier 2 + Smart Site ($847/mo) →'
-        : 'Lock In Tier 2 ($597/mo) →';
+      stripeLabel2El.textContent = 'Start 7-Day Free Trial ($0 Today) →';
     }
     if (stripeLabel3El) {
-      stripeLabel3El.textContent = isBundle
-        ? 'Claim Zip Exclusivity + Smart Site ($1,147/mo) →'
-        : 'Claim Zip Exclusivity ($897/mo) →';
+      stripeLabel3El.textContent = 'Start 7-Day Free Trial ($0 Today) →';
     }
 
     if (priceSub1El) {
       priceSub1El.textContent = isBundle
-        ? 'INCLUDES SMART SITE (+$200/MO EQUITY CREDIT)'
-        : 'STARTS WITH 7-DAY FREE TEST DRIVE (3 RECON CARDS/DAY)';
+        ? '7-DAY FREE TRIAL ($0 TODAY) • INCLUDES SMART SITE (+$200/MO EQUITY)'
+        : '7-DAY FREE TRIAL • $0.00 CHARGED TODAY • FULL ACCESS UNLOCKED';
     }
     if (priceSub2El) {
       priceSub2El.textContent = isBundle
-        ? 'INCLUDES SMART SITE (+$200/MO EQUITY CREDIT)'
-        : 'STARTS WITH 7-DAY FREE TEST DRIVE (3 RECON CARDS/DAY)';
+        ? '7-DAY FREE TRIAL ($0 TODAY) • INCLUDES SMART SITE (+$200/MO EQUITY)'
+        : '7-DAY FREE TRIAL • $0.00 CHARGED TODAY • FULL ACCESS UNLOCKED';
     }
     if (priceSub3El) {
       priceSub3El.textContent = isBundle
-        ? '100% ZIP EXCLUSIVE + SMART SITE EQUITY BUNDLE'
-        : 'LOCKS OUT DIRECT COMPETITORS IN YOUR ZIP';
+        ? '7-DAY FREE TRIAL ($0 TODAY) • 100% ZIP EXCLUSIVE + SMART SITE EQUITY'
+        : '7-DAY FREE TRIAL • $0.00 CHARGED TODAY • 100% ZIP EXCLUSIVE';
     }
 
     bundleSavingsBadges.forEach((badge) => {

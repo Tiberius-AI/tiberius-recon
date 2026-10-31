@@ -490,7 +490,7 @@
 
       const tokenParam = encodeURIComponent(data.magicToken || '');
       if ($('launch-briefing-btn')) {
-        $('launch-briefing-btn').href = `briefing.html?token=${tokenParam}`;
+        $('launch-briefing-btn').href = `briefing.html?token=${tokenParam}&unlocked=all`;
       }
       if ($('launch-inbox-btn')) {
         $('launch-inbox-btn').href = `inbox.html?token=${tokenParam}`;
@@ -558,6 +558,14 @@
         $('onb-tier-level').value = 'Tier 3: Full Territory Exclusivity';
       } else {
         $('onb-tier-level').value = params.get('tier');
+      }
+    }
+    if ($('onb-smart-site-bundle')) {
+      if (params.has('bundle')) {
+        const b = String(params.get('bundle')).toLowerCase();
+        $('onb-smart-site-bundle').checked = b === '1' || b === 'true' || b === 'yes';
+      } else if (params.has('tier')) {
+        $('onb-smart-site-bundle').checked = false;
       }
     }
   }

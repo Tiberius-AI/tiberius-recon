@@ -17,8 +17,10 @@
 const {
   resolveMetroProfile,
   getTradeTemplate,
+  normalizeTradeKey,
   resolvePermitScope,
   sanitizeContactDisplayName,
+  buildShopDossierProofByArchetype,
   buildShopDossierProofAngles,
   buildDefaultKnowledgeBaseForContractor,
   updateContractorKnowledgeBase,
@@ -493,6 +495,78 @@ async function injectLiveZeroApiCardsIntoBriefing({
 }
 
 /**
+ * Infers the canonical trade category, license/credential badge, and signature guarantee
+ * from a company's website URL, company name, and scraped HTML metadata.
+ */
+function inferShopTradeAndCredentials({
+  primaryTrade = '',
+  websiteUrl = '',
+  companyName = '',
+  pageTitle = '',
+  metaDesc = '',
+  html = ''
+} = {}) {
+  const signal = `${websiteUrl} ${companyName} ${pageTitle} ${metaDesc}`.toLowerCase();
+  const fullText = `${signal} ${String(html || '').slice(0, 12000)}`.toLowerCase();
+
+  let detectedTrade = '';
+  if (/roof|standing[- ]seam|tpo|epdm|shingle|flashing|rcat/i.test(signal)) {
+    detectedTrade = 'Roofing / Exteriors';
+  } else if (/electr|hvac|mechanical|mep|switchgear|tacla|tdlr|chiller|air conditioning|ductwork/i.test(signal)) {
+    detectedTrade = 'Electrical / HVAC';
+  } else if (/concrete|paving|flatwork|slab|tilt[- ]wall|asphalt|foundation|screed/i.test(signal)) {
+    detectedTrade = 'Commercial Concrete';
+  } else if (/fenc|pool|gate|canop|pergola|hardscape|bollard|outdoor|decking|railing/i.test(signal)) {
+    detectedTrade = 'Pools / Fencing / Custom Home';
+  } else if (/janitor|cleaning|porter|striping|sealcoat|pressure wash|facility|property services|maintenance|sanitiz/i.test(signal)) {
+    detectedTrade = 'B2B / Commercial Services';
+  }
+
+  const resolvedTrade = detectedTrade || normalizeTradeKey(primaryTrade || 'Commercial Concrete');
+
+  let crewAndLicenseBadge = 'ACI-Certified Commercial Concrete Crew';
+  let signatureGuarantee = 'laser-screed Ff/Fl flatness compliance';
+
+  if (resolvedTrade === 'Roofing / Exteriors') {
+    crewAndLicenseBadge = 'RCAT Licensed Commercial Roofer';
+    signatureGuarantee = '20-year NDL weathertightness warranties';
+  } else if (resolvedTrade === 'Electrical / HVAC') {
+    if (/electr/i.test(signal) && !/hvac|mechanical/i.test(signal)) {
+      crewAndLicenseBadge = 'TDLR Licensed Electrical Contractor';
+    } else if (/hvac|mechanical|tacla/i.test(signal) && !/electr/i.test(signal)) {
+      crewAndLicenseBadge = 'TDLR Class-A TACLA Mechanical Contractor';
+    } else {
+      crewAndLicenseBadge = 'TDLR Licensed Electrical & MEP Contractor';
+    }
+    signatureGuarantee = 'turnkey Title 24 / IECC commissioning';
+  } else if (resolvedTrade === 'Pools / Fencing / Custom Home') {
+    crewAndLicenseBadge = 'AWS-Certified Commercial Site & Perimeter Crew';
+    signatureGuarantee = 'engineered wind-load & UL-325 gate compliance';
+  } else if (resolvedTrade === 'B2B / Commercial Services') {
+    crewAndLicenseBadge = 'OSHA-Certified Commercial Turnover & Facility Crew';
+    signatureGuarantee = 'bonded day-1 CO turnover & SLA compliance';
+  } else {
+    crewAndLicenseBadge = 'ACI-Certified Commercial Concrete Crew';
+    signatureGuarantee = 'laser-screed Ff/Fl flatness compliance';
+  }
+
+  // Refine signatureGuarantee if the scraped HTML highlights a specific technical guarantee
+  if (resolvedTrade === 'Roofing / Exteriors' && /fm[- ]approved|hail|wind/i.test(fullText)) {
+    signatureGuarantee = '20-year NDL weathertightness warranties';
+  } else if (resolvedTrade === 'Commercial Concrete' && /post[- ]tension|aci[- ]302/i.test(fullText)) {
+    signatureGuarantee = 'laser-screed Ff/Fl flatness compliance';
+  } else if (resolvedTrade === 'Electrical / HVAC' && /nfpa|iecc|title 24/i.test(fullText)) {
+    signatureGuarantee = 'turnkey Title 24 / IECC commissioning';
+  }
+
+  return {
+    tradeCategory: resolvedTrade,
+    crewAndLicenseBadge,
+    signatureGuarantee
+  };
+}
+
+/**
  * Autonomously crawls a client contractor's live website (or discovers it via DuckDuckGo HTML search
  * if only companyName is provided) with ZERO API keys, extracts real business services, credentials,
  * years in business, and contact info, and builds/updates their Shop Knowledge Base in db/store.js.
@@ -510,14 +584,7 @@ async function scanClientWebsiteForKnowledgeBase({
     (briefing && store.contractors[briefing.contractorId]) ||
     store.contractors['11111111-2222-3333-4444-555555555555'];
 
-  const effectiveTrade = primaryTrade || (contractor && contractor.primaryTrade) || 'Commercial Concrete';
   const effectiveCompany = companyName || (contractor && contractor.companyName) || 'Commercial Pros';
-  const defaultKb = buildDefaultKnowledgeBaseForContractor({
-    ...(contractor || {}),
-    companyName: effectiveCompany,
-    primaryTrade: effectiveTrade,
-    websiteUrl: websiteUrl || (contractor && contractor.websiteUrl)
-  });
 
   let targetUrl = String(websiteUrl || '').trim();
   if (targetUrl && !/^https?:\/\//i.test(targetUrl)) {
@@ -536,6 +603,7 @@ async function scanClientWebsiteForKnowledgeBase({
 
   let pageTitle = '';
   let metaDesc = '';
+  let rawHtml = '';
   let extractedHeadings = [];
   let extractedYears = '';
   let extractedCerts = '';
@@ -550,6 +618,7 @@ async function scanClientWebsiteForKnowledgeBase({
     if (resp.ok) {
       pagesScanned += 1;
       const html = await resp.text();
+      rawHtml = html;
       const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
       if (titleMatch) {
         pageTitle = titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -588,12 +657,34 @@ async function scanClientWebsiteForKnowledgeBase({
       if (/aci/i.test(html)) certKeywords.push('ACI Certified');
       if (/tacla|tdlr/i.test(html)) certKeywords.push('TDLR / TACLA Licensed');
       if (certKeywords.length > 0) {
-        extractedCerts = `${certKeywords.join(' • ')} (${defaultKb.certificationsAndBonding})`;
+        extractedCerts = certKeywords.join(' • ');
       }
     }
   } catch (_err) {
     // Graceful fallback if external URL blocks or times out
   }
+
+  const inferred = inferShopTradeAndCredentials({
+    primaryTrade: primaryTrade || (contractor && contractor.primaryTrade) || 'Commercial Concrete',
+    websiteUrl: targetUrl,
+    companyName: effectiveCompany,
+    pageTitle,
+    metaDesc,
+    html: rawHtml
+  });
+
+  const effectiveTrade = inferred.tradeCategory;
+  const defaultKb = buildDefaultKnowledgeBaseForContractor({
+    ...(contractor || {}),
+    companyName: effectiveCompany,
+    primaryTrade: effectiveTrade,
+    websiteUrl: targetUrl || (contractor && contractor.websiteUrl),
+    voiceProfile: {
+      ...((contractor && contractor.voiceProfile) || {}),
+      recentWin: '',
+      differentiator: ''
+    }
+  });
 
   const mergedServices =
     extractedHeadings.length >= 2
@@ -601,28 +692,39 @@ async function scanClientWebsiteForKnowledgeBase({
       : defaultKb.coreServices;
 
   const metro = resolveMetroProfile((contractor && contractor.baseZip) || '78130');
-  const computedProofAngles = buildShopDossierProofAngles(
+  const computedProofByArchetype = buildShopDossierProofByArchetype(
     {
       ...defaultKb,
+      tradeCategory: effectiveTrade,
+      crewAndLicenseBadge: inferred.crewAndLicenseBadge,
+      signatureGuarantee: inferred.signatureGuarantee,
       coreCapabilities: mergedServices,
       coreServices: mergedServices
     },
     effectiveTrade,
     metro
   );
+  const computedProofAngles = [
+    computedProofByArchetype.groundUpShell,
+    computedProofByArchetype.commercialRetrofit,
+    computedProofByArchetype.specialtyStructural
+  ];
 
   const updatedKbPayload = {
     tradeCategory: effectiveTrade,
+    crewAndLicenseBadge: inferred.crewAndLicenseBadge,
     websiteUrl: targetUrl || defaultKb.websiteUrl,
     yearsInBusiness: extractedYears || defaultKb.yearsInBusiness,
     coreServices: mergedServices,
     coreCapabilities: mergedServices,
+    proofByArchetype: computedProofByArchetype,
     proofAngles: computedProofAngles,
-    certificationsAndBonding: extractedCerts || defaultKb.certificationsAndBonding,
-    warrantyAndGuarantee: metaDesc
-      ? `${defaultKb.warrantyAndGuarantee} • Website Note: "${metaDesc.slice(0, 110)}"`
-      : defaultKb.warrantyAndGuarantee,
-    proofProjects: defaultKb.proofProjects,
+    certificationsAndBonding: extractedCerts
+      ? `${inferred.crewAndLicenseBadge} • ${extractedCerts}`
+      : defaultKb.certificationsAndBonding,
+    signatureGuarantee: inferred.signatureGuarantee,
+    warrantyAndGuarantee: inferred.signatureGuarantee,
+    proofProjects: computedProofByArchetype.groundUpShell,
     idealJobProfile: defaultKb.idealJobProfile,
     preferredCta: defaultKb.preferredCta,
     signatureLine: defaultKb.signatureLine,

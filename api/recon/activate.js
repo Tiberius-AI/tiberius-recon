@@ -57,7 +57,7 @@ module.exports = async function handler(req, res) {
     websiteUrl: body.websiteUrl || '',
     minPermitValuation: Number(body.minPermitValuation || body.minValuation || 100000),
     accountPassword: rawPassword,
-    isRealClient: Boolean(body.isPaidOnboarding)
+    isRealClient: Boolean(body.isPaidOnboarding || body.unlockAllCards || body.stripeTrialCheckout)
   });
 
   const magicToken = activation.briefing.magicToken;
@@ -68,15 +68,22 @@ module.exports = async function handler(req, res) {
     const normalizedKb = {
       ...kbIn,
       tradeCategory: kbIn.tradeCategory || body.primaryTrade || undefined,
+      crewAndLicenseBadge: kbIn.crewAndLicenseBadge || undefined,
       coreCapabilities: kbIn.coreCapabilities || kbIn.coreServices || undefined,
       coreServices: kbIn.coreServices || kbIn.coreCapabilities || undefined,
+      proofByArchetype:
+        kbIn.proofByArchetype && typeof kbIn.proofByArchetype === 'object'
+          ? kbIn.proofByArchetype
+          : undefined,
       proofAngles: Array.isArray(kbIn.proofAngles) ? kbIn.proofAngles : undefined,
       certificationsAndBonding:
         kbIn.certificationsAndBonding || kbIn.certsAndBonding || undefined,
       proofProjects:
         kbIn.proofProjects || kbIn.recentCompletedProof || undefined,
+      signatureGuarantee:
+        kbIn.signatureGuarantee || kbIn.warrantyAndGuarantee || kbIn.uniqueGuarantee || undefined,
       warrantyAndGuarantee:
-        kbIn.warrantyAndGuarantee || kbIn.uniqueGuarantee || undefined,
+        kbIn.warrantyAndGuarantee || kbIn.signatureGuarantee || kbIn.uniqueGuarantee || undefined,
       idealJobProfile:
         kbIn.idealJobProfile || kbIn.idealProjectTypes || undefined
     };
@@ -89,13 +96,17 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // If this is a post-pay onboarding activation, unlock full daily queue immediately
-  if (body.isPaidOnboarding) {
-    processBriefingAction({
+  // If this is a post-checkout / 7-day free trial onboarding activation, unlock full daily queue immediately
+  if (body.isPaidOnboarding || body.unlockAllCards || body.stripeTrialCheckout) {
+    const unlockedRes = processBriefingAction({
       token: magicToken,
       action: 'unlock-full-queue',
       upgradeTier: body.tierLevel || activation.contractor.tierLevel
     });
+    if (unlockedRes && unlockedRes.briefing && Array.isArray(unlockedRes.briefing.cards)) {
+      activation.briefing.unlockedCount = unlockedRes.briefing.cards.filter((c) => !c.isLockedOverflow).length;
+      activation.briefing.lockedOverflowCount = unlockedRes.briefing.cards.filter((c) => c.isLockedOverflow).length;
+    }
   }
 
   if (activation.sessionToken) {

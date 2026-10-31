@@ -413,15 +413,22 @@ async function runTests() {
     assert.strictEqual(onbActivateData.issuedCredentials.loginEmail, 'mike@apexcommercialbuilders.com');
     assert.strictEqual(onbActivateData.issuedCredentials.password, 'HillCountry78666!');
     assert.strictEqual(onbActivateData.issuedCredentials.territoryPin, '78666');
+    assert.strictEqual(onbActivateData.briefing.unlockedCount, 9);
+    assert.strictEqual(onbActivateData.briefing.lockedOverflowCount, 0);
     assert.ok(onbActivateData.welcomeEmailReceipt);
     assert.ok(onbActivateData.welcomeSmsReceipt);
 
-    // Verify newly onboarded real company briefing has zero 555 demo phone numbers
+    // Verify newly onboarded real company briefing has zero 555 demo phone numbers and all 9 cards unlocked
     const onbBriefingResp = await fetch(
       `${baseUrl}/api/recon/briefing?token=${encodeURIComponent(onbActivateData.magicToken)}`
     );
     const onbBriefingData = await onbBriefingResp.json();
     assert.strictEqual(onbBriefingData.ok, true);
+    assert.strictEqual(onbBriefingData.briefing.cards.length, 9);
+    assert.ok(
+      onbBriefingData.briefing.cards.every((c) => !c.isLockedOverflow),
+      'All 9 cards must be unlocked upon Stripe 7-day trial onboarding'
+    );
     assert.ok(
       onbBriefingData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
       'Real onboarded client cards must not contain 555 demo numbers'
@@ -454,6 +461,15 @@ async function runTests() {
     console.log('[19/20] Testing Shop Dossier -> 9-Card Generation Pipeline (Greetings, Proof Rotation, Scope Matching, CTAs & ZIP/Office Polish)...');
     const kbDossier = alertBriefingData.contractor.knowledgeBase;
     assert.ok(Array.isArray(kbDossier.coreCapabilities) && kbDossier.coreCapabilities.length >= 3, 'shopDossier.coreCapabilities must be populated');
+    assert.ok(kbDossier.crewAndLicenseBadge, 'shopDossier.crewAndLicenseBadge must be populated');
+    assert.ok(kbDossier.signatureGuarantee, 'shopDossier.signatureGuarantee must be populated');
+    assert.ok(
+      kbDossier.proofByArchetype &&
+        kbDossier.proofByArchetype.groundUpShell &&
+        kbDossier.proofByArchetype.commercialRetrofit &&
+        kbDossier.proofByArchetype.specialtyStructural,
+      'shopDossier.proofByArchetype must contain groundUpShell, commercialRetrofit, and specialtyStructural'
+    );
     assert.ok(Array.isArray(kbDossier.proofAngles) && kbDossier.proofAngles.length >= 3, 'shopDossier.proofAngles must contain 3 distinct variations');
     assert.notStrictEqual(kbDossier.proofAngles[0], kbDossier.proofAngles[1]);
     assert.notStrictEqual(kbDossier.proofAngles[1], kbDossier.proofAngles[2]);
@@ -461,13 +477,43 @@ async function runTests() {
     const cards = alertBriefingData.briefing.cards;
     assert.strictEqual(cards.length, 9);
 
-    // 1. Kill the "multi-family" fallback bug across all 9 commercial cards
+    // 1. Kill the "multi-family" fallback bug and legacy hardcoded roofing string across all 9 commercial cards
     cards.forEach((c) => {
       assert.ok(
         !String(c.draftBody || '').toLowerCase().includes('multi-family roof preventative maintenance'),
         `Card ${c.cardNumber} must never output hardcoded "multi-family roof preventative maintenance"`
       );
+      assert.ok(
+        !String(c.draftBody || '').includes('in-house engineered metal roof systems, zero business disruption during install'),
+        `Card ${c.cardNumber} must never output legacy hardcoded roofing guarantee string`
+      );
     });
+
+    // Verify operationalBenefit slot in Sentence #2:
+    // Ground-Up / New Shell / Spec Industrial / New Storage / Gym (Cards 01, 02, 04, 05, 08) -> schedule/inspection milestone
+    // CapEx / Multi-Tenant / TI / Retrofit (Cards 03, 06, 07, 09) -> zero tenant or business disruption
+    const groundUpPermitIds = ['#BP-2026-06102', '#BP-2026-06245', '#BP-2026-06511', '#BP-2026-06640', '#BP-2026-07044'];
+    const retrofitPermitIds = ['#BP-2026-06388', '#BP-2026-06792', '#BP-2026-06915', '#BP-2026-07189'];
+    for (const pid of groundUpPermitIds) {
+      const matched = cards.find((c) => c.cardNumber.includes(pid));
+      assert.ok(matched, `Expected card for ${pid}`);
+      assert.ok(
+        matched.draftBody.includes("passing inspection ahead of the GC's turnover schedule"),
+        `Ground-up/shell card ${pid} must use schedule/inspection milestone in Sentence #2: ${matched.draftBody}`
+      );
+      assert.ok(
+        !matched.draftBody.includes('with zero tenant or business disruption during work'),
+        `Ground-up/shell card ${pid} must not claim zero tenant disruption on an unoccupied new build: ${matched.draftBody}`
+      );
+    }
+    for (const pid of retrofitPermitIds) {
+      const matched = cards.find((c) => c.cardNumber.includes(pid));
+      assert.ok(matched, `Expected card for ${pid}`);
+      assert.ok(
+        matched.draftBody.includes('with zero tenant or business disruption during work'),
+        `CapEx/TI/Retrofit card ${pid} must use zero tenant or business disruption in Sentence #2: ${matched.draftBody}`
+      );
+    }
 
     // 2. Verify Sentence #1 persona-aware greeting & contact sanitization on Batch B (Cards 01-09)
     // Card 01: Wayne Lott @ Lott Brothers Construction (Case A - Named GC Estimator/Precon)
@@ -525,12 +571,16 @@ async function runTests() {
     );
     assert.strictEqual(card07.cadDetails.parcelId, 'CAD-78132-6915');
 
-    // Card 08: Gymnasium (#BP-2026-07044) prioritizes structural standing-seam metal roof
+    // Card 08: Gymnasium (#BP-2026-07044) prioritizes structural standing-seam metal roof and never stuffs "self-storage"
     const card08 = cards.find((c) => c.cardNumber.includes('#BP-2026-07044'));
     assert.ok(card08, 'Card 08 (#BP-2026-07044) should be present');
     assert.ok(
       /standing-seam metal/i.test(card08.draftBody),
       `Card 08 (Gymnasium) must prioritize standing-seam metal capability: ${card08.draftBody}`
+    );
+    assert.ok(
+      !card08.draftBody.toLowerCase().includes('self-storage'),
+      `Card 08 (Municipal Gym) must never stuff "self-storage" into Sentence #2 or #3: ${card08.draftBody}`
     );
 
     // 3. Verify Sentence #2 rotates through 3 distinct proof angles when landmarkReference is blank
@@ -565,7 +615,81 @@ async function runTests() {
       'Populating NEARBY JOB LANDMARK must inject the landmark phrase into Sentence #2 across all cards'
     );
 
-    // 5. Verify Trade Calibration Pills across all 5 trades dynamically update Sentence #2 & Sentence #3 without leaking roofing or multi-family strings
+    // 5. Verify 5-Trade × 9-Permit Matrix in resolvePermitScope (Sentence #3) + 4-Slot Trade-Agnostic Sentence #2 across all 5 Trade Calibration Pills
+    const expectedScopesByTrade = {
+      'Commercial Concrete': {
+        '#BP-2026-06102': 'monolithic slab-on-grade, storefront sidewalk aprons & heavy-duty dumpster pad scope',
+        '#BP-2026-06245': 'laser-screed reinforced warehouse slab, dock leveler pits & heavy truck apron paving',
+        '#BP-2026-06388': 'commercial parking lot mill/overlay, ADA ramp retrofits & structural curb replacement',
+        '#BP-2026-06511': 'vapor-barrier climate-controlled foundation slab, grade beams & concrete drive aisles',
+        '#BP-2026-06640': 'vibration-isolated clinical slab, covered ambulance/drop-off canopy flatwork & site curbing',
+        '#BP-2026-06792': 'high-PSI automotive service bay slabs, trench drains & multi-tenant parking flatwork',
+        '#BP-2026-06915': 'interior structural slab saw-cutting, trenching pour-backs & polished concrete showroom floors',
+        '#BP-2026-07044': 'long-span recessed athletic floor slab, structural pier caps & exterior site flatwork',
+        '#BP-2026-07189': 'sloped chemical-resistant trench drain slabs, heavy fermentation tank pads & patio flatwork'
+      },
+      'Electrical / HVAC': {
+        '#BP-2026-06102': 'commercial shell 3-phase switchgear, packaged RTU installation & tenant sub-metering scope',
+        '#BP-2026-06245': '1200A industrial power distribution, high-bay LED lighting & warehouse make-up air units',
+        '#BP-2026-06388': 'multi-building high-SEER RTU replacement, exterior LED retrofit & EMS controls upgrade',
+        '#BP-2026-06511': 'climate-controlled dehumidification/HVAC package, corridor motion LEDs & low-voltage access rough-in',
+        '#BP-2026-06640': 'hospital-grade electrical rough-in, redundant clinical HVAC zoning & backup generator transfer switch',
+        '#BP-2026-06792': 'multi-tenant meter banks, automotive bay exhaust ventilation & high-output canopy lighting',
+        '#BP-2026-06915': 'exposed spiral ductwork, architectural showroom lighting & commercial panel re-work',
+        '#BP-2026-07044': 'high-volume gymnasium air handlers, high-bay impact-rated LED fixtures & fire alarm rough-in',
+        '#BP-2026-07189': 'process chiller electrical feeds, high-capacity taproom HVAC & commercial exhaust hood makeup air'
+      },
+      'Pools / Fencing / Custom Home': {
+        '#BP-2026-06102': 'architectural steel patio enclosures, decorative site bollards & commercial masonry dumpster enclosures',
+        '#BP-2026-06245': '8-foot industrial chain-link & barbed-wire perimeter security fencing, cantilever slide gates & card-reader pedestals',
+        '#BP-2026-06388': 'commercial perimeter fence replacement, tenant courtyard pergolas & automated gate operator upgrades',
+        '#BP-2026-06511': 'ornamental steel security fencing, dual keypad-controlled cantilever slide gates & perimeter bollards',
+        '#BP-2026-06640': 'healing garden shade structures, privacy screening walls & commercial site furnishings',
+        '#BP-2026-06792': 'rear service-yard security fencing, double-swing utility gates & storefront bike/patio rails',
+        '#BP-2026-06915': 'custom architectural entry canopies, exterior lounge decking & ornamental railing package',
+        '#BP-2026-07044': 'athletic complex perimeter fencing, monument sign masonry & heavy-duty pedestrian gates',
+        '#BP-2026-07189': 'custom structural steel beer-garden shade canopies, cedar/steel perimeter fencing & outdoor patio hardscaping'
+      },
+      'B2B / Commercial Services': {
+        '#BP-2026-06102': 'post-construction final clean, storefront glass detailing & parking lot striping/pressure washing',
+        '#BP-2026-06245': 'industrial warehouse floor scrubbing, dock apron striping & pre-occupancy construction turnover clean',
+        '#BP-2026-06388': '4-building exterior elastomeric facade wash, parking lot sealcoating/striping & ongoing porter contract',
+        '#BP-2026-06511': 'multi-phase post-construction debris haul-off, roll-up door detailing & drive-aisle sweeping',
+        '#BP-2026-06640': 'terminal clinical-grade post-construction sanitization, bio-clean floor prep & exterior window washing',
+        '#BP-2026-06792': 'multi-tenant buildout final clean, parking lot striping/fire-lane painting & exterior pressure washing',
+        '#BP-2026-06915': 'showroom floor polishing/waxing, interior glass partition detailing & TI turnover clean',
+        '#BP-2026-07044': 'athletic facility post-construction top-to-bottom clean, high-bay dusting & parking lot striping',
+        '#BP-2026-07189': 'hospitality turnover deep clean, exterior facade washing & ongoing commercial property maintenance'
+      },
+      'Roofing / Exteriors': {
+        '#BP-2026-06102': 'commercial shell standing-seam metal & TPO roof package, tapered insulation & custom architectural sheet metal scope',
+        '#BP-2026-06245': 'industrial standing-seam metal & high-wind TPO roof system, expansion joint flashing & perimeter coping scope',
+        '#BP-2026-06388': '4-building commercial CapEx standing-seam metal roof retrofit, elastomeric restoration & weather-tight curb flashing',
+        '#BP-2026-06511': 'engineered standing-seam metal roof envelope, climate-controlled storage deck & weather-tight trim package',
+        '#BP-2026-06640': 'clinical shell standing-seam metal & high-R TPO roof assembly, surgical rooftop MEP curb flashing & coping scope',
+        '#BP-2026-06792': 'multi-tenant commercial standing-seam metal canopy, parapet coping & high-durability TPO roof assembly',
+        '#BP-2026-06915': 'structural roof remodel, architectural standing-seam metal envelope & custom rooftop curb/flashing retrofit',
+        '#BP-2026-07044': 'long-span structural standing-seam metal roof system, high-bay thermal insulation & custom perimeter flashing scope',
+        '#BP-2026-07189': 'commercial standing-seam metal roof retrofit, architectural taproom fascia & high-thermal envelope upgrade'
+      }
+    };
+
+    const expectedBadgeByTrade = {
+      'Commercial Concrete': 'ACI-Certified Commercial Concrete Crew',
+      'Electrical / HVAC': 'TDLR Licensed Electrical & MEP Contractor',
+      'Pools / Fencing / Custom Home': 'AWS-Certified Commercial Site & Perimeter Crew',
+      'B2B / Commercial Services': 'OSHA-Certified Commercial Turnover & Facility Crew',
+      'Roofing / Exteriors': 'RCAT Licensed Commercial Roofer'
+    };
+
+    const expectedGuaranteeByTrade = {
+      'Commercial Concrete': 'laser-screed Ff/Fl flatness compliance',
+      'Electrical / HVAC': 'turnkey Title 24 / IECC commissioning',
+      'Pools / Fencing / Custom Home': 'engineered wind-load & UL-325 gate compliance',
+      'B2B / Commercial Services': 'bonded day-1 CO turnover & SLA compliance',
+      'Roofing / Exteriors': '20-year NDL weathertightness warranties'
+    };
+
     const tradePills = [
       'Commercial Concrete',
       'Electrical / HVAC',
@@ -586,19 +710,64 @@ async function runTests() {
       });
       const pillData = await pillResp.json();
       assert.strictEqual(pillData.ok, true);
+      const expectedMap = expectedScopesByTrade[pillTrade];
       pillData.briefing.cards.forEach((c) => {
         assert.ok(
           !c.draftBody.toLowerCase().includes('multi-family roof preventative maintenance'),
           `Trade ${pillTrade} must never contain multi-family roof preventative maintenance`
         );
+        assert.ok(
+          c.draftBody.includes(expectedBadgeByTrade[pillTrade]),
+          `Trade ${pillTrade} Sentence #2 must include crewAndLicenseBadge "${expectedBadgeByTrade[pillTrade]}": ${c.draftBody}`
+        );
+        assert.ok(
+          c.draftBody.includes(expectedGuaranteeByTrade[pillTrade]),
+          `Trade ${pillTrade} Sentence #2 must include signatureGuarantee "${expectedGuaranteeByTrade[pillTrade]}": ${c.draftBody}`
+        );
         if (pillTrade !== 'Roofing / Exteriors') {
           assert.ok(
-            !c.draftBody.toLowerCase().includes('60-mil mechanically attached tpo'),
-            `Non-roofing trade ${pillTrade} must not fall back to TPO roofing scope`
+            !c.draftBody.toLowerCase().includes('60-mil mechanically attached tpo') &&
+              !c.draftBody.toLowerCase().includes('20-year ndl weathertightness warranties') &&
+              !c.draftBody.toLowerCase().includes('standing-seam metal roof'),
+            `Non-roofing trade ${pillTrade} must not leak roofing terms in Sentence #2 or #3: ${c.draftBody}`
           );
         }
+        const matchedPermitId = Object.keys(expectedMap).find((pid) => c.cardNumber.includes(pid));
+        assert.ok(matchedPermitId, `Card ${c.cardNumber} should match one of the 9 New Braunfels permits`);
+        assert.ok(
+          c.draftBody.includes(expectedMap[matchedPermitId]),
+          `Trade "${pillTrade}" on ${matchedPermitId} must include exact matrix scope "${expectedMap[matchedPermitId]}", got: ${c.draftBody}`
+        );
       });
     }
+
+    // 6. Verify Onboarding Website Scraper Alignment populates tradeCategory, crewAndLicenseBadge, signatureGuarantee, proofByArchetype & coreCapabilities
+    const mepScanResp = await fetch(`${baseUrl}/api/recon/knowledge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'scan_website',
+        token: 'demo-7am-briefing',
+        websiteUrl: 'https://www.sparkcommercialelectric.com',
+        companyName: 'Spark Commercial Electrical & MEP',
+        primaryTrade: 'Electrical / HVAC'
+      })
+    });
+    const mepScanData = await mepScanResp.json();
+    assert.strictEqual(mepScanData.ok, true);
+    assert.strictEqual(mepScanData.knowledgeBase.tradeCategory, 'Electrical / HVAC');
+    assert.ok(
+      /TDLR Licensed Electrical/i.test(mepScanData.knowledgeBase.crewAndLicenseBadge),
+      `Expected TDLR Licensed Electrical badge from MEP website scan, got: ${mepScanData.knowledgeBase.crewAndLicenseBadge}`
+    );
+    assert.strictEqual(mepScanData.knowledgeBase.signatureGuarantee, 'turnkey Title 24 / IECC commissioning');
+    assert.ok(
+      mepScanData.knowledgeBase.proofByArchetype &&
+        mepScanData.knowledgeBase.proofByArchetype.groundUpShell &&
+        mepScanData.knowledgeBase.proofByArchetype.commercialRetrofit &&
+        mepScanData.knowledgeBase.proofByArchetype.specialtyStructural,
+      'Website scanner must populate proofByArchetype for all 3 archetypes'
+    );
 
     const initialCard1Contact = alertBriefingData.briefing.cards[0].contactName;
 
@@ -622,6 +791,18 @@ async function runTests() {
       rotateData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
       'Rotated real client batch must have zero 555 demo numbers'
     );
+
+    // Rotate 2 more times so A-lert Roof Systems returns to default Batch B (rotationOffset 0) for idempotent test runs
+    for (let r = 0; r < 2; r++) {
+      await fetch(`${baseUrl}/api/recon/cron-morning`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: 'recon-78130-2101s6',
+          rotateBatch: true
+        })
+      });
+    }
 
     console.log('\n✅ ALL 20 TIBERIUS RECON™ END-TO-END, SHOP DOSSIER PIPELINE, POST-PAY ONBOARDING, DAILY CARD ROTATION, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS & CONVERSATION ROOM TESTS PASSED.');
   } finally {

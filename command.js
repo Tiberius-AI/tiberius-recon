@@ -146,8 +146,8 @@
     if (kbProofInput && kb.proofProjects) {
       kbProofInput.value = kb.proofProjects;
     }
-    if (kbWarrantyInput && kb.warrantyAndGuarantee) {
-      kbWarrantyInput.value = kb.warrantyAndGuarantee;
+    if (kbWarrantyInput && (kb.signatureGuarantee || kb.warrantyAndGuarantee)) {
+      kbWarrantyInput.value = kb.signatureGuarantee || kb.warrantyAndGuarantee;
     }
     if (kbYearsInput && kb.yearsInBusiness) {
       kbYearsInput.value = kb.yearsInBusiness;
@@ -225,6 +225,9 @@
         });
         const data = await resp.json();
         if (data && data.ok && data.knowledgeBase) {
+          if (data.knowledgeBase.tradeCategory && cmdTradeSelect) {
+            cmdTradeSelect.value = data.knowledgeBase.tradeCategory;
+          }
           renderKnowledgeBase(data.knowledgeBase);
           if (kbSaveFeedback) {
             kbSaveFeedback.textContent = `✓ WEBSITE SCANNED (${data.websiteUrl}) • KNOWLEDGE BASE & 7:00 AM DRAFTS UPDATED`;
@@ -249,6 +252,7 @@
         coreServices: kbServicesInput ? kbServicesInput.value.trim() : '',
         certificationsAndBonding: kbCertsInput ? kbCertsInput.value.trim() : '',
         proofProjects: kbProofInput ? kbProofInput.value.trim() : '',
+        signatureGuarantee: kbWarrantyInput ? kbWarrantyInput.value.trim() : '',
         warrantyAndGuarantee: kbWarrantyInput ? kbWarrantyInput.value.trim() : '',
         yearsInBusiness: kbYearsInput ? kbYearsInput.value.trim() : '',
         preferredCta: kbCtaInput ? kbCtaInput.value.trim() : '',
@@ -267,6 +271,9 @@
         });
         const data = await resp.json();
         if (data && data.ok && data.knowledgeBase) {
+          if (data.knowledgeBase.tradeCategory && cmdTradeSelect) {
+            cmdTradeSelect.value = data.knowledgeBase.tradeCategory;
+          }
           renderKnowledgeBase(data.knowledgeBase);
           if (cmdDifferentiatorInput && data.knowledgeBase.warrantyAndGuarantee) {
             cmdDifferentiatorInput.value = data.knowledgeBase.warrantyAndGuarantee;

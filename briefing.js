@@ -37,6 +37,8 @@
         combinedCache.includes('multi-family roof preventative maintenance') ||
         combinedCache.includes('bidding@structurainc.com •') ||
         combinedCache.includes('Hey Estimating Team') ||
+        combinedCache.includes('in-house engineered metal roof systems, zero business disruption during install') ||
+        combinedCache.includes('self-storage & custom architectural sheet-metal package') ||
         combinedCache.includes('right here in New Braunfels off IH-35 & FM 306');
 
       if (force || savedSchema !== ENGINE_SCHEMA_VERSION || hasLegacyStrings) {
@@ -454,6 +456,27 @@
         state.availability = data.availability;
         state.sentLogs = data.sentLogs || [];
         syncFreshDossierToLocalStorage(data.contractor);
+
+        const shouldAutoUnlock =
+          urlParams.get('unlocked') === 'all' ||
+          Boolean(urlParams.get('session_id')) ||
+          Boolean(state.contractor && state.contractor.isRealClient);
+
+        const hasLockedCards =
+          Array.isArray(state.briefing.cards) &&
+          state.briefing.cards.some((c) => c.isLockedOverflow);
+
+        if (shouldAutoUnlock && hasLockedCards) {
+          await sendCardAction({
+            action: 'unlock-full-queue',
+            upgradeTier:
+              (state.contractor && state.contractor.tierLevel) ||
+              state.briefing.tierLevel ||
+              'Tier 2: Commercial Permits'
+          });
+          return;
+        }
+
         renderAll();
       }
     } catch (_err) {
