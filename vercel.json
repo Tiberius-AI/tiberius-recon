@@ -1,7 +1,7 @@
 {
   "functions": {
     "*.js": {
-      "includeFiles": "{*.html,*.css,*.js,images/**}"
+      "includeFiles": "{*.html,*.css,*.js,images/**,video/**}"
     }
   },
   "crons": [

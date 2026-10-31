@@ -59,6 +59,7 @@
   const videoPlayerCard = document.getElementById('hero-video-player-card');
   const videoPosterView = document.getElementById('hero-video-poster-view');
   const videoActiveView = document.getElementById('hero-video-active-view');
+  const heroOverviewVideo = document.getElementById('hero-overview-video');
   const videoCloseBtn = document.getElementById('hero-video-close-btn');
   const heroWatchOverviewBtn = document.getElementById('hero-watch-overview-btn');
   const walkthroughStepBadge = document.getElementById('walkthrough-step-badge');
@@ -109,14 +110,26 @@
   }
 
   function openVideoWalkthrough() {
-    if (!videoPlayerCard || !videoPosterView || !videoActiveView) return;
+    if (!videoPlayerCard || !videoPosterView) return;
+
+    if (heroOverviewVideo) {
+      videoPosterView.classList.add('hidden');
+      heroOverviewVideo.controls = true;
+      const playPromise = heroOverviewVideo.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
+      return;
+    }
+
+    if (!videoActiveView) return;
 
     const customVideoSrc = videoPlayerCard.getAttribute('data-video-src');
     if (customVideoSrc && customVideoSrc.trim() !== '') {
       videoPosterView.classList.add('hidden');
       videoActiveView.classList.remove('hidden');
       videoActiveView.innerHTML = `
-        <video src="${customVideoSrc}" controls autoplay playsinline class="w-full h-full object-cover rounded-xl"></video>
+        <video src="${customVideoSrc}" controls autoplay playsinline class="w-full h-full object-contain bg-[#050507] rounded-xl"></video>
       `;
       return;
     }
@@ -139,10 +152,21 @@
       clearInterval(walkthroughTimer);
       walkthroughTimer = null;
     }
+    if (heroOverviewVideo) {
+      heroOverviewVideo.pause();
+      heroOverviewVideo.controls = false;
+    }
     if (videoPosterView && videoActiveView) {
       videoActiveView.classList.add('hidden');
       videoPosterView.classList.remove('hidden');
     }
+  }
+
+  if (heroOverviewVideo) {
+    heroOverviewVideo.addEventListener('play', () => {
+      if (videoPosterView) videoPosterView.classList.add('hidden');
+      heroOverviewVideo.controls = true;
+    });
   }
 
   if (videoPlayerCard) {
@@ -154,6 +178,9 @@
       ) {
         return;
       }
+      if (videoPosterView && videoPosterView.classList.contains('hidden')) {
+        return;
+      }
       if (videoActiveView && !videoActiveView.classList.contains('hidden')) {
         return;
       }
@@ -162,6 +189,9 @@
 
     videoPlayerCard.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
+        if (videoPosterView && videoPosterView.classList.contains('hidden')) {
+          return;
+        }
         e.preventDefault();
         openVideoWalkthrough();
       }

@@ -57,7 +57,11 @@ const MIME_TYPES = {
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg'
 };
 
 // Explicit static file references so Vercel's Node File Tracer (@vercel/nft)
@@ -78,7 +82,9 @@ const NFT_BUNDLED_FILES = {
   '/inbox.js': path.join(__dirname, 'inbox.js'),
   '/onboarding.js': path.join(__dirname, 'onboarding.js'),
   '/images/logo4.png': path.join(__dirname, 'images', 'logo4.png'),
-  '/images/tiberius-ai.png': path.join(__dirname, 'images', 'tiberius-ai.png')
+  '/images/tiberius-ai.png': path.join(__dirname, 'images', 'tiberius-ai.png'),
+  '/images/tiberius-recon-poster.jpg': path.join(__dirname, 'images', 'tiberius-recon-poster.jpg'),
+  '/video/TIBERIUS RECON.mp4': path.join(__dirname, 'video', 'TIBERIUS RECON.mp4')
 };
 
 function createExpressStyleHelpers(req, res, parsedUrl, bodyObj) {
@@ -144,6 +150,11 @@ async function handleRequest(req, res) {
   try {
     const parsedUrl = new URL(req.url || '/', 'http://localhost');
     let pathname = parsedUrl.pathname;
+    try {
+      pathname = decodeURIComponent(pathname);
+    } catch (_e) {
+      // Keep raw pathname if malformed URI encoding
+    }
 
     // 1. Handle API routes
     if (API_ROUTES[pathname]) {
@@ -188,11 +199,62 @@ async function handleRequest(req, res) {
     }
 
     if (fs.existsSync(safeFilePath) && fs.statSync(safeFilePath).isFile()) {
+      const stat = fs.statSync(safeFilePath);
       const ext = path.extname(safeFilePath).toLowerCase();
-      const content = fs.readFileSync(safeFilePath);
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
       const noCacheExts = ['.html', '.js', '.css'];
+
+      const rangeHeader = req.headers && req.headers.range;
+      if (rangeHeader && (ext === '.mp4' || ext === '.webm' || ext === '.wav' || ext === '.mp3')) {
+        const fileSize = stat.size;
+        const match = /bytes=(\d*)-(\d*)/.exec(rangeHeader);
+        if (match) {
+          const start = match[1] ? parseInt(match[1], 10) : 0;
+          const end = match[2] ? Math.min(parseInt(match[2], 10), fileSize - 1) : fileSize - 1;
+          if (start >= fileSize || start > end) {
+            res.writeHead(416, { 'Content-Range': `bytes */${fileSize}` });
+            res.end();
+            return;
+          }
+          const chunkSize = end - start + 1;
+          res.writeHead(206, {
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunkSize,
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=3600'
+          });
+          if (req.method === 'HEAD') {
+            res.end();
+            return;
+          }
+          const stream = fs.createReadStream(safeFilePath, { start, end });
+          stream.on('error', () => res.end());
+          stream.pipe(res);
+          return;
+        }
+      }
+
+      if (ext === '.mp4' || ext === '.webm') {
+        res.writeHead(200, {
+          'Content-Type': contentType,
+          'Content-Length': stat.size,
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=3600'
+        });
+        if (req.method === 'HEAD') {
+          res.end();
+          return;
+        }
+        const stream = fs.createReadStream(safeFilePath);
+        stream.on('error', () => res.end());
+        stream.pipe(res);
+        return;
+      }
+
+      const content = fs.readFileSync(safeFilePath);
       res.writeHead(200, {
-        'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
+        'Content-Type': contentType,
         'Cache-Control': noCacheExts.includes(ext) ? 'public, max-age=0, must-revalidate' : 'public, max-age=3600'
       });
       res.end(content);
