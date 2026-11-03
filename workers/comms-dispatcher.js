@@ -514,6 +514,299 @@ async function dispatchContractorHotReplyAlertSms({
   };
 }
 
+/**
+ * Formats the 5:35 AM Pre-Trip Manifest email (Subject + HTML + Plain-Text).
+ */
+function formatPreTripEmailManifest(report = {}) {
+  const status = String(report.overallStatus || 'PASS').toUpperCase();
+  const dateLabel = String(report.timestamp || new Date().toISOString()).slice(0, 10);
+  const checks = Array.isArray(report.checks) ? report.checks : [];
+  const heals = Array.isArray(report.heals) ? report.heals : [];
+  const failures = Array.isArray(report.failures) ? report.failures : [];
+  const holdDispatch = Boolean(report.holdDispatch);
+
+  let subjectPrefix = '[🟢 PRE-TRIP PASS]';
+  if (status === 'AUTO_HEALED') {
+    subjectPrefix = '[🟡 PRE-TRIP AUTO-HEALED]';
+  } else if (status === 'RED_TAGGED') {
+    subjectPrefix = '[🔴 PRE-TRIP RED-TAG — 6:45 AM HELD]';
+  }
+
+  const subject = `${subjectPrefix} Tiberius Recon 5:30 AM Pre-Trip Manifest (${dateLabel})`;
+
+  const checkLinesText = checks
+    .map(
+      (c, i) =>
+        `  ${i + 1}. [${c.status}] ${c.name || c.id}: ${c.summary || c.details || 'OK'}`
+    )
+    .join('\n');
+
+  const healLinesText =
+    heals.length > 0
+      ? heals
+          .map(
+            (h, i) =>
+              `  - Heal #${i + 1} (${h.check || 'Tier 1'}): ${h.action || h.description || JSON.stringify(h)}`
+          )
+          .join('\n')
+      : '  - None required (0 auto-heals triggered)';
+
+  const failureLinesText =
+    failures.length > 0
+      ? failures
+          .map(
+            (f, i) =>
+              `  - Failure #${i + 1} (${f.check || 'Check'}): ${f.reason || f.description || JSON.stringify(f)}`
+          )
+          .join('\n')
+      : '  - None (0 unhealed failures)';
+
+  const repairBlockText = report.agRepairPrompt
+    ? `\n================================================================\nANTIGRAVITY REPAIR PROMPT (COPY & PASTE INTO ANTIGRAVITY):\n================================================================\n${report.agRepairPrompt}\n================================================================\n`
+    : '';
+
+  const text = [
+    `TIBERIUS RECON™ — 5:30 AM FLEET PRE-TRIP INSPECTION MANIFEST`,
+    `Timestamp: ${report.timestamp || new Date().toISOString()}`,
+    `Overall Status: ${status}`,
+    `6:45 AM Contractor Dispatch Hold: ${holdDispatch ? 'LOCKED (HELD)' : 'OPEN (ARMED)'}`,
+    ``,
+    `1. PRE-TRIP CHECK RESULTS (${checks.length} Checks):`,
+    checkLinesText || '  No checks recorded',
+    ``,
+    `2. TIER 1 AUTO-HEALS PERFORMED (${heals.length}):`,
+    healLinesText,
+    ``,
+    `3. UNHEALED FAILURES (${failures.length}):`,
+    failureLinesText,
+    repairBlockText,
+    `Admin Command Room: https://www.tiberius.ai/recon/admin`
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const badgeBg =
+    status === 'RED_TAGGED' ? '#FEE2E2' : status === 'AUTO_HEALED' ? '#FEF3C7' : '#DCFCE7';
+  const badgeColor =
+    status === 'RED_TAGGED' ? '#B91C1C' : status === 'AUTO_HEALED' ? '#B45309' : '#15803D';
+
+  const checkRowsHtml = checks
+    .map(
+      (c) => `
+      <tr>
+        <td style="padding:8px 10px;border-bottom:1px solid #E2E8F0;font-weight:700;color:#0F172A;">${c.name || c.id}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #E2E8F0;font-family:monospace;font-weight:700;color:${
+          c.status === 'RED_TAGGED' || c.status === 'FAIL'
+            ? '#B91C1C'
+            : c.status === 'AUTO_HEALED'
+            ? '#B45309'
+            : '#15803D'
+        };">${c.status}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #E2E8F0;color:#334155;">${c.summary || c.details || ''}</td>
+      </tr>`
+    )
+    .join('');
+
+  const healItemsHtml =
+    heals.length > 0
+      ? heals
+          .map(
+            (h) =>
+              `<li style="margin-bottom:6px;"><strong>${h.check || 'Tier 1 Auto-Heal'}:</strong> ${
+                h.action || h.description || JSON.stringify(h)
+              }</li>`
+          )
+          .join('')
+      : `<li>None required — queue passed cleanly without intervention.</li>`;
+
+  const repairBlockHtml = report.agRepairPrompt
+    ? `
+    <div style="margin-top:20px;padding:16px;background:#0F172A;color:#F8FAFC;border-radius:8px;border:2px solid #EF4444;">
+      <div style="font-family:monospace;font-size:11px;font-weight:700;color:#FCA5A5;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">
+        🛠️ Antigravity Repair Prompt (Copy & Paste)
+      </div>
+      <pre style="white-space:pre-wrap;word-break:break-word;font-family:monospace;font-size:12px;line-height:1.5;color:#F8FAFC;margin:0;">${String(
+        report.agRepairPrompt
+      )
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')}</pre>
+    </div>`
+    : '';
+
+  const html = `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:680px;margin:0 auto;padding:24px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;color:#0F172A;">
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #0F172A;padding-bottom:12px;margin-bottom:16px;">
+      <div>
+        <div style="font-family:monospace;font-size:11px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:0.08em;">Tiberius Recon™ • 5:30 AM Watchdog</div>
+        <h2 style="margin:4px 0 0;font-size:20px;color:#0F172A;">Daily Pre-Trip Inspection Manifest</h2>
+      </div>
+      <span style="background:${badgeBg};color:${badgeColor};padding:6px 12px;border-radius:6px;font-family:monospace;font-size:12px;font-weight:800;">
+        ${status}
+      </span>
+    </div>
+    <p style="font-size:13px;color:#334155;margin:0 0 16px;">
+      <strong>Timestamp:</strong> ${report.timestamp || new Date().toISOString()} &nbsp;|&nbsp;
+      <strong>6:45 AM Circuit Breaker:</strong> <span style="font-weight:700;color:${holdDispatch ? '#B91C1C' : '#15803D'};">${
+    holdDispatch ? 'LOCKED (6:45 AM DISPATCH HELD)' : 'OPEN (ARMED FOR 6:45 AM)'
+  }</span>
+    </p>
+    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:#475569;margin:16px 0 8px;">5-Point Inspection Checks</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
+      <thead>
+        <tr style="background:#F8FAFC;text-align:left;">
+          <th style="padding:8px 10px;border-bottom:2px solid #CBD5E1;">Check</th>
+          <th style="padding:8px 10px;border-bottom:2px solid #CBD5E1;">Status</th>
+          <th style="padding:8px 10px;border-bottom:2px solid #CBD5E1;">Details</th>
+        </tr>
+      </thead>
+      <tbody>${checkRowsHtml}</tbody>
+    </table>
+    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:#475569;margin:16px 0 8px;">Tier 1 Auto-Heals (${heals.length})</h3>
+    <ul style="font-size:13px;color:#334155;padding-left:20px;margin:0 0 16px;">${healItemsHtml}</ul>
+    ${repairBlockHtml}
+    <div style="margin-top:20px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:12px;color:#64748B;">
+      Manage Circuit Breaker & Run Live Diagnostics: <a href="https://www.tiberius.ai/recon/admin" style="color:#D97706;font-weight:700;">https://www.tiberius.ai/recon/admin</a>
+    </div>
+  </div>`;
+
+  return {
+    subject,
+    subjectPrefix,
+    text,
+    html
+  };
+}
+
+/**
+ * Dispatches the 5:35 AM Pre-Trip Manifest email via Resend (`recon@send.tiberius.ai`)
+ * to `process.env.ADMIN_ALERT_EMAIL || 'feedbackdaisy@gmail.com'`.
+ */
+async function dispatchPreTripManifestEmail({
+  report = {},
+  recipientEmail,
+  providerConfig = {},
+  simulateOnly = false
+} = {}) {
+  const adminEmail =
+    recipientEmail || process.env.ADMIN_ALERT_EMAIL || 'feedbackdaisy@gmail.com';
+  const formatted = formatPreTripEmailManifest(report);
+
+  if (simulateOnly) {
+    return {
+      ok: true,
+      provider: 'RESEND_SIMULATED',
+      from: 'Tiberius Pre-Trip Watchdog <recon@send.tiberius.ai>',
+      to: adminEmail,
+      subject: formatted.subject,
+      subjectPrefix: formatted.subjectPrefix,
+      text: formatted.text,
+      html: formatted.html,
+      dispatchedAt: new Date().toISOString()
+    };
+  }
+
+  const receipt = await dispatchViaResendEmail({
+    contractor: {
+      ownerName: 'Tiberius Pre-Trip Watchdog',
+      companyName: 'Tiberius Recon Fleet Ops',
+      workEmail: 'recon@send.tiberius.ai'
+    },
+    recipientEmail: adminEmail,
+    recipientName: 'Tiberius Fleet Admin',
+    subject: formatted.subject,
+    bodyText: formatted.text,
+    htmlBody: formatted.html,
+    token: 'admin-pretrip-manifest',
+    threadId: `pretrip-${Date.now()}`,
+    providerConfig: {
+      ...providerConfig,
+      resendFromEmail: 'recon@send.tiberius.ai'
+    }
+  });
+
+  return {
+    ...receipt,
+    fromAddress: 'recon@send.tiberius.ai',
+    to: adminEmail,
+    subject: formatted.subject,
+    subjectPrefix: formatted.subjectPrefix,
+    text: formatted.text,
+    html: formatted.html
+  };
+}
+
+/**
+ * Dispatches a concise Master Twilio Bridge SMS to the admin cell whenever Pre-Trip
+ * is `AUTO_HEALED`, `RED_TAGGED`, or manually triggered.
+ */
+async function dispatchPreTripAdminSms({
+  report = {},
+  toPhone,
+  baseUrl = 'https://www.tiberius.ai',
+  providerConfig = {},
+  simulateOnly = false
+} = {}) {
+  const cleanBase = String(baseUrl || 'https://www.tiberius.ai').replace(/\/$/, '');
+  const adminUrl = `${cleanBase}/recon/admin`;
+  const targetPhone =
+    toPhone ||
+    process.env.ADMIN_ALERT_PHONE ||
+    process.env.MASTER_ADMIN_PHONE ||
+    '(830) 481-0653';
+  const status = String(report.overallStatus || 'PASS').toUpperCase();
+  const heals = Array.isArray(report.heals) ? report.heals : [];
+  const failures = Array.isArray(report.failures) ? report.failures : [];
+
+  let bodyText = '';
+  if (status === 'RED_TAGGED') {
+    const failSummary = failures
+      .map((f) => f.check || f.reason || 'Check failed')
+      .join(', ')
+      .slice(0, 95);
+    bodyText = `🔴 [PRE-TRIP RED-TAG] 6:45 AM Dispatch HELD! Failures: ${
+      failSummary || 'Unhealed check failure'
+    }. Repair prompt ready. Open Admin: ${adminUrl}`;
+  } else if (status === 'AUTO_HEALED') {
+    const healSummary = heals
+      .map((h) => h.action || h.check || 'Auto-healed')
+      .join('; ')
+      .slice(0, 100);
+    bodyText = `🟡 [PRE-TRIP AUTO-HEALED] ${heals.length} heal(s) completed (${
+      healSummary || 'Tier 1 auto-heal'
+    }). 6:45 AM Dispatch ARMED. Open Admin: ${adminUrl}`;
+  } else {
+    bodyText = `🟢 [PRE-TRIP PASS] All 5 fleet checks green. 6:45 AM Contractor Dispatch ARMED. Open Admin: ${adminUrl}`;
+  }
+
+  if (simulateOnly) {
+    return {
+      ok: true,
+      provider: 'TWILIO_MASTER_A2P_SIMULATED',
+      alertType: 'PRETRIP_WATCHDOG_SMS',
+      toPhone: normalizePhoneE164(targetPhone),
+      smsBody: bodyText,
+      deepLinkUrl: adminUrl,
+      dispatchedAt: new Date().toISOString()
+    };
+  }
+
+  const receipt = await sendMasterTwilioSmsToContractor({
+    toPhone: targetPhone,
+    bodyText,
+    providerConfig
+  });
+
+  return {
+    ...receipt,
+    alertType: 'PRETRIP_WATCHDOG_SMS',
+    a2pCampaignModel: 'MASTER_TIBERIUS_A2P_10DLC',
+    fromMasterNumber: receipt.fromNumber,
+    smsBody: bodyText,
+    deepLinkUrl: adminUrl
+  };
+}
+
 module.exports = {
   INBOUND_REPLY_DOMAIN,
   normalizePhoneE164,
@@ -525,5 +818,8 @@ module.exports = {
   getContractorTwilioA2PState,
   sendMasterTwilioSmsToContractor,
   dispatchScoutMorningAlertSms,
-  dispatchContractorHotReplyAlertSms
+  dispatchContractorHotReplyAlertSms,
+  formatPreTripEmailManifest,
+  dispatchPreTripManifestEmail,
+  dispatchPreTripAdminSms
 };

@@ -1,10 +1,15 @@
 {
+  "outputDirectory": ".",
   "functions": {
     "*.js": {
       "includeFiles": "{*.html,*.css,*.js,images/**,video/**}"
     }
   },
   "crons": [
+    {
+      "path": "/api/recon/pretrip",
+      "schedule": "30 10 * * *"
+    },
     {
       "path": "/api/recon/cron-morning",
       "schedule": "45 11 * * *"

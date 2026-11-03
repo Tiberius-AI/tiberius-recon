@@ -11,6 +11,9 @@ const {
   recordScoutAlertLog,
   rotateRealClientBriefing,
   rotateAllRealClientBriefings,
+  getPreTripHoldDispatch,
+  getPreTripState,
+  recordPreTripAuditLog,
   ensureCloudAccountsSynced
 } = require('../../db/store');
 const { dispatchScoutMorningAlertSms } = require('../../workers/comms-dispatcher');
@@ -26,6 +29,29 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
+  }
+
+  // 6:45 AM Circuit Breaker Check: If 5:30 AM Pre-Trip Inspector Red-Tagged the queue,
+  // abort the 6:45 AM contractor blast so clients never receive duplicate or broken cards.
+  if (getPreTripHoldDispatch()) {
+    const preTripState = getPreTripState();
+    const auditEntry = recordPreTripAuditLog({
+      event: 'CIRCUIT_BREAKER_BLOCKED_645AM_DISPATCH',
+      holdDispatch: true,
+      overallStatus: preTripState.overallStatus || 'RED_TAGGED',
+      reason:
+        '6:45 AM Contractor Dispatch aborted because pretrip_hold_dispatch is locked (RED_TAGGED).'
+    });
+    return res.status(423).json({
+      ok: false,
+      blockedByCircuitBreaker: true,
+      holdDispatch: true,
+      overallStatus: preTripState.overallStatus || 'RED_TAGGED',
+      error:
+        '6:45 AM Contractor Dispatch aborted: Pre-Trip Circuit Breaker is locked (RED_TAGGED).',
+      auditEntry,
+      preTripState
+    });
   }
 
   const params = req.method === 'POST' ? req.body || {} : req.query || {};
@@ -96,6 +122,8 @@ module.exports = async function handler(req, res) {
     rotated: Boolean(rotationResult && rotationResult.rotated),
     batchLabel: rotationResult ? rotationResult.batchLabel : undefined,
     briefing: briefingBundle ? briefingBundle.briefing : undefined,
+    historyDates: briefingBundle ? briefingBundle.historyDates : undefined,
+    archivedBriefings: briefingBundle ? briefingBundle.archivedBriefings : undefined,
     scoutMorningSmsReceipt,
     dailyClientSmsDispatches: dailyClientSmsDispatches.length ? dailyClientSmsDispatches : undefined
   });

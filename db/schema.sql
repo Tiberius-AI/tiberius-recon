@@ -166,3 +166,43 @@ CREATE TABLE IF NOT EXISTS recon_cards (
 );
 
 CREATE INDEX IF NOT EXISTS idx_recon_cards_briefing_rank ON recon_cards(briefing_id, card_rank ASC);
+
+-- 8. SEEN PERMITS DEDUPLICATION LEDGER (SQLITE / PERSISTENT RUNTIME LEDGER)
+CREATE TABLE IF NOT EXISTS seen_permits (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  jurisdiction TEXT NOT NULL,
+  permit_number TEXT NOT NULL,
+  normalized_address TEXT,
+  first_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+  last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+  surfaced_briefing_date TEXT,
+  status TEXT NOT NULL DEFAULT 'surfaced', -- 'surfaced' | 'approved' | 'dismissed'
+  UNIQUE(jurisdiction, permit_number)
+);
+CREATE INDEX IF NOT EXISTS idx_seen_permits_lookup 
+  ON seen_permits(jurisdiction, permit_number);
+CREATE INDEX IF NOT EXISTS idx_seen_permits_address 
+  ON seen_permits(jurisdiction, normalized_address);
+
+-- 9. BRIEFING DEALS DAILY ARCHIVE LEDGER (PAST DAYS' CARDS HISTORY)
+CREATE TABLE IF NOT EXISTS briefing_deals (
+  id TEXT PRIMARY KEY,
+  briefing_token TEXT NOT NULL,
+  briefing_date TEXT,
+  jurisdiction TEXT NOT NULL,
+  permit_number TEXT NOT NULL,
+  normalized_address TEXT,
+  headline TEXT,
+  contact_name TEXT,
+  parcel_id TEXT,
+  card_json TEXT,
+  status TEXT NOT NULL DEFAULT 'ready',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_briefing_deals_permit
+  ON briefing_deals(jurisdiction, permit_number);
+CREATE INDEX IF NOT EXISTS idx_briefing_deals_token_date
+  ON briefing_deals(briefing_token, briefing_date);
+
+

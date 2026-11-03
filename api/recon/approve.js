@@ -44,7 +44,8 @@ module.exports = async function handler(req, res) {
     upgradeTier: body.upgradeTier,
     primaryTrade: body.primaryTrade,
     territoryZip: body.territoryZip,
-    landmarkReference: body.landmarkReference
+    landmarkReference: body.landmarkReference,
+    briefingDate: body.briefingDate || body.date
   });
 
   if (!result.ok) {

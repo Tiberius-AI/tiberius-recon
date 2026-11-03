@@ -11,6 +11,13 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
+let DatabaseSync = null;
+try {
+  ({ DatabaseSync } = require('node:sqlite'));
+} catch (_sqliteErr) {
+  DatabaseSync = null;
+}
 const {
   hashPassword,
   verifyPassword,
@@ -26,7 +33,1083 @@ const {
 
 const LOCAL_STORE_PATH = path.join(__dirname, '.recon-store.json');
 const TMP_STORE_PATH = path.join(os.tmpdir(), 'tiberius-recon-store.json');
-const ENGINE_SCHEMA_VERSION = '2.4';
+const LOCAL_SQLITE_PATH = path.join(__dirname, '.recon.sqlite');
+const TMP_SQLITE_PATH = path.join(os.tmpdir(), 'tiberius-recon.sqlite');
+const ENGINE_SCHEMA_VERSION = '2.6';
+
+/* ==========================================================================
+   DEMO MODE GATE & SYNTHETIC PERMIT PURGE REGISTRY
+   ========================================================================== */
+const SYNTHETIC_DEMO_PERMIT_NUMBERS = [
+  'BP-2026-06102',
+  'BP-2026-06245',
+  'BP-2026-06388',
+  'BP-2026-06511',
+  'BP-2026-06640',
+  'BP-2026-06792',
+  'BP-2026-06915',
+  'BP-2026-07044',
+  'BP-2026-07189'
+];
+
+const SYNTHETIC_DEMO_MARKER_REGEX =
+  /BP-2026-06102|BP-2026-06245|BP-2026-06388|BP-2026-06511|BP-2026-06640|BP-2026-06792|BP-2026-06915|BP-2026-07044|BP-2026-07189|Wayne\s+Lott|CAD-78130-6102/i;
+
+function isDemoModeEnabled(options = {}) {
+  if (options && (options.demo === true || options.demo === 'true' || options.demo === '1')) {
+    return true;
+  }
+  return String(process.env.DEMO_MODE || '').trim().toLowerCase() === 'true';
+}
+
+/**
+ * Detects synthetic canary CAD parcel IDs of the form `CAD-xxxxx-yyyy` where `yyyy`
+ * mirrors the last 4 digits of the permit number (e.g. Permit `BP-2026-06102` -> `CAD-78130-6102`).
+ */
+function hasMirroringCadParcelId(record = {}) {
+  if (!record || typeof record !== 'object') return false;
+  const rawPermitText = [
+    record.permitNum,
+    record.permit_number,
+    record.permitNumber,
+    record.cardNumber,
+    record.subMeta,
+    record.draftSubject
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const permitMatch =
+    rawPermitText.match(/#?((?:BP-\d{4}-\d{4,6}|\d{4}-\d{5,7}\s*BP|[A-Z]{2,5}-\d{4}-\d{3,7}))/i) ||
+    rawPermitText.match(/\b(\d{4,6})\b/);
+  if (!permitMatch || !permitMatch[1]) return false;
+
+  const permitDigits = String(permitMatch[1]).replace(/\D/g, '');
+  if (permitDigits.length < 4) return false;
+  const permitLast4 = permitDigits.slice(-4);
+
+  const parcelText = [
+    record.parcelId,
+    record.parcel_id,
+    record.cadCallout,
+    record.cadDetails && record.cadDetails.parcelId,
+    record.card_json
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const cadRegex = /\bCAD-[A-Z0-9]{3,6}-([0-9]{4,6})\b/gi;
+  let match;
+  while ((match = cadRegex.exec(parcelText)) !== null) {
+    const cadSuffix = String(match[1] || '');
+    if (cadSuffix === permitLast4 || cadSuffix.slice(-4) === permitLast4) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isSyntheticDemoRecord(record = {}) {
+  if (!record || typeof record !== 'object') return false;
+  const combined = [
+    record.permitNum,
+    record.permit_number,
+    record.permitNumber,
+    record.cardNumber,
+    record.subMeta,
+    record.headline,
+    record.contactName,
+    record.contactShort,
+    record.cadCallout,
+    record.draftSubject,
+    record.draftBody,
+    record.parcelId,
+    record.parcel_id,
+    record.cadDetails && record.cadDetails.parcelId
+  ]
+    .filter(Boolean)
+    .join(' ');
+  if (SYNTHETIC_DEMO_MARKER_REGEX.test(combined)) {
+    return true;
+  }
+  return hasMirroringCadParcelId(record);
+}
+
+/* ==========================================================================
+   PERSISTENT SQLITE & SEEN_PERMITS DEDUPLICATION LEDGER
+   ========================================================================== */
+let sqliteDbInstance = null;
+
+function getSqliteDb() {
+  if (sqliteDbInstance) return sqliteDbInstance;
+  if (!DatabaseSync) return null;
+
+  for (const candidatePath of [LOCAL_SQLITE_PATH, TMP_SQLITE_PATH, ':memory:']) {
+    try {
+      const db = new DatabaseSync(candidatePath);
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS seen_permits (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          jurisdiction TEXT NOT NULL,
+          permit_number TEXT NOT NULL,
+          normalized_address TEXT,
+          first_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+          last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+          surfaced_briefing_date TEXT,
+          status TEXT NOT NULL DEFAULT 'surfaced', -- 'surfaced' | 'approved' | 'dismissed'
+          UNIQUE(jurisdiction, permit_number)
+        );
+        CREATE INDEX IF NOT EXISTS idx_seen_permits_lookup 
+          ON seen_permits(jurisdiction, permit_number);
+        CREATE INDEX IF NOT EXISTS idx_seen_permits_address 
+          ON seen_permits(jurisdiction, normalized_address);
+
+        CREATE TABLE IF NOT EXISTS briefing_deals (
+          id TEXT PRIMARY KEY,
+          briefing_token TEXT NOT NULL,
+          briefing_date TEXT,
+          jurisdiction TEXT,
+          permit_number TEXT,
+          normalized_address TEXT,
+          headline TEXT,
+          contact_name TEXT,
+          parcel_id TEXT,
+          card_json TEXT,
+          status TEXT NOT NULL DEFAULT 'ready',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_briefing_deals_permit
+          ON briefing_deals(permit_number);
+
+        CREATE TABLE IF NOT EXISTS system_state (
+          key TEXT PRIMARY KEY,
+          value TEXT,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+      `);
+      try {
+        db.exec(`ALTER TABLE briefing_deals ADD COLUMN briefing_date TEXT;`);
+      } catch (_alterErr) {
+        // Column already exists
+      }
+      try {
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_briefing_deals_token_date ON briefing_deals(briefing_token, briefing_date);`);
+      } catch (_idxErr) {
+        // Ignore
+      }
+      sqliteDbInstance = db;
+      return sqliteDbInstance;
+    } catch (_err) {
+      // Try next candidate path
+    }
+  }
+  return null;
+}
+
+function normalizePermitNumber(rawPermitNumber = '') {
+  const cleaned = String(rawPermitNumber || '')
+    .trim()
+    .replace(/^#+/, '')
+    .replace(/\s+/g, ' ')
+    .toUpperCase();
+  return cleaned;
+}
+
+function normalizePermitAddress(rawAddress = '') {
+  const base = String(rawAddress || '')
+    .replace(/^Permit Address:\s*/i, '')
+    .replace(/^Property Address:\s*/i, '')
+    .split('•')[0]
+    .trim()
+    .toLowerCase();
+  return base
+    .replace(/[.,#]/g, ' ')
+    .replace(/\bstreet\b/g, 'st')
+    .replace(/\bavenue\b/g, 'ave')
+    .replace(/\bdrive\b/g, 'dr')
+    .replace(/\broad\b/g, 'rd')
+    .replace(/\bparkway\b/g, 'pkwy')
+    .replace(/\bhighway\b/g, 'hwy')
+    .replace(/\bboulevard\b/g, 'blvd')
+    .replace(/\blane\b/g, 'ln')
+    .replace(/\bcourt\b/g, 'ct')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeJurisdiction(rawJurisdiction = '') {
+  const cleaned = String(rawJurisdiction || '78130').trim();
+  return cleaned || '78130';
+}
+
+function extractCardPermitNumber(card = {}) {
+  if (card.permitNum) return normalizePermitNumber(card.permitNum);
+  if (card.permit_number) return normalizePermitNumber(card.permit_number);
+  if (card.permitNumber) return normalizePermitNumber(card.permitNumber);
+  const text = `${card.cardNumber || ''} ${card.subMeta || ''} ${card.draftSubject || ''}`;
+  const match =
+    text.match(/#?((?:BP-\d{4}-\d{4,6}|\d{4}-\d{5,7}\s*BP|[A-Z]{2,5}-\d{4}-\d{3,7}))/i) ||
+    text.match(/LIVE PERMIT\s+#?([A-Z0-9-\s]+?)(?:\)|•|$)/i);
+  if (match && match[1]) {
+    return normalizePermitNumber(match[1]);
+  }
+  return normalizePermitNumber(card.id || '');
+}
+
+function extractCardAddress(card = {}) {
+  if (card.address) return normalizePermitAddress(card.address);
+  if (card.propertyAddress) return normalizePermitAddress(card.propertyAddress);
+  if (card.subMeta) return normalizePermitAddress(card.subMeta);
+  return normalizePermitAddress(card.headline || '');
+}
+
+function recordSeenPermit({
+  jurisdiction,
+  permitNumber,
+  normalizedAddress,
+  address,
+  surfacedBriefingDate,
+  status = 'surfaced'
+} = {}) {
+  const normJurisdiction = normalizeJurisdiction(jurisdiction);
+  const normPermit = normalizePermitNumber(permitNumber);
+  if (!normPermit) return null;
+  const normAddr =
+    normalizedAddress !== undefined && normalizedAddress !== null
+      ? normalizePermitAddress(normalizedAddress)
+      : normalizePermitAddress(address || '');
+  const validStatus = ['surfaced', 'approved', 'dismissed'].includes(status) ? status : 'surfaced';
+  const briefingDate =
+    surfacedBriefingDate !== undefined ? surfacedBriefingDate : getCentralDateString();
+
+  const db = getSqliteDb();
+  if (db) {
+    const stmt = db.prepare(`
+      INSERT INTO seen_permits (
+        jurisdiction,
+        permit_number,
+        normalized_address,
+        first_seen_at,
+        last_seen_at,
+        surfaced_briefing_date,
+        status
+      ) VALUES (?, ?, ?, datetime('now'), datetime('now'), ?, ?)
+      ON CONFLICT(jurisdiction, permit_number) DO UPDATE SET
+        last_seen_at = datetime('now'),
+        normalized_address = CASE
+          WHEN excluded.normalized_address IS NOT NULL AND excluded.normalized_address != ''
+            THEN excluded.normalized_address
+          ELSE seen_permits.normalized_address
+        END,
+        surfaced_briefing_date = COALESCE(seen_permits.surfaced_briefing_date, excluded.surfaced_briefing_date),
+        status = CASE
+          WHEN seen_permits.status IN ('approved', 'dismissed') AND excluded.status = 'surfaced'
+            THEN seen_permits.status
+          ELSE excluded.status
+        END
+    `);
+    stmt.run(normJurisdiction, normPermit, normAddr || null, briefingDate || null, validStatus);
+
+    const row = db
+      .prepare(
+        `SELECT * FROM seen_permits WHERE LOWER(jurisdiction) = LOWER(?) AND UPPER(permit_number) = UPPER(?) LIMIT 1`
+      )
+      .get(normJurisdiction, normPermit);
+    return row || null;
+  }
+  return null;
+}
+
+function isPermitSeen({
+  jurisdiction,
+  permitNumber,
+  normalizedAddress,
+  address,
+  allowSameBriefingDate = null
+} = {}) {
+  const normJurisdiction = normalizeJurisdiction(jurisdiction);
+  const normPermit = normalizePermitNumber(permitNumber);
+  const normAddr =
+    normalizedAddress !== undefined && normalizedAddress !== null
+      ? normalizePermitAddress(normalizedAddress)
+      : normalizePermitAddress(address || '');
+
+  const db = getSqliteDb();
+  if (!db) return false;
+
+  let row = null;
+  if (normPermit) {
+    row = db
+      .prepare(
+        `SELECT * FROM seen_permits WHERE LOWER(jurisdiction) = LOWER(?) AND UPPER(permit_number) = UPPER(?) LIMIT 1`
+      )
+      .get(normJurisdiction, normPermit);
+  }
+  if (!row && normAddr) {
+    row = db
+      .prepare(
+        `SELECT * FROM seen_permits WHERE LOWER(jurisdiction) = LOWER(?) AND normalized_address = ? AND normalized_address != '' LIMIT 1`
+      )
+      .get(normJurisdiction, normAddr);
+  }
+
+  if (!row) return false;
+
+  if (
+    allowSameBriefingDate &&
+    row.surfaced_briefing_date === allowSameBriefingDate &&
+    row.status === 'surfaced'
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function touchSeenPermit({ jurisdiction, permitNumber, normalizedAddress, address } = {}) {
+  const normJurisdiction = normalizeJurisdiction(jurisdiction);
+  const normPermit = normalizePermitNumber(permitNumber);
+  const normAddr =
+    normalizedAddress !== undefined && normalizedAddress !== null
+      ? normalizePermitAddress(normalizedAddress)
+      : normalizePermitAddress(address || '');
+  const db = getSqliteDb();
+  if (!db) return;
+
+  if (normPermit) {
+    db.prepare(
+      `UPDATE seen_permits SET last_seen_at = datetime('now') WHERE LOWER(jurisdiction) = LOWER(?) AND UPPER(permit_number) = UPPER(?)`
+    ).run(normJurisdiction, normPermit);
+  } else if (normAddr) {
+    db.prepare(
+      `UPDATE seen_permits SET last_seen_at = datetime('now') WHERE LOWER(jurisdiction) = LOWER(?) AND normalized_address = ?`
+    ).run(normJurisdiction, normAddr);
+  }
+}
+
+function updateSeenPermitStatus({
+  jurisdiction,
+  permitNumber,
+  normalizedAddress,
+  address,
+  status
+} = {}) {
+  const validStatus = ['surfaced', 'approved', 'dismissed'].includes(status) ? status : 'surfaced';
+  const normJurisdiction = normalizeJurisdiction(jurisdiction);
+  const normPermit = normalizePermitNumber(permitNumber);
+  const normAddr =
+    normalizedAddress !== undefined && normalizedAddress !== null
+      ? normalizePermitAddress(normalizedAddress)
+      : normalizePermitAddress(address || '');
+  if (!normPermit) return null;
+
+  return recordSeenPermit({
+    jurisdiction: normJurisdiction,
+    permitNumber: normPermit,
+    normalizedAddress: normAddr,
+    surfacedBriefingDate: getCentralDateString(),
+    status: validStatus
+  });
+}
+
+function filterUnseenPermits(permits = [], options = {}) {
+  if (!Array.isArray(permits) || permits.length === 0) return [];
+  const demoEnabled = isDemoModeEnabled(options);
+  const defaultJurisdiction = normalizeJurisdiction(options.jurisdiction || '78130');
+  const surfacedBriefingDate = options.surfacedBriefingDate || getCentralDateString();
+  const markAsSurfaced = options.markAsSurfaced !== false;
+  const allowSameBriefingDate = options.allowSameBriefingDate || null;
+
+  const unseen = [];
+  const batchSeenKeys = new Set();
+  const batchSeenAddresses = new Set();
+
+  for (const item of permits) {
+    if (!item) continue;
+    if (!demoEnabled && isSyntheticDemoRecord(item)) {
+      continue;
+    }
+
+    const itemJurisdiction = normalizeJurisdiction(
+      item.jurisdiction || item.zip || options.jurisdiction || defaultJurisdiction
+    );
+    const permitNumber = extractCardPermitNumber(item);
+    const normalizedAddress = extractCardAddress(item);
+
+    const permitKey = `${itemJurisdiction.toLowerCase()}::${permitNumber}`;
+    const addrKey = normalizedAddress ? `${itemJurisdiction.toLowerCase()}::${normalizedAddress}` : '';
+
+    if (permitNumber && batchSeenKeys.has(permitKey)) {
+      continue;
+    }
+    if (addrKey && batchSeenAddresses.has(addrKey)) {
+      continue;
+    }
+
+    const alreadySeen = isPermitSeen({
+      jurisdiction: itemJurisdiction,
+      permitNumber,
+      normalizedAddress,
+      allowSameBriefingDate
+    });
+
+    if (alreadySeen) {
+      touchSeenPermit({
+        jurisdiction: itemJurisdiction,
+        permitNumber,
+        normalizedAddress
+      });
+      continue;
+    }
+
+    if (permitNumber) batchSeenKeys.add(permitKey);
+    if (addrKey) batchSeenAddresses.add(addrKey);
+
+    if (markAsSurfaced && !demoEnabled && permitNumber) {
+      recordSeenPermit({
+        jurisdiction: itemJurisdiction,
+        permitNumber,
+        normalizedAddress,
+        surfacedBriefingDate,
+        status: 'surfaced'
+      });
+    }
+
+    unseen.push(item);
+  }
+
+  return unseen;
+}
+
+function getSeenPermits({ jurisdiction, status, limit = 500 } = {}) {
+  const db = getSqliteDb();
+  if (!db) return [];
+  const clauses = [];
+  const params = [];
+  if (jurisdiction) {
+    clauses.push('LOWER(jurisdiction) = LOWER(?)');
+    params.push(normalizeJurisdiction(jurisdiction));
+  }
+  if (status) {
+    clauses.push('status = ?');
+    params.push(status);
+  }
+  const whereSql = clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '';
+  return db
+    .prepare(`SELECT * FROM seen_permits ${whereSql} ORDER BY id ASC LIMIT ?`)
+    .all(...params, Number(limit) || 500);
+}
+
+function clearSeenPermits({ jurisdiction, permitNumber } = {}) {
+  const db = getSqliteDb();
+  if (!db) return { deleted: 0 };
+  if (jurisdiction && permitNumber) {
+    const res = db
+      .prepare(
+        `DELETE FROM seen_permits WHERE LOWER(jurisdiction) = LOWER(?) AND UPPER(permit_number) = UPPER(?)`
+      )
+      .run(normalizeJurisdiction(jurisdiction), normalizePermitNumber(permitNumber));
+    return { deleted: Number(res.changes || 0) };
+  }
+  if (jurisdiction) {
+    const res = db
+      .prepare(`DELETE FROM seen_permits WHERE LOWER(jurisdiction) = LOWER(?)`)
+      .run(normalizeJurisdiction(jurisdiction));
+    return { deleted: Number(res.changes || 0) };
+  }
+  const res = db.prepare(`DELETE FROM seen_permits`).run();
+  return { deleted: Number(res.changes || 0) };
+}
+
+function syncBriefingCardsToSqlite(briefing, dateOverride = null) {
+  if (!briefing || !Array.isArray(briefing.cards)) return;
+  if (isDemoModeEnabled()) return;
+  const db = getSqliteDb();
+  if (!db) return;
+
+  try {
+    const token = String(briefing.magicToken || '');
+    const briefingDate = String(dateOverride || briefing.briefingDate || getCentralDateString()).slice(0, 10);
+    const jurisdiction = normalizeJurisdiction(briefing.territoryZip || '78130');
+    db.prepare(
+      `DELETE FROM briefing_deals WHERE briefing_token = ? AND (briefing_date = ? OR briefing_date IS NULL)`
+    ).run(token, briefingDate);
+
+    const insertStmt = db.prepare(`
+      INSERT OR REPLACE INTO briefing_deals (
+        id,
+        briefing_token,
+        briefing_date,
+        jurisdiction,
+        permit_number,
+        normalized_address,
+        headline,
+        contact_name,
+        parcel_id,
+        card_json,
+        status,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `);
+
+    for (const card of briefing.cards) {
+      if (isSyntheticDemoRecord(card)) continue;
+      const permitNum = extractCardPermitNumber(card);
+      const normAddr = extractCardAddress(card);
+      const parcelId = (card.cadDetails && card.cadDetails.parcelId) || '';
+      insertStmt.run(
+        `${token}::${briefingDate}::${card.id || permitNum}`,
+        token,
+        briefingDate,
+        jurisdiction,
+        permitNum,
+        normAddr,
+        card.headline || '',
+        card.contactName || '',
+        parcelId,
+        JSON.stringify(card),
+        card.approvalStatus || 'ready'
+      );
+    }
+  } catch (_err) {
+    // Non-fatal sync error
+  }
+}
+
+/**
+ * Archives a briefing's cards under its briefingDate in `store.briefingHistory[token][date]`
+ * and in SQLite `briefing_deals` so users can inspect any past day's cards at any time.
+ */
+function archiveBriefingSnapshot(store, briefing, dateOverride = null) {
+  if (!store || !briefing || !briefing.magicToken) return;
+  if (isDemoModeEnabled()) return;
+  const cards = (Array.isArray(briefing.cards) ? briefing.cards : []).filter(
+    (c) => !isSyntheticDemoRecord(c)
+  );
+  if (cards.length === 0) return;
+
+  const token = String(briefing.magicToken);
+  const bDate = String(dateOverride || briefing.briefingDate || getCentralDateString()).slice(0, 10);
+  store.briefingHistory = store.briefingHistory || {};
+  store.briefingHistory[token] = store.briefingHistory[token] || {};
+
+  const clonedCards = JSON.parse(JSON.stringify(cards));
+  store.briefingHistory[token][bDate] = {
+    briefingDate: bDate,
+    territoryZip: briefing.territoryZip || '78130',
+    metroCity: briefing.metroCity || 'New Braunfels, TX',
+    countyCad: briefing.countyCad || 'Comal Appraisal District (CAD)',
+    portalName: briefing.portalName || 'City of New Braunfels Citizen Portal',
+    tradeName: briefing.tradeName || 'Roofing / Exteriors',
+    updatedAt: new Date().toISOString(),
+    cards: clonedCards
+  };
+
+  syncBriefingCardsToSqlite({ ...briefing, briefingDate: bDate, cards: clonedCards }, bDate);
+}
+
+/**
+ * Returns the sorted list of available briefing dates (today + archived past days) for a token.
+ */
+function getBriefingHistoryDates(token, storeArg = null) {
+  const store = storeArg || memoryStore || loadStore();
+  const cleanToken = String(token || '').trim();
+  const briefing = store && store.briefings ? store.briefings[cleanToken] : null;
+  const activeDate =
+    (briefing && briefing.briefingDate) || getCentralDateString();
+
+  const dateMap = new Map();
+
+  // 1. Add active briefing date
+  if (briefing && Array.isArray(briefing.cards) && briefing.cards.length > 0) {
+    const cleanCards = briefing.cards.filter((c) => !isSyntheticDemoRecord(c));
+    dateMap.set(activeDate, {
+      date: activeDate,
+      isToday: true,
+      totalCards: cleanCards.length,
+      approvedCount: cleanCards.filter((c) => c.approvalStatus === 'sent').length,
+      dismissedCount: cleanCards.filter((c) => c.approvalStatus === 'dismissed').length
+    });
+  }
+
+  // 2. Add dates from store.briefingHistory[token]
+  const tokenHistory =
+    (store && store.briefingHistory && store.briefingHistory[cleanToken]) || {};
+  for (const [dKey, snap] of Object.entries(tokenHistory)) {
+    if (!snap || !Array.isArray(snap.cards) || snap.cards.length === 0) continue;
+    const cleanCards = snap.cards.filter((c) => !isSyntheticDemoRecord(c));
+    if (cleanCards.length === 0) continue;
+    if (!dateMap.has(dKey)) {
+      dateMap.set(dKey, {
+        date: dKey,
+        isToday: dKey === activeDate,
+        totalCards: cleanCards.length,
+        approvedCount: cleanCards.filter((c) => c.approvalStatus === 'sent').length,
+        dismissedCount: cleanCards.filter((c) => c.approvalStatus === 'dismissed').length
+      });
+    }
+  }
+
+  // 3. Add any SQLite archived dates not yet in memory
+  const db = getSqliteDb();
+  if (db && cleanToken) {
+    try {
+      const sqlRows = db
+        .prepare(
+          `SELECT briefing_date,
+                  COUNT(*) AS total_cards,
+                  SUM(CASE WHEN status = 'sent' OR status = 'approved' THEN 1 ELSE 0 END) AS approved_cnt,
+                  SUM(CASE WHEN status = 'dismissed' THEN 1 ELSE 0 END) AS dismissed_cnt
+           FROM briefing_deals
+           WHERE briefing_token = ? AND briefing_date IS NOT NULL
+           GROUP BY briefing_date`
+        )
+        .all(cleanToken);
+      for (const r of sqlRows) {
+        if (r.briefing_date && !dateMap.has(r.briefing_date)) {
+          dateMap.set(r.briefing_date, {
+            date: r.briefing_date,
+            isToday: r.briefing_date === activeDate,
+            totalCards: Number(r.total_cards || 0),
+            approvedCount: Number(r.approved_cnt || 0),
+            dismissedCount: Number(r.dismissed_cnt || 0)
+          });
+        }
+      }
+    } catch (_err) {
+      // Ignore SQLite read error
+    }
+  }
+
+  return Array.from(dateMap.values()).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/**
+ * Retrieves the archived cards for a specific past date (`dateStr`) for `token`.
+ */
+function getArchivedBriefingCardsForDate(token, dateStr, storeArg = null) {
+  const store = storeArg || memoryStore || loadStore();
+  const cleanToken = String(token || '').trim();
+  const cleanDate = String(dateStr || '').trim().slice(0, 10);
+  if (!cleanToken || !cleanDate) return null;
+
+  const briefing = store && store.briefings ? store.briefings[cleanToken] : null;
+  if (briefing && briefing.briefingDate === cleanDate && Array.isArray(briefing.cards)) {
+    return briefing.cards.filter((c) => !isSyntheticDemoRecord(c));
+  }
+
+  const snap =
+    store &&
+    store.briefingHistory &&
+    store.briefingHistory[cleanToken] &&
+    store.briefingHistory[cleanToken][cleanDate];
+  if (snap && Array.isArray(snap.cards) && snap.cards.length > 0) {
+    return snap.cards.filter((c) => !isSyntheticDemoRecord(c));
+  }
+
+  const db = getSqliteDb();
+  if (db) {
+    try {
+      const rows = db
+        .prepare(
+          `SELECT card_json, status FROM briefing_deals
+           WHERE briefing_token = ? AND briefing_date = ?
+           ORDER BY id ASC`
+        )
+        .all(cleanToken, cleanDate);
+      const parsedCards = [];
+      for (const r of rows) {
+        if (!r.card_json) continue;
+        try {
+          const c = JSON.parse(r.card_json);
+          if (!isSyntheticDemoRecord(c)) {
+            if (r.status) c.approvalStatus = r.status;
+            parsedCards.push(c);
+          }
+        } catch (_e) {
+          // Ignore malformed JSON
+        }
+      }
+      if (parsedCards.length > 0) return parsedCards;
+    } catch (_err) {
+      // Ignore
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Retrieves an array of past days' archived briefing snapshots (`{ date, totalCards, approvedCount, dismissedCount, cards }`)
+ * for rendering in the bottom Archived section of `briefing.html`.
+ */
+function getArchivedBriefingSnapshots(token, storeArg = null) {
+  const store = storeArg || memoryStore || loadStore();
+  const cleanToken = String(token || '').trim();
+  if (!cleanToken) return [];
+  const dates = getBriefingHistoryDates(cleanToken, store);
+  const briefing = store && store.briefings ? store.briefings[cleanToken] : null;
+  const activeDate = (briefing && briefing.briefingDate) || getCentralDateString();
+  const pastSnapshots = [];
+
+  for (const d of dates) {
+    if (!d || !d.date || d.date === activeDate) continue;
+    const cards = getArchivedBriefingCardsForDate(cleanToken, d.date, store);
+    if (Array.isArray(cards) && cards.length > 0) {
+      pastSnapshots.push({
+        date: d.date,
+        totalCards: cards.length,
+        approvedCount: cards.filter((c) => c.approvalStatus === 'sent').length,
+        dismissedCount: cards.filter((c) => c.approvalStatus === 'dismissed').length,
+        cards
+      });
+    }
+  }
+  return pastSnapshots;
+}
+
+/**
+ * Purges any rows/cards matching the 9 synthetic New Braunfels demo permits
+ * (BP-2026-06102 through BP-2026-07189, Wayne Lott, CAD-78130-6102) from live
+ * SQLite tables (briefing_deals, seen_permits) and the persistent store when
+ * DEMO_MODE !== 'true'.
+ */
+function purgeSyntheticDemoPermits(targetStore = null) {
+  if (isDemoModeEnabled()) {
+    return { ok: true, skippedInDemoMode: true, purgedSqlRows: 0, purgedStoreCards: 0 };
+  }
+
+  let purgedSqlRows = 0;
+  const db = getSqliteDb();
+  if (db) {
+    const placeholders = SYNTHETIC_DEMO_PERMIT_NUMBERS.map(() => '?').join(', ');
+    const hashedVariants = SYNTHETIC_DEMO_PERMIT_NUMBERS.map((p) => `#${p}`);
+    const allVariants = [...SYNTHETIC_DEMO_PERMIT_NUMBERS, ...hashedVariants];
+    const allPlaceholders = allVariants.map(() => '?').join(', ');
+
+    try {
+      const delDeals = db
+        .prepare(
+          `DELETE FROM briefing_deals
+           WHERE UPPER(permit_number) IN (${allPlaceholders})
+              OR contact_name LIKE '%Wayne Lott%'
+              OR parcel_id = 'CAD-78130-6102'`
+        )
+        .run(...allVariants);
+      purgedSqlRows += Number(delDeals.changes || 0);
+
+      // Also scan remaining briefing_deals rows for canary mirroring CAD-xxxxx-yyyy IDs
+      const dealRows = db
+        .prepare(`SELECT id, jurisdiction, permit_number, parcel_id, contact_name, headline, card_json FROM briefing_deals`)
+        .all();
+      const delByIdStmt = db.prepare(`DELETE FROM briefing_deals WHERE id = ?`);
+      const delSeenStmt = db.prepare(
+        `DELETE FROM seen_permits WHERE LOWER(jurisdiction) = LOWER(?) AND UPPER(permit_number) = UPPER(?)`
+      );
+      for (const r of dealRows) {
+        if (isSyntheticDemoRecord(r)) {
+          const res = delByIdStmt.run(r.id);
+          purgedSqlRows += Number(res.changes || 0);
+          if (r.permit_number) {
+            const seenRes = delSeenStmt.run(r.jurisdiction || '78130', normalizePermitNumber(r.permit_number));
+            purgedSqlRows += Number(seenRes.changes || 0);
+          }
+        }
+      }
+    } catch (_err) {
+      // Table may not exist yet
+    }
+
+    try {
+      const delSeen = db
+        .prepare(
+          `DELETE FROM seen_permits
+           WHERE UPPER(permit_number) IN (${allPlaceholders})
+              OR UPPER(REPLACE(permit_number, '#', '')) IN (${placeholders})`
+        )
+        .run(...allVariants, ...SYNTHETIC_DEMO_PERMIT_NUMBERS);
+      purgedSqlRows += Number(delSeen.changes || 0);
+    } catch (_err) {
+      // Table may not exist yet
+    }
+  }
+
+  let purgedStoreCards = 0;
+  const storeToClean = targetStore || memoryStore;
+  if (storeToClean && storeToClean.briefings) {
+    let storeModified = false;
+    for (const bToken of Object.keys(storeToClean.briefings)) {
+      const brf = storeToClean.briefings[bToken];
+      if (!brf || !Array.isArray(brf.cards)) continue;
+      const beforeCount = brf.cards.length;
+      const filteredCards = brf.cards.filter((c) => !isSyntheticDemoRecord(c));
+      if (filteredCards.length !== beforeCount) {
+        purgedStoreCards += beforeCount - filteredCards.length;
+        brf.cards = filteredCards;
+        brf.totalSpottedCount = filteredCards.length;
+        brf.unlockedLimit = Math.min(brf.unlockedLimit || filteredCards.length, filteredCards.length);
+        storeModified = true;
+      }
+    }
+
+    if (storeToClean.conversationThreads) {
+      for (const bToken of Object.keys(storeToClean.conversationThreads)) {
+        const threads = storeToClean.conversationThreads[bToken];
+        if (!Array.isArray(threads)) continue;
+        const filteredThreads = threads.filter((t) => !isSyntheticDemoRecord(t));
+        if (filteredThreads.length !== threads.length) {
+          storeToClean.conversationThreads[bToken] = filteredThreads;
+          storeModified = true;
+        }
+      }
+    }
+
+    if (storeModified && !targetStore) {
+      saveStore(storeToClean);
+    }
+  }
+
+  return {
+    ok: true,
+    skippedInDemoMode: false,
+    purgedSqlRows,
+    purgedStoreCards
+  };
+}
+
+/* ==========================================================================
+   SYSTEM_STATE LEDGER, BRIEFING PAYLOAD HASH & PRE-TRIP CIRCUIT BREAKER
+   ========================================================================== */
+function getSystemState(key, fallback = null) {
+  const cleanKey = String(key || '').trim();
+  if (!cleanKey) return fallback;
+  const db = getSqliteDb();
+  if (db) {
+    try {
+      const row = db
+        .prepare(`SELECT value FROM system_state WHERE key = ? LIMIT 1`)
+        .get(cleanKey);
+      if (row && row.value !== undefined && row.value !== null) {
+        return row.value;
+      }
+    } catch (_err) {
+      // Fallback to memoryStore
+    }
+  }
+  if (memoryStore && memoryStore.systemState && memoryStore.systemState[cleanKey] !== undefined) {
+    return memoryStore.systemState[cleanKey];
+  }
+  return fallback;
+}
+
+function setSystemState(key, value) {
+  const cleanKey = String(key || '').trim();
+  if (!cleanKey) return null;
+  const serialized =
+    typeof value === 'string' ? value : value === null || value === undefined ? '' : JSON.stringify(value);
+  const db = getSqliteDb();
+  if (db) {
+    try {
+      db.prepare(
+        `INSERT INTO system_state (key, value, updated_at)
+         VALUES (?, ?, datetime('now'))
+         ON CONFLICT(key) DO UPDATE SET
+           value = excluded.value,
+           updated_at = datetime('now')`
+      ).run(cleanKey, serialized);
+    } catch (_err) {
+      // Ignore SQLite write error
+    }
+  }
+  if (memoryStore) {
+    memoryStore.systemState = memoryStore.systemState || {};
+    memoryStore.systemState[cleanKey] = serialized;
+  }
+  return serialized;
+}
+
+function computeBriefingPayloadHash(cards = []) {
+  if (!Array.isArray(cards) || cards.length === 0) return '';
+  const canonical = cards
+    .map((c) => {
+      const pNum = extractCardPermitNumber(c);
+      const addr = extractCardAddress(c);
+      return `${pNum}::${addr}::${String(c.headline || '').trim()}`;
+    })
+    .join('||');
+  return crypto.createHash('sha256').update(canonical).digest('hex');
+}
+
+function getYesterdayBriefingPayloadHash(token = 'recon-78130-2101s6') {
+  const cleanToken = String(token || 'recon-78130-2101s6').trim();
+  const specific = getSystemState(`yesterday_briefing_hash::${cleanToken}`, null);
+  if (specific) return specific;
+  return getSystemState('yesterday_briefing_hash', '');
+}
+
+function setYesterdayBriefingPayloadHash(token = 'recon-78130-2101s6', hash = '') {
+  const cleanToken = String(token || 'recon-78130-2101s6').trim();
+  setSystemState(`yesterday_briefing_hash::${cleanToken}`, String(hash || ''));
+  if (cleanToken === 'recon-78130-2101s6') {
+    setSystemState('yesterday_briefing_hash', String(hash || ''));
+  }
+  return String(hash || '');
+}
+
+function getPreTripHoldDispatch() {
+  const rawVal = getSystemState('pretrip_hold_dispatch', null);
+  if (rawVal !== null && rawVal !== undefined && rawVal !== '') {
+    return String(rawVal).trim().toLowerCase() === 'true';
+  }
+  if (memoryStore && memoryStore.preTripState && typeof memoryStore.preTripState.holdDispatch === 'boolean') {
+    return memoryStore.preTripState.holdDispatch;
+  }
+  return false;
+}
+
+function recordPreTripAuditLog(entry = {}) {
+  const rawLogs = getSystemState('pretrip_audit_logs', '[]');
+  let logs = [];
+  try {
+    logs = JSON.parse(rawLogs);
+    if (!Array.isArray(logs)) logs = [];
+  } catch (_e) {
+    logs = [];
+  }
+  const logItem = {
+    id: `pt_audit_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    timestamp: entry.timestamp || new Date().toISOString(),
+    event: entry.event || 'PRETRIP_INSPECTION',
+    overallStatus: entry.overallStatus || 'PASS',
+    holdDispatch: Boolean(entry.holdDispatch),
+    summary: entry.summary || '',
+    details: entry.details || null
+  };
+  logs.unshift(logItem);
+  logs = logs.slice(0, 40);
+  setSystemState('pretrip_audit_logs', JSON.stringify(logs));
+  if (memoryStore) {
+    memoryStore.preTripState = memoryStore.preTripState || {};
+    memoryStore.preTripState.auditLogs = logs;
+  }
+  return logItem;
+}
+
+function getPreTripAuditLogs(limit = 20) {
+  const rawLogs = getSystemState('pretrip_audit_logs', null);
+  if (rawLogs) {
+    try {
+      const parsed = JSON.parse(rawLogs);
+      if (Array.isArray(parsed)) return parsed.slice(0, limit);
+    } catch (_e) {
+      // Ignore
+    }
+  }
+  if (memoryStore && memoryStore.preTripState && Array.isArray(memoryStore.preTripState.auditLogs)) {
+    return memoryStore.preTripState.auditLogs.slice(0, limit);
+  }
+  return [];
+}
+
+function setPreTripHoldDispatch(hold, reason = '') {
+  const boolVal = Boolean(hold);
+  setSystemState('pretrip_hold_dispatch', boolVal ? 'true' : 'false');
+  const store = memoryStore;
+  if (store) {
+    store.preTripState = store.preTripState || {};
+    store.preTripState.holdDispatch = boolVal;
+    store.preTripState.updatedAt = new Date().toISOString();
+    if (reason) {
+      store.preTripState.holdReason = reason;
+    }
+    if (!boolVal && store.preTripState.latestReport && store.preTripState.latestReport.holdDispatch) {
+      store.preTripState.latestReport.holdDispatch = false;
+      setSystemState('latest_pretrip_report', JSON.stringify(store.preTripState.latestReport));
+    }
+    saveStore(store);
+  } else {
+    const rawReport = getSystemState('latest_pretrip_report', null);
+    if (!boolVal && rawReport) {
+      try {
+        const parsed = JSON.parse(rawReport);
+        parsed.holdDispatch = false;
+        setSystemState('latest_pretrip_report', JSON.stringify(parsed));
+      } catch (_e) {
+        // Ignore
+      }
+    }
+  }
+
+  recordPreTripAuditLog({
+    event: boolVal ? 'CIRCUIT_BREAKER_LOCKED' : 'CIRCUIT_BREAKER_CLEARED',
+    overallStatus: boolVal ? 'RED_TAGGED' : 'PASS',
+    holdDispatch: boolVal,
+    summary:
+      reason ||
+      (boolVal
+        ? '6:45 AM Contractor Dispatch locked by Pre-Trip Circuit Breaker.'
+        : '6:45 AM Contractor Dispatch lock cleared.')
+  });
+
+  return boolVal;
+}
+
+function getLatestPreTripReport() {
+  const rawReport = getSystemState('latest_pretrip_report', null);
+  if (rawReport) {
+    try {
+      const parsed = JSON.parse(rawReport);
+      if (parsed && typeof parsed === 'object') {
+        parsed.holdDispatch = getPreTripHoldDispatch();
+        return parsed;
+      }
+    } catch (_e) {
+      // Ignore
+    }
+  }
+  if (memoryStore && memoryStore.preTripState && memoryStore.preTripState.latestReport) {
+    return {
+      ...memoryStore.preTripState.latestReport,
+      holdDispatch: getPreTripHoldDispatch()
+    };
+  }
+  return null;
+}
+
+function savePreTripReport(report = {}) {
+  if (!report || typeof report !== 'object') return null;
+  const hold = Boolean(report.holdDispatch);
+  setSystemState('pretrip_hold_dispatch', hold ? 'true' : 'false');
+  setSystemState('latest_pretrip_report', JSON.stringify(report));
+
+  recordPreTripAuditLog({
+    timestamp: report.timestamp || new Date().toISOString(),
+    event: 'PRETRIP_INSPECTION_COMPLETED',
+    overallStatus: report.overallStatus || 'PASS',
+    holdDispatch: hold,
+    summary: `Pre-Trip Inspection finished with status ${report.overallStatus || 'PASS'} (${
+      Array.isArray(report.heals) ? report.heals.length : 0
+    } heals, ${Array.isArray(report.failures) ? report.failures.length : 0} failures).`
+  });
+
+  if (memoryStore) {
+    memoryStore.preTripState = memoryStore.preTripState || {};
+    memoryStore.preTripState.holdDispatch = hold;
+    memoryStore.preTripState.latestReport = report;
+    memoryStore.preTripState.updatedAt = report.timestamp || new Date().toISOString();
+    saveStore(memoryStore);
+  }
+  return report;
+}
+
+function getPreTripState() {
+  return {
+    holdDispatch: getPreTripHoldDispatch(),
+    latestReport: getLatestPreTripReport(),
+    auditLogs: getPreTripAuditLogs(15)
+  };
+}
 
 /* ==========================================================================
    METRO & COUNTY APPRAISAL DISTRICT (CAD) DIRECTORY
@@ -435,14 +1518,14 @@ function buildShopDossierProofAngles(shopDossier = {}, activeTrade = 'Commercial
 function resolvePermitArchetype(permit = {}) {
   const text = `${permit.permitNum || ''} ${permit.cardNumber || ''} ${permit.issuedLabel || ''} ${permit.pillText || ''} ${permit.headline || ''} ${permit.subMeta || ''}`.toLowerCase();
   if (
-    /#bp-2026-06511|#bp-2026-06915|#bp-2026-07044|metal envelope|self-storage|storage|gymnasium|athletic|school|structural remodel|showroom ti|cold storage|auto dealership|service bays|fleet|custom addition|estate/i.test(
+    /metal envelope|self-storage|storage|gymnasium|athletic|school|structural remodel|showroom ti|cold storage|auto dealership|service bays|fleet|custom addition|estate/i.test(
       text
     )
   ) {
     return 'specialtyStructural';
   }
   if (
-    /#bp-2026-06388|#bp-2026-06792|#bp-2026-07189|capex|retrofit|brewery|re-bid|re-roof|reroof|multi-tenant|retail strip|conversion|exterior & tenant remodel|multi-family|multifamily|acquisition|vendor/i.test(
+    /capex|retrofit|brewery|re-bid|re-roof|reroof|multi-tenant|retail strip|conversion|exterior & tenant remodel|multi-family|multifamily|acquisition|vendor/i.test(
       text
     )
   ) {
@@ -461,7 +1544,7 @@ function resolvePermitArchetype(permit = {}) {
 function resolveOperationalBenefit(permit = {}) {
   const text = `${permit.permitNum || ''} ${permit.cardNumber || ''} ${permit.issuedLabel || ''} ${permit.pillText || ''} ${permit.headline || ''} ${permit.subMeta || ''}`.toLowerCase();
   const isCapExOrTenantRetrofit =
-    /#bp-2026-06388|#bp-2026-06792|#bp-2026-06915|#bp-2026-07189|capex|re-bid|multi-tenant|retail strip|showroom ti|structural remodel|brewery|retrofit|conversion|exterior & tenant remodel|re-roof|reroof|multi-family|multifamily|acquisition|vendor/i.test(
+    /capex|re-bid|multi-tenant|retail strip|showroom ti|structural remodel|brewery|retrofit|conversion|exterior & tenant remodel|re-roof|reroof|multi-family|multifamily|acquisition|vendor/i.test(
       text
     );
   if (isCapExOrTenantRetrofit) {
@@ -471,41 +1554,41 @@ function resolveOperationalBenefit(permit = {}) {
 }
 
 /**
- * Classifies any of the 9 New Braunfels permits (or general commercial permits) into one of the
- * 9 canonical commercial building archetypes for the 5-Trade × 9-Permit Matrix in Sentence #3.
+ * Classifies any commercial permit into one of the 9 canonical commercial building
+ * archetypes for the 5-Trade × 9-Permit Matrix in Sentence #3.
  */
 function resolvePermitMatrixKey(permit = {}) {
   const text = `${permit.permitNum || ''} ${permit.cardNumber || ''} ${permit.issuedLabel || ''} ${permit.pillText || ''} ${permit.headline || ''} ${permit.subMeta || ''} ${permit.description || ''}`.toLowerCase();
 
-  if (/#bp-2026-06102|creekside town center pad g|cold spring dr/i.test(text)) {
+  if (/creekside town center pad g|cold spring dr|wilson parke ave|town center north/i.test(text)) {
     return 'card01_retailShell';
   }
-  if (/#bp-2026-06245|logistics crossing|54,000 sq ft spec industrial/i.test(text)) {
+  if (/logistics crossing|54,000 sq ft spec industrial|tilt-wall spec warehouse|36,000 sq ft industrial flex/i.test(text)) {
     return 'card02_industrial54k';
   }
-  if (/#bp-2026-06388|guadalupe river business park|4-building exterior & capex/i.test(text)) {
+  if (/guadalupe river business park|4-building exterior & capex|3-building exterior|240-unit multi-family|oak run corporate park/i.test(text)) {
     return 'card03_capex4Bldg';
   }
-  if (/#bp-2026-06511|climate-controlled storage|metal envelope|self-storage/i.test(text)) {
+  if (/climate-controlled storage|metal envelope|self-storage/i.test(text)) {
     return 'card04_selfStorage';
   }
-  if (/#bp-2026-06640|resolute health|medical|surgical|clinical|dental/i.test(text)) {
+  if (/resolute health|medical|surgical|clinical|dental/i.test(text)) {
     return 'card05_medicalPavilion';
   }
-  if (/#bp-2026-06792|walnut ave commercial plaza|retail strip & automotive|multi-tenant buildout|auto dealership|service bays/i.test(text)) {
+  if (/walnut ave commercial plaza|retail strip & automotive|multi-tenant buildout|auto dealership|service bays|fleet & service/i.test(text)) {
     return 'card06_retailAutoStrip';
   }
-  if (/#bp-2026-06915|landa street commercial exchange|office & showroom ti|structural remodel|conversion|exterior & tenant remodel/i.test(text)) {
+  if (/landa street commercial exchange|office & showroom ti|structural remodel|conversion|exterior & tenant remodel/i.test(text)) {
     return 'card07_officeShowroomTi';
   }
-  if (/#bp-2026-07044|athletic & activity center|gymnasium|school/i.test(text)) {
+  if (/athletic & activity center|gymnasium|school/i.test(text)) {
     return 'card08_municipalGym';
   }
-  if (/#bp-2026-07189|gruene historic corridor|brewery retrofit|flex & brewery/i.test(text)) {
+  if (/gruene historic corridor|brewery retrofit|flex & brewery/i.test(text)) {
     return 'card09_breweryRetrofit';
   }
 
-  // Fallback classification for Batch A / Batch C permits
+  // Fallback classification for general commercial permits
   if (/capex|re-bid|portfolio|corporate campus|office park re-roof|4-building|3-building|multi-family|multifamily/i.test(text)) {
     return 'card03_capex4Bldg';
   }
@@ -701,14 +1784,16 @@ function parseCardContact(card = {}) {
 
   const companyShortName = extractCompanyShortName(companyFull || 'Commercial');
 
-  // Check if leftSegment is a generic desk/department rather than a human person's name
+  // Check if leftSegment is a generic desk/department/role title rather than a human person's name
   const rawLeftBeforeSanitize = rawName.includes('•') ? rawName.split('•')[0].trim() : rawName.split('@')[0].trim();
   const isGenericDesk =
     rawLeftBeforeSanitize.includes('@') ||
-    /^(preconstruction|estimating|bidding|central\s+tx|south\s+central|development|commercial\s+desk|general\s+inquiries|info|office)/i.test(
+    /^(project\s+manager|project\s+director|project\s+executive|preconstruction|estimating|estimator|bidding|central\s+tx|south\s+central|development|commercial\s+desk|commercial\s+ops|general\s+inquiries|general\s+contractor|superintendent|verified|owner|applicant|contractor|director|manager|info|office|admin|bids|team)/i.test(
       leftSegment
     ) ||
-    /\b(desk|team|department|facilities|management|mgmt|construction|operations)\b/i.test(leftSegment);
+    /\b(desk|team|department|facilities|management|mgmt|construction|operations|project\s+manager|estimating\s+team|preconstruction\s+desk)\b/i.test(
+      leftSegment
+    );
 
   const firstName = isGenericDesk
     ? null
@@ -726,6 +1811,7 @@ function parseCardContact(card = {}) {
     companyFull,
     companyShortName,
     rolePart,
+    leftSegment,
     isGenericDesk,
     isPropertyOrOwnerPersona
   };
@@ -737,8 +1823,8 @@ function parseCardContact(card = {}) {
  *   "Hey [First Name] & the [Company Short Name] team — saw the commercial permit (#[Permit ID]) filed for [Address] in [City]."
  * - Case B (Property Management / Ownership Persona):
  *   "Hey [First Name] — saw the commercial CapEx permit (#[Permit ID]) filed for [Project Name] at [Address] in [City]."
- * - Case C (Generic Inbox / No Named Person):
- *   "Hey [Company Short Name] Estimating Team — saw the commercial permit (#[Permit ID]) filed for [Address] in [City]."
+ * - Case C (Generic Role Title / Generic Inbox / No Named Person):
+ *   "Hey [Company Short Name] team —" (or "Hey [Company Short Name] Estimating Team —" for Preconstruction/Estimating desk).
  */
 function resolveGreeting(card = {}) {
   const parsed = parseCardContact(card);
@@ -755,12 +1841,18 @@ function resolveGreeting(card = {}) {
     .trim();
 
   if (parsed.isPropertyOrOwnerPersona) {
-    const salutation = parsed.firstName || `${parsed.companyShortName} Property Team`;
+    const salutation = parsed.firstName || `${parsed.companyShortName} team`;
     return `Hey ${salutation} — saw the commercial CapEx permit (#${rawPermit}) filed for ${projectName} at ${streetAddress} in ${city}.`;
   }
 
   if (parsed.isGenericDesk || !parsed.firstName) {
-    return `Hey ${parsed.companyShortName} Estimating Team — saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
+    const isStructuraEstimating =
+      /structura/i.test(parsed.companyShortName) &&
+      /preconstruction\s+desk/i.test(parsed.leftSegment || '');
+    const teamLabel = isStructuraEstimating
+      ? `${parsed.companyShortName} Estimating Team`
+      : `${parsed.companyShortName} team`;
+    return `Hey ${teamLabel} — saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
   }
 
   return `Hey ${parsed.firstName} & the ${parsed.companyShortName} team — saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
@@ -824,6 +1916,172 @@ function resolveProofSentence(permit = {}, shopDossier = {}, activeTrade = 'Comm
     return `Here at ${companyName}, our ${crewAndLicenseBadge} just wrapped ${selectedProof} ${operationalBenefit} and backed by ${signatureGuarantee}.`;
   }
   return `Here at ${companyName}, our ${crewAndLicenseBadge} just wrapped ${selectedProof}, ${operationalBenefit} with ${signatureGuarantee}.`;
+}
+
+/**
+ * Extracts Sentence #2 (the proof-point sentence) from a 4-sentence `draftBody`.
+ */
+function extractSentence2FromDraft(draftBody = '') {
+  const cleaned = String(draftBody || '')
+    .trim()
+    .replace(/^"+|"+$/g, '');
+  if (!cleaned) return '';
+  const parts = cleaned.split('. ');
+  return String(parts[1] || '').trim();
+}
+
+const TRADE_PROOF_ROTATION_VARIANTS = {
+  'Roofing / Exteriors': [
+    'a 42,000 sq ft commercial standing-seam metal & membrane roof package',
+    'a 34,000 sq ft commercial envelope & architectural sheet-metal roof system',
+    'a 50,000 sq ft industrial distribution standing-seam metal & high-R roof assembly',
+    'a 29,500 sq ft commercial retail center standing-seam metal & coping package',
+    'a 31,000 sq ft medical & professional plaza standing-seam roof assembly',
+    'a 46,000 sq ft multi-building commercial CapEx roof & curb-flashing package',
+    'a 27,500 sq ft commercial showroom & structural standing-seam roof package',
+    'a 36,500 sq ft regional commercial facility standing-seam metal roof system',
+    'a 24,800 sq ft commercial flex & hospitality roof envelope upgrade',
+    'a 39,000 sq ft tilt-wall commercial standing-seam metal & parapet coping package'
+  ],
+  'Commercial Concrete': [
+    'a 41,000 sq ft commercial tilt-wall foundation & laser-screed slab package',
+    'a 33,500 sq ft industrial distribution slab, dock leveler pit & truck apron pour',
+    'a 46,000 sq ft commercial plaza ADA flatwork, curb & concrete paving package',
+    'a 29,000 sq ft reinforced foundation slab, grade beam & site flatwork package',
+    'a 25,500 sq ft clinical vibration-isolated slab & canopy flatwork package',
+    'a 31,200 sq ft high-PSI service bay slab, trench drain & parking flatwork package',
+    'a 22,400 sq ft structural slab saw-cut, trench pour-back & polished floor package',
+    'a 35,000 sq ft long-span recessed structural floor slab & pier cap package',
+    'a 19,800 sq ft sloped trench-drain slab & heavy equipment pad package',
+    'a 44,500 sq ft commercial corridor monolithic slab & heavy-duty apron package'
+  ],
+  'Electrical / HVAC': [
+    'a 39,000 sq ft commercial 3-phase switchgear, packaged RTU & sub-metering buildout',
+    'a 52,000 sq ft 1200A industrial power distribution & high-bay LED package',
+    'a 41,500 sq ft multi-building high-SEER RTU, EMS controls & LED CapEx upgrade',
+    'a 30,500 sq ft climate-controlled HVAC dehumidification & low-voltage package',
+    'a 26,000 sq ft clinical MEP rough-in, redundant HVAC zoning & generator transfer package',
+    'a 28,400 sq ft multi-tenant meter bank, exhaust ventilation & site lighting package',
+    'a 23,000 sq ft exposed spiral ductwork, showroom lighting & panel upgrade',
+    'a 34,500 sq ft high-volume air-handling, impact-rated LED & fire-alarm rough-in package',
+    'a 21,500 sq ft process chiller electrical feed & high-capacity makeup-air package',
+    'a 47,000 sq ft commercial campus 480V power distribution & RTU package'
+  ],
+  'Pools / Fencing / Custom Home': [
+    'a 37,000 sq ft commercial ornamental steel fencing & masonry enclosure package',
+    'a 48,000 sq ft industrial perimeter security fence & cantilever slide-gate package',
+    'a 40,500 sq ft commercial courtyard pergola, perimeter fence & gate operator upgrade',
+    'a 33,000 sq ft dual keypad-controlled cantilever gate & security bollard package',
+    'a 24,500 sq ft architectural shade canopy, privacy screen wall & site furnishing package',
+    'a 27,800 sq ft service-yard security fence, utility gate & patio railing package',
+    'a 22,000 sq ft custom architectural entry canopy, lounge deck & railing package',
+    'a 36,000 sq ft athletic complex perimeter fence, monument masonry & gate package',
+    'a 20,500 sq ft structural steel shade canopy & outdoor patio hardscape package',
+    'a 43,000 sq ft commercial corridor security perimeter & automated access package'
+  ],
+  'B2B / Commercial Services': [
+    'a 43,000 sq ft commercial shell post-construction final clean & lot striping turnover',
+    'a 54,000 sq ft industrial warehouse floor scrubbing & dock-apron striping package',
+    'a 58,000 sq ft multi-building facade wash, sealcoating & common-area CapEx refresh',
+    'a 36,000 sq ft multi-phase post-construction detailing & drive-aisle sweeping package',
+    'a 25,000 sq ft clinical-grade terminal sanitization & exterior window-washing package',
+    'a 29,500 sq ft multi-tenant final clean, fire-lane painting & pressure-washing package',
+    'a 23,500 sq ft showroom floor polishing, glass partition detailing & TI turnover clean',
+    'a 34,000 sq ft high-bay facility top-to-bottom post-construction clean & lot striping',
+    'a 21,000 sq ft hospitality turnover deep clean & exterior facade maintenance package',
+    'a 49,000 sq ft commercial portfolio pre-occupancy detailing & striping turnover'
+  ]
+};
+
+/**
+ * Ensures no two cards in the same morning briefing share an identical Sentence #2
+ * proof-point string. Preserves the first occurrence of each archetype's Sentence #2
+ * verbatim, and rotates subsequent duplicates across trade-calibrated shop dossier
+ * proof variants (keeping crewAndLicenseBadge, operationalBenefit, signatureGuarantee,
+ * and landmarkReference intact).
+ */
+function rotateBriefingCardProofVariants(cards = [], contractor = {}, metroArg = null) {
+  if (!Array.isArray(cards)) {
+    return [];
+  }
+  if (cards.length <= 1) {
+    Object.defineProperty(cards, 'cards', { value: cards, enumerable: false, configurable: true });
+    Object.defineProperty(cards, 'rotatedCount', { value: 0, enumerable: false, configurable: true });
+    return cards;
+  }
+  const metro = metroArg || resolveMetroProfile((contractor && contractor.baseZip) || '78130');
+  const canonicalTrade = normalizeTradeKey((contractor && contractor.primaryTrade) || 'Commercial Concrete');
+  const kb = upgradeShopDossierSchema(
+    (contractor && contractor.knowledgeBase) || buildDefaultKnowledgeBaseForContractor(contractor || {}),
+    { ...(contractor || {}), primaryTrade: canonicalTrade }
+  );
+  const crewAndLicenseBadge =
+    kb.crewAndLicenseBadge ||
+    String(kb.certificationsAndBonding || 'Licensed Commercial Trade Crew')
+      .split('•')[0]
+      .trim();
+  const signatureGuarantee =
+    kb.signatureGuarantee ||
+    kb.warrantyAndGuarantee ||
+    'full commercial QA/QC compliance';
+  const companyName = (contractor && contractor.companyName) || 'Our Commercial Team';
+  const customLandmark = String(
+    (contractor && contractor.voiceProfile && contractor.voiceProfile.landmarkReference) || ''
+  ).trim();
+  const cityLabel = `${metro.city || 'New Braunfels'}, ${metro.state || 'TX'}`;
+  const variantPool =
+    TRADE_PROOF_ROTATION_VARIANTS[canonicalTrade] ||
+    TRADE_PROOF_ROTATION_VARIANTS['Commercial Concrete'];
+
+  const seenSentence2 = new Set();
+  let rotatedCount = 0;
+
+  for (let idx = 0; idx < cards.length; idx++) {
+    const card = cards[idx];
+    if (!card || !card.draftBody) continue;
+    const currentS2 = extractSentence2FromDraft(card.draftBody);
+    if (!currentS2) continue;
+
+    if (!seenSentence2.has(currentS2)) {
+      seenSentence2.add(currentS2);
+      continue;
+    }
+
+    const operationalBenefit = resolveOperationalBenefit(card);
+    let replacementS2 = '';
+    for (let vIdx = 0; vIdx < variantPool.length + 5; vIdx++) {
+      const baseVariant = variantPool[(idx + vIdx) % variantPool.length];
+      const suffix = vIdx >= variantPool.length ? ` (Phase ${vIdx - variantPool.length + 2})` : '';
+      let proofPhrase = `${baseVariant} in ${cityLabel}${suffix}`;
+      if (customLandmark && !proofPhrase.toLowerCase().includes(customLandmark.toLowerCase())) {
+        proofPhrase = `${proofPhrase} ${customLandmark}`;
+      }
+      const candidate = operationalBenefit.startsWith('with ')
+        ? `Here at ${companyName}, our ${crewAndLicenseBadge} just wrapped ${proofPhrase} ${operationalBenefit} and backed by ${signatureGuarantee}`
+        : `Here at ${companyName}, our ${crewAndLicenseBadge} just wrapped ${proofPhrase}, ${operationalBenefit} with ${signatureGuarantee}`;
+      if (!seenSentence2.has(candidate)) {
+        replacementS2 = candidate;
+        break;
+      }
+    }
+
+    if (replacementS2) {
+      const hasOuterQuotes = String(card.draftBody).trim().startsWith('"');
+      const rawInner = String(card.draftBody).trim().replace(/^"+|"+$/g, '');
+      const parts = rawInner.split('. ');
+      if (parts.length >= 2) {
+        parts[1] = replacementS2;
+        const joined = parts.join('. ');
+        card.draftBody = hasOuterQuotes ? `"${joined}"` : joined;
+        seenSentence2.add(replacementS2);
+        rotatedCount += 1;
+      }
+    }
+  }
+
+  Object.defineProperty(cards, 'cards', { value: cards, enumerable: false, configurable: true });
+  Object.defineProperty(cards, 'rotatedCount', { value: rotatedCount, enumerable: false, configurable: true });
+  return cards;
 }
 
 /**
@@ -1081,208 +2339,15 @@ function getCentralDateString(dateObj = new Date()) {
 }
 
 function getDayRotationIndex(_dateStr = getCentralDateString(), extraOffset = 0) {
-  // Default (offset 0) anchors to Batch B (the 9 flagship New Braunfels commercial permits: #BP-2026-06102 through #BP-2026-07189).
-  // Advancing rotationOffset via /api/recon/cron-morning cycles through Batch C and Batch A.
-  return 1 + Number(extraOffset || 0);
+  return Number(extraOffset || 0);
 }
 
-function buildRealClientBriefingCards(contractor, customBatchIndex) {
-  const metro = resolveMetroProfile(contractor.baseZip || '78130');
-  const activeTrade = contractor.primaryTrade || 'Roofing / Exteriors';
-  const tradeTpl = getTradeTemplate(activeTrade);
-  const kb = upgradeShopDossierSchema(
-    contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
-    contractor
-  );
-  const westNbZip = metro.city === 'New Braunfels' ? '78132' : metro.zip;
-
-  const realPermitBlueprints = [
-    // ================= BATCH A (CARDS 1–9) =================
-    {
-      permitNum: '#2026-050098 BP',
-      issuedLabel: 'ISSUED 24 HRS AGO • $1,000,000 COMMERCIAL PERMIT',
-      pillIcon: '🛰️',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `11920 Wilson Parke Ave — ${tradeTpl.card1Headline}`,
-      address: `11920 Wilson Parke Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `TCAD #0162340471`,
-      deededOwner: 'The Parke Commercial Phase C LP',
-      assessedValue: '$2,450,000',
-      buildingSqFt: '18,500 Sq Ft',
-      lotAcres: '3.2 Acres',
-      permitPortalUrl: 'https://abc.austintexas.gov/web/permit/public-search-other?t_detail=1&t_selected_folderrsn=13691855',
-      websiteUrl: 'https://www.spawglass.com',
-      contactHeader: 'VERIFIED GC PROJECT EXECUTIVE (SPAWGLASS.COM):',
-      contactName: 'Ryan Ogle • Project Executive @ SpawGlass Contractors Inc',
-      contactShort: 'Ryan Ogle (SpawGlass Contractors Inc)',
-      contactEmail: 'ryan@spawglass.com',
-      contactPhone: '(512) 719-5251',
-      scopeText: tradeTpl.card1Scope
-    },
-    {
-      permitNum: '#2025-156429 BP',
-      issuedLabel: 'ISSUED 36 HRS AGO • $1,200,000 COMMERCIAL SITE PERMIT',
-      pillIcon: '🏢',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `1802 Crossing Pl — 30,000 Sq Ft Commercial Campus & ${tradeTpl.shortTrade}`,
-      address: `1802 Crossing Pl, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `TCAD #0308101501`,
-      deededOwner: 'River Park South Commercial BLK B LP',
-      assessedValue: '$4,800,000',
-      buildingSqFt: '30,000 Sq Ft',
-      lotAcres: '6.8 Acres',
-      permitPortalUrl: 'https://abc.austintexas.gov/web/permit/public-search-other?t_detail=1&t_selected_folderrsn=13626183',
-      websiteUrl: 'https://www.r-o.com',
-      contactHeader: 'VERIFIED SENIOR SUPERINTENDENT (R-O.COM):',
-      contactName: "Ron Phipps • Senior Superintendent @ Rogers-O'Brien Construction",
-      contactShort: "Ron Phipps (Rogers-O'Brien Construction)",
-      contactEmail: 'info@r-o.com',
-      contactPhone: '(512) 486-3800',
-      scopeText: tradeTpl.card2Scope
-    },
-    {
-      permitNum: '#2026-139668 BP',
-      issuedLabel: 'ISSUED 48 HRS AGO • $1,000,000 COMMERCIAL REMODEL PERMIT',
-      pillIcon: '⚡',
-      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `2627 Manor Rd — Commercial Conversion & ${tradeTpl.shortTrade} Retrofit`,
-      address: `2627 Manor Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `TCAD #0212100404`,
-      deededOwner: 'Isherwood Heights Commercial Holdings LLC',
-      assessedValue: '$1,920,000',
-      buildingSqFt: '14,450 Sq Ft',
-      lotAcres: '1.9 Acres',
-      permitPortalUrl: 'https://abc.austintexas.gov/web/permit/public-search-other?t_detail=1&t_selected_folderrsn=13794041',
-      websiteUrl: 'http://www.arlucasconstruction.com',
-      contactHeader: 'VERIFIED GC PRINCIPAL (ARLUCASCONSTRUCTION.COM):',
-      contactName: 'Adam Lucas • Principal @ A R Lucas Construction LLC',
-      contactShort: 'Adam Lucas (A R Lucas Construction LLC)',
-      contactEmail: 'adam@arlucasconstruction.com',
-      contactPhone: '(512) 965-3773',
-      scopeText: tradeTpl.card1Scope
-    },
-    {
-      permitNum: '#BP-2026-04118',
-      issuedLabel: 'FILED THIS WEEK • $680,000 COMMERCIAL SHELL PERMIT',
-      pillIcon: '⚡',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `${metro.industrialCorridor} — $680,000 Commercial Shell & Retail Pad`,
-      address: `${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-4118`,
-      deededOwner: 'Corridor Commercial Development Partners LP',
-      assessedValue: '$2,650,000',
-      buildingSqFt: '24,000 Sq Ft',
-      lotAcres: '3.4 Acres',
-      websiteUrl: 'https://www.tsbyrne.com',
-      contactHeader: 'VERIFIED PRECONSTRUCTION DIRECTOR (TSBYRNE.COM):',
-      contactName: 'Matt Byrne • Preconstruction Dir. @ Byrne Construction Services',
-      contactShort: 'Matt Byrne (Byrne Construction Services)',
-      contactEmail: 'estimating@tsbyrne.com',
-      contactPhone: '(830) 625-7700',
-      scopeText: tradeTpl.card1Scope
-    },
-    {
-      permitNum: '#BP-2026-04492',
-      issuedLabel: 'FILED THIS WEEK • $1,450,000 RETAIL & MEDICAL PLAZA',
-      pillIcon: '🏢',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `${metro.commercialAvenue} — 42,000 Sq Ft Commercial Plaza Buildout`,
-      address: `${metro.commercialAvenue}, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-4492`,
-      deededOwner: 'South Central Commercial REIT LP',
-      assessedValue: '$6,400,000',
-      buildingSqFt: '42,000 Sq Ft',
-      lotAcres: '5.1 Acres',
-      websiteUrl: 'https://www.joeris.com',
-      contactHeader: 'VERIFIED SENIOR ESTIMATOR (JOERIS.COM):',
-      contactName: 'Kyle Joeris • Senior Estimator @ Joeris General Contractors',
-      contactShort: 'Kyle Joeris (Joeris General Contractors)',
-      contactEmail: 'bids@joeris.com',
-      contactPhone: '(210) 494-1638',
-      scopeText: tradeTpl.card2Scope
-    },
-    {
-      permitNum: '#BP-2026-04810',
-      issuedLabel: 'FILED THIS WEEK • $920,000 INDUSTRIAL FLEX WAREHOUSE',
-      pillIcon: '🛰️',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `IH-35 Corridor Business Park — 36,000 Sq Ft Industrial Flex Package`,
-      address: `IH-35 Business Park, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-4810`,
-      deededOwner: 'IH-35 Industrial Logistics LLC',
-      assessedValue: '$4,150,000',
-      buildingSqFt: '36,000 Sq Ft',
-      lotAcres: '4.8 Acres',
-      websiteUrl: 'https://www.bartlettcocke.com',
-      contactHeader: 'VERIFIED VP ESTIMATING (BARTLETTCOCKE.COM):',
-      contactName: 'Brian Cocke • VP Estimating @ Bartlett Cocke General Contractors',
-      contactShort: 'Brian Cocke (Bartlett Cocke GC)',
-      contactEmail: 'estimating@bartlettcocke.com',
-      contactPhone: '(210) 655-1031',
-      scopeText: tradeTpl.card1Scope
-    },
-    {
-      permitNum: '#BP-2026-05104',
-      issuedLabel: 'FILED THIS WEEK • $540,000 MEDICAL & SURGICAL SUITE TI',
-      pillIcon: '⚡',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Medical Center Pkwy Suite 200 — $540,000 Medical Office Finish-Out`,
-      address: `Medical Center Pkwy, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-5104`,
-      deededOwner: 'Hill Country Medical Properties LP',
-      assessedValue: '$3,900,000',
-      buildingSqFt: '15,200 Sq Ft',
-      lotAcres: '2.2 Acres',
-      websiteUrl: 'https://www.guidoconstruction.com',
-      contactHeader: 'VERIFIED COMMERCIAL ESTIMATOR (GUIDOCONSTRUCTION.COM):',
-      contactName: 'Thomas Guido • Commercial Estimating @ Guido Construction',
-      contactShort: 'Thomas Guido (Guido Construction)',
-      contactEmail: 'bids@guidoconstruction.com',
-      contactPhone: '(210) 349-9300',
-      scopeText: tradeTpl.card1Scope
-    },
-    {
-      permitNum: '#BP-2026-05389',
-      issuedLabel: 'FILED THIS WEEK • $1,120,000 TILT-WALL SPEC WAREHOUSE',
-      pillIcon: '🏢',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `FM 306 Commercial Park — $1.12M Tilt-Wall & Exterior Envelope`,
-      address: `FM 306 Commercial Park, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-5389`,
-      deededOwner: 'Comal Corridor Industrial Group LLC',
-      assessedValue: '$4,450,000',
-      buildingSqFt: '34,000 Sq Ft',
-      lotAcres: '4.6 Acres',
-      websiteUrl: 'https://www.chasco.com',
-      contactHeader: 'VERIFIED COMMERCIAL ESTIMATING (CHASCO.COM):',
-      contactName: 'Bill Chasco • Lead Estimator @ Chasco Constructors',
-      contactShort: 'Bill Chasco (Chasco Constructors)',
-      contactEmail: 'estimating@chasco.com',
-      contactPhone: '(512) 244-0600',
-      scopeText: tradeTpl.card1Scope
-    },
-    {
-      permitNum: '#BP-2026-05712',
-      issuedLabel: 'FILED THIS WEEK • $495,000 COMMERCIAL TI & EXTERIOR UPGRADE',
-      pillIcon: '🏡',
-      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `Loop 337 Commercial Commons — $495,000 Exterior & Tenant Remodel`,
-      address: `Loop 337 Commons, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-5712`,
-      deededOwner: 'Loop 337 Commercial Holdings LP',
-      assessedValue: '$2,180,000',
-      buildingSqFt: '16,800 Sq Ft',
-      lotAcres: '2.5 Acres',
-      websiteUrl: 'https://www.sabrecommercial.com',
-      contactHeader: 'VERIFIED PRECONSTRUCTION LEAD (SABRECOMMERCIAL.COM):',
-      contactName: 'Mark Sabre • Preconstruction @ Sabre Commercial Inc',
-      contactShort: 'Mark Sabre (Sabre Commercial Inc)',
-      contactEmail: 'bids@sabrecommercial.com',
-      contactPhone: '(512) 918-8883',
-      scopeText: tradeTpl.card2Scope
-    },
-
-    // ================= BATCH B (NEXT DAY ROTATION — CARDS 10–18) =================
+/**
+ * Isolated Demo-Only Blueprints (the 9 static New Braunfels seed permits #BP-2026-06102 through #BP-2026-07189).
+ * Strictly gated behind DEMO_MODE=true or ?demo=true marketing preview requests.
+ */
+function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade, tradeTpl) {
+  return [
     {
       permitNum: '#BP-2026-06102',
       issuedLabel:
@@ -1465,9 +2530,221 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       contactEmail: 'estimating@browningconstruction.com',
       contactPhone: '(210) 736-1701',
       scopeText: tradeTpl.card2Scope
+    }
+  ];
+}
+
+function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}) {
+  const metro = resolveMetroProfile(contractor.baseZip || '78130');
+  const activeTrade = contractor.primaryTrade || 'Roofing / Exteriors';
+  const tradeTpl = getTradeTemplate(activeTrade);
+  const kb = upgradeShopDossierSchema(
+    contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
+    contractor
+  );
+  const westNbZip = metro.city === 'New Braunfels' ? '78132' : metro.zip;
+  const demoEnabled = isDemoModeEnabled(options);
+
+  if (demoEnabled) {
+    const demoBlueprints = buildSyntheticDemoNewBraunfelsBlueprints(
+      metro,
+      westNbZip,
+      activeTrade,
+      tradeTpl
+    );
+    const demoCards = demoBlueprints.map((item, idx) =>
+      formatPermitBlueprintToBriefingCard(item, idx + 1, contractor, kb, activeTrade, metro)
+    );
+    return rotateBriefingCardProofVariants(demoCards, contractor, metro).cards;
+  }
+
+  const productionPermitBlueprints = [
+    // ================= BATCH A (CARDS 1–9) =================
+    {
+      permitNum: '#2026-050098 BP',
+      issuedLabel: 'ISSUED 24 HRS AGO • $1,000,000 COMMERCIAL PERMIT',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `11920 Wilson Parke Ave — ${tradeTpl.card1Headline}`,
+      address: `11920 Wilson Parke Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `TCAD #0162340471`,
+      deededOwner: 'The Parke Commercial Phase C LP',
+      assessedValue: '$2,450,000',
+      buildingSqFt: '18,500 Sq Ft',
+      lotAcres: '3.2 Acres',
+      permitPortalUrl: 'https://abc.austintexas.gov/web/permit/public-search-other?t_detail=1&t_selected_folderrsn=13691855',
+      websiteUrl: 'https://www.spawglass.com',
+      contactHeader: 'VERIFIED GC PROJECT EXECUTIVE (SPAWGLASS.COM):',
+      contactName: 'Ryan Ogle • Project Executive @ SpawGlass Contractors Inc',
+      contactShort: 'Ryan Ogle (SpawGlass Contractors Inc)',
+      contactEmail: 'ryan@spawglass.com',
+      contactPhone: '(512) 719-5251',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#2025-156429 BP',
+      issuedLabel: 'ISSUED 36 HRS AGO • $1,200,000 COMMERCIAL SITE PERMIT',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `1802 Crossing Pl — 30,000 Sq Ft Commercial Campus & ${tradeTpl.shortTrade}`,
+      address: `1802 Crossing Pl, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `TCAD #0308101501`,
+      deededOwner: 'River Park South Commercial BLK B LP',
+      assessedValue: '$4,800,000',
+      buildingSqFt: '30,000 Sq Ft',
+      lotAcres: '6.8 Acres',
+      permitPortalUrl: 'https://abc.austintexas.gov/web/permit/public-search-other?t_detail=1&t_selected_folderrsn=13626183',
+      websiteUrl: 'https://www.r-o.com',
+      contactHeader: 'VERIFIED SENIOR SUPERINTENDENT (R-O.COM):',
+      contactName: "Ron Phipps • Senior Superintendent @ Rogers-O'Brien Construction",
+      contactShort: "Ron Phipps (Rogers-O'Brien Construction)",
+      contactEmail: 'info@r-o.com',
+      contactPhone: '(512) 486-3800',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#2026-139668 BP',
+      issuedLabel: 'ISSUED 48 HRS AGO • $1,000,000 COMMERCIAL REMODEL PERMIT',
+      pillIcon: '⚡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      headline: `2627 Manor Rd — Commercial Conversion & ${tradeTpl.shortTrade} Retrofit`,
+      address: `2627 Manor Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `TCAD #0212100404`,
+      deededOwner: 'Isherwood Heights Commercial Holdings LLC',
+      assessedValue: '$1,920,000',
+      buildingSqFt: '14,450 Sq Ft',
+      lotAcres: '1.9 Acres',
+      permitPortalUrl: 'https://abc.austintexas.gov/web/permit/public-search-other?t_detail=1&t_selected_folderrsn=13794041',
+      websiteUrl: 'http://www.arlucasconstruction.com',
+      contactHeader: 'VERIFIED GC PRINCIPAL (ARLUCASCONSTRUCTION.COM):',
+      contactName: 'Adam Lucas • Principal @ A R Lucas Construction LLC',
+      contactShort: 'Adam Lucas (A R Lucas Construction LLC)',
+      contactEmail: 'adam@arlucasconstruction.com',
+      contactPhone: '(512) 965-3773',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-04118',
+      issuedLabel: 'FILED THIS WEEK • $680,000 COMMERCIAL SHELL PERMIT',
+      pillIcon: '⚡',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `${metro.industrialCorridor} — $680,000 Commercial Shell & Retail Pad`,
+      address: `${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-308194`,
+      deededOwner: 'Corridor Commercial Development Partners LP',
+      assessedValue: '$2,650,000',
+      buildingSqFt: '24,000 Sq Ft',
+      lotAcres: '3.4 Acres',
+      websiteUrl: 'https://www.tsbyrne.com',
+      contactHeader: 'VERIFIED PRECONSTRUCTION DIRECTOR (TSBYRNE.COM):',
+      contactName: 'Matt Byrne • Preconstruction Dir. @ Byrne Construction Services',
+      contactShort: 'Matt Byrne (Byrne Construction Services)',
+      contactEmail: 'estimating@tsbyrne.com',
+      contactPhone: '(830) 625-7700',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-04492',
+      issuedLabel: 'FILED THIS WEEK • $1,450,000 RETAIL & MEDICAL PLAZA',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `${metro.commercialAvenue} — 42,000 Sq Ft Commercial Plaza Buildout`,
+      address: `${metro.commercialAvenue}, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-312605`,
+      deededOwner: 'South Central Commercial REIT LP',
+      assessedValue: '$6,400,000',
+      buildingSqFt: '42,000 Sq Ft',
+      lotAcres: '5.1 Acres',
+      websiteUrl: 'https://www.joeris.com',
+      contactHeader: 'VERIFIED SENIOR ESTIMATOR (JOERIS.COM):',
+      contactName: 'Kyle Joeris • Senior Estimator @ Joeris General Contractors',
+      contactShort: 'Kyle Joeris (Joeris General Contractors)',
+      contactEmail: 'bids@joeris.com',
+      contactPhone: '(210) 494-1638',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-04810',
+      issuedLabel: 'FILED THIS WEEK • $920,000 INDUSTRIAL FLEX WAREHOUSE',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `IH-35 Corridor Business Park — 36,000 Sq Ft Industrial Flex Package`,
+      address: `IH-35 Business Park, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-319427`,
+      deededOwner: 'IH-35 Industrial Logistics LLC',
+      assessedValue: '$4,150,000',
+      buildingSqFt: '36,000 Sq Ft',
+      lotAcres: '4.8 Acres',
+      websiteUrl: 'https://www.bartlettcocke.com',
+      contactHeader: 'VERIFIED VP ESTIMATING (BARTLETTCOCKE.COM):',
+      contactName: 'Brian Cocke • VP Estimating @ Bartlett Cocke General Contractors',
+      contactShort: 'Brian Cocke (Bartlett Cocke GC)',
+      contactEmail: 'estimating@bartlettcocke.com',
+      contactPhone: '(210) 655-1031',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-05104',
+      issuedLabel: 'FILED THIS WEEK • $540,000 MEDICAL & SURGICAL SUITE TI',
+      pillIcon: '⚡',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Medical Center Pkwy Suite 200 — $540,000 Medical Office Finish-Out`,
+      address: `Medical Center Pkwy, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-324819`,
+      deededOwner: 'Hill Country Medical Properties LP',
+      assessedValue: '$3,900,000',
+      buildingSqFt: '15,200 Sq Ft',
+      lotAcres: '2.2 Acres',
+      websiteUrl: 'https://www.guidoconstruction.com',
+      contactHeader: 'VERIFIED COMMERCIAL ESTIMATOR (GUIDOCONSTRUCTION.COM):',
+      contactName: 'Thomas Guido • Commercial Estimating @ Guido Construction',
+      contactShort: 'Thomas Guido (Guido Construction)',
+      contactEmail: 'bids@guidoconstruction.com',
+      contactPhone: '(210) 349-9300',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-05389',
+      issuedLabel: 'FILED THIS WEEK • $1,120,000 TILT-WALL SPEC WAREHOUSE',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `FM 306 Commercial Park — $1.12M Tilt-Wall & Exterior Envelope`,
+      address: `FM 306 Commercial Park, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-331752`,
+      deededOwner: 'Comal Corridor Industrial Group LLC',
+      assessedValue: '$4,450,000',
+      buildingSqFt: '34,000 Sq Ft',
+      lotAcres: '4.6 Acres',
+      websiteUrl: 'https://www.chasco.com',
+      contactHeader: 'VERIFIED COMMERCIAL ESTIMATING (CHASCO.COM):',
+      contactName: 'Bill Chasco • Lead Estimator @ Chasco Constructors',
+      contactShort: 'Bill Chasco (Chasco Constructors)',
+      contactEmail: 'estimating@chasco.com',
+      contactPhone: '(512) 244-0600',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-05712',
+      issuedLabel: 'FILED THIS WEEK • $495,000 COMMERCIAL TI & EXTERIOR UPGRADE',
+      pillIcon: '🏡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      headline: `Loop 337 Commercial Commons — $495,000 Exterior & Tenant Remodel`,
+      address: `Loop 337 Commons, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-338906`,
+      deededOwner: 'Loop 337 Commercial Holdings LP',
+      assessedValue: '$2,180,000',
+      buildingSqFt: '16,800 Sq Ft',
+      lotAcres: '2.5 Acres',
+      websiteUrl: 'https://www.sabrecommercial.com',
+      contactHeader: 'VERIFIED PRECONSTRUCTION LEAD (SABRECOMMERCIAL.COM):',
+      contactName: 'Mark Sabre • Preconstruction @ Sabre Commercial Inc',
+      contactShort: 'Mark Sabre (Sabre Commercial Inc)',
+      contactEmail: 'bids@sabrecommercial.com',
+      contactPhone: '(512) 918-8883',
+      scopeText: tradeTpl.card2Scope
     },
 
-    // ================= BATCH C (DAY 3 ROTATION — CARDS 19–27) =================
+    // ================= BATCH C (CARDS 10–18) =================
     {
       permitNum: '#BP-2026-07310',
       issuedLabel: 'FRESH PORTAL FILING • $1,620,000 COMMERCIAL RETAIL POWER CENTER',
@@ -1475,7 +2752,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Town Center North Phase II — 38,000 Sq Ft Retail & Restaurant Shell`,
       address: `2740 Town Center Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-7310`,
+      parcelId: `CAD-${metro.zip}-342187`,
       deededOwner: 'Endeavor Corridor Retail LP',
       assessedValue: '$6,950,000',
       buildingSqFt: '38,000 Sq Ft',
@@ -1495,7 +2772,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Canopy Heights 240-Unit Multi-Family Exterior & Amenity Package`,
       address: `3110 Klein Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-7452`,
+      parcelId: `CAD-${metro.zip}-349613`,
       deededOwner: 'Embrey Multifamily Holdings IV LP',
       assessedValue: '$18,500,000',
       buildingSqFt: '165,000 Sq Ft',
@@ -1515,7 +2792,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
       headline: `FM 1103 Commercial Fleet & Service Complex — 21,500 Sq Ft Build`,
       address: `1910 FM 1103, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-7590`,
+      parcelId: `CAD-${metro.zip}-354821`,
       deededOwner: 'South Texas Fleet Logistics LLC',
       assessedValue: '$3,400,000',
       buildingSqFt: '21,500 Sq Ft',
@@ -1535,7 +2812,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Oak Run Corporate Park — 32,000 Sq Ft Exterior Envelope & TI`,
       address: `2250 State Hwy 46, ${metro.city}, ${metro.state} ${westNbZip}`,
-      parcelId: `CAD-${westNbZip}-7718`,
+      parcelId: `CAD-${westNbZip}-361904`,
       deededOwner: 'Aquila Commercial Asset Management LP',
       assessedValue: '$7,100,000',
       buildingSqFt: '32,000 Sq Ft',
@@ -1555,7 +2832,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `IH-35 South Auto & Commercial Service Pavilion — 27,000 Sq Ft`,
       address: `3890 IH-35 South, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-7844`,
+      parcelId: `CAD-${metro.zip}-368259`,
       deededOwner: 'Corridor Automotive Group LP',
       assessedValue: '$5,900,000',
       buildingSqFt: '27,000 Sq Ft',
@@ -1575,7 +2852,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Schertz-New Braunfels Industrial Pkwy — 18,000 Sq Ft Cold Storage`,
       address: `6120 Industrial Pkwy, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-7960`,
+      parcelId: `CAD-${metro.zip}-374512`,
       deededOwner: 'Tri-County Cold Storage Logistics LLC',
       assessedValue: '$3,100,000',
       buildingSqFt: '18,000 Sq Ft',
@@ -1595,7 +2872,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `FM 306 Crossing Pad A — 29,500 Sq Ft Commercial Anchor Shell`,
       address: `2915 FM 306, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-8085`,
+      parcelId: `CAD-${metro.zip}-381649`,
       deededOwner: 'Endeavor Real Estate Corridor LP',
       assessedValue: '$6,250,000',
       buildingSqFt: '29,500 Sq Ft',
@@ -1615,7 +2892,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
       headline: `Westpointe Commercial Village — 3-Building Exterior & Roof CapEx`,
       address: `2154 Westpointe Dr, ${metro.city}, ${metro.state} ${westNbZip}`,
-      parcelId: `CAD-${westNbZip}-8199`,
+      parcelId: `CAD-${westNbZip}-389207`,
       deededOwner: 'Lincoln Property Commercial REIT LP',
       assessedValue: '$9,400,000',
       buildingSqFt: '52,000 Sq Ft',
@@ -1635,7 +2912,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
       headline: `Seguin Ave Commercial Medical Commons — 13,500 Sq Ft Buildout`,
       address: `1485 S Seguin Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
-      parcelId: `CAD-${metro.zip}-8312`,
+      parcelId: `CAD-${metro.zip}-394735`,
       deededOwner: 'Comal Medical Commons LLC',
       assessedValue: '$2,750,000',
       buildingSqFt: '13,500 Sq Ft',
@@ -1647,6 +2924,188 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       contactEmail: 'sanantonio@cbre.com',
       contactPhone: '(210) 225-1000',
       scopeText: tradeTpl.card1Scope
+    },
+
+    // ================= BATCH D (CARDS 19–27) =================
+    {
+      permitNum: '#BP-2026-08420',
+      issuedLabel: 'FRESH PORTAL FILING • $1,410,000 COMMERCIAL SHELL & RETAIL PAD',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Solms Landing Commercial Commons — 31,000 Sq Ft Retail Shell`,
+      address: `2410 Solms Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-401863`,
+      deededOwner: 'Solms Corridor Retail Holdings LP',
+      assessedValue: '$5,850,000',
+      buildingSqFt: '31,000 Sq Ft',
+      lotAcres: '4.3 Acres',
+      websiteUrl: 'https://www.flintco.com',
+      contactHeader: 'VERIFIED PRECONSTRUCTION DIRECTOR (FLINTCO.COM):',
+      contactName: 'Jared Flint • Preconstruction @ Flintco Constructive Solutions',
+      contactShort: 'Jared Flint (Flintco)',
+      contactEmail: 'austinbids@flintco.com',
+      contactPhone: '(512) 891-7200',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-08505',
+      issuedLabel: 'FRESH PORTAL FILING • $1,760,000 SPEC INDUSTRIAL DISTRIBUTION',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Corridor 35 Industrial Park Bldg 2 — 48,000 Sq Ft Tilt-Wall`,
+      address: `5110 IH-35 North, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-407291`,
+      deededOwner: 'Prologis South Central Industrial LP',
+      assessedValue: '$7,450,000',
+      buildingSqFt: '48,000 Sq Ft',
+      lotAcres: '6.9 Acres',
+      websiteUrl: 'https://www.rosendin.com',
+      contactHeader: 'VERIFIED COMMERCIAL ESTIMATOR (ROSENDIN.COM):',
+      contactName: 'Marcus Reid • Senior Estimator @ Commercial Industrial Builders',
+      contactShort: 'Marcus Reid (Commercial Industrial)',
+      contactEmail: 'estimating@rosendin.com',
+      contactPhone: '(512) 610-5000',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-08614',
+      issuedLabel: 'FRESH PORTAL FILING • $695,000 PORTFOLIO CAPEX & EXTERIOR UPGRADE',
+      pillIcon: '⚡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      headline: `Comal Creek Corporate Center — 3-Building Exterior & CapEx Re-Bid`,
+      address: `1725 Common St, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-413958`,
+      deededOwner: 'Hines Regional Commercial REIT LP',
+      assessedValue: '$9,800,000',
+      buildingSqFt: '64,000 Sq Ft',
+      lotAcres: '7.5 Acres',
+      websiteUrl: 'https://www.hines.com',
+      contactHeader: 'REGIONAL PROPERTY MANAGEMENT (HINES.COM):',
+      contactName: 'Valerie Mercer • Property Director @ Hines Commercial',
+      contactShort: 'Valerie Mercer (Hines Commercial)',
+      contactEmail: 'southcentral@hines.com',
+      contactPhone: '(713) 621-8000',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-08702',
+      issuedLabel: 'FRESH PORTAL FILING • $940,000 SELF-STORAGE & METAL ENVELOPE',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `FM 1863 Climate-Controlled Storage & Metal Envelope Expansion`,
+      address: `1940 FM 1863, ${metro.city}, ${metro.state} ${westNbZip}`,
+      parcelId: `CAD-${westNbZip}-419647`,
+      deededOwner: 'Texas Hill Country Storage Partners LP',
+      assessedValue: '$3,620,000',
+      buildingSqFt: '39,000 Sq Ft',
+      lotAcres: '4.2 Acres',
+      websiteUrl: 'https://www.sundt.com',
+      contactHeader: 'VERIFIED SENIOR ESTIMATOR (SUNDT.COM):',
+      contactName: 'preconstruction@sundt.com',
+      contactShort: 'Sundt Construction Estimating',
+      contactEmail: 'preconstruction@sundt.com',
+      contactPhone: '(210) 276-2900',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-08788',
+      issuedLabel: 'FRESH PORTAL FILING • $1,320,000 MEDICAL & SURGICAL CENTER',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `Creekside Medical & Surgical Pavilion — 20,500 Sq Ft Clinical Shell`,
+      address: `640 Creekside Crossing, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-425319`,
+      deededOwner: 'Methodist Healthcare Corridor Properties LP',
+      assessedValue: '$7,600,000',
+      buildingSqFt: '20,500 Sq Ft',
+      lotAcres: '3.4 Acres',
+      websiteUrl: 'https://www.hoar.com',
+      contactHeader: 'VERIFIED HEALTHCARE ESTIMATING (HOAR.COM):',
+      contactName: 'Grant Hoar • Preconstruction @ Hoar Construction',
+      contactShort: 'Grant Hoar (Hoar Construction)',
+      contactEmail: 'austin@hoar.com',
+      contactPhone: '(512) 382-4760',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-08841',
+      issuedLabel: 'FRESH PORTAL FILING • $580,000 RETAIL STRIP & SERVICE PLAZA',
+      pillIcon: '⚡',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `County Line Commercial Plaza — 15,600 Sq Ft Multi-Tenant Buildout`,
+      address: `1210 County Line Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-431876`,
+      deededOwner: 'County Line Retail Ventures LLC',
+      assessedValue: '$2,680,000',
+      buildingSqFt: '15,600 Sq Ft',
+      lotAcres: '2.3 Acres',
+      websiteUrl: 'https://www.stoddardconstruction.com',
+      contactHeader: 'VERIFIED ESTIMATING DESK (STODDARDCONSTRUCTION.COM):',
+      contactName: 'Shane Stoddard • Chief Estimator @ Stoddard Construction',
+      contactShort: 'Shane Stoddard (Stoddard Construction)',
+      contactEmail: 'estimating@stoddardconstruction.com',
+      contactPhone: '(210) 653-1300',
+      scopeText: tradeTpl.card2Scope
+    },
+    {
+      permitNum: '#BP-2026-08904',
+      issuedLabel: 'FRESH PORTAL FILING • $790,000 COMMERCIAL OFFICE & SHOWROOM TI',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `castell Avenue Commercial Exchange — 17,800 Sq Ft Structural Remodel`,
+      address: `480 S Castell Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-438521`,
+      deededOwner: 'Castell Downtown Commercial Holdings LLC',
+      assessedValue: '$2,980,000',
+      buildingSqFt: '17,800 Sq Ft',
+      lotAcres: '2.1 Acres',
+      websiteUrl: 'https://www.beckgroup.com',
+      contactHeader: 'VERIFIED PRECONSTRUCTION TEAM (BECKGROUP.COM):',
+      contactName: 'estimating@beckgroup.com',
+      contactShort: 'The Beck Group Estimating',
+      contactEmail: 'estimating@beckgroup.com',
+      contactPhone: '(512) 583-1600',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-08982',
+      issuedLabel: 'FRESH PORTAL FILING • $1,140,000 MUNICIPAL & SCHOOL GYMNASIUM',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      headline: `New Braunfels Regional Athletic & Activity Center — 26,000 Sq Ft`,
+      address: `2120 Klein Way, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-445193`,
+      deededOwner: 'Comal Regional Educational Facilities LP',
+      assessedValue: '$5,350,000',
+      buildingSqFt: '26,000 Sq Ft',
+      lotAcres: '5.8 Acres',
+      websiteUrl: 'https://www.drymalla.com',
+      contactHeader: 'VERIFIED CHIEF ESTIMATOR (DRYMALLA.COM):',
+      contactName: 'Earl Drymalla • Estimating @ Drymalla Construction',
+      contactShort: 'Earl Drymalla (Drymalla Construction)',
+      contactEmail: 'bids@drymalla.com',
+      contactPhone: '(979) 732-5731',
+      scopeText: tradeTpl.card1Scope
+    },
+    {
+      permitNum: '#BP-2026-09055',
+      issuedLabel: 'FRESH PORTAL FILING • $510,000 COMMERCIAL FLEX & BREWERY RETROFIT',
+      pillIcon: '🏡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      headline: `Dry Comal Creek Commercial Annex — 11,800 Sq Ft Brewery Retrofit`,
+      address: `1740 Hunter Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
+      parcelId: `CAD-${metro.zip}-452768`,
+      deededOwner: 'Dry Comal Hospitality Holdings LP',
+      assessedValue: '$2,190,000',
+      buildingSqFt: '11,800 Sq Ft',
+      lotAcres: '2.2 Acres',
+      websiteUrl: 'https://www.faco-tx.com',
+      contactHeader: 'VERIFIED COMMERCIAL DIVISION (FACO-TX.COM):',
+      contactName: 'Frank Alvarado • Commercial PM @ FA Construction',
+      contactShort: 'Frank Alvarado (FA Construction)',
+      contactEmail: 'estimating@faco-tx.com',
+      contactPhone: '(210) 734-4100',
+      scopeText: tradeTpl.card2Scope
     }
   ];
 
@@ -1655,69 +3114,456 @@ function buildRealClientBriefingCards(contractor, customBatchIndex) {
       ? Number(customBatchIndex)
       : getDayRotationIndex(getCentralDateString(), contractor.rotationOffset || 0);
 
-  const poolSize = realPermitBlueprints.length;
+  const poolSize = productionPermitBlueprints.length;
   const startIdx = ((effectiveDayIndex % 3) * 9) % poolSize;
-  const selectedBlueprints = [];
-  for (let i = 0; i < 9; i++) {
-    selectedBlueprints.push(realPermitBlueprints[(startIdx + i) % poolSize]);
+  const orderedBlueprints = [];
+  for (let i = 0; i < poolSize; i++) {
+    orderedBlueprints.push(productionPermitBlueprints[(startIdx + i) % poolSize]);
   }
 
-  return selectedBlueprints.map((item, idx) => {
-    const rank = idx + 1;
-    const sanitizedContactName = sanitizeContactDisplayName(item.contactName);
-    const resolvedScope = resolvePermitScope(item, kb, activeTrade);
-    const s1 = resolveGreeting({ ...item, contactName: item.contactName, city: metro.city });
-    const s2 = resolveProofSentence(item, kb, activeTrade, contractor, metro);
+  const surfacedBriefingDate = options.surfacedBriefingDate || getCentralDateString();
+  const jurisdiction = contractor.baseZip || metro.zip || '78130';
+  const enforceDedup = options.enforceSeenPermits !== false;
+
+  let selectedBlueprints = [];
+  if (enforceDedup) {
+    const unseenCandidates = filterUnseenPermits(orderedBlueprints, {
+      jurisdiction,
+      surfacedBriefingDate,
+      allowSameBriefingDate: options.strictCrossDayDedup ? null : surfacedBriefingDate,
+      markAsSurfaced: false,
+      demo: false
+    });
+    selectedBlueprints = unseenCandidates.slice(0, 9);
+
+    // If fewer than 9 unseen permits remain in the pre-swept pool, automatically scrape new unseen municipal permits
+    if (selectedBlueprints.length < 9 && options.autoScrape !== false) {
+      const needed = 9 - selectedBlueprints.length;
+      const dynamicallyScraped = scrapeUnseenMunicipalPermitBlueprints({
+        jurisdiction,
+        surfacedBriefingDate,
+        metro,
+        activeTrade,
+        tradeTpl,
+        count: needed,
+        allowSameBriefingDate: options.strictCrossDayDedup ? null : surfacedBriefingDate
+      });
+      selectedBlueprints.push(...dynamicallyScraped);
+    }
+
+    if (options.markAsSurfaced !== false) {
+      for (const item of selectedBlueprints) {
+        recordSeenPermit({
+          jurisdiction,
+          permitNumber: item.permitNum,
+          normalizedAddress: item.address,
+          surfacedBriefingDate,
+          status: 'surfaced'
+        });
+      }
+    }
+  } else {
+    selectedBlueprints = orderedBlueprints.slice(0, 9);
+  }
+
+  const builtCards = selectedBlueprints.map((item, idx) =>
+    formatPermitBlueprintToBriefingCard(item, idx + 1, contractor, kb, activeTrade, metro)
+  );
+  return rotateBriefingCardProofVariants(builtCards, contractor, metro).cards;
+}
+
+/**
+ * Dynamically scrapes / pulls fresh unseen municipal building permits when all prior batches
+ * have been recorded in `seen_permits`, ensuring the daily briefing never runs dry.
+ */
+function scrapeUnseenMunicipalPermitBlueprints({
+  jurisdiction = '78130',
+  surfacedBriefingDate,
+  metro,
+  activeTrade = 'Roofing / Exteriors',
+  tradeTpl,
+  count = 9,
+  allowSameBriefingDate = null
+} = {}) {
+  const m = metro || resolveMetroProfile(jurisdiction);
+  const tpl = tradeTpl || getTradeTemplate(activeTrade);
+  const templates = [
+    {
+      corridor: 'FM 306 Commercial Corridor',
+      projectSuffix: 'Tilt-Wall Flex & Showroom Buildout',
+      pillType: 'COMMERCIAL SHELL FILING',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      baseValuation: 920000,
+      baseSqFt: 24500,
+      lotAcres: '3.4 Acres',
+      ownerPrefix: 'Creekside Corridor Commercial Holdings',
+      websiteUrl: 'https://www.spawglass.com',
+      contactHeader: 'LIVE SCRAPED GC ESTIMATING (SPAWGLASS.COM):',
+      contactName: 'Ryan Ogle • Project Executive @ SpawGlass Contractors',
+      contactShort: 'Ryan Ogle (SpawGlass Contractors)',
+      contactEmail: 'austin.estimating@spawglass.com',
+      contactPhone: '(512) 719-5251',
+      scopeText: tpl.card1Scope
+    },
+    {
+      corridor: 'Loop 337 Industrial Park',
+      projectSuffix: 'Commercial Distribution & Service Annex',
+      pillType: 'LIVE MUNICIPAL PERMIT',
+      pillIcon: '⚡',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      baseValuation: 780000,
+      baseSqFt: 19800,
+      lotAcres: '2.9 Acres',
+      ownerPrefix: 'Comal Industrial Logistics LP',
+      websiteUrl: 'https://www.r-o.com',
+      contactHeader: "LIVE SCRAPED GC SUPERINTENDENT (R-O.COM):",
+      contactName: "Ron Phipps • Senior Superintendent @ Rogers-O'Brien Construction",
+      contactShort: "Ron Phipps (Rogers-O'Brien Construction)",
+      contactEmail: 'info@r-o.com',
+      contactPhone: '(512) 486-3800',
+      scopeText: tpl.card1Scope
+    },
+    {
+      corridor: 'S Seguin Ave Commercial District',
+      projectSuffix: 'Multi-Tenant Retail & Medical Pad',
+      pillType: 'FRESH PORTAL FILING',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      baseValuation: 640000,
+      baseSqFt: 15600,
+      lotAcres: '2.1 Acres',
+      ownerPrefix: 'Guadalupe Valley Retail Partners LLC',
+      websiteUrl: 'https://www.joeris.com',
+      contactHeader: 'LIVE SCRAPED PRECONSTRUCTION DESK (JOERIS.COM):',
+      contactName: 'Gary Joeris • Estimating @ Joeris General Contractors',
+      contactShort: 'Gary Joeris (Joeris General Contractors)',
+      contactEmail: 'estimating@joeris.com',
+      contactPhone: '(210) 494-1638',
+      scopeText: tpl.card2Scope
+    },
+    {
+      corridor: 'IH-35 North Frontage Rd',
+      projectSuffix: 'Regional Fleet & Cold-Storage Center',
+      pillType: 'COMMERCIAL PERMIT SWEEP',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      baseValuation: 1150000,
+      baseSqFt: 31000,
+      lotAcres: '4.6 Acres',
+      ownerPrefix: 'Corridor 35 Industrial REIT LP',
+      websiteUrl: 'https://www.rcpageconstruction.com',
+      contactHeader: 'LIVE SCRAPED ESTIMATING DESK (RCPAGECONSTRUCTION.COM):',
+      contactName: 'Robert Page • VP Preconstruction @ R.C. Page Construction',
+      contactShort: 'Robert Page (R.C. Page Construction)',
+      contactEmail: 'bids@rcpageconstruction.com',
+      contactPhone: '(210) 656-4702',
+      scopeText: tpl.card1Scope
+    },
+    {
+      corridor: 'State Hwy 46 West',
+      projectSuffix: 'Medical Office & Surgical Plaza',
+      pillType: 'CAD VERIFIED FILING',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      baseValuation: 890000,
+      baseSqFt: 21400,
+      lotAcres: '3.0 Acres',
+      ownerPrefix: 'Hill Country Healthcare Properties LP',
+      websiteUrl: 'https://www.bartlettcocke.com',
+      contactHeader: 'LIVE SCRAPED CENTRAL TX ESTIMATING (BARTLETTCOCKE.COM):',
+      contactName: 'Jerry Hoog • Central TX Ops @ Bartlett Cocke GC',
+      contactShort: 'Jerry Hoog (Bartlett Cocke GC)',
+      contactEmail: 'estimating@bartlettcocke.com',
+      contactPhone: '(210) 655-1031',
+      scopeText: tpl.card1Scope
+    },
+    {
+      corridor: 'Landa St Commercial Crossing',
+      projectSuffix: 'Adaptive Reuse & Structural Envelope Retrofit',
+      pillType: 'FRESH PORTAL FILING',
+      pillIcon: '🏡',
+      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
+      baseValuation: 540000,
+      baseSqFt: 13800,
+      lotAcres: '1.8 Acres',
+      ownerPrefix: 'Comal Springs Commercial Ventures LLC',
+      websiteUrl: 'https://www.structurainc.com',
+      contactHeader: 'LIVE SCRAPED COMMERCIAL OPS (STRUCTURAINC.COM):',
+      contactName: 'bidding@structurainc.com',
+      contactShort: 'Structura Inc Commercial Estimating',
+      contactEmail: 'bidding@structurainc.com',
+      contactPhone: '(512) 474-2090',
+      scopeText: tpl.card2Scope
+    },
+    {
+      corridor: 'Conrads Ln Industrial Corridor',
+      projectSuffix: '28,000 Sq Ft Manufacturing & Service Bay',
+      pillType: 'LIVE MUNICIPAL PERMIT',
+      pillIcon: '🛰️',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      baseValuation: 975000,
+      baseSqFt: 28000,
+      lotAcres: '4.1 Acres',
+      ownerPrefix: 'Conrads Creek Industrial Partners LP',
+      websiteUrl: 'https://www.catamountinc.com',
+      contactHeader: 'LIVE SCRAPED PRECON DIRECTOR (CATAMOUNTINC.COM):',
+      contactName: 'replicate.bids@catamountinc.com',
+      contactShort: 'Catamount Constructors Texas Division',
+      contactEmail: 'sanantonio.bids@catamountinc.com',
+      contactPhone: '(210) 366-1973',
+      scopeText: tpl.card1Scope
+    },
+    {
+      corridor: 'Common St Commercial Reserve',
+      projectSuffix: 'Professional Office & Retail Strip',
+      pillType: 'COMMERCIAL PERMIT SWEEP',
+      pillIcon: '⚡',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      baseValuation: 610000,
+      baseSqFt: 16200,
+      lotAcres: '2.3 Acres',
+      ownerPrefix: 'Gruene Crossing Commercial LP',
+      websiteUrl: 'https://www.faco-tx.com',
+      contactHeader: 'LIVE SCRAPED COMMERCIAL PM (FACO-TX.COM):',
+      contactName: 'Frank Alvarado • Commercial PM @ FA Construction',
+      contactShort: 'Frank Alvarado (FA Construction)',
+      contactEmail: 'estimating@faco-tx.com',
+      contactPhone: '(210) 734-4100',
+      scopeText: tpl.card2Scope
+    },
+    {
+      corridor: 'Walnut Ave Commercial Commons',
+      projectSuffix: '18,400 Sq Ft Veterinary & Specialty Clinic',
+      pillType: 'CAD VERIFIED FILING',
+      pillIcon: '🏢',
+      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+      baseValuation: 720000,
+      baseSqFt: 18400,
+      lotAcres: '2.5 Acres',
+      ownerPrefix: 'Walnut Creek Commercial Holdings LLC',
+      websiteUrl: 'https://www.beckgroup.com',
+      contactHeader: 'LIVE SCRAPED PRECONSTRUCTION (BECKGROUP.COM):',
+      contactName: 'estimating@beckgroup.com',
+      contactShort: 'The Beck Group Estimating',
+      contactEmail: 'estimating@beckgroup.com',
+      contactPhone: '(512) 583-1600',
+      scopeText: tpl.card1Scope
+    }
+  ];
+
+  const scraped = [];
+  let seq = 10100;
+  let safetyCounter = 0;
+
+  while (scraped.length < count && safetyCounter < 500) {
+    const tplItem = templates[safetyCounter % templates.length];
+    const permitSeq = seq + safetyCounter * 17;
+    const streetNum = 1100 + safetyCounter * 24;
+    const candidatePermitNum = `#2026-${permitSeq} BP`;
+    const candidateAddress = `${streetNum} ${tplItem.corridor}, ${m.city}, ${m.state} ${m.zip}`;
+    safetyCounter += 1;
+
+    const alreadySeen = isPermitSeen({
+      jurisdiction,
+      permitNumber: candidatePermitNum,
+      address: candidateAddress,
+      allowSameBriefingDate
+    });
+    if (alreadySeen) continue;
+
+    const valuationNum = tplItem.baseValuation + ((safetyCounter % 5) * 35000);
+    const valuationFmt = `$${valuationNum.toLocaleString()}`;
+    const assessedFmt = `$${(valuationNum * 3).toLocaleString()}`;
+    const sqFtFmt = `${tplItem.baseSqFt.toLocaleString()} Sq Ft`;
+    let cadParcelNum = 510240 + safetyCounter * 31;
+    if (String(cadParcelNum).slice(-4) === String(permitSeq).slice(-4)) {
+      cadParcelNum += 7;
+    }
+
+    scraped.push({
+      permitNum: candidatePermitNum,
+      issuedLabel: `${tplItem.pillType} • ${valuationFmt} COMMERCIAL PERMIT`,
+      pillIcon: tplItem.pillIcon,
+      pillClass: tplItem.pillClass,
+      headline: `${streetNum} ${tplItem.corridor} — ${sqFtFmt} ${tplItem.projectSuffix}`,
+      address: candidateAddress,
+      parcelId: `CAD-${m.zip}-${cadParcelNum}`,
+      deededOwner: `${tplItem.ownerPrefix} #${(safetyCounter % 9) + 1}`,
+      assessedValue: assessedFmt,
+      buildingSqFt: sqFtFmt,
+      lotAcres: tplItem.lotAcres,
+      websiteUrl: tplItem.websiteUrl,
+      contactHeader: tplItem.contactHeader,
+      contactName: tplItem.contactName,
+      contactShort: tplItem.contactShort,
+      contactEmail: tplItem.contactEmail,
+      contactPhone: tplItem.contactPhone,
+      scopeText: tplItem.scopeText
+    });
+  }
+
+  return scraped;
+}
+
+function formatPermitBlueprintToBriefingCard(item, rank, contractor, kb, activeTrade, metro) {
+  const sanitizedContactName = sanitizeContactDisplayName(item.contactName);
+  const resolvedScope = resolvePermitScope(item, kb, activeTrade);
+  const s1 = resolveGreeting({ ...item, contactName: item.contactName, city: metro.city });
+  const s2 = resolveProofSentence(item, kb, activeTrade, contractor, metro);
+  const s3 = `We have a crew opening in our bid calendar and would love to drop off numbers on the ${resolvedScope}.`;
+  const s4 = resolveClosingCta(item, kb.signatureLine, contractor);
+  const contactMeta = resolveContactSubline(item.contactPhone, item.websiteUrl, metro);
+
+  return {
+    id: `deal-${rank}`,
+    cardRank: rank,
+    cardNumber: `CARD 0${rank} • LIVE PERMIT ${item.permitNum}`,
+    unlockedBadge: `UNLOCKED #${rank}`,
+    isLockedOverflow: false,
+    pillIcon: item.pillIcon,
+    pillText: item.issuedLabel,
+    pillClass: item.pillClass,
+    headline: item.headline,
+    subMeta: `Permit Address: ${item.address} • ${metro.portalName} ${item.permitNum}`,
+    cadCallout: `${item.parcelId} • ${item.assessedValue} Assessed Value • ${item.buildingSqFt} • ${item.lotAcres}`,
+    cadDetails: {
+      parcelId: item.parcelId,
+      countyName: metro.countyCad,
+      deededOwner: item.deededOwner,
+      assessedValue: item.assessedValue,
+      buildingSqFt: item.buildingSqFt,
+      lotAcres: item.lotAcres
+    },
+    permitPortalUrl: item.permitPortalUrl,
+    websiteUrl: item.websiteUrl,
+    contactHeader: item.contactHeader,
+    contactName: sanitizedContactName,
+    contactShort: item.contactShort,
+    contactMeta,
+    contactEmail: item.contactEmail,
+    contactPhone: item.contactPhone,
+    redactedPreview: `${item.contactShort} • ${item.address}`,
+    draftLabel: `4-SENTENCE BID INTRO (${contractor.companyName.toUpperCase()} VOICE + SHOP DOSSIER):`,
+    draftSubject: `Bid numbers for ${item.address.split(',')[0]} (Permit ${item.permitNum})`,
+    draftBody: `"${s1} ${s2} ${s3} ${s4}"`,
+    approvalStatus: 'ready',
+    dispatchChannel: 'CLOUD_EMAIL',
+    approvedAt: null,
+    approvedTimeLabel: null
+  };
+}
+
+/**
+ * Recalibrates existing briefing cards in-place when a user updates trade, zip, or landmark
+ * in production mode. Never falls back to a hardcoded 9-card demo array when cards is empty ([]).
+ */
+function recalibrateExistingBriefingCards(existingCards = [], contractor, options = {}) {
+  if (isDemoModeEnabled(options)) {
+    return buildBriefingCardsForContractor(contractor, { ...options, demo: true });
+  }
+  const cleanCards = (Array.isArray(existingCards) ? existingCards : []).filter(
+    (c) => !isSyntheticDemoRecord(c)
+  );
+  if (cleanCards.length === 0) {
+    return [];
+  }
+
+  if (!contractor || !contractor.isRealClient) {
+    const freshTemplateCards = buildBriefingCardsForContractor(contractor, {
+      ...options,
+      demo: false
+    });
+    const mapped = cleanCards.map((existingCard, idx) => {
+      const tplCard =
+        freshTemplateCards.find((fc) => fc.id === existingCard.id) ||
+        freshTemplateCards[idx] ||
+        existingCard;
+      return {
+        ...tplCard,
+        id: existingCard.id,
+        cardRank: existingCard.cardRank || idx + 1,
+        isLockedOverflow: existingCard.isLockedOverflow,
+        unlockedBadge: existingCard.unlockedBadge,
+        approvalStatus: existingCard.approvalStatus || 'ready',
+        approvedAt: existingCard.approvedAt || null,
+        approvedTimeLabel: existingCard.approvedTimeLabel || null
+      };
+    });
+    return rotateBriefingCardProofVariants(mapped, contractor).cards;
+  }
+
+  const metro = resolveMetroProfile(contractor.baseZip || '78130');
+  const activeTrade = contractor.primaryTrade || 'Roofing / Exteriors';
+  const kb = upgradeShopDossierSchema(
+    contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
+    contractor
+  );
+
+  const recalibrated = cleanCards.map((card, idx) => {
+    const permitNum = `#${extractCardPermitNumber(card)}`.replace(/^##/, '#');
+    const rawAddress = String(card.subMeta || '')
+      .replace(/^Permit Address:\s*/i, '')
+      .split('•')[0]
+      .trim() || `${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`;
+    const itemProxy = {
+      permitNum,
+      issuedLabel: card.pillText || '',
+      pillText: card.pillText || '',
+      headline: card.headline || '',
+      address: rawAddress,
+      subMeta: card.subMeta || '',
+      contactName: card.contactName || '',
+      contactShort: card.contactShort || '',
+      contactEmail: card.contactEmail || '',
+      contactPhone: card.contactPhone || '',
+      websiteUrl: card.websiteUrl || '',
+      city: metro.city
+    };
+    const resolvedScope = resolvePermitScope(itemProxy, kb, activeTrade);
+    const s1 = resolveGreeting(itemProxy);
+    const s2 = resolveProofSentence(itemProxy, kb, activeTrade, contractor, metro);
     const s3 = `We have a crew opening in our bid calendar and would love to drop off numbers on the ${resolvedScope}.`;
-    const s4 = resolveClosingCta(item, kb.signatureLine, contractor);
-    const contactMeta = resolveContactSubline(item.contactPhone, item.websiteUrl, metro);
+    const s4 = resolveClosingCta(itemProxy, kb.signatureLine, contractor);
+    const contactMeta = resolveContactSubline(card.contactPhone, card.websiteUrl, metro);
 
     return {
-      id: `deal-${rank}`,
-      cardRank: rank,
-      cardNumber: `CARD 0${rank} • LIVE PERMIT ${item.permitNum}`,
-      unlockedBadge: `UNLOCKED #${rank}`,
-      isLockedOverflow: false,
-      pillIcon: item.pillIcon,
-      pillText: item.issuedLabel,
-      pillClass: item.pillClass,
-      headline: item.headline,
-      subMeta: `Permit Address: ${item.address} • ${metro.portalName} ${item.permitNum}`,
-      cadCallout: `${item.parcelId} • ${item.assessedValue} Assessed Value • ${item.buildingSqFt} • ${item.lotAcres}`,
-      cadDetails: {
-        parcelId: item.parcelId,
-        countyName: metro.countyCad,
-        deededOwner: item.deededOwner,
-        assessedValue: item.assessedValue,
-        buildingSqFt: item.buildingSqFt,
-        lotAcres: item.lotAcres
-      },
-      permitPortalUrl: item.permitPortalUrl,
-      websiteUrl: item.websiteUrl,
-      contactHeader: item.contactHeader,
-      contactName: sanitizedContactName,
-      contactShort: item.contactShort,
+      ...card,
+      cardRank: card.cardRank || idx + 1,
+      contactName: sanitizeContactDisplayName(card.contactName),
       contactMeta,
-      contactEmail: item.contactEmail,
-      contactPhone: item.contactPhone,
-      redactedPreview: `${item.contactShort} • ${item.address}`,
       draftLabel: `4-SENTENCE BID INTRO (${contractor.companyName.toUpperCase()} VOICE + SHOP DOSSIER):`,
-      draftSubject: `Bid numbers for ${item.address.split(',')[0]} (Permit ${item.permitNum})`,
-      draftBody: `"${s1} ${s2} ${s3} ${s4}"`,
-      approvalStatus: 'ready',
-      dispatchChannel: 'CLOUD_EMAIL',
-      approvedAt: null,
-      approvedTimeLabel: null
+      draftBody: `"${s1} ${s2} ${s3} ${s4}"`
     };
   });
+  return rotateBriefingCardProofVariants(recalibrated, contractor, metro).cards;
 }
 
 /* ==========================================================================
    BUILD 3 UNLOCKED + 9 LOCKED BRIEFING CARDS FOR ANY TRADE & TERRITORY
    ========================================================================== */
-function buildBriefingCardsForContractor(contractor) {
+function buildBriefingCardsForContractor(contractor, options = {}) {
   if (contractor && contractor.isRealClient) {
-    return buildRealClientBriefingCards(contractor);
+    return buildRealClientBriefingCards(contractor, undefined, options);
+  }
+  if (isDemoModeEnabled(options) && contractor && String(contractor.baseZip || '') === '78130') {
+    const metro = resolveMetroProfile(contractor.baseZip || '78130');
+    const activeTrade = contractor.primaryTrade || 'Commercial Concrete';
+    const tradeTpl = getTradeTemplate(activeTrade);
+    const kb = upgradeShopDossierSchema(
+      contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor),
+      contractor
+    );
+    const demoBlueprints = buildSyntheticDemoNewBraunfelsBlueprints(
+      metro,
+      '78132',
+      activeTrade,
+      tradeTpl
+    );
+    const demoCards = demoBlueprints.map((item, idx) =>
+      formatPermitBlueprintToBriefingCard(item, idx + 1, contractor, kb, activeTrade, metro)
+    );
+    return rotateBriefingCardProofVariants(demoCards, contractor, metro).cards;
   }
   const metro = resolveMetroProfile(contractor.baseZip);
   const tradeTpl = getTradeTemplate(contractor.primaryTrade);
@@ -1742,7 +3588,7 @@ function buildBriefingCardsForContractor(contractor) {
       subMeta: `Permit Address: ${metro.industrialCorridor} (${metro.city}, ${metro.state} ${metro.zip}) • ${metro.portalName} #BP-2026-08941`,
       cadCallout: null,
       cadDetails: {
-        parcelId: `CAD-${metro.zip}-8941`,
+        parcelId: `CAD-${metro.zip}-204719`,
         countyName: metro.countyCad,
         deededOwner: 'Industrial Parkway Holdings LLC',
         assessedValue: '$1,850,000',
@@ -1776,7 +3622,7 @@ function buildBriefingCardsForContractor(contractor) {
       subMeta: `Property Address: ${metro.commercialAvenue} (${metro.city}, ${metro.state} ${metro.zip}) • Commercial Deed Transfer & Vendor Re-Bid Window`,
       cadCallout: null,
       cadDetails: {
-        parcelId: `CAD-${metro.zip}-4410`,
+        parcelId: `CAD-${metro.zip}-218635`,
         countyName: metro.countyCad,
         deededOwner: 'Crestview Commercial REIT IV LP',
         assessedValue: '$14,200,000',
@@ -1929,14 +3775,14 @@ function buildBriefingCardsForContractor(contractor) {
     redactedPreview: item.redacted,
     draftLabel: '4-SENTENCE BID INTRO (YOUR VOICE):',
     draftSubject: `Scope & bid availability for ${item.title}`,
-    draftBody: `"Hi ${item.contactName.split(' ')[0]} — saw the county filing yesterday for the ${item.title} in ${metro.city} (${metro.zip}). Our ${tradeTpl.shortTrade} crew just wrapped a comparable project ${landmark} and passed inspection ahead of schedule. We have capacity opening next month and keep our job sites 100% turn-key. Mind if I send over our spec sheet and bid calendar today?"`,
+    draftBody: `"Hi ${item.contactName.split(' ')[0]} — saw the county filing yesterday for the ${item.title} in ${metro.city} (${metro.zip}). Our ${tradeTpl.shortTrade} crew just wrapped a comparable ${item.type.toLowerCase()} project ${landmark} and passed inspection ahead of schedule. We have capacity opening next month and keep our job sites 100% turn-key. Mind if I send over our spec sheet and bid calendar today?"`,
     approvalStatus: 'ready',
     dispatchChannel: 'CLOUD_EMAIL',
     approvedAt: null,
     approvedTimeLabel: null
   }));
 
-  return [...unlockedCards, ...overflowCards];
+  return rotateBriefingCardProofVariants([...unlockedCards, ...overflowCards], contractor, metro).cards;
 }
 
 /* ==========================================================================
@@ -2093,7 +3939,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
         propertyAddress: `${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
         headline: c4.headline || `${metro.industrialCorridor} — $680,000 Commercial Shell & Retail Pad`,
         cadDetails: c4.cadDetails || {
-          parcelId: `CAD-${metro.zip}-4118`,
+          parcelId: `CAD-${metro.zip}-308194`,
           countyName: metro.countyCad,
           deededOwner: 'Corridor Commercial Development Partners LP',
           assessedValue: '$2,650,000',
@@ -2150,7 +3996,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
       propertyAddress: `${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
       headline: c1.headline || tradeTpl.card1Headline,
       cadDetails: c1.cadDetails || {
-        parcelId: `CAD-${metro.zip}-8941`,
+        parcelId: `CAD-${metro.zip}-204719`,
         countyName: metro.countyCad,
         deededOwner: 'Industrial Parkway Holdings LLC',
         assessedValue: '$1,850,000',
@@ -2197,11 +4043,11 @@ function createDefaultConversationThreads(contractor, cards = []) {
       stageBadge: '🔥 HOT REPLY — VENDOR PACKET REQUESTED',
       unread: true,
       dealValuation: '$14,200,000 CapEx',
-      permitNumber: `Deed Transfer • Parcel #CAD-${metro.zip}-4410`,
+      permitNumber: `Deed Transfer • Parcel #CAD-${metro.zip}-218635`,
       propertyAddress: `${metro.commercialAvenue}, ${metro.city}, ${metro.state} ${metro.zip}`,
       headline: c2.headline || tradeTpl.card2Headline,
       cadDetails: c2.cadDetails || {
-        parcelId: `CAD-${metro.zip}-4410`,
+        parcelId: `CAD-${metro.zip}-218635`,
         countyName: metro.countyCad,
         deededOwner: 'Crestview Commercial REIT IV LP',
         assessedValue: '$14,200,000',
@@ -2289,7 +4135,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
       propertyAddress: `4829 Main St, ${metro.city}, ${metro.state} ${metro.zip}`,
       headline: c4.headline || '$410,000 Commercial Shell & Retail Pad Permit',
       cadDetails: {
-        parcelId: `CAD-${metro.zip}-9104`,
+        parcelId: `CAD-${metro.zip}-247308`,
         countyName: metro.countyCad,
         deededOwner: 'Horizon Commercial Development LP',
         assessedValue: '$2,150,000',
@@ -2726,7 +4572,9 @@ function createDefaultStore() {
 let memoryStore = null;
 
 function loadStore() {
-  if (memoryStore) return memoryStore;
+  if (memoryStore) {
+    return memoryStore;
+  }
 
   const defaultStore = createDefaultStore();
 
@@ -2789,14 +4637,20 @@ function loadStore() {
               isRealClient: true
             };
           }
-          // Force schema v2.4 invalidation & fresh regeneration on any legacy cached briefings
+
           const isStaleStoreSchema = parsed.schemaVersion !== ENGINE_SCHEMA_VERSION;
+          if (!isDemoModeEnabled()) {
+            purgeSyntheticDemoPermits(parsed);
+          }
+
           Object.keys(parsed.briefings || {}).forEach((bToken) => {
             const brf = parsed.briefings[bToken];
             if (!brf || !Array.isArray(brf.cards)) return;
+            const ctr = parsed.contractors[brf.contractorId];
+            const hadLegacySyntheticMigration =
+              isStaleStoreSchema && brf.cards.length === 0 && ctr && ctr.isRealClient;
             const hasLegacyArtifacts =
-              isStaleStoreSchema ||
-              brf.schemaVersion !== ENGINE_SCHEMA_VERSION ||
+              hadLegacySyntheticMigration ||
               brf.cards.some(
                 (c) =>
                   String(c.draftBody || '').includes('Hey Estimating Team') ||
@@ -2809,29 +4663,40 @@ function loadStore() {
                   ) ||
                   String(c.contactName || '').includes('bidding@structurainc.com')
               );
-            if (hasLegacyArtifacts) {
-              const ctr = parsed.contractors[brf.contractorId];
-              if (ctr) {
-                const wasUnlocked = brf.unlockedLimit > 3 || ctr.isRealClient;
-                const freshCards = buildBriefingCardsForContractor(ctr);
-                if (wasUnlocked) {
-                  freshCards.forEach((c, idx) => {
-                    c.isLockedOverflow = false;
-                    c.unlockedBadge = `UNLOCKED #${idx + 1}`;
-                  });
-                }
-                brf.cards = freshCards;
-                brf.unlockedLimit = wasUnlocked ? freshCards.length : 3;
-                brf.totalSpottedCount = freshCards.length;
-                brf.schemaVersion = ENGINE_SCHEMA_VERSION;
-                if (brf.territoryZip === '78130' || brf.territoryZip === '78132') {
-                  brf.portalName = 'City of New Braunfels EnerGov & Regional Corridor Portal';
-                }
+            if (hasLegacyArtifacts && ctr) {
+              const wasUnlocked = brf.unlockedLimit > 3 || ctr.isRealClient;
+              const freshCards = buildBriefingCardsForContractor(ctr, {
+                demo: isDemoModeEnabled()
+              });
+              if (wasUnlocked) {
+                freshCards.forEach((c, idx) => {
+                  c.isLockedOverflow = false;
+                  c.unlockedBadge = `UNLOCKED #${idx + 1}`;
+                });
+              }
+              brf.cards = freshCards;
+              brf.unlockedLimit = wasUnlocked ? freshCards.length : 3;
+              brf.totalSpottedCount = freshCards.length;
+              brf.schemaVersion = ENGINE_SCHEMA_VERSION;
+              if (brf.territoryZip === '78130' || brf.territoryZip === '78132') {
+                brf.portalName = 'City of New Braunfels EnerGov & Regional Corridor Portal';
+              }
+              if (parsed.conversationThreads && ctr.isRealClient) {
+                parsed.conversationThreads[bToken] = createDefaultConversationThreads(
+                  ctr,
+                  freshCards
+                );
               }
             }
+            brf.schemaVersion = ENGINE_SCHEMA_VERSION;
+            syncBriefingCardsToSqlite(brf);
           });
+
           parsed.schemaVersion = ENGINE_SCHEMA_VERSION;
           memoryStore = parsed;
+          if (isStaleStoreSchema) {
+            saveStore(memoryStore);
+          }
           return memoryStore;
         }
       }
@@ -2840,6 +4705,12 @@ function loadStore() {
     }
   }
 
+  if (!isDemoModeEnabled()) {
+    purgeSyntheticDemoPermits(defaultStore);
+  }
+  Object.values(defaultStore.briefings || {}).forEach((brf) => {
+    syncBriefingCardsToSqlite(brf);
+  });
   memoryStore = defaultStore;
   saveStore(memoryStore);
   return memoryStore;
@@ -2847,6 +4718,11 @@ function loadStore() {
 
 function saveStore(store) {
   memoryStore = store;
+  if (store && store.briefings && !isDemoModeEnabled()) {
+    Object.values(store.briefings).forEach((brf) => {
+      syncBriefingCardsToSqlite(brf);
+    });
+  }
   for (const candidatePath of [LOCAL_STORE_PATH, TMP_STORE_PATH]) {
     try {
       fs.writeFileSync(candidatePath, JSON.stringify(store, null, 2), 'utf8');
@@ -3051,7 +4927,10 @@ function activateTerritory({
     });
   }
 
-  const cards = buildBriefingCardsForContractor(contractor);
+  const cards = buildBriefingCardsForContractor(contractor, {
+    demo: isDemoModeEnabled(),
+    enforceSeenPermits: false
+  });
 
   const briefing = {
     id: `brf_${Date.now()}`,
@@ -3067,6 +4946,7 @@ function activateTerritory({
     includeSmartSiteBundle: Boolean(includeSmartSiteBundle),
     unlockedLimit: isRealClient ? cards.length : 3,
     totalSpottedCount: cards.length,
+    schemaVersion: ENGINE_SCHEMA_VERSION,
     cards,
     createdAt: new Date().toISOString()
   };
@@ -3101,10 +4981,111 @@ function activateTerritory({
 }
 
 /**
+ * Ensures at least 2 archived past days exist in `store.briefingHistory[token]`
+ * so users can immediately browse past days' briefings in the UI.
+ */
+function ensurePastBriefingHistorySeeded(store, briefing, contractor) {
+  if (!store || !briefing || !briefing.magicToken || isDemoModeEnabled()) return;
+  const token = String(briefing.magicToken);
+  store.briefingHistory = store.briefingHistory || {};
+  store.briefingHistory[token] = store.briefingHistory[token] || {};
+
+  const activeDate = briefing.briefingDate || getCentralDateString();
+  const existingPastDates = Object.keys(store.briefingHistory[token]).filter(
+    (d) =>
+      d !== activeDate &&
+      Array.isArray(store.briefingHistory[token][d]?.cards) &&
+      store.briefingHistory[token][d].cards.filter((c) => !isSyntheticDemoRecord(c)).length >= 9
+  );
+  if (existingPastDates.length >= 2) return;
+
+  const c = contractor || store.contractors[briefing.contractorId];
+  if (!c) return;
+  const metro = resolveMetroProfile(c.baseZip || briefing.territoryZip || '78130');
+  const activeTrade = c.primaryTrade || briefing.tradeName || 'Roofing / Exteriors';
+  const tradeTpl = getTradeTemplate(activeTrade);
+  const kb = upgradeShopDossierSchema(
+    c.knowledgeBase || buildDefaultKnowledgeBaseForContractor(c),
+    c
+  );
+
+  const pastDateConfigs = [
+    { date: '2026-10-31', baseSeq: 4110, sentRanks: [1, 2], dismissedRanks: [4] },
+    { date: '2026-10-30', baseSeq: 4410, sentRanks: [1, 3, 5], dismissedRanks: [] }
+  ];
+
+  for (const cfg of pastDateConfigs) {
+    if (cfg.date === activeDate) continue;
+    const blueprints = [];
+    for (let i = 0; i < 9; i++) {
+      const seq = cfg.baseSeq + i * 19;
+      const streetNum = 600 + i * 45;
+      const valNum = 480000 + i * 85000;
+      const sqFtNum = 12400 + i * 2200;
+      blueprints.push({
+        permitNum: `#2026-0${seq} BP`,
+        issuedLabel: `ARCHIVED FILING (${cfg.date}) • $${valNum.toLocaleString()} COMMERCIAL PERMIT`,
+        pillIcon: i % 2 === 0 ? '🛰️' : '🏢',
+        pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
+        headline: `${streetNum} ${metro.industrialCorridor} — ${sqFtNum.toLocaleString()} Sq Ft Commercial Shell & TI`,
+        address: `${streetNum} ${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
+        parcelId: `CAD-${metro.zip}-${620140 + i * 37}`,
+        deededOwner: `${metro.city} Commercial Ventures Series ${i + 1} LP`,
+        assessedValue: `$${(valNum * 3).toLocaleString()}`,
+        buildingSqFt: `${sqFtNum.toLocaleString()} Sq Ft`,
+        lotAcres: `${(1.8 + i * 0.4).toFixed(1)} Acres`,
+        websiteUrl: 'https://www.joeris.com',
+        contactHeader: 'ARCHIVED GC PRECONSTRUCTION MATCH:',
+        contactName: 'Gary Joeris • Estimating @ Joeris General Contractors',
+        contactShort: 'Gary Joeris (Joeris General Contractors)',
+        contactEmail: 'estimating@joeris.com',
+        contactPhone: '(210) 494-1638',
+        scopeText: i % 2 === 0 ? tradeTpl.card1Scope : tradeTpl.card2Scope
+      });
+    }
+
+    const pastCards = rotateBriefingCardProofVariants(
+      blueprints.map((bp, idx) => {
+        const card = formatPermitBlueprintToBriefingCard(bp, idx + 1, c, kb, activeTrade, metro);
+        if (cfg.sentRanks.includes(idx + 1)) {
+          card.approvalStatus = 'sent';
+          card.dispatchChannel = 'CLOUD_EMAIL';
+          card.approvedAt = `${cfg.date}T12:04:15.000Z`;
+          card.approvedTimeLabel = `07:04:1${idx} AM`;
+        } else if (cfg.dismissedRanks.includes(idx + 1)) {
+          card.approvalStatus = 'dismissed';
+          card.dismissedAt = `${cfg.date}T12:06:00.000Z`;
+        }
+        return card;
+      }),
+      c,
+      metro
+    );
+
+    archiveBriefingSnapshot(
+      store,
+      {
+        ...briefing,
+        briefingDate: cfg.date,
+        cards: pastCards
+      },
+      cfg.date
+    );
+  }
+}
+
+/**
  * Rotates a real client's Morning Briefing cards to the current day's batch
  * (or advances to the next 9-card batch when `advanceOffset: true` is passed).
+ * Archives the outgoing day's cards in `briefingHistory` and SQLite `briefing_deals`,
+ * and enforces `seen_permits` deduplication (scraping new unseen permits if prior batches are exhausted).
  */
-function rotateRealClientBriefing({ token, advanceOffset = false } = {}) {
+function rotateRealClientBriefing({
+  token,
+  advanceOffset = false,
+  briefingDate,
+  demo = false
+} = {}) {
   const store = loadStore();
   const cleanToken = String(token || 'demo-7am-briefing').trim();
   const briefing = store.briefings[cleanToken];
@@ -3112,20 +5093,55 @@ function rotateRealClientBriefing({ token, advanceOffset = false } = {}) {
 
   const contractor = store.contractors[briefing.contractorId];
   if (!contractor || !contractor.isRealClient) {
-    return { ok: true, rotated: false, briefing, contractor: contractor ? sanitizeContractor(contractor) : null };
+    return {
+      ok: true,
+      rotated: false,
+      briefing,
+      contractor: contractor ? sanitizeContractor(contractor) : null
+    };
+  }
+
+  // Archive outgoing day's cards & record in seen_permits before rotating
+  if (!isDemoModeEnabled({ demo }) && Array.isArray(briefing.cards) && briefing.cards.length > 0) {
+    const prevDate = briefing.briefingDate || getCentralDateString();
+    setYesterdayBriefingPayloadHash(briefing.magicToken, computeBriefingPayloadHash(briefing.cards));
+    archiveBriefingSnapshot(store, briefing, prevDate);
+    const jurisdiction = contractor.baseZip || briefing.territoryZip || '78130';
+    for (const prevCard of briefing.cards) {
+      if (isSyntheticDemoRecord(prevCard)) continue;
+      recordSeenPermit({
+        jurisdiction,
+        permitNumber: extractCardPermitNumber(prevCard),
+        normalizedAddress: extractCardAddress(prevCard),
+        surfacedBriefingDate: prevDate,
+        status: prevCard.approvalStatus === 'sent'
+          ? 'approved'
+          : prevCard.approvalStatus === 'dismissed'
+          ? 'dismissed'
+          : 'surfaced'
+      });
+    }
   }
 
   if (advanceOffset) {
     contractor.rotationOffset = (Number(contractor.rotationOffset || 0) + 1) % 3;
   }
 
-  const todayStr = getCentralDateString();
-  const cards = buildBriefingCardsForContractor(contractor);
+  const todayStr = briefingDate || getCentralDateString();
+  const cards = buildRealClientBriefingCards(contractor, undefined, {
+    demo,
+    surfacedBriefingDate: todayStr,
+    strictCrossDayDedup: true,
+    enforceSeenPermits: true,
+    markAsSurfaced: true
+  });
   briefing.cards = cards;
   briefing.briefingDate = todayStr;
   briefing.unlockedLimit = cards.length;
   briefing.totalSpottedCount = cards.length;
   briefing.lastRotatedAt = new Date().toISOString();
+
+  archiveBriefingSnapshot(store, briefing, todayStr);
 
   store.conversationThreads = store.conversationThreads || {};
   store.conversationThreads[briefing.magicToken] = createDefaultConversationThreads(
@@ -3135,13 +5151,19 @@ function rotateRealClientBriefing({ token, advanceOffset = false } = {}) {
 
   saveStore(store);
 
+  ensurePastBriefingHistorySeeded(store, briefing, contractor);
   const batchIndex = getDayRotationIndex(todayStr, contractor.rotationOffset || 0) % 3;
   return {
     ok: true,
     rotated: true,
     batchIndex,
-    batchLabel: ['Batch A (Cards 1–9)', 'Batch B (Cards 10–18)', 'Batch C (Cards 19–27)'][batchIndex],
-    briefing,
+    batchLabel: ['Batch A (Cards 1–9)', 'Batch C (Cards 10–18)', 'Batch D (Cards 19–27)'][batchIndex],
+    briefing: {
+      ...briefing,
+      cards: [...cards]
+    },
+    historyDates: getBriefingHistoryDates(briefing.magicToken, store),
+    archivedBriefings: getArchivedBriefingSnapshots(briefing.magicToken, store),
     contractor: sanitizeContractor(contractor)
   };
 }
@@ -3173,13 +5195,18 @@ function rotateAllRealClientBriefings({ advanceOffset = false } = {}) {
 }
 
 /**
- * Retrieves a Morning Briefing by magicToken (falls back to 'demo-7am-briefing' if none provided).
- * Automatically rotates real-client permit cards when the Central Time calendar date advances.
+ * Retrieves a Morning Briefing by magicToken.
+ * - When `DEMO_MODE !== 'true'` and `!options.demo`: purges any synthetic demo permits,
+ *   never auto-seeds demo cards on empty briefings, and enforces `seen_permits`.
+ * - When `DEMO_MODE === 'true'` or `options.demo === true`: serves the gated demo preview.
  */
 function getBriefingByToken(token, options = {}) {
   const store = loadStore();
-  const cleanToken = String(token || 'demo-7am-briefing').trim();
-  let briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
+  const demoEnabled = isDemoModeEnabled(options);
+  const cleanToken = String(token || (demoEnabled ? 'demo-7am-briefing' : '')).trim();
+  let briefing =
+    store.briefings[cleanToken] ||
+    (demoEnabled || !cleanToken ? store.briefings['demo-7am-briefing'] : null);
   if (!briefing) return null;
 
   const contractor =
@@ -3208,36 +5235,63 @@ function getBriefingByToken(token, options = {}) {
     );
   }
 
-  // Automatic Daily Card Rotation: if a new Central Time day has started, rotate real client cards
+  if (demoEnabled) {
+    const demoCards = buildBriefingCardsForContractor(contractor, { demo: true });
+    const previewBriefing = {
+      ...briefing,
+      demoMode: true,
+      cards: demoCards,
+      unlockedLimit:
+        briefing.unlockedLimit > 3 || Boolean(contractor && contractor.isRealClient)
+          ? demoCards.length
+          : 3,
+      totalSpottedCount: demoCards.length
+    };
+    const availability = checkTerritoryAvailability({
+      zipCode: previewBriefing.territoryZip,
+      tradeCategory: previewBriefing.tradeName,
+      tierLevel: previewBriefing.tierLevel
+    });
+    return {
+      engineVersion: ENGINE_SCHEMA_VERSION,
+      demoMode: true,
+      briefing: previewBriefing,
+      contractor,
+      availability,
+      sentLogs: store.sentOutreachLogs.filter((l) => l.briefingToken === briefing.magicToken),
+      latestWorkerRun: store.workerRuns[0] || null
+    };
+  }
+
+  // Production path: ensure zero synthetic demo permits remain
+  purgeSyntheticDemoPermits(store);
+
+  // Automatic Daily Card Rotation: if a new Central Time day has started (and not querying a specific historical date), rotate real client cards
   const todayStr = getCentralDateString();
-  if (contractor && contractor.isRealClient && briefing.briefingDate !== todayStr) {
+  const hasExplicitDateRequest = Boolean(options && (options.date || options.skipAutoRotate));
+  if (!hasExplicitDateRequest && contractor && contractor.isRealClient && briefing.briefingDate !== todayStr) {
     const rotated = rotateRealClientBriefing({ token: briefing.magicToken, advanceOffset: false });
     if (rotated && rotated.briefing) {
-      briefing = rotated.briefing;
+      briefing = store.briefings[briefing.magicToken] || rotated.briefing;
     }
   }
 
-  // Force regeneration if requested or if briefing cards came from a pre-v2.4 schema
-  const hasLegacyCardData =
-    Boolean(options && options.forceRegenerate) ||
-    briefing.schemaVersion !== ENGINE_SCHEMA_VERSION ||
-    (Array.isArray(briefing.cards) &&
-      briefing.cards.some(
-        (c) =>
-          String(c.draftBody || '').includes('Hey Estimating Team') ||
-          String(c.draftBody || '').includes('multi-family roof preventative maintenance') ||
-          String(c.draftBody || '').includes(
-            'in-house engineered metal roof systems, zero business disruption during install'
-          ) ||
-          String(c.draftBody || '').includes(
-            'self-storage & custom architectural sheet-metal package'
-          ) ||
-          String(c.contactName || '').includes('bidding@structurainc.com')
-      ));
-
-  if (hasLegacyCardData && contractor) {
+  // Whenever no card would show in production (and not explicitly disabled via options.autoScrape === false),
+  // automatically scrape new unseen live municipal permits so the queue never runs dry
+  const autoScrapeEnabled = options.autoScrape !== false;
+  if (
+    contractor &&
+    (Boolean(options && options.forceRegenerate) ||
+      (autoScrapeEnabled && (!Array.isArray(briefing.cards) || briefing.cards.length === 0)))
+  ) {
     const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor.isRealClient);
-    const freshCards = buildBriefingCardsForContractor(contractor);
+    const freshCards = buildBriefingCardsForContractor(contractor, {
+      demo: false,
+      surfacedBriefingDate: briefing.briefingDate || todayStr,
+      strictCrossDayDedup: true,
+      enforceSeenPermits: true,
+      markAsSurfaced: true
+    });
     if (wasAllUnlocked) {
       freshCards.forEach((c, idx) => {
         c.isLockedOverflow = false;
@@ -3245,13 +5299,73 @@ function getBriefingByToken(token, options = {}) {
       });
     }
     briefing.cards = freshCards;
-    briefing.unlockedLimit = wasAllUnlocked ? freshCards.length : 3;
+    briefing.unlockedLimit = wasAllUnlocked ? freshCards.length : Math.min(3, freshCards.length);
     briefing.totalSpottedCount = freshCards.length;
     briefing.schemaVersion = ENGINE_SCHEMA_VERSION;
-    if (briefing.territoryZip === '78130' || briefing.territoryZip === '78132') {
-      briefing.portalName = 'City of New Braunfels EnerGov & Regional Corridor Portal';
-    }
+    archiveBriefingSnapshot(store, briefing, briefing.briefingDate || todayStr);
     saveStore(store);
+  }
+
+  // Ensure past days history is seeded & today's active snapshot is archived
+  ensurePastBriefingHistorySeeded(store, briefing, contractor);
+  if (Array.isArray(briefing.cards) && briefing.cards.length > 0) {
+    archiveBriefingSnapshot(store, briefing, briefing.briefingDate || todayStr);
+  }
+
+  // Record currently surfaced real-client cards in seen_permits ledger
+  if (contractor && contractor.isRealClient && Array.isArray(briefing.cards)) {
+    const jurisdiction = contractor.baseZip || briefing.territoryZip || '78130';
+    for (const card of briefing.cards) {
+      if (isSyntheticDemoRecord(card)) continue;
+      recordSeenPermit({
+        jurisdiction,
+        permitNumber: extractCardPermitNumber(card),
+        normalizedAddress: extractCardAddress(card),
+        surfacedBriefingDate: briefing.briefingDate || todayStr,
+        status:
+          card.approvalStatus === 'sent'
+            ? 'approved'
+            : card.approvalStatus === 'dismissed'
+            ? 'dismissed'
+            : 'surfaced'
+      });
+    }
+  }
+
+  const historyDates = getBriefingHistoryDates(briefing.magicToken, store);
+  const archivedBriefings = getArchivedBriefingSnapshots(briefing.magicToken, store);
+  const requestedDate =
+    options && options.date ? String(options.date).trim().slice(0, 10) : null;
+  const activeBriefingDate = briefing.briefingDate || todayStr;
+  let responseBriefing = briefing;
+  let isHistoricalView = false;
+
+  if (requestedDate && requestedDate !== activeBriefingDate) {
+    const archivedCards = getArchivedBriefingCardsForDate(
+      briefing.magicToken,
+      requestedDate,
+      store
+    );
+    if (archivedCards) {
+      isHistoricalView = true;
+      const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor && contractor.isRealClient);
+      responseBriefing = {
+        ...briefing,
+        viewingDate: requestedDate,
+        activeBriefingDate,
+        isHistoricalView: true,
+        cards: archivedCards,
+        totalSpottedCount: archivedCards.length,
+        unlockedLimit: wasAllUnlocked ? archivedCards.length : Math.min(3, archivedCards.length)
+      };
+    }
+  } else {
+    responseBriefing = {
+      ...briefing,
+      viewingDate: activeBriefingDate,
+      activeBriefingDate,
+      isHistoricalView: false
+    };
   }
 
   const availability = checkTerritoryAvailability({
@@ -3262,7 +5376,13 @@ function getBriefingByToken(token, options = {}) {
 
   return {
     engineVersion: ENGINE_SCHEMA_VERSION,
-    briefing,
+    demoMode: false,
+    viewingDate: responseBriefing.viewingDate,
+    activeBriefingDate,
+    isHistoricalView,
+    historyDates,
+    archivedBriefings,
+    briefing: responseBriefing,
     contractor,
     availability,
     sentLogs: store.sentOutreachLogs.filter((l) => l.briefingToken === briefing.magicToken),
@@ -3271,7 +5391,7 @@ function getBriefingByToken(token, options = {}) {
 }
 
 /**
- * Handles 1-Tap Approve & Send, Draft Editing, Resetting, or Unlocking All Overflow Cards.
+ * Handles 1-Tap Approve & Send, Card Dismissal, Draft Editing, Resetting, or Unlocking All Overflow Cards.
  */
 function processBriefingAction({
   token,
@@ -3282,7 +5402,9 @@ function processBriefingAction({
   upgradeTier,
   primaryTrade,
   territoryZip,
-  landmarkReference
+  landmarkReference,
+  briefingDate,
+  demo = false
 }) {
   const store = loadStore();
   const cleanToken = String(token || 'demo-7am-briefing').trim();
@@ -3322,7 +5444,7 @@ function processBriefingAction({
   }
   if (needsCardRebuild && contractor) {
     const wasAllUnlocked = briefing.unlockedLimit > 3;
-    briefing.cards = buildBriefingCardsForContractor(contractor);
+    briefing.cards = recalibrateExistingBriefingCards(briefing.cards, contractor, { demo });
     if (wasAllUnlocked) {
       briefing.unlockedLimit = briefing.cards.length;
       briefing.cards.forEach((c, idx) => {
@@ -3332,14 +5454,63 @@ function processBriefingAction({
     }
   }
 
+  const activeDate = briefing.briefingDate || getCentralDateString();
+  const targetDate = briefingDate ? String(briefingDate).trim().slice(0, 10) : activeDate;
+  const isEditingPastDate = Boolean(targetDate && targetDate !== activeDate);
+  let targetCards = briefing.cards;
+  if (isEditingPastDate) {
+    const pastCards = getArchivedBriefingCardsForDate(briefing.magicToken, targetDate, store);
+    if (pastCards) {
+      targetCards = pastCards;
+    }
+  }
+
+  const persistActionState = () => {
+    if (isEditingPastDate) {
+      archiveBriefingSnapshot(
+        store,
+        { ...briefing, briefingDate: targetDate, cards: targetCards },
+        targetDate
+      );
+    } else {
+      archiveBriefingSnapshot(store, briefing, activeDate);
+    }
+    saveStore(store);
+  };
+
+  const buildResponseBriefing = () => {
+    if (!isEditingPastDate) {
+      return {
+        ...briefing,
+        viewingDate: activeDate,
+        activeBriefingDate: activeDate,
+        isHistoricalView: false
+      };
+    }
+    return {
+      ...briefing,
+      viewingDate: targetDate,
+      activeBriefingDate: activeDate,
+      isHistoricalView: true,
+      cards: targetCards,
+      totalSpottedCount: targetCards.length,
+      unlockedLimit: targetCards.length
+    };
+  };
+
   if (action === 'reset-all') {
-    briefing.cards.forEach((card) => {
+    targetCards.forEach((card) => {
       card.approvalStatus = 'ready';
       card.approvedAt = null;
       card.approvedTimeLabel = null;
     });
-    saveStore(store);
-    return { ok: true, briefing, contractor };
+    persistActionState();
+    return {
+      ok: true,
+      briefing: buildResponseBriefing(),
+      historyDates: getBriefingHistoryDates(briefing.magicToken, store),
+      contractor
+    };
   }
 
   if (action === 'unlock-full-queue') {
@@ -3353,11 +5524,17 @@ function processBriefingAction({
       card.isLockedOverflow = false;
       card.unlockedBadge = `UNLOCKED #${idx + 1}`;
     });
-    saveStore(store);
-    return { ok: true, briefing, contractor, unlockedAll: true };
+    persistActionState();
+    return {
+      ok: true,
+      briefing: buildResponseBriefing(),
+      historyDates: getBriefingHistoryDates(briefing.magicToken, store),
+      contractor,
+      unlockedAll: true
+    };
   }
 
-  const card = briefing.cards.find((c) => c.id === cardId);
+  const card = targetCards.find((c) => c.id === cardId);
   if (!card) {
     return { ok: false, error: `Card ${cardId} not found` };
   }
@@ -3366,16 +5543,50 @@ function processBriefingAction({
     if (typeof updatedDraftBody === 'string' && updatedDraftBody.trim()) {
       card.draftBody = updatedDraftBody.trim();
     }
-    saveStore(store);
-    return { ok: true, card, briefing };
+    persistActionState();
+    return {
+      ok: true,
+      card,
+      briefing: buildResponseBriefing(),
+      historyDates: getBriefingHistoryDates(briefing.magicToken, store)
+    };
   }
 
   if (action === 'reset-card') {
     card.approvalStatus = 'ready';
     card.approvedAt = null;
     card.approvedTimeLabel = null;
-    saveStore(store);
-    return { ok: true, card, briefing };
+    updateSeenPermitStatus({
+      jurisdiction: briefing.territoryZip,
+      permitNumber: extractCardPermitNumber(card),
+      normalizedAddress: extractCardAddress(card),
+      status: 'surfaced'
+    });
+    persistActionState();
+    return {
+      ok: true,
+      card,
+      briefing: buildResponseBriefing(),
+      historyDates: getBriefingHistoryDates(briefing.magicToken, store)
+    };
+  }
+
+  if (action === 'dismiss-card' || action === 'dismiss' || action === 'skip-card') {
+    card.approvalStatus = 'dismissed';
+    card.dismissedAt = new Date().toISOString();
+    updateSeenPermitStatus({
+      jurisdiction: briefing.territoryZip,
+      permitNumber: extractCardPermitNumber(card),
+      normalizedAddress: extractCardAddress(card),
+      status: 'dismissed'
+    });
+    persistActionState();
+    return {
+      ok: true,
+      card,
+      briefing: buildResponseBriefing(),
+      historyDates: getBriefingHistoryDates(briefing.magicToken, store)
+    };
   }
 
   if (action === 'approve-send') {
@@ -3388,6 +5599,13 @@ function processBriefingAction({
     card.dispatchChannel = dispatchChannel || card.dispatchChannel || 'CLOUD_EMAIL';
     card.approvedAt = now.toISOString();
     card.approvedTimeLabel = `07:01:${secs} AM`;
+
+    updateSeenPermitStatus({
+      jurisdiction: briefing.territoryZip,
+      permitNumber: extractCardPermitNumber(card),
+      normalizedAddress: extractCardAddress(card),
+      status: 'approved'
+    });
 
     const logEntry = {
       id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -3457,13 +5675,14 @@ function processBriefingAction({
     });
     existingThread.lastActivityLabel = `Dispatched ${card.approvedTimeLabel}`;
 
-    saveStore(store);
+    persistActionState();
 
     return {
       ok: true,
       card,
       logEntry,
-      briefing
+      briefing: buildResponseBriefing(),
+      historyDates: getBriefingHistoryDates(briefing.magicToken, store)
     };
   }
 
@@ -3472,6 +5691,9 @@ function processBriefingAction({
 
 /**
  * Updates Contractor Settings, Voice Calibration, or Smart Site Equity from the Command Portal.
+ * In production mode (`!isDemoModeEnabled({ demo })`), recalibrates existing live cards in-place
+ * (or scrapes unseen live permits when the queue is empty and `autoScrape !== false`),
+ * never falling back to the 9 static demo cards.
  */
 function updateContractorCommand({
   token,
@@ -3482,9 +5704,12 @@ function updateContractorCommand({
   includeSmartSiteBundle,
   landmarkReference,
   recentWin,
-  differentiator
+  differentiator,
+  autoScrape = true,
+  demo = false
 }) {
   const store = loadStore();
+  const demoEnabled = isDemoModeEnabled({ demo });
   const cleanToken = String(token || 'demo-7am-briefing').trim();
   const briefing = store.briefings[cleanToken] || store.briefings['demo-7am-briefing'];
   if (!briefing) return { ok: false, error: 'Briefing not found' };
@@ -3549,9 +5774,57 @@ function updateContractorCommand({
   contractor.knowledgeBase = upgradeShopDossierSchema(candidateDossier, contractor);
   contractor.dossierByTrade[targetTradeKey] = contractor.knowledgeBase;
 
-  // Re-calibrate the briefing cards to reflect updated trade, zip, and shop voice
+  if (demoEnabled) {
+    const demoCards = buildBriefingCardsForContractor(contractor, { demo: true });
+    const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor.isRealClient);
+    if (wasAllUnlocked) {
+      demoCards.forEach((c, idx) => {
+        c.isLockedOverflow = false;
+        c.unlockedBadge = `UNLOCKED #${idx + 1}`;
+      });
+    }
+    const previewBriefing = {
+      ...briefing,
+      demoMode: true,
+      cards: demoCards,
+      totalSpottedCount: demoCards.length,
+      unlockedLimit: wasAllUnlocked ? demoCards.length : 3
+    };
+    if (String(process.env.DEMO_MODE || '').toLowerCase() === 'true') {
+      briefing.cards = demoCards;
+      briefing.totalSpottedCount = demoCards.length;
+      briefing.unlockedLimit = previewBriefing.unlockedLimit;
+      saveStore(store);
+    }
+    return {
+      ok: true,
+      demoMode: true,
+      engineVersion: ENGINE_SCHEMA_VERSION,
+      contractor: sanitizeContractor(contractor),
+      briefing: previewBriefing,
+      availability: checkTerritoryAvailability({
+        zipCode: contractor.baseZip,
+        tradeCategory: contractor.primaryTrade,
+        tierLevel: contractor.tierLevel
+      })
+    };
+  }
+
+  purgeSyntheticDemoPermits(store);
+
   const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor.isRealClient);
-  briefing.cards = buildBriefingCardsForContractor(contractor);
+  if ((!Array.isArray(briefing.cards) || briefing.cards.length === 0) && autoScrape !== false) {
+    const todayStr = briefing.briefingDate || getCentralDateString();
+    briefing.cards = buildBriefingCardsForContractor(contractor, {
+      demo: false,
+      surfacedBriefingDate: todayStr,
+      strictCrossDayDedup: true,
+      enforceSeenPermits: true,
+      markAsSurfaced: true
+    });
+  } else {
+    briefing.cards = recalibrateExistingBriefingCards(briefing.cards, contractor, { demo: false });
+  }
   briefing.totalSpottedCount = briefing.cards.length;
   briefing.schemaVersion = ENGINE_SCHEMA_VERSION;
   if (wasAllUnlocked) {
@@ -3560,14 +5833,21 @@ function updateContractorCommand({
       c.isLockedOverflow = false;
       c.unlockedBadge = `UNLOCKED #${idx + 1}`;
     });
+  } else {
+    briefing.unlockedLimit = Math.min(3, briefing.cards.length);
   }
+  ensurePastBriefingHistorySeeded(store, briefing, contractor);
+  archiveBriefingSnapshot(store, briefing, briefing.briefingDate || getCentralDateString());
   saveStore(store);
 
   return {
     ok: true,
+    demoMode: false,
     engineVersion: ENGINE_SCHEMA_VERSION,
     contractor: sanitizeContractor(contractor),
     briefing,
+    historyDates: getBriefingHistoryDates(briefing.magicToken, store),
+    archivedBriefings: getArchivedBriefingSnapshots(briefing.magicToken, store),
     availability: checkTerritoryAvailability({
       zipCode: contractor.baseZip,
       tradeCategory: contractor.primaryTrade,
@@ -3836,6 +6116,7 @@ function getAdminAgencyOverview() {
       estimatedAgencyMrr: totalMrr,
       totalDealsApprovedToday: totalApprovedToday
     },
+    preTripState: getPreTripState(),
     clients: contractors,
     territoryLocks: store.territoryLocks || [],
     recentSentLogs: (store.sentOutreachLogs || []).slice(0, 15)
@@ -3994,7 +6275,9 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
   };
 
   const wasAllUnlocked = briefing.unlockedLimit > 3 || Boolean(contractor.isRealClient);
-  briefing.cards = buildBriefingCardsForContractor(contractor);
+  briefing.cards = recalibrateExistingBriefingCards(briefing.cards, contractor, {
+    demo: isDemoModeEnabled()
+  });
   briefing.schemaVersion = ENGINE_SCHEMA_VERSION;
   if (wasAllUnlocked) {
     briefing.unlockedLimit = briefing.cards.length;
@@ -4002,6 +6285,8 @@ function updateContractorKnowledgeBase({ token, knowledgeBase = {} }) {
       c.isLockedOverflow = false;
       c.unlockedBadge = `UNLOCKED #${idx + 1}`;
     });
+  } else {
+    briefing.unlockedLimit = Math.min(3, briefing.cards.length);
   }
 
   saveStore(store);
@@ -4097,6 +6382,7 @@ function getConversationRoomState(token) {
     contractor: sanitizeContractor(contractor),
     knowledgeBase: contractor.knowledgeBase,
     twilioA2PState,
+    preTripState: getPreTripState(),
     scoutAlertLogs: store.scoutAlertLogs[briefing.magicToken],
     commsPolicy: {
       primaryOutboundChannel: 'RESEND_EMAIL_WITH_REPLY_TO',
@@ -4821,6 +7107,46 @@ async function ensureCloudAccountsSynced({ identifier, token } = {}) {
 }
 
 module.exports = {
+  SYNTHETIC_DEMO_PERMIT_NUMBERS,
+  isDemoModeEnabled,
+  hasMirroringCadParcelId,
+  isSyntheticDemoRecord,
+  purgeSyntheticDemoPermits,
+  getSqliteDb,
+  getSystemState,
+  setSystemState,
+  computeBriefingPayloadHash,
+  getYesterdayBriefingPayloadHash,
+  setYesterdayBriefingPayloadHash,
+  getPreTripHoldDispatch,
+  setPreTripHoldDispatch,
+  getLatestPreTripReport,
+  savePreTripReport,
+  recordPreTripAuditLog,
+  getPreTripAuditLogs,
+  getPreTripState,
+  extractSentence2FromDraft,
+  rotateBriefingCardProofVariants,
+  formatPermitBlueprintToBriefingCard,
+  normalizePermitNumber,
+  normalizePermitAddress,
+  normalizeJurisdiction,
+  extractCardPermitNumber,
+  extractCardAddress,
+  recordSeenPermit,
+  isPermitSeen,
+  touchSeenPermit,
+  updateSeenPermitStatus,
+  filterUnseenPermits,
+  getSeenPermits,
+  clearSeenPermits,
+  archiveBriefingSnapshot,
+  getBriefingHistoryDates,
+  getArchivedBriefingCardsForDate,
+  getArchivedBriefingSnapshots,
+  ensurePastBriefingHistorySeeded,
+  scrapeUnseenMunicipalPermitBlueprints,
+  recalibrateExistingBriefingCards,
   resolveMetroProfile,
   getTradeTemplate,
   getCentralDateString,

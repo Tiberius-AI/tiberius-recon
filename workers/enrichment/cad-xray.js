@@ -29,7 +29,7 @@ async function runCadTaxRollXRay(trigger) {
 
   if (trigger.triggerType === 'B2B_PM') {
     return {
-      parcelId: `CAD-${metro.zip}-4410B`,
+      parcelId: `CAD-${metro.zip}-218635B`,
       countyName: metro.countyCad,
       deededOwnerName: 'Crestview Commercial REIT IV LP',
       ownerEntityType: 'COMMERCIAL_ENTITY',
@@ -44,7 +44,7 @@ async function runCadTaxRollXRay(trigger) {
   }
 
   return {
-    parcelId: `CAD-${metro.zip}-8941C`,
+    parcelId: `CAD-${metro.zip}-204719C`,
     countyName: metro.countyCad,
     deededOwnerName: 'Industrial Parkway Holdings LLC',
     ownerEntityType: 'COMMERCIAL_ENTITY',

@@ -10,8 +10,15 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
+const { loadStore, purgeSyntheticDemoPermits, isDemoModeEnabled } = require('./db/store');
 
 const ROOT_DIR = __dirname;
+
+// On server startup (when DEMO_MODE !== 'true'), automatically purge any synthetic demo
+// permit rows (BP-2026-06102 through BP-2026-07189) from SQLite and the runtime store.
+if (!isDemoModeEnabled()) {
+  purgeSyntheticDemoPermits(loadStore());
+}
 
 const availabilityHandler = require('./api/recon/availability');
 const activateHandler = require('./api/recon/activate');
@@ -26,6 +33,7 @@ const knowledgeHandler = require('./api/recon/knowledge');
 const inboxHandler = require('./api/recon/inbox');
 const sendHandler = require('./api/recon/send');
 const alertsHandler = require('./api/recon/alerts');
+const pretripHandler = require('./api/recon/pretrip');
 const resendWebhookHandler = require('./api/webhooks/resend');
 const twilioWebhookHandler = require('./api/webhooks/twilio');
 
@@ -43,6 +51,7 @@ const API_ROUTES = {
   '/api/recon/inbox': inboxHandler,
   '/api/recon/send': sendHandler,
   '/api/recon/alerts': alertsHandler,
+  '/api/recon/pretrip': pretripHandler,
   '/api/webhooks/resend': resendWebhookHandler,
   '/api/webhooks/twilio': twilioWebhookHandler
 };
@@ -270,6 +279,9 @@ async function handleRequest(req, res) {
 }
 
 function createReconServer() {
+  if (!isDemoModeEnabled()) {
+    purgeSyntheticDemoPermits(loadStore());
+  }
   return http.createServer(handleRequest);
 }
 

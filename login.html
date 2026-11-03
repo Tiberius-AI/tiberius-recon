@@ -327,6 +327,43 @@
             <p id="admin-kpi-approved" class="mt-1 font-display text-2xl font-extrabold text-blue-400">0</p>
           </div>
         </div>
+
+        <!-- 🩺 5:30 AM Pre-Trip Watchdog & 6:45 AM Circuit Breaker Card -->
+        <div id="admin-pretrip-watchdog-card" class="p-5 rounded-2xl bg-slate-800/95 border border-slate-700 space-y-3.5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2.5">
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+                🩺 5:30 AM Pre-Trip Watchdog
+              </span>
+              <span id="admin-pretrip-status-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+                PASS
+              </span>
+              <span id="admin-pretrip-circuit-pill" class="font-mono-telemetry text-xs text-emerald-400 font-bold">
+                🟢 6:45 AM Circuit Breaker: ARMED
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                id="admin-btn-run-pretrip"
+                type="button"
+                class="btn-executive-navy px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>[ 🩺 Run Pre-Trip Now ]</span>
+              </button>
+              <button
+                id="admin-btn-clear-pretrip-hold"
+                type="button"
+                class="hidden btn-trust-emerald px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>[ 🔓 Clear Hold Lock ]</span>
+              </button>
+            </div>
+          </div>
+          <p id="admin-pretrip-summary" class="text-xs text-slate-300 leading-relaxed">
+            Automated 5:30 AM fleet inspection (Check 1: Seed/Canary Scan • Check 2: Seen-Permits Dedup • Check 3: Sentence #2 Proof Rotation • Check 4: Endpoint Smoke Probe • Check 5: Antigravity Repair Prompt).
+          </p>
+          <pre id="admin-pretrip-repair-prompt" class="hidden p-3 rounded-xl bg-slate-950 border border-red-500/60 font-mono-telemetry text-[11px] text-red-200 whitespace-pre-wrap overflow-x-auto max-h-48"></pre>
+        </div>
       </div>
 
       <!-- Client Accounts Roster Cards -->

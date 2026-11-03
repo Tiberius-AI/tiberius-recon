@@ -12,8 +12,40 @@
 
 const assert = require('assert');
 const { createReconServer } = require('../server');
+const {
+  SYNTHETIC_DEMO_PERMIT_NUMBERS,
+  hasMirroringCadParcelId,
+  isSyntheticDemoRecord,
+  purgeSyntheticDemoPermits,
+  getSqliteDb,
+  recordSeenPermit,
+  isPermitSeen,
+  updateSeenPermitStatus,
+  filterUnseenPermits,
+  getSeenPermits,
+  clearSeenPermits,
+  extractSentence2FromDraft,
+  extractCardPermitNumber,
+  getPreTripHoldDispatch,
+  setPreTripHoldDispatch,
+  getPreTripAuditLogs,
+  getCentralDateString,
+  loadStore,
+  saveStore,
+  buildRealClientBriefingCards
+} = require('../db/store');
+const { runPreTripInspection } = require('../workers/pretrip-inspector');
+const {
+  formatPreTripEmailManifest,
+  dispatchPreTripAdminSms
+} = require('../workers/comms-dispatcher');
+const {
+  buildLivePermitGreeting,
+  resolvePermitValuation
+} = require('../workers/live-zero-api-agent');
 
 async function runTests() {
+  clearSeenPermits();
   const server = createReconServer();
   await new Promise((resolve) => server.listen(0, resolve));
   const { port } = server.address();
@@ -453,13 +485,125 @@ async function runTests() {
     const alertBriefingData = await alertBriefingResp.json();
     assert.strictEqual(alertBriefingData.ok, true);
     assert.strictEqual(alertBriefingData.contractor.companyName, 'A-lert Roof Systems');
+    assert.strictEqual(alertBriefingData.demoMode, false, 'Production briefing must not be in demoMode');
     assert.ok(
       alertBriefingData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
       'A-lert Roof Systems cards must not contain 555 demo numbers'
     );
+    assert.ok(
+      alertBriefingData.briefing.cards.every((c) => !isSyntheticDemoRecord(c)),
+      'Production briefing must never serve the 9 synthetic New Braunfels demo seed records (#BP-2026-06102 through #BP-2026-07189)'
+    );
 
-    console.log('[19/20] Testing Shop Dossier -> 9-Card Generation Pipeline (Greetings, Proof Rotation, Scope Matching, CTAs & ZIP/Office Polish)...');
-    const kbDossier = alertBriefingData.contractor.knowledgeBase;
+    console.log('[19/21] Testing Production Demo-Seed Purge, Empty-Queue Isolation & Gated ?demo=true 9-Card Matrix...');
+    // Verify startup/explicit purge removes synthetic demo permits from SQLite & runtime store
+    const storeForPurge = loadStore();
+    const sqliteDb = getSqliteDb();
+    assert.ok(sqliteDb, 'SQLite database must be initialized');
+    sqliteDb
+      .prepare(
+        `INSERT OR REPLACE INTO briefing_deals (id, briefing_token, jurisdiction, permit_number, normalized_address, headline, contact_name, parcel_id, status)
+         VALUES ('stale-demo-1', 'recon-78130-2101s6', '78130', 'BP-2026-06102', '2950 cold spring dr', 'Creekside Town Center Pad G', 'Wayne Lott', 'CAD-78130-6102', 'ready')`
+      )
+      .run();
+    sqliteDb
+      .prepare(
+        `INSERT OR REPLACE INTO seen_permits (jurisdiction, permit_number, normalized_address, status)
+         VALUES ('78130', 'BP-2026-06102', '2950 cold spring dr', 'surfaced')`
+      )
+      .run();
+
+    const purgeResult = purgeSyntheticDemoPermits(storeForPurge);
+    assert.strictEqual(purgeResult.ok, true);
+    assert.ok(purgeResult.purgedSqlRows >= 2, 'Startup purge must delete synthetic demo rows from SQLite');
+    const remainingStaleDeals = sqliteDb
+      .prepare(`SELECT COUNT(*) AS cnt FROM briefing_deals WHERE permit_number IN (${SYNTHETIC_DEMO_PERMIT_NUMBERS.map(() => '?').join(',')})`)
+      .get(...SYNTHETIC_DEMO_PERMIT_NUMBERS);
+    assert.strictEqual(Number(remainingStaleDeals.cnt), 0, 'Zero synthetic demo rows may remain in briefing_deals');
+
+    // Verify empty briefing queue with autoScrape=false does NOT auto-seed 9 static demo cards,
+    // and with default autoScrape=true automatically scrapes 9 unseen live permits (never static demo cards)
+    const liveStore = loadStore();
+    const savedAlertCards = [...liveStore.briefings['recon-78130-2101s6'].cards];
+    liveStore.briefings['recon-78130-2101s6'].cards = [];
+    saveStore(liveStore);
+
+    const emptyGetResp = await fetch(`${baseUrl}/api/recon/briefing?token=recon-78130-2101s6&autoScrape=false`);
+    const emptyGetData = await emptyGetResp.json();
+    assert.strictEqual(emptyGetData.ok, true);
+    assert.strictEqual(
+      emptyGetData.briefing.cards.length,
+      0,
+      'Empty briefing with autoScrape=false must return 0 cards, never auto-seeding demo cards'
+    );
+
+    const emptyPillResp = await fetch(`${baseUrl}/api/recon/briefing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'recon-78130-2101s6',
+        primaryTrade: 'Commercial Concrete',
+        territoryZip: '78130',
+        landmarkReference: '',
+        autoScrape: false
+      })
+    });
+    const emptyPillData = await emptyPillResp.json();
+    assert.strictEqual(emptyPillData.ok, true);
+    assert.strictEqual(
+      emptyPillData.briefing.cards.length,
+      0,
+      'Clicking trade calibration pill with autoScrape=false must not fallback to 9 demo cards'
+    );
+
+    // Now verify default behavior (when no card would show): automatically scrapes 9 new unseen live permits!
+    const autoScrapeResp = await fetch(`${baseUrl}/api/recon/briefing?token=recon-78130-2101s6`);
+    const autoScrapeData = await autoScrapeResp.json();
+    assert.strictEqual(autoScrapeData.ok, true);
+    assert.strictEqual(
+      autoScrapeData.briefing.cards.length,
+      9,
+      'When no card would show, production briefing must automatically scrape 9 new unseen live permits'
+    );
+    assert.ok(
+      autoScrapeData.briefing.cards.every((c) => !isSyntheticDemoRecord(c)),
+      'Auto-scraped live permits must never contain the 9 synthetic demo records'
+    );
+
+    // Verify Past Days Archive (?date=2026-10-31) returns archived past day's cards & historyDates list
+    assert.ok(
+      Array.isArray(autoScrapeData.historyDates) && autoScrapeData.historyDates.length >= 2,
+      'Briefing response must include historyDates for viewing past days'
+    );
+    const pastDateResp = await fetch(
+      `${baseUrl}/api/recon/briefing?token=recon-78130-2101s6&date=2026-10-31`
+    );
+    const pastDateData = await pastDateResp.json();
+    assert.strictEqual(pastDateData.ok, true);
+    assert.strictEqual(pastDateData.isHistoricalView, true, 'Requesting a past date must set isHistoricalView=true');
+    assert.strictEqual(pastDateData.viewingDate, '2026-10-31');
+    assert.strictEqual(pastDateData.briefing.cards.length, 9, 'Archived past date must return its 9 cards');
+    assert.ok(
+      pastDateData.briefing.cards.some((c) => c.approvalStatus === 'sent'),
+      'Archived past date must preserve approvalStatus ("sent") of cards approved on that day'
+    );
+
+    // Restore live production cards for A-lert Roof Systems and reset trade to Roofing / Exteriors
+    clearSeenPermits({ jurisdiction: '78130' });
+    liveStore.briefings['recon-78130-2101s6'].cards = savedAlertCards;
+    liveStore.contractors['44444444-5555-6666-7777-888888888888'].primaryTrade = 'Roofing / Exteriors';
+    liveStore.briefings['recon-78130-2101s6'].tradeName = 'Roofing / Exteriors';
+    saveStore(liveStore);
+
+    // Now test explicit ?demo=true preview mode for the 9 New Braunfels demo permits & 5-Trade Matrix
+    const demoBriefingResp = await fetch(
+      `${baseUrl}/api/recon/briefing?token=recon-78130-2101s6&demo=true`
+    );
+    const demoBriefingData = await demoBriefingResp.json();
+    assert.strictEqual(demoBriefingData.ok, true);
+    assert.strictEqual(demoBriefingData.demoMode, true);
+
+    const kbDossier = demoBriefingData.contractor.knowledgeBase;
     assert.ok(Array.isArray(kbDossier.coreCapabilities) && kbDossier.coreCapabilities.length >= 3, 'shopDossier.coreCapabilities must be populated');
     assert.ok(kbDossier.crewAndLicenseBadge, 'shopDossier.crewAndLicenseBadge must be populated');
     assert.ok(kbDossier.signatureGuarantee, 'shopDossier.signatureGuarantee must be populated');
@@ -474,7 +618,7 @@ async function runTests() {
     assert.notStrictEqual(kbDossier.proofAngles[0], kbDossier.proofAngles[1]);
     assert.notStrictEqual(kbDossier.proofAngles[1], kbDossier.proofAngles[2]);
 
-    const cards = alertBriefingData.briefing.cards;
+    const cards = demoBriefingData.briefing.cards;
     assert.strictEqual(cards.length, 9);
 
     // 1. Kill the "multi-family" fallback bug and legacy hardcoded roofing string across all 9 commercial cards
@@ -515,8 +659,7 @@ async function runTests() {
       );
     }
 
-    // 2. Verify Sentence #1 persona-aware greeting & contact sanitization on Batch B (Cards 01-09)
-    // Card 01: Wayne Lott @ Lott Brothers Construction (Case A - Named GC Estimator/Precon)
+    // 2. Verify Sentence #1 persona-aware greeting & contact sanitization on ?demo=true cards (Cards 01-09)
     const card01 = cards.find((c) => c.cardNumber.includes('#BP-2026-06102')) || cards[0];
     assert.ok(
       card01.draftBody.includes('Hey Wayne & the Lott Brothers team — saw the commercial permit (#BP-2026-06102) filed for 2950 Cold Spring Dr in New Braunfels.'),
@@ -527,7 +670,6 @@ async function runTests() {
       `Card 01 (512) contactMeta should distinguish Austin GC office vs New Braunfels jobsite: ${card01.contactMeta}`
     );
 
-    // Card 03: Lauren Vance @ Stream Realty Partners (Case B - Property Management / Ownership Persona)
     const card03 = cards.find((c) => c.cardNumber.includes('#BP-2026-06388'));
     assert.ok(card03, 'Card 03 (#BP-2026-06388) should be present');
     assert.ok(
@@ -539,7 +681,6 @@ async function runTests() {
       `Card 03 PM closing CTA should use CapEx comparison numbers: ${card03.draftBody}`
     );
 
-    // Card 04: David Keller @ Keller-Martin Construction (Self-Storage & Metal Envelope, 78132 ZIP, (210) San Antonio Office)
     const card04 = cards.find((c) => c.cardNumber.includes('#BP-2026-06511'));
     assert.ok(card04, 'Card 04 (#BP-2026-06511) should be present');
     assert.ok(
@@ -557,7 +698,6 @@ async function runTests() {
       `Card 04 (210) contactMeta should distinguish San Antonio GC office: ${card04.contactMeta}`
     );
 
-    // Card 07: Structura Inc (Case C - Generic Inbox fallback & Sanitized UI Contact Badge, 78132 ZIP)
     const card07 = cards.find((c) => c.cardNumber.includes('#BP-2026-06915'));
     assert.ok(card07, 'Card 07 (#BP-2026-06915) should be present');
     assert.strictEqual(
@@ -571,7 +711,6 @@ async function runTests() {
     );
     assert.strictEqual(card07.cadDetails.parcelId, 'CAD-78132-6915');
 
-    // Card 08: Gymnasium (#BP-2026-07044) prioritizes structural standing-seam metal roof and never stuffs "self-storage"
     const card08 = cards.find((c) => c.cardNumber.includes('#BP-2026-07044'));
     assert.ok(card08, 'Card 08 (#BP-2026-07044) should be present');
     assert.ok(
@@ -595,7 +734,7 @@ async function runTests() {
       `When landmarkReference is blank, Sentence #2 must rotate through 3 distinct proof variations across the 9 cards (found ${sentence2Set.size})`
     );
 
-    // 4. Verify Landmark Override when NEARBY JOB LANDMARK (SENTENCE #2) is populated
+    // 4. Verify Landmark Override when NEARBY JOB LANDMARK (SENTENCE #2) is populated on live production cards
     const landmarkOverrideResp = await fetch(`${baseUrl}/api/recon/briefing`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -609,13 +748,17 @@ async function runTests() {
     const landmarkOverrideData = await landmarkOverrideResp.json();
     assert.strictEqual(landmarkOverrideData.ok, true);
     assert.ok(
+      landmarkOverrideData.briefing.cards.every((c) => !isSyntheticDemoRecord(c)),
+      'Production landmark override must recalibrate live cards without introducing synthetic demo cards'
+    );
+    assert.ok(
       landmarkOverrideData.briefing.cards.every((c) =>
         c.draftBody.includes('two miles east off FM 306 & Hunter Rd')
       ),
       'Populating NEARBY JOB LANDMARK must inject the landmark phrase into Sentence #2 across all cards'
     );
 
-    // 5. Verify 5-Trade × 9-Permit Matrix in resolvePermitScope (Sentence #3) + 4-Slot Trade-Agnostic Sentence #2 across all 5 Trade Calibration Pills
+    // 5. Verify 5-Trade × 9-Permit Matrix in resolvePermitScope (Sentence #3) + 4-Slot Trade-Agnostic Sentence #2 across all 5 Trade Calibration Pills (with demo: true)
     const expectedScopesByTrade = {
       'Commercial Concrete': {
         '#BP-2026-06102': 'monolithic slab-on-grade, storefront sidewalk aprons & heavy-duty dumpster pad scope',
@@ -705,7 +848,8 @@ async function runTests() {
           token: 'recon-78130-2101s6',
           primaryTrade: pillTrade,
           territoryZip: '78130',
-          landmarkReference: ''
+          landmarkReference: '',
+          demo: true
         })
       });
       const pillData = await pillResp.json();
@@ -770,9 +914,11 @@ async function runTests() {
     );
 
     const initialCard1Contact = alertBriefingData.briefing.cards[0].contactName;
+    const initialPermitNumbers = alertBriefingData.briefing.cards.map((c) => c.cardNumber);
 
-    console.log('[20/20] Testing Daily Card Rotation + 6:45 AM Sweep (/api/recon/cron-morning)...');
+    console.log('[20/21] Testing Daily Card Rotation + Cross-Day Deduplication (/api/recon/cron-morning)...');
     // 20. Verify Daily Card Rotation + 6:45 AM Sweep rotates A-lert Roof Systems to a fresh 9-card batch
+    // with zero overlap against the previously surfaced batch in seen_permits
     const rotateResp = await fetch(`${baseUrl}/api/recon/cron-morning`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -791,20 +937,501 @@ async function runTests() {
       rotateData.briefing.cards.every((c) => !String(c.contactPhone || '').includes('555')),
       'Rotated real client batch must have zero 555 demo numbers'
     );
+    assert.ok(
+      rotateData.briefing.cards.every((c) => !isSyntheticDemoRecord(c)),
+      'Rotated real client batch must never include synthetic demo permits'
+    );
+    assert.ok(
+      rotateData.briefing.cards.every((c) => !initialPermitNumbers.includes(c.cardNumber)),
+      'Cross-day rotation must never resurface permits already recorded in seen_permits'
+    );
 
-    // Rotate 2 more times so A-lert Roof Systems returns to default Batch B (rotationOffset 0) for idempotent test runs
-    for (let r = 0; r < 2; r++) {
-      await fetch(`${baseUrl}/api/recon/cron-morning`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: 'recon-78130-2101s6',
-          rotateBatch: true
+    // Verify Day 3 and Day 4+ rotation: once all 27 pre-built permits are in seen_permits,
+    // Day 4 automatically scrapes 9 brand-new unseen live permits (#2026-10100 BP+) and archives each day
+    const { rotateRealClientBriefing } = require('../db/store');
+    const seenAcrossDays = new Set([
+      ...initialPermitNumbers,
+      ...rotateData.briefing.cards.map((c) => c.cardNumber)
+    ]);
+    const day3Rot = rotateRealClientBriefing({
+      token: 'recon-78130-2101s6',
+      briefingDate: '2026-11-04',
+      advanceOffset: true
+    });
+    assert.strictEqual(day3Rot.ok, true);
+    assert.strictEqual(day3Rot.briefing.cards.length, 9);
+    day3Rot.briefing.cards.forEach((c) => {
+      assert.ok(!seenAcrossDays.has(c.cardNumber), `Day 3 card ${c.cardNumber} must be unseen`);
+      seenAcrossDays.add(c.cardNumber);
+    });
+
+    const day4Rot = rotateRealClientBriefing({
+      token: 'recon-78130-2101s6',
+      briefingDate: '2026-11-05',
+      advanceOffset: true
+    });
+    assert.strictEqual(day4Rot.ok, true);
+    assert.strictEqual(
+      day4Rot.briefing.cards.length,
+      9,
+      'Day 4 (when pre-built pool is exhausted) must auto-scrape 9 new unseen live permits'
+    );
+    day4Rot.briefing.cards.forEach((c) => {
+      assert.ok(!seenAcrossDays.has(c.cardNumber), `Day 4 auto-scraped card ${c.cardNumber} must be unseen`);
+      assert.ok(!isSyntheticDemoRecord(c), 'Day 4 auto-scraped card must not be a synthetic demo record');
+      seenAcrossDays.add(c.cardNumber);
+    });
+
+    // Verify Day 3 ('2026-11-04') was automatically archived and can be viewed via ?date=2026-11-04
+    const archivedDay3Resp = await fetch(
+      `${baseUrl}/api/recon/briefing?token=recon-78130-2101s6&date=2026-11-04`
+    );
+    const archivedDay3Data = await archivedDay3Resp.json();
+    assert.strictEqual(archivedDay3Data.ok, true);
+    assert.strictEqual(archivedDay3Data.isHistoricalView, true);
+    assert.strictEqual(archivedDay3Data.viewingDate, '2026-11-04');
+    assert.strictEqual(archivedDay3Data.briefing.cards.length, 9);
+    assert.strictEqual(
+      archivedDay3Data.briefing.cards[0].cardNumber,
+      day3Rot.briefing.cards[0].cardNumber,
+      'Viewing archived date 2026-11-04 must return the exact cards surfaced on 2026-11-04'
+    );
+
+    console.log('[21/21] Testing seen_permits SQLite Schema, Indexes, Address/Permit Deduplication & Status Transitions...');
+    const schemaMasterRows = sqliteDb
+      .prepare(
+        `SELECT name, type FROM sqlite_master WHERE name IN ('seen_permits', 'idx_seen_permits_lookup', 'idx_seen_permits_address')`
+      )
+      .all();
+    const schemaNames = schemaMasterRows.map((r) => r.name);
+    assert.ok(schemaNames.includes('seen_permits'), 'seen_permits table must exist in SQLite');
+    assert.ok(schemaNames.includes('idx_seen_permits_lookup'), 'idx_seen_permits_lookup index must exist');
+    assert.ok(schemaNames.includes('idx_seen_permits_address'), 'idx_seen_permits_address index must exist');
+
+    clearSeenPermits({ jurisdiction: '78130-TEST' });
+    const firstRecord = recordSeenPermit({
+      jurisdiction: '78130-TEST',
+      permitNumber: '#BP-2026-99001',
+      address: '1500 Industrial Parkway, New Braunfels, TX 78130',
+      surfacedBriefingDate: '2026-11-01',
+      status: 'surfaced'
+    });
+    assert.ok(firstRecord, 'recordSeenPermit must insert and return row');
+    assert.strictEqual(firstRecord.permit_number, 'BP-2026-99001');
+    assert.strictEqual(firstRecord.status, 'surfaced');
+    assert.strictEqual(
+      isPermitSeen({ jurisdiction: '78130-TEST', permitNumber: 'BP-2026-99001' }),
+      true,
+      'Permit must be marked seen by (jurisdiction, permit_number)'
+    );
+    assert.strictEqual(
+      isPermitSeen({
+        jurisdiction: '78130-TEST',
+        permitNumber: 'BP-2026-OTHER',
+        address: '1500 Industrial Pkwy, New Braunfels, TX 78130'
+      }),
+      true,
+      'Permit must also be deduplicated by normalized_address ("Parkway" -> "pkwy")'
+    );
+
+    // Verify filterUnseenPermits excludes already-seen permits on consecutive day and surfaces only new ones
+    const day2Candidates = [
+      {
+        permitNum: '#BP-2026-99001',
+        address: '1500 Industrial Pkwy, New Braunfels, TX 78130',
+        headline: 'Duplicate Permit From Day 1'
+      },
+      {
+        permitNum: '#BP-2026-99002',
+        address: '2800 Loop 337, New Braunfels, TX 78130',
+        headline: 'Brand New Day 2 Permit'
+      }
+    ];
+    const unseenDay2 = filterUnseenPermits(day2Candidates, {
+      jurisdiction: '78130-TEST',
+      surfacedBriefingDate: '2026-11-02',
+      markAsSurfaced: true
+    });
+    assert.strictEqual(unseenDay2.length, 1, 'Only unseen permit should survive deduplication');
+    assert.strictEqual(unseenDay2[0].permitNum, '#BP-2026-99002');
+
+    // Verify status transitions: surfaced -> approved -> dismissed
+    const approvedRow = updateSeenPermitStatus({
+      jurisdiction: '78130-TEST',
+      permitNumber: 'BP-2026-99002',
+      status: 'approved'
+    });
+    assert.strictEqual(approvedRow.status, 'approved');
+
+    // Re-seeing an approved permit as 'surfaced' during a scrape must NOT downgrade its 'approved' status
+    const reseenApproved = recordSeenPermit({
+      jurisdiction: '78130-TEST',
+      permitNumber: 'BP-2026-99002',
+      status: 'surfaced'
+    });
+    assert.strictEqual(
+      reseenApproved.status,
+      'approved',
+      'Re-scraping an approved permit must preserve status="approved"'
+    );
+
+    // Dismissing a card via /api/recon/approve updates seen_permits.status = 'dismissed'
+    const dismissResp = await fetch(`${baseUrl}/api/recon/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'recon-78130-2101s6',
+        action: 'dismiss-card',
+        cardId: 'deal-1'
+      })
+    });
+    const dismissData = await dismissResp.json();
+    assert.strictEqual(dismissData.ok, true);
+    assert.strictEqual(dismissData.card.approvalStatus, 'dismissed');
+    const dismissedLedgerRows = getSeenPermits({ jurisdiction: '78130', status: 'dismissed' });
+    assert.ok(dismissedLedgerRows.length >= 1, 'Dismissing a card must record status="dismissed" in seen_permits');
+
+    console.log('[22/25] Testing 5:30 AM Pre-Trip Inspector Check 1 (Seed & Canary Contamination Auto-Purge)...');
+    clearSeenPermits();
+    // Inject synthetic demo card (BP-2026-06102 + Wayne Lott) AND a canary mirroring CAD parcel card (Permit #2026-099124 + CAD-78130-9124)
+    sqliteDb
+      .prepare(
+        `INSERT OR REPLACE INTO briefing_deals (briefing_token, briefing_date, permit_number, card_json) VALUES (?, ?, ?, ?)`
+      )
+      .run(
+        'recon-78130-2101s6',
+        '2026-11-02',
+        'BP-2026-06102',
+        JSON.stringify({
+          id: 'deal-contaminated-1',
+          cardNumber: 'CARD 01 • PERMIT #BP-2026-06102',
+          contactName: 'Wayne Lott • Lott Brothers Construction',
+          cadCallout: 'Comal CAD Parcel #CAD-78130-6102'
         })
-      });
+      );
+
+    const storeBeforeCheck1 = loadStore();
+    storeBeforeCheck1.briefings['recon-78130-2101s6'].briefingDate = getCentralDateString();
+    storeBeforeCheck1.briefings['recon-78130-2101s6'].cards[0] = {
+      ...storeBeforeCheck1.briefings['recon-78130-2101s6'].cards[0],
+      cardNumber: 'CARD 01 • PERMIT #BP-2026-06102',
+      contactName: 'Wayne Lott • Lott Brothers Construction',
+      cadCallout: 'Comal CAD Parcel #CAD-78130-6102'
+    };
+    storeBeforeCheck1.briefings['recon-78130-2101s6'].cards[1] = {
+      ...storeBeforeCheck1.briefings['recon-78130-2101s6'].cards[1],
+      cardNumber: 'CARD 02 • PERMIT #2026-099124 BP',
+      cadCallout: 'Comal CAD Parcel #CAD-78130-9124 • $650,000 Valuation',
+      cadDetails: { parcelId: 'CAD-78130-9124' }
+    };
+    assert.strictEqual(
+      hasMirroringCadParcelId(storeBeforeCheck1.briefings['recon-78130-2101s6'].cards[1]),
+      true,
+      'hasMirroringCadParcelId must detect CAD-xxxxx-yyyy where yyyy mirrors last 4 digits of permit'
+    );
+    saveStore(storeBeforeCheck1);
+
+    const preTripHeal1 = await runPreTripInspection({
+      token: 'recon-78130-2101s6',
+      baseUrl,
+      simulateComms: true
+    });
+    assert.strictEqual(preTripHeal1.overallStatus, 'AUTO_HEALED', 'Check 1 contamination must trigger AUTO_HEALED');
+    assert.strictEqual(preTripHeal1.holdDispatch, false, 'Auto-healed queue must not lock 6:45 AM dispatch');
+    const check1Result = preTripHeal1.checks.find((c) => c.id === 'seed_and_canary_scan');
+    assert.strictEqual(check1Result.status, 'AUTO_HEALED');
+    assert.ok(preTripHeal1.heals.length >= 1, 'heals[] must log the Check 1 auto-purge');
+
+    // Verify SQLite & active briefing cards are now 100% free of BP-2026-06102, Wayne Lott, and mirroring CAD-78130-9124
+    const remainingSqlCanary = sqliteDb
+      .prepare(`SELECT COUNT(*) AS cnt FROM briefing_deals WHERE permit_number = 'BP-2026-06102'`)
+      .get();
+    assert.strictEqual(remainingSqlCanary.cnt, 0, 'BP-2026-06102 must be purged from SQLite briefing_deals');
+    const storeAfterCheck1 = loadStore();
+    const cleanedCards1 = storeAfterCheck1.briefings['recon-78130-2101s6'].cards;
+    assert.strictEqual(cleanedCards1.length, 9, 'Briefing must be replenished back to 9 clean cards');
+    assert.ok(
+      cleanedCards1.every((c) => !isSyntheticDemoRecord(c) && !hasMirroringCadParcelId(c)),
+      'Zero synthetic or canary mirroring CAD cards may remain after Check 1 Auto-Heal'
+    );
+
+    console.log('[23/25] Testing Pre-Trip Check 2 (Prior-Day seen_permits Duplicate Removal & Live Replenishment) + Check 3 (Sentence #2 Proof Rotation)...');
+    const storeBeforeCheck2 = loadStore();
+    const targetBriefing2 = storeBeforeCheck2.briefings['recon-78130-2101s6'];
+    targetBriefing2.briefingDate = getCentralDateString();
+    const card0Permit = extractCardPermitNumber(targetBriefing2.cards[0]);
+    const card1Permit = extractCardPermitNumber(targetBriefing2.cards[1]);
+
+    // Mark card 0 and card 1 as already surfaced on a PRIOR date ('2026-10-30') in seen_permits
+    sqliteDb
+      .prepare(
+        `UPDATE seen_permits SET surfaced_briefing_date = '2026-10-30' WHERE jurisdiction = '78130' AND permit_number IN (?, ?)`
+      )
+      .run(card0Permit, card1Permit);
+
+    saveStore(storeBeforeCheck2);
+
+    const preTripHeal2 = await runPreTripInspection({
+      token: 'recon-78130-2101s6',
+      baseUrl,
+      simulateComms: true
+    });
+    assert.strictEqual(preTripHeal2.overallStatus, 'AUTO_HEALED');
+    const check2Res = preTripHeal2.checks.find((c) => c.id === 'day_over_day_duplicate_check');
+    assert.strictEqual(check2Res.status, 'AUTO_HEALED', 'Check 2 must auto-heal prior-day duplicate permits');
+
+    const storeAfterCheck2 = loadStore();
+    const healedCards2 = storeAfterCheck2.briefings['recon-78130-2101s6'].cards;
+    assert.strictEqual(healedCards2.length, 9, 'Replenished queue must have 9 cards');
+    const healedPermitNums = healedCards2.map((c) => extractCardPermitNumber(c));
+    assert.ok(
+      !healedPermitNums.includes(card0Permit) && !healedPermitNums.includes(card1Permit),
+      'Prior-day duplicate permits must be removed and replaced with fresh unseen permits'
+    );
+
+    // Now force cards 2 and 3 to share an identical Sentence #2 string to verify Check 3 proof rotation auto-heal
+    storeAfterCheck2.briefings['recon-78130-2101s6'].cards[3].draftBody =
+      storeAfterCheck2.briefings['recon-78130-2101s6'].cards[2].draftBody;
+    saveStore(storeAfterCheck2);
+
+    const preTripHeal2And3 = await runPreTripInspection({
+      token: 'recon-78130-2101s6',
+      baseUrl,
+      simulateComms: true
+    });
+    assert.strictEqual(preTripHeal2And3.overallStatus, 'AUTO_HEALED');
+    const check3Res = preTripHeal2And3.checks.find((c) => c.id === 'sentence2_repetition_check');
+    assert.strictEqual(check3Res.status, 'AUTO_HEALED', 'Check 3 must auto-rotate duplicate Sentence #2 proof strings');
+
+    const storeAfterCheck3 = loadStore();
+    const healedCards3 = storeAfterCheck3.briefings['recon-78130-2101s6'].cards;
+    const s2Set = new Set(healedCards3.map((c) => extractSentence2FromDraft(c.draftBody).toLowerCase()));
+    assert.strictEqual(
+      s2Set.size,
+      healedCards3.length,
+      'Every card in the healed briefing must have a 100% unique Sentence #2 proof-point string'
+    );
+
+    // Running Pre-Trip again immediately after healing must return clean PASS
+    const preTripCleanPass = await runPreTripInspection({
+      token: 'recon-78130-2101s6',
+      baseUrl,
+      simulateComms: true
+    });
+    assert.strictEqual(preTripCleanPass.overallStatus, 'PASS', 'Clean queue must pass Pre-Trip with PASS');
+    assert.strictEqual(preTripCleanPass.holdDispatch, false);
+    assert.strictEqual(preTripCleanPass.heals.length, 0);
+    assert.strictEqual(preTripCleanPass.failures.length, 0);
+    assert.strictEqual(preTripCleanPass.agRepairPrompt, null);
+
+    console.log('[24/25] Testing Pre-Trip Check 5 RED_TAGGED, Antigravity Repair Prompt & 6:45 AM Circuit Breaker Lock on /api/recon/cron-morning...');
+    const redTagReport = await runPreTripInspection({
+      token: 'recon-78130-2101s6',
+      baseUrl,
+      simulateEndpointFailure: 'https://newbraunfelsinsider.com/health-check-probe',
+      simulateComms: true
+    });
+    assert.strictEqual(redTagReport.overallStatus, 'RED_TAGGED', 'Unhealed check failure must set overallStatus = RED_TAGGED');
+    assert.strictEqual(redTagReport.holdDispatch, true, 'RED_TAGGED must engage holdDispatch = true');
+    assert.strictEqual(getPreTripHoldDispatch(), true, 'SQLite system_state pretrip_hold_dispatch must be true');
+    assert.ok(
+      typeof redTagReport.agRepairPrompt === 'string' &&
+        redTagReport.agRepairPrompt.includes('Antigravity Emergency Repair Task') &&
+        redTagReport.agRepairPrompt.includes('Check 4: Fleet Endpoint & Webhook Smoke Probe') &&
+        redTagReport.agRepairPrompt.includes('server.js'),
+      'RED_TAGGED report must include a ready-to-paste agRepairPrompt naming the failing check and suspect files'
+    );
+
+    // Verify 6:45 AM Circuit Breaker blocks /api/recon/cron-morning when pretrip_hold_dispatch is true
+    const blockedCronResp = await fetch(`${baseUrl}/api/recon/cron-morning`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    assert.strictEqual(blockedCronResp.status, 423, 'Locked circuit breaker must return HTTP 423 Locked on /api/recon/cron-morning');
+    const blockedCronData = await blockedCronResp.json();
+    assert.strictEqual(blockedCronData.ok, false);
+    assert.strictEqual(blockedCronData.blockedByCircuitBreaker, true);
+    assert.strictEqual(blockedCronData.holdDispatch, true);
+
+    const auditLogs = getPreTripAuditLogs();
+    assert.ok(
+      auditLogs.some((entry) => entry.event === 'CIRCUIT_BREAKER_BLOCKED_645AM_DISPATCH'),
+      'Blocked 6:45 AM cron dispatch must be recorded in the Pre-Trip audit trail'
+    );
+
+    // Clear the Hold Lock via POST /api/recon/pretrip { action: 'clear_hold' } and verify /api/recon/cron-morning succeeds
+    const clearHoldResp = await fetch(`${baseUrl}/api/recon/pretrip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'clear_hold' })
+    });
+    const clearHoldData = await clearHoldResp.json();
+    assert.strictEqual(clearHoldData.ok, true);
+    assert.strictEqual(clearHoldData.holdDispatch, false);
+    assert.strictEqual(getPreTripHoldDispatch(), false);
+
+    console.log('[25/25] Testing 5:35 AM Resend Pre-Trip Manifest Email & Master Twilio SMS Alert Formatting...');
+    const passEmail = formatPreTripEmailManifest(preTripCleanPass);
+    const healEmail = formatPreTripEmailManifest(preTripHeal2And3);
+    const redTagEmail = formatPreTripEmailManifest(redTagReport);
+
+    assert.ok(passEmail.subject.startsWith('[🟢 PRE-TRIP PASS]'), 'PASS email subject must start with [🟢 PRE-TRIP PASS]');
+    assert.ok(healEmail.subject.startsWith('[🟡 PRE-TRIP AUTO-HEALED]'), 'AUTO_HEALED email subject must start with [🟡 PRE-TRIP AUTO-HEALED]');
+    assert.ok(
+      redTagEmail.subject.startsWith('[🔴 PRE-TRIP RED-TAG — 6:45 AM HELD]'),
+      'RED_TAGGED email subject must start with [🔴 PRE-TRIP RED-TAG — 6:45 AM HELD]'
+    );
+    assert.ok(
+      redTagEmail.text.includes(redTagReport.agRepairPrompt) &&
+        redTagEmail.html.includes('Antigravity Emergency Repair Task'),
+      'RED_TAGGED email HTML & plain-text bodies must contain the copy-pasteable agRepairPrompt block'
+    );
+
+    const healSms = await dispatchPreTripAdminSms({
+      report: preTripHeal2And3,
+      baseUrl: 'https://www.tiberius.ai',
+      simulateOnly: true
+    });
+    assert.strictEqual(healSms.ok, true);
+    assert.ok(
+      healSms.smsBody.includes('[PRE-TRIP AUTO-HEALED]') &&
+        healSms.smsBody.includes('https://www.tiberius.ai/recon/admin'),
+      'Auto-Healed SMS must summarize heals and link straight to /recon/admin'
+    );
+
+    const redTagSms = await dispatchPreTripAdminSms({
+      report: redTagReport,
+      baseUrl: 'https://www.tiberius.ai',
+      simulateOnly: true
+    });
+    assert.strictEqual(redTagSms.ok, true);
+    assert.ok(
+      redTagSms.smsBody.includes('[PRE-TRIP RED-TAG]') &&
+        redTagSms.smsBody.includes('6:45 AM Dispatch HELD') &&
+        redTagSms.smsBody.includes('https://www.tiberius.ai/recon/admin'),
+      'Red-Tagged SMS must warn that 6:45 AM Dispatch is HELD and link straight to /recon/admin'
+    );
+
+    console.log('[26/26] Testing Full-Account Live Permit Pull (78130 Territory Match, Zero Locked Vault, No $0 Permits, Role-Title Greeting & Persistent Archive Section)...');
+    // 1. Verify greeting fallback for generic role titles ("Project Manager", "Preconstruction Desk", "Estimating Team")
+    assert.strictEqual(
+      buildLivePermitGreeting('Project Manager', 'SpawGlass Contractors Inc'),
+      'Hey SpawGlass team —',
+      'Project Manager must greet as "Hey [Company] team —", never "Hey Project —"'
+    );
+    assert.strictEqual(
+      buildLivePermitGreeting('Preconstruction Desk', 'Joeris General Contractors'),
+      'Hey Joeris team —',
+      'Preconstruction Desk must greet as "Hey [Company] team —"'
+    );
+    assert.strictEqual(
+      buildLivePermitGreeting('Estimating Team', 'Bartlett Cocke GC'),
+      'Hey Bartlett Cocke GC team —',
+      'Estimating Team must greet as "Hey [Company] team —"'
+    );
+    assert.strictEqual(
+      buildLivePermitGreeting('Ryan Ogle', 'SpawGlass Contractors Inc'),
+      'Hey Ryan —',
+      'Named contact must still greet by first name'
+    );
+
+    // 2. Verify $0 permit valuation resolution & square-footage estimation
+    const zeroValWithSqFt = resolvePermitValuation(
+      { total_job_valuation: '0', total_valuation_remodel: '0', total_new_add_sqft: '18000' },
+      150000
+    );
+    assert.ok(
+      zeroValWithSqFt.valuation >= 150000 && zeroValWithSqFt.isEstimated === true,
+      'Unvalued commercial sq-ft permit with "0" valuation must estimate valuation from sq ft instead of returning $0'
+    );
+    const zeroValNoSqFt = resolvePermitValuation(
+      { total_job_valuation: '0', total_valuation_remodel: 0, total_new_add_sqft: 0 },
+      150000
+    );
+    assert.strictEqual(
+      zeroValNoSqFt.valuation,
+      0,
+      'Permit with $0 valuation and 0 sq ft must return 0 so it is filtered out'
+    );
+
+    // 3. Verify clicking Pull Real Live Permits (/api/recon/live-agent) on a 78130 full account:
+    //    - Returns 9 unlocked cards (0 locked overflow cards)
+    //    - Preserves 78130 / New Braunfels & Comal CAD territory (never overwrites with Austin AB+C / TCAD)
+    //    - Contains zero "$0 PERMIT" strings and zero "Hey Project —" greetings
+    //    - Preserves archivedBriefings and historyDates for the bottom Archived section
+    const livePull78130Resp = await fetch(`${baseUrl}/api/recon/live-agent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'recon-78130-2101s6',
+        primaryTrade: 'Roofing / Exteriors',
+        territoryZip: '78130',
+        landmarkReference: ''
+      })
+    });
+    const livePull78130Data = await livePull78130Resp.json();
+    assert.strictEqual(livePull78130Data.ok, true);
+    assert.strictEqual(livePull78130Data.briefing.territoryZip, '78130');
+    assert.ok(
+      /New Braunfels/i.test(livePull78130Data.briefing.metroCity),
+      `Expected New Braunfels metroCity after live pull on 78130, got: ${livePull78130Data.briefing.metroCity}`
+    );
+    assert.ok(
+      /Comal/i.test(livePull78130Data.briefing.countyCad),
+      `Expected Comal CAD after live pull on 78130, got: ${livePull78130Data.briefing.countyCad}`
+    );
+    assert.strictEqual(
+      livePull78130Data.briefing.cards.length,
+      9,
+      'Full account live permit pull must return all 9 qualifying unseen permits'
+    );
+    assert.strictEqual(
+      livePull78130Data.briefing.cards.filter((c) => c.isLockedOverflow).length,
+      0,
+      'Full account live permit pull must have 0 locked overflow cards'
+    );
+    for (const card of livePull78130Data.briefing.cards) {
+      assert.ok(
+        !/\$0\s+PERMIT/i.test(card.pillText),
+        `Card ${card.cardNumber} must never display "$0 PERMIT": ${card.pillText}`
+      );
+      assert.ok(
+        !/Hey\s+Project\b/i.test(card.draftBody),
+        `Card ${card.cardNumber} must never greet as "Hey Project": ${card.draftBody}`
+      );
+    }
+    assert.ok(
+      Array.isArray(livePull78130Data.archivedBriefings) &&
+        livePull78130Data.archivedBriefings.length >= 2,
+      'Live permit pull response must keep archivedBriefings populated with past days cards'
+    );
+
+    const briefingPageResp = await fetch(`${baseUrl}/briefing`);
+    const briefingPageHtml = await briefingPageResp.text();
+    assert.ok(
+      briefingPageHtml.includes('id="briefing-archived-section"') &&
+        briefingPageHtml.includes('id="briefing-history-bar"') &&
+        briefingPageHtml.includes('v2.6'),
+      'briefing.html must render #briefing-archived-section, #briefing-history-bar, and v2.6'
+    );
+
+    // Reset state for idempotent test runs
+    clearSeenPermits();
+    setPreTripHoldDispatch(false, 'Test suite cleanup');
+    const finalStore = loadStore();
+    const alertCtr = finalStore.contractors['44444444-5555-6666-7777-888888888888'];
+    if (alertCtr) {
+      alertCtr.rotationOffset = 0;
+      alertCtr.primaryTrade = 'Roofing / Exteriors';
+      if (alertCtr.voiceProfile) alertCtr.voiceProfile.landmarkReference = '';
+      const resetCards = buildRealClientBriefingCards(alertCtr, 0, { demo: false });
+      finalStore.briefings['recon-78130-2101s6'].cards = resetCards;
+      finalStore.briefings['recon-78130-2101s6'].tradeName = 'Roofing / Exteriors';
+      saveStore(finalStore);
     }
 
-    console.log('\n✅ ALL 20 TIBERIUS RECON™ END-TO-END, SHOP DOSSIER PIPELINE, POST-PAY ONBOARDING, DAILY CARD ROTATION, RESEND/TWILIO WEBHOOK, MASTER A2P SCOUT SMS & CONVERSATION ROOM TESTS PASSED.');
+    console.log('\n✅ ALL 26 TIBERIUS RECON™ END-TO-END, 5:30 AM PRE-TRIP INSPECTOR, FULL-ACCOUNT LIVE PERMIT PULL, & ARCHIVE TESTS PASSED.');
   } finally {
     server.close();
   }

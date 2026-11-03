@@ -7,23 +7,49 @@
  */
 
 const { injectLiveZeroApiCardsIntoBriefing } = require('../../workers/live-zero-api-agent');
+const { hydrateAccountFromSession, ensureCloudAccountsSynced } = require('../../db/store');
+const { extractSessionFromRequest } = require('../../db/auth');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Recon-Session');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   const params = req.method === 'POST' ? req.body || {} : req.query || {};
+  const sessionClaims = extractSessionFromRequest(req);
 
   try {
+    const initialToken =
+      params.token ||
+      (sessionClaims && sessionClaims.magicToken) ||
+      'demo-7am-briefing';
+    await ensureCloudAccountsSynced({ token: initialToken });
+    const hydrated = sessionClaims ? hydrateAccountFromSession(sessionClaims) : null;
+    const resolvedToken =
+      params.token ||
+      (hydrated && hydrated.account && hydrated.account.magicToken) ||
+      'demo-7am-briefing';
+    const resolvedTerritoryZip =
+      params.territoryZip ||
+      params.zipCode ||
+      params.zip ||
+      (hydrated && hydrated.account && hydrated.account.baseZip) ||
+      undefined;
+
     const result = await injectLiveZeroApiCardsIntoBriefing({
-      token: params.token || 'demo-7am-briefing',
-      primaryTrade: params.primaryTrade || params.trade || 'Commercial Concrete',
-      landmarkReference: params.landmarkReference || 'two miles east off IH-35'
+      token: resolvedToken,
+      primaryTrade:
+        params.primaryTrade ||
+        params.trade ||
+        (hydrated && hydrated.account && hydrated.account.primaryTrade) ||
+        '',
+      territoryZip: resolvedTerritoryZip,
+      landmarkReference: params.landmarkReference !== undefined ? params.landmarkReference : undefined
     });
     return res.status(200).json(result);
   } catch (err) {

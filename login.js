@@ -30,6 +30,74 @@
   const adminActionStatus = document.getElementById('admin-action-status');
   const adminCreateClientForm = document.getElementById('admin-create-client-form');
 
+  const adminPretripStatusBadge = document.getElementById('admin-pretrip-status-badge');
+  const adminPretripCircuitPill = document.getElementById('admin-pretrip-circuit-pill');
+  const adminPretripSummary = document.getElementById('admin-pretrip-summary');
+  const adminPretripRepairPrompt = document.getElementById('admin-pretrip-repair-prompt');
+  const adminBtnRunPretrip = document.getElementById('admin-btn-run-pretrip');
+  const adminBtnClearPretripHold = document.getElementById('admin-btn-clear-pretrip-hold');
+
+  function renderAdminPreTripState(preTrip) {
+    if (!preTrip) return;
+    const rawStatus = String(preTrip.overallStatus || 'PASS').toUpperCase();
+    const displayStatus =
+      rawStatus === 'RED_TAGGED'
+        ? 'RED-TAGGED'
+        : rawStatus === 'AUTO_HEALED'
+        ? 'AUTO-HEALED'
+        : 'PASS';
+    const holdDispatch = Boolean(preTrip.holdDispatch);
+    const report = preTrip.latestReport || {};
+    const heals = Array.isArray(report.heals) ? report.heals : [];
+    const failures = Array.isArray(report.failures) ? report.failures : [];
+
+    if (adminPretripStatusBadge) {
+      adminPretripStatusBadge.textContent = displayStatus;
+      adminPretripStatusBadge.className =
+        rawStatus === 'RED_TAGGED'
+          ? 'px-2.5 py-1 rounded-full bg-red-500/20 border border-red-400/50 font-mono-telemetry text-xs text-red-300 font-bold'
+          : rawStatus === 'AUTO_HEALED'
+          ? 'px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 font-mono-telemetry text-xs text-amber-300 font-bold'
+          : 'px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold';
+    }
+    if (adminPretripCircuitPill) {
+      adminPretripCircuitPill.textContent = holdDispatch
+        ? '🔴 6:45 AM Circuit Breaker: LOCKED (DISPATCH HELD)'
+        : '🟢 6:45 AM Circuit Breaker: ARMED';
+      adminPretripCircuitPill.className = holdDispatch
+        ? 'font-mono-telemetry text-xs text-red-400 font-bold'
+        : 'font-mono-telemetry text-xs text-emerald-400 font-bold';
+    }
+    if (adminBtnClearPretripHold) {
+      if (holdDispatch) {
+        adminBtnClearPretripHold.classList.remove('hidden');
+      } else {
+        adminBtnClearPretripHold.classList.add('hidden');
+      }
+    }
+    if (adminPretripSummary) {
+      if (rawStatus === 'RED_TAGGED') {
+        adminPretripSummary.textContent = `🔴 RED-TAGGED (${failures.length} failure): ${(
+          failures[0] && (failures[0].reason || failures[0].check)
+        ) || '6:45 AM contractor blast is held.'}`;
+      } else if (rawStatus === 'AUTO_HEALED') {
+        adminPretripSummary.textContent = `🟡 AUTO-HEALED (${heals.length} heal): ${(
+          heals[0] && (heals[0].action || heals[0].check)
+        ) || 'Queue auto-healed and armed for 6:45 AM.'}`;
+      } else if (report.timestamp) {
+        adminPretripSummary.textContent = `🟢 All 5 Pre-Trip checks passed at ${report.timestamp}. 6:45 AM Dispatch Armed.`;
+      }
+    }
+    if (adminPretripRepairPrompt) {
+      if (report.agRepairPrompt) {
+        adminPretripRepairPrompt.textContent = report.agRepairPrompt;
+        adminPretripRepairPrompt.classList.remove('hidden');
+      } else {
+        adminPretripRepairPrompt.classList.add('hidden');
+      }
+    }
+  }
+
   function getSessionHeaders() {
     const headers = { 'Content-Type': 'application/json' };
     const jwt = localStorage.getItem('tiberius_recon_session_jwt');
@@ -123,6 +191,9 @@
     }
     if (adminKpiApproved) {
       adminKpiApproved.textContent = String(metrics.totalDealsApprovedToday || 0);
+    }
+    if (data.preTripState) {
+      renderAdminPreTripState(data.preTripState);
     }
 
     if (!adminClientsGrid) return;
@@ -333,6 +404,52 @@
       }
       renderAuthenticatedSession(null, null);
       showMessage('success', 'Signed out of session.');
+    });
+  }
+
+  if (adminBtnRunPretrip) {
+    adminBtnRunPretrip.addEventListener('click', async () => {
+      const origHtml = adminBtnRunPretrip.innerHTML;
+      adminBtnRunPretrip.innerHTML = '<span>🩺 Running Pre-Trip...</span>';
+      try {
+        const resp = await fetch('/api/recon/pretrip', {
+          method: 'POST',
+          headers: getSessionHeaders(),
+          body: JSON.stringify({ manualTrigger: true })
+        });
+        const data = await resp.json();
+        if (data && data.preTripState) {
+          renderAdminPreTripState(data.preTripState);
+          if (adminActionStatus) {
+            adminActionStatus.textContent = `✓ Pre-Trip completed: ${data.overallStatus}`;
+          }
+        }
+      } catch (_err) {
+        // Ignore
+      } finally {
+        adminBtnRunPretrip.innerHTML = origHtml;
+      }
+    });
+  }
+
+  if (adminBtnClearPretripHold) {
+    adminBtnClearPretripHold.addEventListener('click', async () => {
+      try {
+        const resp = await fetch('/api/recon/pretrip', {
+          method: 'POST',
+          headers: getSessionHeaders(),
+          body: JSON.stringify({ action: 'clear_hold' })
+        });
+        const data = await resp.json();
+        if (data && data.preTripState) {
+          renderAdminPreTripState(data.preTripState);
+          if (adminActionStatus) {
+            adminActionStatus.textContent = '✓ Cleared 6:45 AM Circuit Breaker Hold Lock';
+          }
+        }
+      } catch (_err) {
+        // Ignore
+      }
     });
   }
 

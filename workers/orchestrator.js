@@ -16,12 +16,20 @@ const { sweepB2BAndDeedSignals } = require('./scrapers/b2b-deed-scout');
 const { runCadTaxRollXRay } = require('./enrichment/cad-xray');
 const { resolveDecisionMakerContact } = require('./enrichment/contact-resolver');
 const { generateShopVoiceDraft } = require('./drafting/gemini-drafter');
-const { loadStore, saveStore } = require('../db/store');
+const {
+  loadStore,
+  saveStore,
+  isSyntheticDemoRecord,
+  filterUnseenPermits,
+  recordSeenPermit,
+  getCentralDateString
+} = require('../db/store');
 
 async function runNightlyReconPipeline({
   zipCode = '78130',
   primaryTrade = 'Commercial Concrete',
-  dryRun = false
+  dryRun = false,
+  strictCrossDayDedup = false
 } = {}) {
   const startedAt = new Date().toISOString();
 
@@ -33,12 +41,27 @@ async function runNightlyReconPipeline({
     sweepB2BAndDeedSignals({ zipCode })
   ]);
 
-  const rawTriggers = [
+  const allRawTriggers = [
     ...accelaRes.permits,
     ...b2bRes.triggers,
     ...energovRes.permits,
     ...socrataRes.permits
-  ];
+  ]
+    .filter((t) => !isSyntheticDemoRecord(t))
+    .map((t) => ({
+      ...t,
+      permit_number: t.externalPermitId,
+      address: t.propertyAddress
+    }));
+
+  const todayStr = getCentralDateString();
+  // Filter out any permit already in seen_permits BEFORE Stage 2 CAD X-Ray or Stage 3 Gemini drafting
+  const rawTriggers = filterUnseenPermits(allRawTriggers, {
+    jurisdiction: zipCode,
+    surfacedBriefingDate: todayStr,
+    allowSameBriefingDate: strictCrossDayDedup ? null : todayStr,
+    markAsSurfaced: false
+  });
 
   // Stage 2 & 3: 4:30 AM CAD Tax Roll X-Ray + Contact Resolution + 5:30 AM 4-Sentence Drafting
   const contractor = {
@@ -71,6 +94,16 @@ async function runNightlyReconPipeline({
       draftBody: draft.draftBody,
       factVerified: draft.verification.valid
     });
+
+    if (!dryRun) {
+      recordSeenPermit({
+        jurisdiction: zipCode,
+        permitNumber: trigger.externalPermitId,
+        normalizedAddress: trigger.propertyAddress,
+        surfacedBriefingDate: todayStr,
+        status: 'surfaced'
+      });
+    }
   }
 
   const summary = {

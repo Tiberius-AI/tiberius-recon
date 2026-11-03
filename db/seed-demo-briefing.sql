@@ -1,5 +1,7 @@
 -- ============================================================================
 -- TIBERIUS RECON™ — DEMO SEED DATA (7:00 AM BRIEFING + TERRITORY LOCKS)
+-- NOTE: Strictly gated behind DEMO_MODE=true or ?demo=true marketing previews.
+-- Never auto-seeded on production initialization or empty query fallbacks.
 -- ============================================================================
 
 INSERT INTO contractors (

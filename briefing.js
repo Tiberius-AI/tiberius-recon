@@ -15,25 +15,50 @@
   if (window.__TIBERIUS_BRIEFING_APP_INITIALIZED__) return;
   window.__TIBERIUS_BRIEFING_APP_INITIALIZED__ = true;
 
-  const ENGINE_SCHEMA_VERSION = '2.4';
+  const ENGINE_SCHEMA_VERSION = '2.6';
   const urlParams = new URLSearchParams(window.location.search);
-  const activeToken = urlParams.get('token') || urlParams.get('t') || localStorage.getItem('tiberius_recon_token') || 'demo-7am-briefing';
-  localStorage.setItem('tiberius_recon_token', activeToken);
+  const isDemoPreview = urlParams.get('demo') === 'true' || urlParams.get('demo') === '1';
+  const savedAccountRaw = localStorage.getItem('tiberius_recon_account');
+  let savedAccountToken = '';
+  try {
+    if (savedAccountRaw) {
+      const parsedAcc = JSON.parse(savedAccountRaw);
+      if (parsedAcc && parsedAcc.magicToken) {
+        savedAccountToken = String(parsedAcc.magicToken).trim();
+      }
+    }
+  } catch (_e) {
+    // Ignore parse error
+  }
+  const activeToken =
+    urlParams.get('token') ||
+    urlParams.get('t') ||
+    localStorage.getItem('tiberius_recon_token') ||
+    savedAccountToken ||
+    (isDemoPreview ? 'demo-7am-briefing' : 'recon-78130-2101s6');
+  if (activeToken) {
+    localStorage.setItem('tiberius_recon_token', activeToken);
+  }
 
   /**
-   * Invalidates any cached localStorage pitches, Shop Dossiers, or account objects
-   * saved under an older schema so fresh v2.4 cards and dossiers always render.
+   * Invalidates any cached localStorage pitches or card arrays saved under an older schema
+   * or containing synthetic demo records when not in ?demo=true mode, while preserving active auth session.
    */
   function invalidateStaleLocalStorageCache(force = false) {
     try {
       const savedSchema = localStorage.getItem('tiberius_recon_schema_version');
-      const rawAccount = localStorage.getItem('tiberius_recon_account') || '';
-      const rawProfile = localStorage.getItem('tiberius_recon_profile') || '';
       const rawBriefing = localStorage.getItem('tiberius_recon_briefing') || '';
       const rawCards = localStorage.getItem('tiberius_recon_cards') || '';
-      const combinedCache = `${rawAccount} ${rawProfile} ${rawBriefing} ${rawCards}`;
+      const combinedCache = `${rawBriefing} ${rawCards}`;
+
+      const hasSyntheticDemoRecords =
+        !isDemoPreview &&
+        /BP-2026-06102|BP-2026-06245|BP-2026-06388|BP-2026-06511|BP-2026-06640|BP-2026-06792|BP-2026-06915|BP-2026-07044|BP-2026-07189|Wayne Lott|CAD-78130-6102/i.test(
+          combinedCache
+        );
 
       const hasLegacyStrings =
+        hasSyntheticDemoRecords ||
         combinedCache.includes('multi-family roof preventative maintenance') ||
         combinedCache.includes('bidding@structurainc.com •') ||
         combinedCache.includes('Hey Estimating Team') ||
@@ -43,8 +68,6 @@
 
       if (force || savedSchema !== ENGINE_SCHEMA_VERSION || hasLegacyStrings) {
         [
-          'tiberius_recon_account',
-          'tiberius_recon_profile',
           'tiberius_recon_dossier',
           'tiberius_recon_knowledge_base',
           'tiberius_recon_briefing',
@@ -103,14 +126,38 @@
   const nightSweepBanner = document.getElementById('night-sweep-telemetry-banner');
   const nightSweepText = document.getElementById('night-sweep-telemetry-text');
   const unlockFullQueueBtn = document.getElementById('unlock-full-queue-btn');
+  const briefingHistoryBar = document.getElementById('briefing-history-bar');
+  const briefingArchivedSection = document.getElementById('briefing-archived-section');
+  const briefingArchivedCardsContainer = document.getElementById('briefing-archived-cards-container');
+  const briefingArchivedCountBadge = document.getElementById('briefing-archived-count-badge');
 
   let state = {
     briefing: null,
     contractor: null,
+    authenticatedAccount: null,
     availability: null,
     sentLogs: [],
+    historyDates: [],
+    archivedBriefings: [],
+    selectedDate: urlParams.get('date') || null,
+    isHistoricalView: false,
+    livePullExecuted: false,
+    autoScrapeAttempted: false,
     editingCardId: null
   };
+
+  function isFullAccount() {
+    if (state.livePullExecuted) return true;
+    if (urlParams.get('unlocked') === 'all' || Boolean(urlParams.get('session_id'))) return true;
+    const c = state.contractor || state.authenticatedAccount || {};
+    const b = state.briefing || {};
+    if (c.isRealClient || c.status === 'PAID_ACTIVE' || c.role === 'ADMIN') return true;
+    if (Number(b.unlockedLimit) > 3) return true;
+    if (localStorage.getItem('tiberius_recon_session_jwt')) return true;
+    const tierStr = String(c.tierLevel || b.tierLevel || '');
+    if (!isDemoPreview && /tier\s*[123]|admin|exclusive|dominion/i.test(tierStr)) return true;
+    return false;
+  }
 
   function escapeHtml(str) {
     return String(str || '')
@@ -152,8 +199,21 @@
 
     const b = state.briefing;
     const c = state.contractor || {};
-    const unlockedCards = (b.cards || []).filter((card) => !card.isLockedOverflow);
-    const lockedCards = (b.cards || []).filter((card) => card.isLockedOverflow);
+    const fullAccountActive = isFullAccount();
+    if (fullAccountActive && Array.isArray(b.cards)) {
+      b.cards.forEach((card, idx) => {
+        if (card.isLockedOverflow) {
+          card.isLockedOverflow = false;
+          card.unlockedBadge = `UNLOCKED #${idx + 1}`;
+        }
+      });
+    }
+    const unlockedCards = fullAccountActive
+      ? b.cards || []
+      : (b.cards || []).filter((card) => !card.isLockedOverflow);
+    const lockedCards = fullAccountActive
+      ? []
+      : (b.cards || []).filter((card) => card.isLockedOverflow);
     const approvedCount = unlockedCards.filter((card) => card.approvalStatus === 'sent').length;
 
     const isNewBraunfelsCorridor =
@@ -174,13 +234,19 @@
     }
     if (briefingMainTitle) {
       const zipLabel = isNewBraunfelsCorridor ? '78130 / 78132' : b.territoryZip;
-      briefingMainTitle.textContent = `07:00 AM Briefing: ${unlockedCards.length} Verified ${b.tradeName} Deals in ${zipLabel}.`;
+      if (state.isHistoricalView && b.viewingDate) {
+        briefingMainTitle.textContent = `Archived Briefing (${b.viewingDate}): ${unlockedCards.length} Verified ${b.tradeName} Deals in ${zipLabel}.`;
+      } else {
+        briefingMainTitle.textContent = `07:00 AM Briefing: ${unlockedCards.length} Verified ${b.tradeName} Deals in ${zipLabel}.`;
+      }
     }
     if (briefingSubtitle) {
       briefingSubtitle.textContent = `Swept at 2:04 AM from ${b.portalName || 'Municipal Portals'} & verified at 4:30 AM against ${b.countyCad || 'County Appraisal District Tax Rolls'}. Nothing sends without your tap.`;
     }
     if (briefingApprovedCounter) {
-      briefingApprovedCounter.textContent = `Deals Approved This Morning: ${approvedCount}/${unlockedCards.length}`;
+      briefingApprovedCounter.textContent = state.isHistoricalView
+        ? `Deals Approved (${b.viewingDate || 'Archive'}): ${approvedCount}/${unlockedCards.length}`
+        : `Deals Approved This Morning: ${approvedCount}/${unlockedCards.length}`;
     }
 
     if (calibratorTradeSelect && b.tradeName) {
@@ -197,13 +263,136 @@
       calibratorLandmarkInput.value = c.voiceProfile.landmarkReference;
     }
 
+    renderHistoryBar();
     renderUnlockedCards(unlockedCards);
     renderLockedOverflow(lockedCards, b);
     renderSentLogs();
+    renderArchivedSection();
+  }
+
+  function renderHistoryBar() {
+    if (!briefingHistoryBar) return;
+    const dates = Array.isArray(state.historyDates) ? state.historyDates : [];
+    const activeDate =
+      (state.briefing && (state.briefing.activeBriefingDate || state.briefing.briefingDate)) || '';
+    const viewingDate =
+      (state.briefing && state.briefing.viewingDate) || state.selectedDate || activeDate;
+
+    if (dates.length === 0) {
+      briefingHistoryBar.classList.add('hidden');
+      return;
+    }
+    briefingHistoryBar.classList.remove('hidden');
+
+    const pillButtons = dates
+      .slice(0, 5)
+      .map((item) => {
+        const isSelected = item.date === viewingDate;
+        const badgeLabel = item.isToday ? `Today (${item.date})` : item.date;
+        const sentBadge = item.approvedCount > 0 ? ` • ${item.approvedCount} Sent` : '';
+        const btnClasses = isSelected
+          ? 'bg-[#0F172A] text-white border-[#0F172A] font-bold shadow-sm'
+          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50';
+        return `
+          <button
+            type="button"
+            data-history-date="${escapeHtml(item.date)}"
+            class="px-3 py-1.5 rounded-lg border text-xs font-mono-telemetry transition cursor-pointer ${btnClasses}"
+          >
+            ${item.isToday ? '🟢' : '📜'} ${escapeHtml(badgeLabel)} (${item.totalCards} Cards${escapeHtml(sentBadge)})
+          </button>
+        `;
+      })
+      .join('');
+
+    const selectOptions = dates
+      .map((item) => {
+        const isSelected = item.date === viewingDate ? 'selected' : '';
+        const label = item.isToday
+          ? `Today (${item.date}) — ${item.totalCards} Cards (${item.approvedCount} Approved)`
+          : `Archive: ${item.date} — ${item.totalCards} Cards (${item.approvedCount} Approved)`;
+        return `<option value="${escapeHtml(item.date)}" ${isSelected}>${escapeHtml(label)}</option>`;
+      })
+      .join('');
+
+    const historicalBanner = state.isHistoricalView
+      ? `
+        <div class="w-full mt-2 p-3 rounded-xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-amber-900">
+          <span>📜 VIEWING ARCHIVED BRIEFING FROM <strong>${escapeHtml(viewingDate)}</strong> — You can review past permits or still approve &amp; dispatch any unsent cards from this day.</span>
+          <button
+            type="button"
+            data-history-date="${escapeHtml(activeDate)}"
+            class="px-3 py-1 rounded-lg bg-[#0F172A] text-white font-bold cursor-pointer"
+          >
+            ← Back to Today's Live Queue (${escapeHtml(activeDate)})
+          </button>
+        </div>
+      `
+      : '';
+
+    briefingHistoryBar.innerHTML = `
+      <div class="w-full flex flex-col gap-2">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="font-mono-telemetry text-[11px] font-bold text-slate-500 mr-1">📅 PAST BRIEFINGS ARCHIVE:</span>
+            ${pillButtons}
+          </div>
+          <div class="flex items-center gap-2">
+            <label for="briefing-history-date-select" class="text-[11px] font-mono-telemetry text-slate-500 whitespace-nowrap">Jump to Date:</label>
+            <select id="briefing-history-date-select" class="enterprise-select text-xs py-1.5 px-2.5">
+              ${selectOptions}
+            </select>
+          </div>
+        </div>
+        ${historicalBanner}
+      </div>
+    `;
+
+    const selectEl = document.getElementById('briefing-history-date-select');
+    if (selectEl) {
+      selectEl.addEventListener('change', (e) => {
+        const targetDate = e.target.value;
+        state.selectedDate = targetDate === activeDate ? null : targetDate;
+        loadBriefing(state.selectedDate);
+      });
+    }
+
+    briefingHistoryBar.querySelectorAll('[data-history-date]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetDate = btn.getAttribute('data-history-date');
+        state.selectedDate = targetDate === activeDate ? null : targetDate;
+        loadBriefing(state.selectedDate);
+      });
+    });
   }
 
   function renderUnlockedCards(unlockedCards) {
     if (!briefingCardsGrid) return;
+
+    if (!Array.isArray(unlockedCards) || unlockedCards.length === 0) {
+      briefingCardsGrid.innerHTML = `
+        <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-8 text-center">
+          <div class="font-mono-telemetry text-xs text-slate-500 font-bold mb-2">🛰️ SCRAPING NEW UNSEEN MUNICIPAL PERMITS...</div>
+          <p class="text-sm text-slate-600 mb-4">All prior batch cards have been processed in your deduplication ledger. Pulling fresh unseen permits from municipal portals now.</p>
+          <button
+            type="button"
+            id="empty-queue-scrape-now-btn"
+            class="btn-trust-emerald px-4 py-2 rounded-xl text-xs font-mono-telemetry font-bold cursor-pointer"
+          >
+            🛰️ Scrape Fresh Live Permits Now
+          </button>
+        </div>
+      `;
+      const scrapeBtn = document.getElementById('empty-queue-scrape-now-btn');
+      if (scrapeBtn && liveZeroApiBtn) {
+        scrapeBtn.addEventListener('click', () => liveZeroApiBtn.click());
+      }
+      if (!state.autoScrapeAttempted && !state.isHistoricalView && liveZeroApiBtn) {
+        state.autoScrapeAttempted = true;
+        liveZeroApiBtn.click();
+      }
+      return;
+    }
 
     briefingCardsGrid.innerHTML = unlockedCards
       .map((card, idx) => {
@@ -373,8 +562,9 @@
   function renderLockedOverflow(lockedCards, briefing) {
     if (!briefingLockedVault || !lockedOverflowGrid) return;
 
-    if (!lockedCards || lockedCards.length === 0) {
+    if (isFullAccount() || !lockedCards || lockedCards.length === 0) {
       briefingLockedVault.classList.add('hidden');
+      lockedOverflowGrid.innerHTML = '';
       return;
     }
 
@@ -394,6 +584,137 @@
       `
       )
       .join('');
+  }
+
+  function renderArchivedSection() {
+    if (!briefingArchivedSection || !briefingArchivedCardsContainer) return;
+
+    const snapshots = Array.isArray(state.archivedBriefings) ? state.archivedBriefings : [];
+    const totalArchivedCards = snapshots.reduce(
+      (sum, snap) => sum + (Array.isArray(snap.cards) ? snap.cards.length : 0),
+      0
+    );
+
+    if (briefingArchivedCountBadge) {
+      briefingArchivedCountBadge.textContent =
+        snapshots.length > 0
+          ? `📜 ${snapshots.length} Past Days • ${totalArchivedCards} Archived Recon Cards`
+          : '📜 Past Days Archive Active';
+    }
+
+    if (snapshots.length === 0) {
+      briefingArchivedCardsContainer.innerHTML = `
+        <p class="text-xs font-mono-telemetry text-slate-500">
+          Past days' recon cards will appear here automatically after each daily 7:00 AM briefing cycle.
+        </p>
+      `;
+      return;
+    }
+
+    briefingArchivedCardsContainer.innerHTML = snapshots
+      .map((snap) => {
+        const cards = Array.isArray(snap.cards) ? snap.cards : [];
+        const cardsHtml = cards
+          .map((card) => {
+            const isSent = card.approvalStatus === 'sent';
+            const smsHref = buildCleanSmsHref(card.contactPhone, card.draftBody);
+            const mailtoHref = buildCleanMailtoHref(
+              card.contactEmail,
+              card.draftSubject,
+              card.draftBody
+            );
+            const statusPill = isSent
+              ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono-telemetry text-[10px] font-bold">✓ SENT (${escapeHtml(
+                  card.approvedTimeLabel || '07:04 AM'
+                )})</span>`
+              : `<span class="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 font-mono-telemetry text-[10px] text-slate-700">ARCHIVED (${escapeHtml(
+                  snap.date
+                )})</span>`;
+
+            return `
+              <article class="rounded-xl border ${
+                isSent ? 'border-emerald-300 bg-emerald-50/40' : 'border-slate-200 bg-slate-50/70'
+              } p-4 flex flex-col justify-between gap-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="font-mono-telemetry text-[10px] text-[#1E40AF] font-bold">${escapeHtml(
+                      card.cardNumber
+                    )}</span>
+                    ${statusPill}
+                  </div>
+                  <div class="text-xs font-mono-telemetry text-amber-800 font-bold mb-1">
+                    ${escapeHtml(card.pillIcon || '🛰️')} ${escapeHtml(card.pillText)}
+                  </div>
+                  <h4 class="font-display font-bold text-sm text-[#0F172A] leading-snug mb-1">
+                    ${escapeHtml(card.headline)}
+                  </h4>
+                  <p class="text-[11px] text-emerald-800 font-semibold mb-2">
+                    ${escapeHtml(card.cadCallout || card.subMeta || '')}
+                  </p>
+                  <div class="text-[11px] text-slate-700 font-medium mb-2">
+                    <strong>${escapeHtml(sanitizeContactNameDisplay(card.contactName))}</strong> • 📞 ${escapeHtml(
+                      card.contactPhone
+                    )} • ✉️ ${escapeHtml(card.contactEmail)}
+                  </div>
+                  <p class="text-[11px] text-slate-600 italic line-clamp-3 bg-white border border-slate-200 rounded-lg p-2.5">
+                    ${escapeHtml(card.draftBody)}
+                  </p>
+                </div>
+                <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between gap-2 text-[11px] font-bold">
+                  <div class="flex items-center gap-1.5">
+                    <a href="${smsHref}" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-100">📱 Text</a>
+                    <a href="${mailtoHref}" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-100">✉️ Mail</a>
+                  </div>
+                  <button
+                    type="button"
+                    data-archive-jump-date="${escapeHtml(snap.date)}"
+                    class="text-[#1E40AF] hover:underline font-mono-telemetry text-[10px] cursor-pointer"
+                  >
+                    Open in Top View ↑
+                  </button>
+                </div>
+              </article>
+            `;
+          })
+          .join('');
+
+        return `
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-200">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-lg bg-[#0F172A] text-white font-mono-telemetry text-xs font-bold">
+                  📅 ${escapeHtml(snap.date)}
+                </span>
+                <span class="font-display font-bold text-sm text-[#0F172A]">
+                  ${cards.length} Verified Permits Archived (${snap.approvedCount || 0} Approved &amp; Sent)
+                </span>
+              </div>
+              <button
+                type="button"
+                data-archive-jump-date="${escapeHtml(snap.date)}"
+                class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 font-mono-telemetry text-xs text-slate-800 font-bold cursor-pointer"
+              >
+                Load ${escapeHtml(snap.date)} into Top Queue ↑
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${cardsHtml}
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    briefingArchivedCardsContainer.querySelectorAll('[data-archive-jump-date]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetDate = btn.getAttribute('data-archive-jump-date');
+        if (targetDate) {
+          state.selectedDate = targetDate;
+          loadBriefing(targetDate);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    });
   }
 
   function renderSentLogs() {
@@ -438,11 +759,18 @@
     return headers;
   }
 
-  async function loadBriefing() {
+  async function loadBriefing(dateOverride = undefined) {
     invalidateStaleLocalStorageCache(false);
+    if (dateOverride !== undefined) {
+      state.selectedDate = dateOverride;
+    }
     try {
+      const queryParts = [];
+      if (activeToken) queryParts.push(`token=${encodeURIComponent(activeToken)}`);
+      if (isDemoPreview) queryParts.push('demo=true');
+      if (state.selectedDate) queryParts.push(`date=${encodeURIComponent(state.selectedDate)}`);
       const resp = await fetch(
-        `/api/recon/briefing?token=${encodeURIComponent(activeToken)}&fresh=1&v=${ENGINE_SCHEMA_VERSION}`,
+        `/api/recon/briefing${queryParts.length ? `?${queryParts.join('&')}` : ''}`,
         {
           headers: getAuthHeaders(),
           cache: 'no-store'
@@ -453,20 +781,23 @@
       if (data && data.ok && data.briefing) {
         state.briefing = data.briefing;
         state.contractor = data.contractor;
+        state.authenticatedAccount = data.authenticatedAccount || state.authenticatedAccount;
         state.availability = data.availability;
         state.sentLogs = data.sentLogs || [];
+        state.historyDates = data.historyDates || state.historyDates || [];
+        if (Array.isArray(data.archivedBriefings) && data.archivedBriefings.length > 0) {
+          state.archivedBriefings = data.archivedBriefings;
+        }
+        state.isHistoricalView = Boolean(data.isHistoricalView || data.briefing.isHistoricalView);
         syncFreshDossierToLocalStorage(data.contractor);
 
-        const shouldAutoUnlock =
-          urlParams.get('unlocked') === 'all' ||
-          Boolean(urlParams.get('session_id')) ||
-          Boolean(state.contractor && state.contractor.isRealClient);
+        const shouldAutoUnlock = isFullAccount();
 
         const hasLockedCards =
           Array.isArray(state.briefing.cards) &&
           state.briefing.cards.some((c) => c.isLockedOverflow);
 
-        if (shouldAutoUnlock && hasLockedCards) {
+        if (shouldAutoUnlock && hasLockedCards && !state.isHistoricalView) {
           await sendCardAction({
             action: 'unlock-full-queue',
             upgradeTier:
@@ -480,7 +811,14 @@
         renderAll();
       }
     } catch (_err) {
-      // Fallback handled gracefully
+      if (!state.briefing) {
+        state.briefing = {
+          cards: [],
+          territoryZip: '78130',
+          tradeName: 'Commercial Concrete'
+        };
+      }
+      renderAll();
     }
   }
 
@@ -488,6 +826,8 @@
     const activeTrade = calibratorTradeSelect ? calibratorTradeSelect.value : undefined;
     const activeZip = calibratorZipInput ? calibratorZipInput.value.trim() : undefined;
     const activeLandmark = calibratorLandmarkInput ? calibratorLandmarkInput.value.trim() : undefined;
+    const currentViewingDate =
+      (state.briefing && state.briefing.viewingDate) || state.selectedDate || undefined;
     try {
       const resp = await fetch('/api/recon/approve', {
         method: 'POST',
@@ -497,6 +837,7 @@
           primaryTrade: activeTrade,
           territoryZip: activeZip,
           landmarkReference: activeLandmark,
+          briefingDate: currentViewingDate,
           ...payload
         })
       });
@@ -504,6 +845,8 @@
       if (data && data.ok && data.briefing) {
         state.briefing = data.briefing;
         if (data.contractor) state.contractor = data.contractor;
+        if (data.historyDates) state.historyDates = data.historyDates;
+        state.isHistoricalView = Boolean(data.briefing.isHistoricalView);
         state.editingCardId = null;
         renderAll();
       }
@@ -647,7 +990,7 @@
   }
 
   async function recalibrateBriefing() {
-    invalidateStaleLocalStorageCache(true);
+    invalidateStaleLocalStorageCache(false);
     const primaryTrade = calibratorTradeSelect ? calibratorTradeSelect.value : 'Commercial Concrete';
     const territoryZip = calibratorZipInput ? calibratorZipInput.value.trim() : '78130';
     const landmarkReference = calibratorLandmarkInput ? calibratorLandmarkInput.value.trim() : '';
@@ -663,7 +1006,7 @@
           primaryTrade,
           territoryZip,
           landmarkReference,
-          forceRegenerate: true,
+          demo: isDemoPreview,
           schemaVersion: ENGINE_SCHEMA_VERSION
         })
       });
@@ -672,6 +1015,12 @@
         state.briefing = data.briefing;
         state.contractor = data.contractor;
         state.availability = data.availability;
+        if (data.historyDates) state.historyDates = data.historyDates;
+        if (Array.isArray(data.archivedBriefings) && data.archivedBriefings.length > 0) {
+          state.archivedBriefings = data.archivedBriefings;
+        }
+        state.selectedDate = null;
+        state.isHistoricalView = false;
         syncFreshDossierToLocalStorage(data.contractor);
         renderAll();
       }
@@ -712,7 +1061,7 @@
       try {
         const resp = await fetch('/api/recon/cron-morning', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             token: activeToken,
             zipCode,
@@ -724,6 +1073,12 @@
         if (data && data.ok) {
           if (data.briefing) {
             state.briefing = data.briefing;
+            if (data.historyDates) state.historyDates = data.historyDates;
+            if (Array.isArray(data.archivedBriefings) && data.archivedBriefings.length > 0) {
+              state.archivedBriefings = data.archivedBriefings;
+            }
+            state.selectedDate = null;
+            state.isHistoricalView = false;
             renderAll();
           }
           if (nightSweepBanner && nightSweepText) {
@@ -745,27 +1100,44 @@
   if (liveZeroApiBtn) {
     liveZeroApiBtn.addEventListener('click', async () => {
       const primaryTrade = calibratorTradeSelect ? calibratorTradeSelect.value : 'Commercial Concrete';
+      const territoryZip = calibratorZipInput
+        ? calibratorZipInput.value.trim()
+        : (state.briefing && state.briefing.territoryZip) || '78130';
       const landmarkReference = calibratorLandmarkInput
         ? calibratorLandmarkInput.value.trim()
-        : 'two miles east off IH-35';
+        : '';
 
       liveZeroApiBtn.textContent = '🛰️ Crawling Live Permits & Websites...';
       try {
         const resp = await fetch('/api/recon/live-agent', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             token: activeToken,
             primaryTrade,
+            territoryZip,
             landmarkReference
           })
         });
         const data = await resp.json();
         if (data && data.ok && data.briefing) {
+          state.livePullExecuted = true;
           state.briefing = data.briefing;
+          if (Array.isArray(state.briefing.cards)) {
+            state.briefing.cards.forEach((c, idx) => {
+              c.isLockedOverflow = false;
+              c.unlockedBadge = `LIVE SCRAPED #${idx + 1}`;
+            });
+          }
+          if (data.historyDates) state.historyDates = data.historyDates;
+          if (Array.isArray(data.archivedBriefings) && data.archivedBriefings.length > 0) {
+            state.archivedBriefings = data.archivedBriefings;
+          }
+          state.selectedDate = null;
+          state.isHistoricalView = false;
           renderAll();
           if (nightSweepBanner && nightSweepText) {
-            nightSweepText.textContent = `🛰️ ZERO-API LIVE AGENT COMPLETE (${data.elapsedSeconds}s): PULLED ${data.rawRowsFetched} REAL CITY PERMITS + CRAWLED LIVE CONTRACTOR WEBSITES & EMAILS`;
+            nightSweepText.textContent = `🛰️ ZERO-API LIVE AGENT COMPLETE (${data.elapsedSeconds}s): PULLED ${data.distinctPermitsEnriched || data.cards?.length || 9} UNLOCKED PERMITS IN ${territoryZip} + CRAWLED LIVE CONTRACTOR WEBSITES & EMAILS`;
             nightSweepBanner.classList.remove('hidden');
           }
         }

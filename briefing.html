@@ -234,6 +234,11 @@
           </div>
         </div>
 
+        <!-- Past Days' Briefings & Daily History Switcher -->
+        <div id="briefing-history-bar" class="mt-4 pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <!-- Populated dynamically by briefing.js -->
+        </div>
+
         <!-- Overnight Telemetry Banner (Revealed on 2:00 AM Sweep Trigger) -->
         <div id="night-sweep-telemetry-banner" class="hidden mt-4 p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-[#1E40AF]">
           <span id="night-sweep-telemetry-text">✓ 02:00 AM SWEEP COMPLETE: 476 PORTAL ROWS SCANNED • 100% ZERO-HALLUCINATION VERIFIED</span>
@@ -253,7 +258,7 @@
       <!-- ====================================================================
            LOCKED TERRITORY OVERFLOW VAULT (TRIAL CONVERSION ENGINE)
            ==================================================================== -->
-      <section id="briefing-locked-vault" class="locked-vault-panel rounded-2xl p-6 sm:p-7 shadow-md mb-10">
+      <section id="briefing-locked-vault" class="hidden locked-vault-panel rounded-2xl p-6 sm:p-7 shadow-md mb-10">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
           <div class="flex items-start gap-3.5">
             <span class="text-2xl flex-shrink-0" aria-hidden="true">🔒</span>
@@ -304,7 +309,7 @@
       <!-- ====================================================================
            DISPATCHED OUTREACH AUDIT LOG
            ==================================================================== -->
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7">
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7 mb-10">
         <div class="flex items-center justify-between gap-2 mb-4">
           <div>
             <span class="font-mono-telemetry text-xs text-[#1E40AF]">HUMAN-IN-THE-LOOP AUDIT LOG</span>
@@ -324,12 +329,36 @@
         </div>
       </section>
 
+      <!-- ====================================================================
+           ARCHIVED PAST DAYS' RECON CARDS VAULT (PERSISTENT MULTI-DAY LEDGER)
+           ==================================================================== -->
+      <section id="briefing-archived-section" aria-label="Archived Past Days' Recon Cards" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-200">
+          <div>
+            <span class="font-mono-telemetry text-xs text-[#1E40AF]">📅 ARCHIVED PAST DAYS' BRIEFINGS • DEDUPLICATED LEDGER</span>
+            <h2 class="font-display font-extrabold text-xl text-[#0F172A]">
+              Archived Recon Cards from Previous Days
+            </h2>
+            <p class="text-xs sm:text-sm text-[#475569] mt-0.5">
+              Every morning's surfaced permits are permanently archived by date and recorded in <code class="font-mono text-xs">seen_permits</code> so they never repeat in future daily queues.
+            </p>
+          </div>
+          <span id="briefing-archived-count-badge" class="px-3 py-1 rounded-full bg-slate-100 border border-slate-300 font-mono-telemetry text-xs text-slate-800 font-bold self-start sm:self-center">
+            📜 Past Days Archived
+          </span>
+        </div>
+
+        <div id="briefing-archived-cards-container" class="space-y-6">
+          <!-- Populated dynamically by briefing.js -->
+        </div>
+      </section>
+
     </div>
   </main>
 
   <footer class="section-bg-white border-t border-slate-200 py-8 px-4 sm:px-6 lg:px-8 mt-12">
     <div class="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B] font-mono-telemetry">
-      <span>TIBERIUS RECON™ • 07:00 AM MORNING BRIEFING ENGINE v2.4</span>
+      <span>TIBERIUS RECON™ • 07:00 AM MORNING BRIEFING ENGINE v2.6</span>
       <div class="flex items-center gap-5">
         <a href="/" class="text-blue-700 hover:underline">← Back to /recon Overview</a>
         <a href="command.html" class="text-emerald-700 hover:underline">Open Territory Command Portal →</a>
@@ -340,6 +369,6 @@
     </div>
   </footer>
 
-  <script src="/recon/briefing.js?v=2.5" onerror="this.onerror=null;this.src='briefing.js?v=2.5';"></script>
+  <script src="/recon/briefing.js?v=2.6" onerror="this.onerror=null;this.src='briefing.js?v=2.6';"></script>
 </body>
 </html>

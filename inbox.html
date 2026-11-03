@@ -122,6 +122,9 @@
               <span id="inbox-kb-badge" class="px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-xs text-blue-300">
                 🧠 SHOP KNOWLEDGE BASE CONNECTED
               </span>
+              <span id="inbox-pretrip-header-badge" class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+                🩺 5:30 AM Pre-Trip Watchdog: PASS
+              </span>
             </div>
             <h1 id="inbox-contractor-title" class="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
               Lone Star Commercial Concrete &amp; Paving — Deal Replies &amp; Follow-Ups
@@ -500,6 +503,49 @@
         <!-- PANE 3 (RIGHT): 1-TAP CALL/VOICEMAIL + PERMIT/CAD X-RAY + ACTIVE KNOWLEDGE BASE -->
         <div class="lg:col-span-4 space-y-6">
 
+          <!-- CARD PRE-TRIP: 5:30 AM NATIVE PRE-TRIP WATCHDOG & CIRCUIT BREAKER -->
+          <section id="pretrip-watchdog-card" class="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-3.5">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+              <div>
+                <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">🩺 5:30 AM PRE-TRIP WATCHDOG</div>
+                <h3 class="font-display font-bold text-base text-white">Auto-Heal &amp; 6:45 AM Circuit Breaker</h3>
+              </div>
+              <span id="pretrip-status-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold">
+                PASS
+              </span>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700 space-y-2 text-xs">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-mono-telemetry text-[10px] text-slate-400">6:45 AM CIRCUIT BREAKER:</span>
+                <span id="pretrip-circuit-pill" class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">
+                  🟢 OPEN — ARMED FOR 6:45 AM
+                </span>
+              </div>
+              <p id="pretrip-summary-text" class="text-xs text-slate-200 leading-relaxed">
+                5-Point Daily Pre-Trip Check: Seed &amp; Canary Scan, Seen-Permits Dedup, Sentence #2 Proof Rotation, &amp; Fleet Endpoint Probe.
+              </p>
+              <pre id="pretrip-repair-prompt-box" class="hidden p-2.5 rounded-lg bg-slate-950 border border-red-500/60 font-mono-telemetry text-[10px] text-red-200 whitespace-pre-wrap overflow-x-auto max-h-40"></pre>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                id="btn-run-pretrip-now"
+                type="button"
+                class="btn-executive-navy flex-1 py-2.5 px-3 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5"
+              >
+                <span>[ 🩺 Run Pre-Trip Now ]</span>
+              </button>
+              <button
+                id="btn-clear-pretrip-hold"
+                type="button"
+                class="hidden btn-trust-emerald py-2.5 px-3 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5"
+              >
+                <span>[ 🔓 Clear Hold Lock ]</span>
+              </button>
+            </div>
+          </section>
+
           <!-- CARD 0: 1-TAP CALL & 20-SECOND VOICEMAIL SCRIPT + NATIVE SIM COMPANION -->
           <section class="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-3.5">
             <div class="flex items-center justify-between border-b border-slate-700 pb-3">
@@ -566,7 +612,7 @@
                 <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">
                   <div class="font-mono-telemetry text-[10px] text-slate-400">CAD PARCEL ID</div>
                   <div id="dossier-parcel" class="font-mono-telemetry font-bold text-amber-300 mt-0.5">
-                    CAD-78130-8941
+                    CAD-78130-204719
                   </div>
                 </div>
                 <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700">

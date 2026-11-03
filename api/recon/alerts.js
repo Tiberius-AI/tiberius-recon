@@ -13,12 +13,14 @@ const {
   getConversationRoomState,
   recordScoutAlertLog,
   provisionContractorTwilioSubaccount,
+  getLatestPreTripReport,
   ensureCloudAccountsSynced
 } = require('../../db/store');
 const {
   getContractorTwilioA2PState,
   dispatchScoutMorningAlertSms,
-  dispatchContractorHotReplyAlertSms
+  dispatchContractorHotReplyAlertSms,
+  dispatchPreTripAdminSms
 } = require('../../workers/comms-dispatcher');
 
 module.exports = async function handler(req, res) {
@@ -73,6 +75,28 @@ module.exports = async function handler(req, res) {
           JSON.stringify({
             ...provResult,
             action
+          })
+        );
+      }
+
+      if (action === 'send_pretrip_alert_sms') {
+        const report = body.report || getLatestPreTripReport() || { overallStatus: 'PASS', checks: [], heals: [], failures: [] };
+        const receipt = await dispatchPreTripAdminSms({
+          report,
+          toPhone: body.overridePhone || body.toPhone,
+          baseUrl: body.baseUrl || 'https://www.tiberius.ai',
+          providerConfig: body.providerConfig || {}
+        });
+        const logResult = recordScoutAlertLog(token, receipt);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(
+          JSON.stringify({
+            ok: true,
+            action,
+            receipt,
+            alertEntry: logResult.entry,
+            scoutAlertLogs: logResult.scoutAlertLogs
           })
         );
       }

@@ -10,7 +10,8 @@ const {
   getBriefingByToken,
   updateContractorCommand,
   hydrateAccountFromSession,
-  ensureCloudAccountsSynced
+  ensureCloudAccountsSynced,
+  isDemoModeEnabled
 } = require('../../db/store');
 const { extractSessionFromRequest } = require('../../db/auth');
 
@@ -28,6 +29,9 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'GET') {
     const requestedToken = req.query && (req.query.token || req.query.t);
+    const demoRequested = isDemoModeEnabled({
+      demo: req.query && req.query.demo
+    });
     const initialToken =
       requestedToken ||
       (sessionClaims && sessionClaims.magicToken) ||
@@ -40,8 +44,18 @@ module.exports = async function handler(req, res) {
       (hydrated && hydrated.account && hydrated.account.magicToken) ||
       'demo-7am-briefing';
 
-    const forceRegenerate = Boolean(req.query && (req.query.fresh || req.query.v));
-    const data = getBriefingByToken(token, { forceRegenerate });
+    const requestedDate = req.query && req.query.date ? String(req.query.date).trim() : undefined;
+    const autoScrape = !(
+      req.query &&
+      (req.query.autoScrape === 'false' || req.query.autoScrape === '0')
+    );
+
+    const data = getBriefingByToken(token, {
+      demo: demoRequested,
+      date: requestedDate,
+      autoScrape,
+      forceRegenerate: false
+    });
     if (!data) {
       return res.status(404).json({ ok: false, error: 'Morning briefing not found' });
     }
@@ -54,6 +68,9 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'POST') {
     const body = req.body || {};
+    const demoRequested = isDemoModeEnabled({
+      demo: body.demo !== undefined ? body.demo : req.query && req.query.demo
+    });
     const initialToken =
       body.token ||
       (sessionClaims && sessionClaims.magicToken) ||
@@ -64,6 +81,9 @@ module.exports = async function handler(req, res) {
       body.token ||
       (hydrated && hydrated.account && hydrated.account.magicToken) ||
       'demo-7am-briefing';
+    const autoScrape =
+      body.autoScrape !== false &&
+      !(req.query && (req.query.autoScrape === 'false' || req.query.autoScrape === '0'));
     const result = updateContractorCommand({
       token,
       primaryTrade: body.primaryTrade,
@@ -73,7 +93,9 @@ module.exports = async function handler(req, res) {
       includeSmartSiteBundle: body.includeSmartSiteBundle,
       landmarkReference: body.landmarkReference,
       recentWin: body.recentWin,
-      differentiator: body.differentiator
+      differentiator: body.differentiator,
+      autoScrape,
+      demo: demoRequested
     });
 
     if (!result.ok) {
