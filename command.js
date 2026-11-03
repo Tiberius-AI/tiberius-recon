@@ -22,14 +22,14 @@
     'demo-7am-briefing';
   localStorage.setItem('tiberius_recon_token', activeToken);
 
-  ['nav-briefing-link', 'cta-briefing-link', 'hero-open-briefing-btn'].forEach((id) => {
+  ['nav-briefing-link', 'cta-briefing-link', 'hero-open-briefing-btn', 'footer-briefing-link'].forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.href = `briefing.html?token=${encodeURIComponent(activeToken)}`;
+    if (el) el.href = `/recon/briefing?token=${encodeURIComponent(activeToken)}`;
   });
 
   ['nav-inbox-link', 'cta-inbox-link', 'hero-open-inbox-btn', 'kb-open-inbox-link'].forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.href = `inbox.html?token=${encodeURIComponent(activeToken)}`;
+    if (el) el.href = `/recon/inbox?token=${encodeURIComponent(activeToken)}`;
   });
 
   const kbWebsiteInput = document.getElementById('kb-website-input');

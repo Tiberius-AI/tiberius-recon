@@ -25,12 +25,12 @@
 
   ['nav-briefing-link', 'header-briefing-btn', 'footer-briefing-link'].forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.href = `briefing.html?token=${encodeURIComponent(activeToken)}`;
+    if (el) el.href = `/recon/briefing?token=${encodeURIComponent(activeToken)}`;
   });
 
   ['nav-command-link', 'cta-command-link', 'pane-edit-kb-link', 'footer-command-link'].forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.href = `command.html?token=${encodeURIComponent(activeToken)}`;
+    if (el) el.href = `/recon/command?token=${encodeURIComponent(activeToken)}`;
   });
 
   const contractorTitleEl = document.getElementById('inbox-contractor-title');

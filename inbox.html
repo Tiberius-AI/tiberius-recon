@@ -60,7 +60,7 @@
       <div class="g3-dim"></div>
     </div>
     <div class="max-w-[1400px] mx-auto px-2 sm:px-6 lg:px-8 py-2.5 md:py-0 md:h-24 flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 md:gap-4">
-      <a href="/" class="brand-logo focus:outline-none" aria-label="Tiberius Recon Home">
+      <a href="/recon/login" class="brand-logo focus:outline-none" aria-label="Tiberius Recon Account Portal">
         <img
           src="/recon/images/logo4.png?v=white"
           onerror="this.onerror=null;this.src='images/logo4.png?v=white';"
@@ -70,12 +70,12 @@
       </a>
 
       <nav aria-label="Conversation Room Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-200">
-        <a href="/" class="hover:text-blue-400 transition-colors">← Recon Overview</a>
-        <a id="nav-briefing-link" href="briefing.html" class="hover:text-blue-400 transition-colors flex items-center gap-1.5">
+        <a href="/recon/login" class="hover:text-blue-400 transition-colors">← Back to Account Portal</a>
+        <a id="nav-briefing-link" href="/recon/briefing" class="hover:text-blue-400 transition-colors flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
           <span>07:00 AM Briefing Cards</span>
         </a>
-        <a id="nav-command-link" href="command.html" class="hover:text-blue-400 transition-colors">
+        <a id="nav-command-link" href="/recon/command" class="hover:text-blue-400 transition-colors">
           🧠 Shop Knowledge Base &amp; Territory
         </a>
         <span class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300">
@@ -86,13 +86,13 @@
       <div class="flex items-center gap-2.5 flex-shrink-0">
         <a
           id="cta-command-link"
-          href="command.html"
+          href="/recon/command"
           class="btn-outline-slate px-3.5 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5"
         >
           <span>🧠 Knowledge Base</span>
         </a>
         <a
-          href="login.html"
+          href="/recon/login"
           class="btn-outline-slate px-3.5 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5"
         >
           <span>🔐 Switch Account</span>
@@ -753,8 +753,9 @@
     <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-mono-telemetry">
       <span>TIBERIUS RECON™ • 3-PANE REPLY &amp; FOLLOW-UP CONVERSATION ROOM</span>
       <div class="flex items-center gap-5">
-        <a id="footer-briefing-link" href="briefing.html" class="text-emerald-400 hover:underline">← 7:00 AM Briefing Queue</a>
-        <a id="footer-command-link" href="command.html" class="text-blue-400 hover:underline">Shop Knowledge Base &amp; Command →</a>
+        <a href="/recon/login" class="text-slate-300 hover:underline">← Back to Account &amp; Sign-In Portal</a>
+        <a id="footer-briefing-link" href="/recon/briefing" class="text-emerald-400 hover:underline">7:00 AM Briefing Queue</a>
+        <a id="footer-command-link" href="/recon/command" class="text-blue-400 hover:underline">Shop Knowledge Base &amp; Command →</a>
       </div>
     </div>
   </footer>
