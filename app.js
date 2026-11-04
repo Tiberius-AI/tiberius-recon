@@ -792,14 +792,39 @@
       document.body.classList.add('g-root', 'g3-root');
     }
 
-    // 7A. 3D Scroll-Tilted Interactive Stage (--tilt-progress)
+    // 7A. Scroll-Into-View Entrance Animation & 3D Scroll-Tilted Stage (--tilt-progress)
+    const videoScrollStage = document.getElementById('hero-video-scroll-stage');
+    const videoShowcaseShell = videoScrollStage ? videoScrollStage.querySelector('.video-showcase-shell') : null;
+
+    if (videoScrollStage) {
+      if ('IntersectionObserver' in window) {
+        const videoRevealObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                videoScrollStage.classList.add('is-in-view');
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+        );
+        videoRevealObserver.observe(videoScrollStage);
+      } else {
+        videoScrollStage.classList.add('is-in-view');
+      }
+    }
+
     function syncHeroTilt() {
-      if (!videoPlayerCard) return;
-      const rect = videoPlayerCard.getBoundingClientRect();
+      const targetEl = videoShowcaseShell || videoPlayerCard;
+      if (!targetEl) return;
+      const rect = targetEl.getBoundingClientRect();
       const vh = window.innerHeight || 900;
-      const raw = 1 - Math.max(0, Math.min(1, (rect.top - vh * 0.12) / (vh * 0.65)));
-      const eased = 0.45 + raw * 0.55;
-      videoPlayerCard.style.setProperty('--tilt-progress', eased.toFixed(3));
+      const raw = 1 - Math.max(0, Math.min(1, (rect.top - vh * 0.14) / (vh * 0.72)));
+      const eased = 0.25 + raw * 0.75;
+      targetEl.style.setProperty('--tilt-progress', eased.toFixed(3));
+      if (videoScrollStage && rect.top < vh * 0.88 && rect.bottom > 0) {
+        videoScrollStage.classList.add('is-in-view');
+      }
     }
     window.addEventListener('scroll', syncHeroTilt, { passive: true });
     syncHeroTilt();

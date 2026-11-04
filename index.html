@@ -42,7 +42,7 @@
   </script>
 
   <!-- Enterprise Dark Glass Design System Stylesheet (Supports both /recon and local root) -->
-  <link rel="stylesheet" href="/recon/styles.css?v=2.6" onerror="this.onerror=null;this.href='styles.css?v=2.6';" />
+  <link rel="stylesheet" href="/recon/styles.css?v=2.7" onerror="this.onerror=null;this.href='styles.css?v=2.7';" />
 
   <!-- Complete SoftwareApplication + ProfessionalService JSON-LD Schema -->
   <script type="application/ld+json">
@@ -177,106 +177,55 @@
 
   <main>
     <!-- ======================================================================
-         CHAPTER 1 (21ST.DEV G3 WEBGL SILK SHADER STAGE): VIDEO OVERVIEW HERO
-         - Clean 2-Column Desktop / Single-Column Mobile
-         - On Mobile: 16:9 Video Player placed right between Subhead & Primary CTA
+         CHAPTER 1A (21ST.DEV G3 WEBGL SILK SHADER STAGE): CENTERED HERO SECTION
+         - Dedicated Hero Section for Callout (no pill), Headline, Subheadline,
+           Centered CTA Row, and Balanced Single-Line Trust Strip
          ====================================================================== -->
-    <section id="hero-overview" class="section-bg-white g3-hero-stage py-10 sm:py-16 lg:py-20 border-b border-slate-200/80" aria-label="Tiberius Recon Overview">
+    <section id="hero-overview" class="section-bg-white g3-hero-stage pt-12 pb-12 sm:pt-16 sm:pb-16 lg:pt-24 lg:pb-20 border-b border-slate-200/80" aria-label="Tiberius Recon Overview">
       <!-- 21st.dev WebGL1 'silk' Shader Canvas & Radial Vignette -->
       <div class="g3-hero-bg" aria-hidden="true">
         <canvas class="g3-hero-bg-canvas" data-g3-shader="silk"></canvas>
         <div class="g3-hero-vignette"></div>
       </div>
+
       <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-y-7 lg:gap-x-12 lg:gap-y-6 items-center">
+        <div class="max-w-4xl mx-auto text-center space-y-6 sm:space-y-7">
 
-          <!-- 1. Left Column Top: Pill Badge + H1 Headline + Story Subhead -->
-          <div class="order-1 lg:col-span-7 lg:col-start-1 lg:row-start-1 space-y-4 sm:space-y-5">
-            <!-- Subtle Pill Badge -->
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] sm:text-xs font-bold tracking-wide uppercase">
-              <span class="w-2 h-2 rounded-full bg-amber-600 flex-shrink-0"></span>
-              <span>FOR COMMERCIAL CONTRACTORS, SUBS &amp; HIGH-TICKET HOME TRADES</span>
-            </div>
+          <!-- Clean Typographic Callout (No Pill) -->
+          <p class="font-mono-telemetry text-xs sm:text-sm font-bold tracking-[0.16em] uppercase text-amber-400">
+            FOR COMMERCIAL CONTRACTORS, SUBS &amp; HIGH-TICKET HOME TRADES
+          </p>
 
-            <!-- H1 Headline (#0F172A, bold, tight tracking) -->
-            <h1 class="font-display font-extrabold text-3xl sm:text-5xl lg:text-[52px] text-[#0F172A] leading-[1.1] tracking-tight">
-              Close Your Next $50,000 Job in 90 Seconds Over Morning Coffee.
-            </h1>
+          <!-- Balanced Centered H1 Headline -->
+          <h1 class="font-display font-extrabold text-3xl sm:text-5xl lg:text-[60px] text-[#0F172A] leading-[1.08] tracking-tight max-w-4xl mx-auto">
+            Close Your Next $50,000 Job in 90 Seconds Over Morning Coffee.
+          </h1>
 
-            <!-- Story Subhead (#334155) -->
-            <p class="text-base sm:text-lg lg:text-[19px] text-[#334155] leading-relaxed max-w-2xl font-normal">
-              Picture 6:45 AM tomorrow in your kitchen. While your competitors are still asleep, your Tiberius Scout has already finished its overnight recon—pulling last night's suburban building permits, verifying the property owners on the county tax rolls, and drafting your outreach. You just sip your coffee, tap "Send" three times, and roll out to the job site.
-            </p>
-          </div>
+          <!-- Balanced Centered Story Subheadline -->
+          <p class="text-base sm:text-lg lg:text-[20px] text-[#334155] leading-relaxed max-w-3xl mx-auto font-normal">
+            Picture 6:45 AM tomorrow in your kitchen. While your competitors are still asleep, your Tiberius Scout has already finished its overnight recon—pulling last night's suburban building permits, verifying the property owners on the county tax rolls, and drafting your outreach. You just sip your coffee, tap "Send" three times, and roll out to the job site.
+          </p>
 
-          <!-- 2. Right Column on Desktop / Between Subhead & Primary CTA on Mobile:
-               16:9 Executive Video Overview Card -->
-          <div class="order-2 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 w-full">
-            <div class="bg-slate-50 p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 shadow-xl">
-              <div
-                id="hero-video-player-card"
-                class="hero-video-frame group"
-                aria-label="Tiberius Recon Overview Video"
-                data-video-src="/recon/video/TIBERIUS%20RECON.mp4"
-              >
-                <div class="hero-video-blueprint-grid" aria-hidden="true"></div>
-
-                <!-- TIBERIUS RECON OVERVIEW VIDEO -->
-                <video
-                  id="hero-overview-video"
-                  poster="/recon/images/tiberius-recon-poster.jpg"
-                  preload="metadata"
-                  controls
-                  playsinline
-                  class="relative z-10 w-full h-full object-contain bg-[#050507] rounded-xl"
-                >
-                  <source src="/recon/video/TIBERIUS%20RECON.mp4" type="video/mp4" />
-                  <source src="video/TIBERIUS%20RECON.mp4" type="video/mp4" />
-                  Your browser does not support HTML5 video.
-                </video>
-
-                <!-- CLEAN PLAY BUTTON OVERLAY (Hides on Click / Play) -->
-                <div
-                  id="hero-video-poster-view"
-                  onclick="this.classList.add('hidden'); var v = document.getElementById('hero-overview-video'); if (v) { v.controls = true; v.play(); }"
-                  class="absolute inset-0 z-20 flex items-center justify-center bg-[#050507]/20 hover:bg-[#050507]/10 transition-colors duration-200 cursor-pointer"
-                >
-                  <div class="video-play-overlay-btn">
-                    <svg class="w-7 h-7 ml-0.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M8 5.14v14l11-7-11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Video Caption -->
-              <p class="text-xs sm:text-sm text-slate-600 font-medium text-center mt-3 px-2">
-                Watch how Tiberius Recon™ turns 2:00 AM city permit filings into 7:00 AM booked estimates.
-              </p>
-            </div>
-          </div>
-
-          <!-- 3. Left Column Bottom: CTA Row + Trust Micro-Strip -->
-          <div class="order-3 lg:col-span-7 lg:col-start-1 lg:row-start-2 space-y-5">
-            <!-- CTA Row -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <!-- Centered CTA Row + Balanced Trust Micro-Strip -->
+          <div class="pt-2 space-y-5">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3.5">
               <a
                 href="#pricing"
-                class="btn-trust-emerald px-5 py-3.5 rounded-xl text-sm lg:text-[15px] text-center sm:whitespace-nowrap inline-flex items-center justify-center gap-2"
+                class="btn-trust-emerald px-7 py-4 rounded-xl text-sm sm:text-base font-bold text-center sm:whitespace-nowrap inline-flex items-center justify-center gap-2"
               >
                 <span>Start 7-Day Free Trial ($0 Today) →</span>
               </a>
               <button
                 id="hero-watch-overview-btn"
                 type="button"
-                class="btn-outline-slate px-4 py-3.5 rounded-xl text-sm lg:text-[15px] text-center sm:whitespace-nowrap inline-flex items-center justify-center gap-2 cursor-pointer"
+                class="btn-outline-slate px-6 py-4 rounded-xl text-sm sm:text-base font-semibold text-center sm:whitespace-nowrap inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Watch 90-Second Overview ▶</span>
               </button>
             </div>
 
-            <!-- Trust Micro-Strip -->
-            <div class="pt-1 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm font-semibold text-slate-600">
+            <!-- Balanced Single-Line Trust Micro-Strip -->
+            <div class="pt-1 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm font-semibold text-slate-600">
               <span class="inline-flex items-center gap-1.5">
                 <span class="text-emerald-600 font-bold">✓</span>
                 <span>Nothing Sends Without Your Tap</span>
@@ -292,6 +241,75 @@
                 <span>Live City Permits &amp; County Tax Rolls</span>
               </span>
             </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         CHAPTER 1B: STANDALONE CENTERED WIDESCREEN VIDEO SHOWCASE SECTION
+         - Centered all by itself underneath the Hero Section
+         - "Watch how it works" directly above the large 16:9 player
+         - Scroll-into-view entrance animation (.video-scroll-reveal)
+         ====================================================================== -->
+    <section id="video-walkthrough" class="section-bg-white py-12 sm:py-16 lg:py-24 border-b border-slate-200/80 relative overflow-hidden" aria-label="Watch How Tiberius Recon Works">
+      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="hero-video-scroll-stage" class="video-scroll-reveal max-w-5xl mx-auto">
+
+          <!-- "Watch how it works" Header Directly Above the Video -->
+          <div class="text-center mb-6 sm:mb-8">
+            <div class="inline-flex items-center gap-2 text-xs sm:text-sm font-mono-telemetry text-[#1E40AF] tracking-widest uppercase mb-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10B981] animate-pulse"></span>
+              <span>90-SECOND SYSTEM WALKTHROUGH</span>
+            </div>
+            <h2 class="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-[#0F172A] tracking-tight">
+              Watch how it works
+            </h2>
+          </div>
+
+          <!-- Large Centered 16:9 Executive Video Player Card -->
+          <div class="video-showcase-shell bg-slate-50 p-3 sm:p-4 lg:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl">
+            <div
+              id="hero-video-player-card"
+              class="hero-video-frame group"
+              aria-label="Tiberius Recon Overview Video"
+              data-video-src="/recon/video/TIBERIUS%20RECON.mp4"
+            >
+              <div class="hero-video-blueprint-grid" aria-hidden="true"></div>
+
+              <!-- TIBERIUS RECON OVERVIEW VIDEO -->
+              <video
+                id="hero-overview-video"
+                poster="/recon/images/tiberius-recon-poster.jpg"
+                preload="metadata"
+                controls
+                playsinline
+                class="relative z-10 w-full h-full object-contain bg-[#050507] rounded-xl sm:rounded-2xl"
+              >
+                <source src="/recon/video/TIBERIUS%20RECON.mp4" type="video/mp4" />
+                <source src="video/TIBERIUS%20RECON.mp4" type="video/mp4" />
+                Your browser does not support HTML5 video.
+              </video>
+
+              <!-- CLEAN PLAY BUTTON OVERLAY (Hides on Click / Play) -->
+              <div
+                id="hero-video-poster-view"
+                onclick="this.classList.add('hidden'); var v = document.getElementById('hero-overview-video'); if (v) { v.controls = true; v.play(); }"
+                class="absolute inset-0 z-20 flex items-center justify-center bg-[#050507]/20 hover:bg-[#050507]/10 transition-colors duration-200 cursor-pointer"
+              >
+                <div class="video-play-overlay-btn">
+                  <svg class="w-8 h-8 ml-0.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M8 5.14v14l11-7-11-7z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Video Caption -->
+            <p class="text-xs sm:text-sm lg:text-base text-slate-600 font-medium text-center mt-3.5 sm:mt-4 px-2">
+              Watch how Tiberius Recon™ turns 2:00 AM city permit filings into 7:00 AM booked estimates.
+            </p>
           </div>
 
         </div>
@@ -1417,6 +1435,6 @@
   </footer>
 
   <!-- Application Logic (Supports both /recon and local root) -->
-  <script src="/recon/app.js?v=2.9" onerror="this.onerror=null;this.src='app.js?v=2.9';"></script>
+  <script src="/recon/app.js?v=3.0" onerror="this.onerror=null;this.src='app.js?v=3.0';"></script>
 </body>
 </html>
