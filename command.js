@@ -377,6 +377,325 @@
   loadCommandState();
 
   /* ==========================================================================
+     MODULE 04 • TIBERIUS HQ AUTONOMOUS META-RECON™ ENGINE
+     ========================================================================== */
+  const metaZipSelect = document.getElementById('meta-zip-select');
+  const metaTradeSelect = document.getElementById('meta-trade-select');
+  const metaPlaybookSelect = document.getElementById('meta-playbook-select');
+  const metaSweepBtn = document.getElementById('meta-sweep-btn');
+  const metaRunDripBtn = document.getElementById('meta-run-drip-btn');
+  const metaFeedback = document.getElementById('meta-action-feedback');
+  const metaProspectsGrid = document.getElementById('meta-prospects-grid');
+  const metaStatProspects = document.getElementById('meta-stat-prospects');
+  const metaStatHot = document.getElementById('meta-stat-hot');
+  const metaStatLeak = document.getElementById('meta-stat-leak');
+  const metaStatGate = document.getElementById('meta-stat-gate');
+  const metaStatSent = document.getElementById('meta-stat-sent');
+
+  let activeMetaRecon = null;
+  const selectedTouchByProspect = {};
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function showMetaFeedback(message) {
+    if (!metaFeedback) return;
+    metaFeedback.textContent = message;
+    metaFeedback.classList.remove('hidden');
+  }
+
+  function renderMetaRecon(metaRecon) {
+    if (!metaRecon) return;
+    activeMetaRecon = metaRecon;
+    const m = metaRecon.metrics || {};
+    if (metaStatProspects) metaStatProspects.textContent = String(m.totalProspectsGathered || 0);
+    if (metaStatHot) metaStatHot.textContent = `${m.hotLeadsCount || 0} HOT`;
+    if (metaStatLeak) metaStatLeak.textContent = m.totalMonthlyLeakFormatted || '$0/mo';
+    if (metaStatGate) metaStatGate.textContent = `${m.antiAiGatePassRate || '100%'} PASS`;
+    if (metaStatSent) {
+      metaStatSent.textContent = `${m.touchesSentCount || 0} Sent • ${m.demosAutoDeliveredCount || 0} Demos`;
+    }
+
+    if (!metaProspectsGrid) return;
+    const prospects = Array.isArray(metaRecon.prospects) ? metaRecon.prospects : [];
+
+    metaProspectsGrid.innerHTML = prospects
+      .map((p) => {
+        const touchNum = selectedTouchByProspect[p.id] || 1;
+        const activeTouch =
+          (Array.isArray(p.touches) && p.touches.find((t) => t.touchNumber === touchNum)) ||
+          (p.touches && p.touches[0]) ||
+          {};
+        const xray = p.siteLeakXRay || {};
+        const math = xray.revenueMath || {};
+        const primaryPermit = (p.baitPermits && p.baitPermits[0]) || {};
+        const leaks = Array.isArray(xray.leaks) ? xray.leaks : [];
+        const isDemoSent = p.outreachStatus === 'DEMO_SENT_HOT_LEAD';
+
+        const statusBadge = isDemoSent
+          ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/50 font-mono-telemetry text-[11px] text-emerald-300 font-bold">🔥 REPLIED • LIVE PREVIEW AUTO-SENT</span>`
+          : `<span class="px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-[11px] text-blue-300">${escapeHtml(
+              p.outreachStatus
+            )}</span>`;
+
+        const touchTabsHtml = [1, 2, 3, 4]
+          .map((n) => {
+            const tObj = (p.touches || []).find((t) => t.touchNumber === n) || {};
+            const isSelected = n === touchNum;
+            const sentMark = tObj.status === 'SENT' ? ' ✓' : tObj.status === 'HALTED_ON_REPLY' ? ' ⏸' : '';
+            return `<button type="button" data-meta-touch-tab="${escapeHtml(p.id)}" data-touch-num="${n}" class="px-2.5 py-1 rounded-lg font-mono-telemetry text-[11px] cursor-pointer ${
+              isSelected
+                ? 'bg-blue-600 text-white font-bold'
+                : 'bg-slate-900 text-slate-300 border border-slate-700 hover:bg-slate-700'
+            }">Touch ${n}${sentMark}</button>`;
+          })
+          .join('');
+
+        return `
+        <article class="p-5 rounded-2xl bg-slate-800/95 border border-slate-700 flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                  ${escapeHtml(xray.leadScore || 'HOT')} • ${escapeHtml(p.primaryTrade)} (${escapeHtml(p.zipCode)})
+                </span>
+                <span class="font-mono-telemetry text-[11px] text-emerald-400">
+                  ✓ Anti-AI Gate: ${p.copyGate && p.copyGate.passed ? 'PASS (0 Links T1)' : 'CHECK'}
+                </span>
+              </div>
+              ${statusBadge}
+            </div>
+
+            <div>
+              <h3 class="font-display font-extrabold text-lg text-white">
+                ${escapeHtml(p.companyName)}
+              </h3>
+              <p class="text-xs text-slate-300 font-mono-telemetry mt-0.5">
+                👤 ${escapeHtml(p.contactName)} (${escapeHtml(p.contactRole)}) • 📞 ${escapeHtml(p.phone)} • ✉️ ${escapeHtml(p.email)}
+              </p>
+            </div>
+
+            <!-- Trojan Horse Live Permit Bait + 3-Leak Revenue Math Callout -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 space-y-1">
+                <div class="font-mono-telemetry text-[10px] text-amber-300 uppercase">🛰️ Trojan Horse Permit Bait</div>
+                <div class="font-bold text-white">Permit #${escapeHtml(primaryPermit.permitNumber)} (${escapeHtml(primaryPermit.valuationFormatted)})</div>
+                <div class="text-slate-300">${escapeHtml(primaryPermit.address)} • GC: ${escapeHtml(primaryPermit.gcContact)} (${escapeHtml(primaryPermit.gcCompany)})</div>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 space-y-1">
+                <div class="font-mono-telemetry text-[10px] text-emerald-300 uppercase">🔍 3-Leak Site X-Ray (${escapeHtml(xray.websiteStatus)})</div>
+                <div class="font-bold text-emerald-400">${escapeHtml(math.estimatedMonthlyLeakFormatted || '$14,250/mo')} Est. Leaked Revenue</div>
+                <div class="text-slate-300">${escapeHtml(leaks[0] ? leaks[0].title : 'Multi-field form & zero after-hours SMS')}</div>
+              </div>
+            </div>
+
+            <!-- 4-Touch Sequence Selector & Message Preview -->
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-700 space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="font-mono-telemetry text-[10px] text-blue-300 uppercase">${escapeHtml(activeTouch.angleLabel || 'Touch 1')}</span>
+                <div class="flex items-center gap-1.5">${touchTabsHtml}</div>
+              </div>
+              <div class="font-mono-telemetry text-xs text-amber-200">
+                Subject: <span class="text-white font-bold">${escapeHtml(activeTouch.subject)}</span>
+              </div>
+              <pre class="whitespace-pre-wrap font-sans text-xs text-slate-200 leading-relaxed bg-slate-950/70 p-3 rounded-lg border border-slate-800 max-h-44 overflow-y-auto">${escapeHtml(
+                activeTouch.body
+              )}</pre>
+            </div>
+          </div>
+
+          <!-- Action Bar -->
+          <div class="pt-2 border-t border-slate-700 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                data-meta-send-email="${escapeHtml(p.id)}"
+                data-touch-num="${touchNum}"
+                class="btn-trust-emerald px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer"
+              >
+                ✓ Send Touch ${touchNum} Email
+              </button>
+              <a
+                href="${escapeHtml(p.nativeSimUri || '#')}"
+                data-meta-send-sms="${escapeHtml(p.id)}"
+                class="btn-outline-slate px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1"
+              >
+                📲 Native SIM Text
+              </a>
+              <button
+                type="button"
+                data-meta-sim-reply="${escapeHtml(p.id)}"
+                class="px-3 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 hover:bg-amber-500/30 text-xs font-bold cursor-pointer"
+              >
+                ⚡ Simulate "Yes, send it!" Reply
+              </button>
+            </div>
+            <a
+              href="/recon/briefing?token=${encodeURIComponent(p.previewToken || 'demo-7am-briefing')}"
+              target="_blank"
+              class="font-mono-telemetry text-xs text-blue-300 hover:text-white underline"
+            >
+              Open Live Preview Briefing →
+            </a>
+          </div>
+        </article>`;
+      })
+      .join('');
+  }
+
+  async function loadMetaReconInitial() {
+    if (!metaProspectsGrid) return;
+    try {
+      const resp = await fetch('/api/recon/meta-outreach');
+      const data = await resp.json();
+      if (data && data.ok && data.metaRecon) {
+        renderMetaRecon(data.metaRecon);
+      }
+    } catch (_err) {
+      // Ignore offline error
+    }
+  }
+
+  if (metaSweepBtn) {
+    metaSweepBtn.addEventListener('click', async () => {
+      const orig = metaSweepBtn.textContent;
+      metaSweepBtn.textContent = '🛰️ Sweeping & Building Previews...';
+      metaSweepBtn.disabled = true;
+      try {
+        const resp = await fetch('/api/recon/meta-outreach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'sweep',
+            zipCode: metaZipSelect ? metaZipSelect.value : 'ALL',
+            primaryTrade: metaTradeSelect ? metaTradeSelect.value : 'ALL',
+            playbook: metaPlaybookSelect ? metaPlaybookSelect.value : 'FULL_BUNDLE_OFFENSE_DEFENSE'
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.metaRecon) {
+          renderMetaRecon(data.metaRecon);
+          showMetaFeedback(
+            `✓ Swept ${data.metaRecon.prospects.length} prospects, ran 3-Leak Website X-Rays, and auto-provisioned ${data.metaRecon.metrics.livePreviewsProvisioned} live Preview Briefings.`
+          );
+        }
+      } catch (_err) {
+        // Ignore
+      } finally {
+        metaSweepBtn.textContent = orig;
+        metaSweepBtn.disabled = false;
+      }
+    });
+  }
+
+  if (metaRunDripBtn) {
+    metaRunDripBtn.addEventListener('click', async () => {
+      const orig = metaRunDripBtn.textContent;
+      metaRunDripBtn.textContent = '⚡ Dispatching Autonomous Drip Batch...';
+      metaRunDripBtn.disabled = true;
+      try {
+        const resp = await fetch('/api/recon/meta-outreach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'run_drip_batch',
+            touchNumber: 1,
+            maxBatchSize: 6
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.metaRecon) {
+          renderMetaRecon(data.metaRecon);
+          showMetaFeedback(
+            `✓ Autonomous Drip Runner dispatched Touch 1 to ${data.dispatchedCount} Copy-Gate-verified prospect(s) via Resend with thread-locked reply routing.`
+          );
+        }
+      } catch (_err) {
+        // Ignore
+      } finally {
+        metaRunDripBtn.textContent = orig;
+        metaRunDripBtn.disabled = false;
+      }
+    });
+  }
+
+  if (metaProspectsGrid) {
+    metaProspectsGrid.addEventListener('click', async (e) => {
+      const tabBtn = e.target.closest('[data-meta-touch-tab]');
+      if (tabBtn) {
+        const pid = tabBtn.getAttribute('data-meta-touch-tab');
+        const tNum = Number(tabBtn.getAttribute('data-touch-num') || 1);
+        selectedTouchByProspect[pid] = tNum;
+        if (activeMetaRecon) renderMetaRecon(activeMetaRecon);
+        return;
+      }
+
+      const sendBtn = e.target.closest('[data-meta-send-email]');
+      if (sendBtn) {
+        const pid = sendBtn.getAttribute('data-meta-send-email');
+        const tNum = Number(sendBtn.getAttribute('data-touch-num') || 1);
+        sendBtn.textContent = 'Sending...';
+        try {
+          const resp = await fetch('/api/recon/meta-outreach', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'send_touch',
+              prospectId: pid,
+              touchNumber: tNum,
+              channel: 'RESEND_EMAIL'
+            })
+          });
+          const data = await resp.json();
+          if (data && data.ok && data.metaRecon) {
+            renderMetaRecon(data.metaRecon);
+            showMetaFeedback(
+              `✓ Dispatched Touch ${tNum} to ${data.prospect.contactName} (${data.prospect.companyName}) via Resend (${data.receipt.replyToAddress}).`
+            );
+          }
+        } catch (_err) {
+          // Ignore
+        }
+        return;
+      }
+
+      const simReplyBtn = e.target.closest('[data-meta-sim-reply]');
+      if (simReplyBtn) {
+        const pid = simReplyBtn.getAttribute('data-meta-sim-reply');
+        simReplyBtn.textContent = '🤖 Auto-Replying...';
+        try {
+          const resp = await fetch('/api/recon/meta-outreach', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'simulate_reply',
+              prospectId: pid,
+              rawReplyBody: 'Yes, send over the live permit packet and 3-leak breakdown!',
+              autoSendDemoLink: true
+            })
+          });
+          const data = await resp.json();
+          if (data && data.ok && data.metaRecon) {
+            renderMetaRecon(data.metaRecon);
+            showMetaFeedback(
+              `🔥 ${data.prospect.contactName} replied! Follow-ups halted & Autonomous Fulfilment Agent delivered live Preview Briefing (${data.prospect.previewBriefingUrl}).`
+            );
+          }
+        } catch (_err) {
+          // Ignore
+        }
+      }
+    });
+  }
+
+  loadMetaReconInitial();
+
+  /* ==========================================================================
      21ST.DEV ("G3") WEBGL1 'SILK' SHADER & PIXEL-GRID FOOTER ENGINE
      ========================================================================== */
   (function initG3PortalEffects() {

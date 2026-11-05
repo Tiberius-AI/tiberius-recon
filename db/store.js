@@ -1104,9 +1104,15 @@ function savePreTripReport(report = {}) {
 }
 
 function getPreTripState() {
+  const holdDispatch = getPreTripHoldDispatch();
+  const latestReport = getLatestPreTripReport();
+  const overallStatus = holdDispatch
+    ? 'RED_TAGGED'
+    : (latestReport && latestReport.overallStatus) || 'PASS';
   return {
-    holdDispatch: getPreTripHoldDispatch(),
-    latestReport: getLatestPreTripReport(),
+    overallStatus,
+    holdDispatch,
+    latestReport,
     auditLogs: getPreTripAuditLogs(15)
   };
 }
@@ -4593,6 +4599,22 @@ function loadStore() {
           Object.keys(parsed.contractors).forEach((id) => {
             const c = parsed.contractors[id];
             if (!c) return;
+            const ownerStr = String(c.ownerName || '').trim();
+            const emailStr = String(c.workEmail || '').trim().toLowerCase();
+            const isSpamOrTestResidue =
+              !defaultStore.contractors[id] &&
+              (/^[A-Za-z]{14,}$/.test(ownerStr) ||
+                /^(Whncjba|Rkwfj|Mcbznppiyl)\b/i.test(String(c.companyName || '')) ||
+                /^(owner@sanantonioroofing\.com|mike@apexcommercialbuilders\.com|luke@brazoselectric\.com|john\.redican@hotmail\.com|t\.k\.w\.illi\.e1\.5@gmail\.com|jacobwhite86@yahoo\.com)$/i.test(
+                  emailStr
+                ));
+            if (isSpamOrTestResidue) {
+              if (c.magicToken && parsed.briefings) {
+                delete parsed.briefings[c.magicToken];
+              }
+              delete parsed.contractors[id];
+              return;
+            }
             if (defaultStore.contractors[id] && !c.passwordHash) {
               c.passwordHash = defaultStore.contractors[id].passwordHash;
               c.magicToken = defaultStore.contractors[id].magicToken;
@@ -6859,6 +6881,17 @@ function registerHydratedCloudContractor(store, contractorData, rawPassword) {
   const magicToken = String(contractorData.magicToken).trim();
   // Never overwrite the canonical v2.4 A-lert Roof Systems profile with an older Resend onboarding email snapshot
   if (magicToken === 'recon-78130-2101s6' && store.briefings['recon-78130-2101s6']) {
+    return false;
+  }
+  const ownerCheck = String(contractorData.ownerName || '').trim();
+  const emailCheck = String(contractorData.workEmail || '').trim().toLowerCase();
+  if (
+    /^[A-Za-z]{14,}$/.test(ownerCheck) ||
+    /^(Whncjba|Rkwfj|Mcbznppiyl)\b/i.test(String(contractorData.companyName || '')) ||
+    /^(owner@sanantonioroofing\.com|mike@apexcommercialbuilders\.com|luke@brazoselectric\.com|john\.redican@hotmail\.com|t\.k\.w\.illi\.e1\.5@gmail\.com|jacobwhite86@yahoo\.com)$/i.test(
+      emailCheck
+    )
+  ) {
     return false;
   }
   const baseZip = String(contractorData.baseZip || '78130').trim();

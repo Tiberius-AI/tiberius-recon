@@ -20,6 +20,23 @@ const {
 } = require('../../db/store');
 const { runPreTripInspection } = require('../../workers/pretrip-inspector');
 
+function resolveRequestBaseUrl(req) {
+  const rawHost =
+    (req && req.headers && (req.headers['x-forwarded-host'] || req.headers.host)) ||
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+    process.env.VERCEL_URL ||
+    '';
+  const host = String(rawHost).split(',')[0].trim();
+  if (host) {
+    const isLocal = /^(127\.0\.0\.1|localhost)(:\d+)?$/i.test(host);
+    const rawProto =
+      (req && req.headers && req.headers['x-forwarded-proto']) || (isLocal ? 'http' : 'https');
+    const proto = String(rawProto).split(',')[0].trim() || (isLocal ? 'http' : 'https');
+    return `${proto}://${host}`;
+  }
+  return 'https://www.tiberius.ai';
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -31,6 +48,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const requestBaseUrl = resolveRequestBaseUrl(req);
+
     if (req.method === 'GET') {
       const statusOnly =
         req.query && (req.query.statusOnly === 'true' || req.query.statusOnly === '1');
@@ -52,6 +71,7 @@ module.exports = async function handler(req, res) {
 
       const report = await runPreTripInspection({
         token: (req.query && (req.query.token || req.query.t)) || 'demo-7am-briefing',
+        baseUrl: (req.query && req.query.baseUrl) || requestBaseUrl,
         manualTrigger: Boolean(req.query && req.query.manual === 'true'),
         sendNotifications: !(req.query && req.query.silent === 'true')
       });
@@ -121,6 +141,7 @@ module.exports = async function handler(req, res) {
       }
 
       const report = await runPreTripInspection({
+        baseUrl: body.baseUrl || requestBaseUrl,
         ...body,
         manualTrigger: body.manualTrigger !== undefined ? Boolean(body.manualTrigger) : true
       });

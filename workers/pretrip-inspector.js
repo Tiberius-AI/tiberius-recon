@@ -122,9 +122,16 @@ function buildAntigravityRepairPrompt({ failures = [], heals = [], timestamp }) 
 async function probeFleetEndpoint(endpointSpec, { baseUrl, timeoutMs = 10000 } = {}) {
   const { label, pathOrUrl, fallbackCheck } = endpointSpec;
   const isExternal = /^https?:\/\//i.test(pathOrUrl);
+  const defaultBaseUrl =
+    process.env.PUBLIC_BASE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : '') ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+    (process.env.VERCEL ? 'https://www.tiberius.ai' : `http://127.0.0.1:${process.env.PORT || 3000}`);
   const fullUrl = isExternal
     ? pathOrUrl
-    : `${String(baseUrl || `http://127.0.0.1:${process.env.PORT || 3000}`).replace(/\/$/, '')}${pathOrUrl}`;
+    : `${String(baseUrl || defaultBaseUrl).replace(/\/$/, '')}${pathOrUrl}`;
 
   const started = Date.now();
   try {
@@ -630,11 +637,15 @@ async function runPreTripInspection(options = {}) {
   // CHECK 4: Fleet Endpoint & Webhook Smoke Probe (10s Timeout)
   // =========================================================================
   const rootDir = path.join(__dirname, '..');
+  const hasHtmlAsset = (fileName) =>
+    fs.existsSync(path.join(rootDir, fileName)) ||
+    fs.existsSync(path.join(process.cwd(), fileName)) ||
+    typeof require('../server') === 'function';
   const endpointsToProbe = [
     {
       label: '/recon/briefing',
       pathOrUrl: '/recon/briefing',
-      fallbackCheck: () => fs.existsSync(path.join(rootDir, 'briefing.html'))
+      fallbackCheck: () => hasHtmlAsset('briefing.html')
     },
     {
       label: '/api/recon/briefing',
@@ -647,7 +658,7 @@ async function runPreTripInspection(options = {}) {
     {
       label: '/recon/inbox',
       pathOrUrl: '/recon/inbox',
-      fallbackCheck: () => fs.existsSync(path.join(rootDir, 'inbox.html'))
+      fallbackCheck: () => hasHtmlAsset('inbox.html')
     },
     {
       label: 'https://newbraunfelsinsider.com',

@@ -8,7 +8,11 @@
  */
 
 const { ingestInboundWebhookReply, recordScoutAlertLog } = require('../../db/store');
-const { dispatchContractorHotReplyAlertSms } = require('../../workers/comms-dispatcher');
+const {
+  dispatchContractorHotReplyAlertSms,
+  parseThreadReplyToAddress
+} = require('../../workers/comms-dispatcher');
+const { handleMetaInboundProspectReply } = require('../../workers/meta-recon-orchestrator');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -35,6 +39,25 @@ module.exports = async function handler(req, res) {
     const toRaw = data.to || data.recipient || data.reply_to || '';
     const subject = data.subject || '';
     const rawBody = data.text || data.body || data.html || '';
+
+    const parsedThreadReply = parseThreadReplyToAddress(toRaw);
+    const effectiveToken =
+      data.token || payload.token || (parsedThreadReply && parsedThreadReply.token);
+
+    if (effectiveToken === 'tiberius-hq') {
+      const metaReplyResult = await handleMetaInboundProspectReply({
+        prospectId:
+          data.threadId ||
+          payload.threadId ||
+          (parsedThreadReply && parsedThreadReply.threadId),
+        fromEmail: fromRaw,
+        rawReplyBody: rawBody,
+        autoSendDemoLink: true
+      });
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify(metaReplyResult));
+    }
 
     const result = ingestInboundWebhookReply({
       provider: 'RESEND',

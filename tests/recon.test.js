@@ -1416,10 +1416,166 @@ async function runTests() {
       'briefing.html must render #briefing-archived-section, #briefing-history-bar, and v2.6'
     );
 
+    console.log('[27/27] Testing Tiberius Meta-Recon™ Autonomous Lead-Gen, 3-Leak Website X-Ray, Trojan Horse Permit Bait, Anti-AI Copy Gate, Drip Runner & Autonomous Reply Fulfilment...');
+    const { verifyAntiAiCopyGate } = require('../workers/drafting/tiberius-meta-drafter');
+
+    // 1. Sweep prospects across all corridors via POST /api/recon/meta-outreach
+    const metaSweepResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'sweep',
+        zipCode: 'ALL',
+        primaryTrade: 'ALL',
+        playbook: 'FULL_BUNDLE_OFFENSE_DEFENSE'
+      })
+    });
+    const metaSweepData = await metaSweepResp.json();
+    assert.strictEqual(metaSweepData.ok, true);
+    assert.ok(
+      metaSweepData.metaRecon && Array.isArray(metaSweepData.metaRecon.prospects),
+      'Meta-Recon sweep must return enriched prospects array'
+    );
+    assert.strictEqual(metaSweepData.metaRecon.prospects.length, 6);
+    assert.strictEqual(
+      metaSweepData.metaRecon.metrics.antiAiGatePassRate,
+      '100%',
+      'All generated 4-touch sequences must pass the Anti-AI Copy Gate'
+    );
+
+    // 2. Verify each prospect has 3-Leak X-Ray, Revenue Math, 3 Bait Permits, 4 Touches, and a live playable Preview Briefing
+    const firstProspect = metaSweepData.metaRecon.prospects[0];
+    assert.ok(firstProspect.previewToken && firstProspect.previewToken.startsWith('preview-'));
+    assert.strictEqual(firstProspect.siteLeakXRay.leaks.length, 3, 'Must detect 3 website conversion/SEO leaks');
+    assert.ok(
+      firstProspect.siteLeakXRay.revenueMath.estimatedMonthlyLeakDollars > 5000,
+      'Must calculate monthly owner leaked revenue math'
+    );
+    assert.strictEqual(firstProspect.baitPermits.length, 3, 'Must pair 3 real unseen permits as Trojan Horse bait');
+    assert.strictEqual(firstProspect.touches.length, 4, 'Must generate a 4-touch sequence (Day 0, 3, 7, 14)');
+    assert.strictEqual(firstProspect.copyGate.passed, true);
+    assert.strictEqual(firstProspect.copyGate.hasLinksInTouch1, false, 'Touch 1 must have 0 links to protect inbox placement');
+
+    // Verify the auto-provisioned Preview Briefing works live via GET /api/recon/briefing?token=<previewToken>
+    const previewBriefingResp = await fetch(
+      `${baseUrl}/api/recon/briefing?token=${encodeURIComponent(firstProspect.previewToken)}`
+    );
+    const previewBriefingData = await previewBriefingResp.json();
+    assert.strictEqual(previewBriefingData.ok, true);
+    assert.strictEqual(previewBriefingData.contractor.companyName, firstProspect.companyName);
+    assert.strictEqual(previewBriefingData.briefing.cards.length, 9);
+    assert.strictEqual(
+      previewBriefingData.briefing.cards.filter((c) => !c.isLockedOverflow).length,
+      3,
+      'Prospect preview briefing must show 3 unlocked live permits and 6 locked overflow permits'
+    );
+
+    // 3. Verify Anti-AI Copy Gate catches banned AI phrases and links in Touch 1 when injected
+    const badCopyCheck = verifyAntiAiCopyGate({
+      touches: [
+        {
+          touchNumber: 1,
+          subject: 'Quick note — Game-Changer',
+          body: 'I hope this email finds you well! Check https://tiberius.ai to unlock the power of AI.'
+        },
+        {
+          touchNumber: 2,
+          subject: 're: note',
+          body: 'Just checking in and bumping this to the top of your inbox.'
+        }
+      ],
+      prospect: firstProspect,
+      baitPermit: firstProspect.baitPermits[0]
+    });
+    assert.strictEqual(badCopyCheck.passed, false, 'Anti-AI Copy Gate must reject AI clichés and links in Touch 1');
+    assert.strictEqual(badCopyCheck.hasLinksInTouch1, true);
+    assert.ok(badCopyCheck.violations.length >= 4);
+
+    // 4. Verify Native SIM SMS handoff & Autonomous Drip Batch Runner
+    const simSmsResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'send_touch',
+        prospectId: firstProspect.id,
+        touchNumber: 1,
+        channel: 'NATIVE_SIM_SMS'
+      })
+    });
+    const simSmsData = await simSmsResp.json();
+    assert.strictEqual(simSmsData.ok, true);
+    assert.ok(
+      simSmsData.nativeSimUri.startsWith('sms:+18306254810?body='),
+      `Expected Native SIM sms: URI for prospect, got: ${simSmsData.nativeSimUri}`
+    );
+
+    const dripResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'run_drip_batch',
+        touchNumber: 1,
+        maxBatchSize: 3
+      })
+    });
+    const dripData = await dripResp.json();
+    assert.strictEqual(dripData.ok, true);
+    assert.strictEqual(dripData.dispatchedCount, 3, 'Autonomous Drip Batch must dispatch to 3 remaining eligible prospects');
+
+    // 5. Verify Inbound Prospect Reply via /api/webhooks/resend (addressed to reply+tiberius-hq+<prospectId>@inbound.tiberius.ai)
+    //    classifies positive permission ("Yes, send over the packet!"), halts Touch 2-4 follow-ups,
+    //    and autonomously dispatches the prospect's live Preview Briefing link!
+    const webhookReplyResp = await fetch(`${baseUrl}/api/webhooks/resend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: `${firstProspect.contactName} <${firstProspect.email}>`,
+        to: `reply+tiberius-hq+${firstProspect.id}@inbound.tiberius.ai`,
+        subject: `Re: ${firstProspect.touches[0].subject}`,
+        text: 'Yes, send over the 3-permit packet and the site breakdown!'
+      })
+    });
+    const webhookReplyData = await webhookReplyResp.json();
+    assert.strictEqual(webhookReplyData.ok, true);
+    assert.strictEqual(webhookReplyData.classification.intent, 'POSITIVE_SEND_DEMO');
+    assert.strictEqual(webhookReplyData.prospect.outreachStatus, 'DEMO_SENT_HOT_LEAD');
+    assert.ok(
+      webhookReplyData.autoFulfilmentReceipt && webhookReplyData.autoFulfilmentReceipt.ok,
+      'Autonomous Fulfilment Agent must send the live Preview Briefing link via Resend'
+    );
+    assert.ok(
+      webhookReplyData.founderHotSmsReceipt && webhookReplyData.founderHotSmsReceipt.ok,
+      'Must fire Master Twilio Hot-Reply SMS alert to founder cell'
+    );
+    assert.ok(
+      webhookReplyData.prospect.touches
+        .slice(1)
+        .every((t) => t.status === 'HALTED_ON_REPLY'),
+      'Unsent cold follow-up touches (Touches 2–4) must be halted immediately upon prospect reply'
+    );
+
+    const commandPageResp = await fetch(`${baseUrl}/command`);
+    const commandPageHtml = await commandPageResp.text();
+    assert.ok(
+      commandPageHtml.includes('id="meta-recon-module"') &&
+        commandPageHtml.includes('TIBERIUS META-RECON™'),
+      'command.html must render #meta-recon-module (Module 04: Tiberius Meta-Recon)'
+    );
+
     // Reset state for idempotent test runs
     clearSeenPermits();
     setPreTripHoldDispatch(false, 'Test suite cleanup');
     const finalStore = loadStore();
+    if (finalStore.briefings) {
+      for (const k of Object.keys(finalStore.briefings)) {
+        if (k.startsWith('preview-')) delete finalStore.briefings[k];
+      }
+    }
+    if (finalStore.contractors) {
+      for (const k of Object.keys(finalStore.contractors)) {
+        if (k.startsWith('prospect-ctr-')) delete finalStore.contractors[k];
+      }
+    }
     const alertCtr = finalStore.contractors['44444444-5555-6666-7777-888888888888'];
     if (alertCtr) {
       alertCtr.rotationOffset = 0;
@@ -1430,8 +1586,15 @@ async function runTests() {
       finalStore.briefings['recon-78130-2101s6'].tradeName = 'Roofing / Exteriors';
       saveStore(finalStore);
     }
+    await runPreTripInspection({
+      token: 'recon-78130-2101s6',
+      baseUrl,
+      simulateComms: true,
+      sendNotifications: false
+    });
+    clearSeenPermits();
 
-    console.log('\n✅ ALL 26 TIBERIUS RECON™ END-TO-END, 5:30 AM PRE-TRIP INSPECTOR, FULL-ACCOUNT LIVE PERMIT PULL, & ARCHIVE TESTS PASSED.');
+    console.log('\n✅ ALL 27 TIBERIUS RECON™ & META-RECON™ AUTONOMOUS LEAD-GEN END-TO-END TESTS PASSED.');
   } finally {
     server.close();
   }

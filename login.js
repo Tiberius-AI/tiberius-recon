@@ -39,7 +39,10 @@
 
   function renderAdminPreTripState(preTrip) {
     if (!preTrip) return;
-    const rawStatus = String(preTrip.overallStatus || 'PASS').toUpperCase();
+    const report = preTrip.latestReport || {};
+    const rawStatus = String(
+      preTrip.overallStatus || report.overallStatus || 'PASS'
+    ).toUpperCase();
     const displayStatus =
       rawStatus === 'RED_TAGGED'
         ? 'RED-TAGGED'
@@ -47,7 +50,6 @@
         ? 'AUTO-HEALED'
         : 'PASS';
     const holdDispatch = Boolean(preTrip.holdDispatch);
-    const report = preTrip.latestReport || {};
     const heals = Array.isArray(report.heals) ? report.heals : [];
     const failures = Array.isArray(report.failures) ? report.failures : [];
 

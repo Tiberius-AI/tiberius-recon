@@ -3,6 +3,9 @@
   "functions": {
     "*.js": {
       "includeFiles": "{*.html,*.css,*.js,images/**,video/**}"
+    },
+    "api/**/*.js": {
+      "includeFiles": "{*.html,*.css,*.js}"
     }
   },
   "crons": [
