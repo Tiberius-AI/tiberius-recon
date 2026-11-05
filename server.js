@@ -72,7 +72,9 @@ const MIME_TYPES = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
   '.wav': 'audio/wav',
-  '.mp3': 'audio/mpeg'
+  '.mp3': 'audio/mpeg',
+  '.md': 'text/markdown; charset=utf-8',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 };
 
 // Explicit static file references so Vercel's Node File Tracer (@vercel/nft)
@@ -92,6 +94,8 @@ const NFT_BUNDLED_FILES = {
   '/login.js': path.join(__dirname, 'login.js'),
   '/inbox.js': path.join(__dirname, 'inbox.js'),
   '/onboarding.js': path.join(__dirname, 'onboarding.js'),
+  '/TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.docx': path.join(__dirname, 'TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.docx'),
+  '/TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.md': path.join(__dirname, 'TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.md'),
   '/images/logo4.png': path.join(__dirname, 'images', 'logo4.png'),
   '/images/tiberius-ai.png': path.join(__dirname, 'images', 'tiberius-ai.png'),
   '/images/tiberius-recon-poster.jpg': path.join(__dirname, 'images', 'tiberius-recon-poster.jpg'),
