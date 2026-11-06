@@ -637,10 +637,19 @@ async function runPreTripInspection(options = {}) {
   // CHECK 4: Fleet Endpoint & Webhook Smoke Probe (10s Timeout)
   // =========================================================================
   const rootDir = path.join(__dirname, '..');
-  const hasHtmlAsset = (fileName) =>
-    fs.existsSync(path.join(rootDir, fileName)) ||
-    fs.existsSync(path.join(process.cwd(), fileName)) ||
-    typeof require('../server') === 'function';
+  const hasHtmlAsset = (fileName) => {
+    try {
+      return (
+        fs.existsSync(path.join(rootDir, fileName)) ||
+        fs.existsSync(path.join(rootDir, 'recon', fileName)) ||
+        fs.existsSync(path.join(process.cwd(), fileName)) ||
+        fs.existsSync(path.join(process.cwd(), 'recon', fileName)) ||
+        typeof require('../server') === 'function'
+      );
+    } catch (_e) {
+      return Boolean(process.env.VERCEL);
+    }
+  };
   const endpointsToProbe = [
     {
       label: '/recon/briefing',

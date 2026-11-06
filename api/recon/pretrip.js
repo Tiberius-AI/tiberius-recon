@@ -73,7 +73,7 @@ module.exports = async function handler(req, res) {
         token: (req.query && (req.query.token || req.query.t)) || 'demo-7am-briefing',
         baseUrl: (req.query && req.query.baseUrl) || requestBaseUrl,
         manualTrigger: Boolean(req.query && req.query.manual === 'true'),
-        sendNotifications: !(req.query && req.query.silent === 'true')
+        sendNotifications: !statusOnly && !(req.query && req.query.silent === 'true')
       });
       const preTripState = getPreTripState();
 
