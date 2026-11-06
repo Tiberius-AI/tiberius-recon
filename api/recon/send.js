@@ -11,6 +11,7 @@ const {
   processConversationAction,
   ensureCloudAccountsSynced
 } = require('../../db/store');
+const { extractSessionFromRequest } = require('../../db/auth');
 const {
   dispatchViaResendEmail,
   sendMasterTwilioSmsToContractor,
@@ -40,9 +41,16 @@ module.exports = async function handler(req, res) {
     const threadId = body.threadId || 'thread-deal-1';
     const channel = body.channel || 'RESEND_EMAIL';
     const messageBody = String(body.messageBody || body.draftBody || '').trim();
-    const overrideEmail = body.overrideEmail ? String(body.overrideEmail).trim() : '';
-    const overridePhone = body.overridePhone ? String(body.overridePhone).trim() : '';
-    const providerConfig = body.providerConfig && typeof body.providerConfig === 'object' ? body.providerConfig : {};
+    const sessionClaims = extractSessionFromRequest(req);
+    const isAdminSession = Boolean(sessionClaims && sessionClaims.role === 'ADMIN');
+    const overrideEmail =
+      isAdminSession && body.overrideEmail ? String(body.overrideEmail).trim() : '';
+    const overridePhone =
+      isAdminSession && body.overridePhone ? String(body.overridePhone).trim() : '';
+    const providerConfig =
+      isAdminSession && body.providerConfig && typeof body.providerConfig === 'object'
+        ? body.providerConfig
+        : {};
 
     if (!messageBody) {
       res.statusCode = 400;

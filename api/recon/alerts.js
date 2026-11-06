@@ -16,6 +16,7 @@ const {
   getLatestPreTripReport,
   ensureCloudAccountsSynced
 } = require('../../db/store');
+const { extractSessionFromRequest } = require('../../db/auth');
 const {
   getContractorTwilioA2PState,
   dispatchScoutMorningAlertSms,
@@ -111,9 +112,14 @@ module.exports = async function handler(req, res) {
 
       const contractor = briefingBundle.contractor;
       const briefing = briefingBundle.briefing;
-      const overridePhone = body.overridePhone ? String(body.overridePhone).trim() : '';
+      const sessionClaims = extractSessionFromRequest(req);
+      const isAdminSession = Boolean(sessionClaims && sessionClaims.role === 'ADMIN');
+      const overridePhone =
+        isAdminSession && body.overridePhone ? String(body.overridePhone).trim() : '';
       const providerConfig =
-        body.providerConfig && typeof body.providerConfig === 'object' ? body.providerConfig : {};
+        isAdminSession && body.providerConfig && typeof body.providerConfig === 'object'
+          ? body.providerConfig
+          : {};
 
       if (action === 'send_morning_briefing_sms') {
         const receipt = await dispatchScoutMorningAlertSms({

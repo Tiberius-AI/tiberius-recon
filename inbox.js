@@ -609,11 +609,45 @@
     });
   }
 
+  async function checkInboxSessionPermissions() {
+    const jwt = localStorage.getItem('tiberius_recon_session_jwt');
+    if (!jwt) return;
+    try {
+      const resp = await fetch('/api/recon/auth', {
+        headers: { Authorization: `Bearer ${jwt}` }
+      });
+      const data = await resp.json();
+      if (data && data.authenticated && data.role === 'ADMIN') {
+        [
+          'inbox-pretrip-header-badge',
+          'test-scout-7am-sms-btn',
+          'live-delivery-tester-panel',
+          'pretrip-watchdog-card',
+          'btn-toggle-a2p-stage'
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove('hidden');
+        });
+      }
+    } catch (_err) {
+      // Keep admin diagnostics hidden for public visitors
+    }
+  }
+
   async function loadRoomState() {
+    checkInboxSessionPermissions();
     try {
       const resp = await fetch(`/api/recon/inbox?token=${encodeURIComponent(activeToken)}`);
       const data = await resp.json();
       if (data && data.ok) {
+        const demoBannerEl = document.getElementById('inbox-demo-banner');
+        if (demoBannerEl) {
+          if (data.contractor && data.contractor.isRealClient && activeToken !== 'demo-7am-briefing') {
+            demoBannerEl.classList.add('hidden');
+          } else {
+            demoBannerEl.classList.remove('hidden');
+          }
+        }
         renderFullRoom(data);
       }
     } catch (_err) {

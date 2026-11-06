@@ -234,16 +234,31 @@
     if (briefingExclusivityBadge && state.availability) {
       briefingExclusivityBadge.textContent = state.availability.statusBadge;
     }
+    const demoBadgeEl = document.getElementById('briefing-demo-badge');
+    if (demoBadgeEl) {
+      if (c.isRealClient && !isDemoPreview && b.magicToken !== 'demo-7am-briefing') {
+        demoBadgeEl.classList.add('hidden');
+      } else {
+        demoBadgeEl.classList.remove('hidden');
+      }
+    }
+
     if (briefingMainTitle) {
       const zipLabel = isNewBraunfelsCorridor ? '78130 / 78132' : b.territoryZip;
+      const isSampleDemo = !c.isRealClient || isDemoPreview || b.magicToken === 'demo-7am-briefing';
       if (state.isHistoricalView && b.viewingDate) {
-        briefingMainTitle.textContent = `Archived Briefing (${b.viewingDate}): ${unlockedCards.length} Verified ${b.tradeName} Deals in ${zipLabel}.`;
+        briefingMainTitle.textContent = `Archived Briefing (${b.viewingDate}): ${unlockedCards.length} ${b.tradeName} Opportunities in ${zipLabel}.`;
+      } else if (isSampleDemo) {
+        briefingMainTitle.textContent = `Example Recon Briefing: ${unlockedCards.length} Sample ${b.tradeName} Opportunities in ${zipLabel}.`;
       } else {
-        briefingMainTitle.textContent = `07:00 AM Briefing: ${unlockedCards.length} Verified ${b.tradeName} Deals in ${zipLabel}.`;
+        briefingMainTitle.textContent = `07:00 AM Briefing: ${unlockedCards.length} Researched ${b.tradeName} Opportunities in ${zipLabel}.`;
       }
     }
     if (briefingSubtitle) {
-      briefingSubtitle.textContent = `Swept at 2:04 AM from ${b.portalName || 'Municipal Portals'} & verified at 4:30 AM against ${b.countyCad || 'County Appraisal District Tax Rolls'}. Nothing sends without your tap.`;
+      const isSampleDemo = !c.isRealClient || isDemoPreview || b.magicToken === 'demo-7am-briefing';
+      briefingSubtitle.textContent = isSampleDemo
+        ? `Illustrative Demo Briefing showing how Recon organizes municipal permits (${b.portalName || 'Municipal Portals'}) & property records (${b.countyCad || 'County Appraisal District'}). Nothing sends without your approval.`
+        : `Researched from ${b.portalName || 'Municipal Portals'} & cross-referenced against ${b.countyCad || 'County Appraisal District Tax Rolls'}. Nothing sends without your approval.`;
     }
     if (briefingApprovedCounter) {
       briefingApprovedCounter.textContent = state.isHistoricalView
@@ -572,7 +587,7 @@
 
     briefingLockedVault.classList.remove('hidden');
     if (lockedVaultHeading) {
-      lockedVaultHeading.textContent = `${lockedCards.length} Additional Verified Recon Cards Spotted in ${briefing.territoryZip} Last Night (Locked on Free 3-a-Day Test Drive)`;
+      lockedVaultHeading.textContent = `${lockedCards.length} Additional Recon Opportunities in ${briefing.territoryZip} (Illustrative Demo Preview — 3 Sample Cards Shown)`;
     }
 
     lockedOverflowGrid.innerHTML = lockedCards

@@ -1,16 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="scroll-smooth dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tiberius Recon™ | Overnight Building Permit &amp; Tax Roll Recon for Contractors</title>
-  <meta name="description" content="Stop buying shared leads or grinding through city portals at night. Your Tiberius Scout pulls live $240K+ building permits and owner cell numbers by 7:00 AM." />
+  <title>Tiberius Recon™ | Permit, Property &amp; B2B Opportunity Intelligence for Contractors</title>
+  <meta name="description" content="While you're busy running your business, Tiberius Recon searches local permits, property records, and commercial activity for potential projects that match your trade. Start your 7-day free trial." />
+  <link rel="canonical" href="https://www.tiberius.ai/recon" />
+
+  <!-- Open Graph / Social Meta -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Tiberius Recon™ — Your Next Big Job Could Already Be Sitting in a Building Permit." />
+  <meta property="og:description" content="Wake up over morning coffee to researched opportunities, relevant contacts, and ready-to-edit outreach messages. Start your 7-day free trial ($0.00 charged today)." />
+  <meta property="og:url" content="https://www.tiberius.ai/recon" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#050508" />
 
   <!-- Google Fonts & Fontshare General Sans (21st.dev G3 Typography) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600,700,800&amp;display=swap" rel="stylesheet" />
 
   <!-- Tailwind CSS via CDN configured for 21st.dev G3 Dark Glass & Electric Cobalt -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -29,7 +38,25 @@
             royalAccent: '#0034FF',
             trustEmerald: '#10B981',
             trustEmeraldDark: '#059669',
-            permitAmber: '#F59E0B'
+            permitAmber: '#F59E0B',
+            canvas: '#F8FAFC',
+            navy: {
+              900: '#0F172A',
+              800: '#1E293B',
+              700: '#334155'
+            },
+            royal: {
+              700: '#1E40AF',
+              600: '#2563EB'
+            },
+            emerald: {
+              700: '#047857',
+              600: '#059669'
+            },
+            amber: {
+              600: '#D97706',
+              500: '#F59E0B'
+            }
           },
           fontFamily: {
             display: ['General Sans', 'Plus Jakarta Sans', 'Outfit', 'Inter', 'sans-serif'],
@@ -42,76 +69,82 @@
   </script>
 
   <!-- Enterprise Dark Glass Design System Stylesheet (Supports both /recon and local root) -->
-  <link rel="stylesheet" href="/recon/styles.css?v=2.7" onerror="this.onerror=null;this.href='styles.css?v=2.7';" />
+  <link rel="stylesheet" href="/recon/styles.css?v=3.1" onerror="this.onerror=null;this.href='styles.css?v=3.1';" />
 
-  <!-- Complete SoftwareApplication + ProfessionalService JSON-LD Schema -->
+  <!-- JSON-LD Structured Data (Consistent with 7-Day Free Trial & 3 Core Plans) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@graph": [
+    "@type": "SoftwareApplication",
+    "name": "Tiberius Recon",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web, iOS, Android, SMS, Email",
+    "description": "Automated permit, property record, and B2B opportunity research for commercial and residential trade contractors. Organizes daily briefings with source references, available contacts, and editable outreach drafts.",
+    "offers": [
       {
-        "@type": "SoftwareApplication",
-        "name": "Tiberius Recon™",
-        "applicationCategory": "BusinessApplication",
-        "operatingSystem": "Web, iOS, Android, SMS",
-        "description": "Standalone 24/7 Tiberius Scout for commercial contractors, subcontractors, and high-ticket residential trades. Navigates municipal building department portals, county appraisal district (CAD) tax rolls, and live B2B websites to deliver a curated 7:00 AM recon briefing with pre-written outreach ready for 1-click Approve & Send control.",
-        "brand": {
-          "@type": "Brand",
-          "name": "Tiberius AI"
-        },
-        "offers": [
-          {
-            "@type": "Offer",
-            "name": "7-Day Live Territory Test Drive",
-            "price": "0.00",
-            "priceCurrency": "USD",
-            "description": "3 Free Verified Recon Cards/Day for 7 Days — No Website Changes Required."
-          },
-          {
-            "@type": "Offer",
-            "name": "Tier 1: B2B Deal Scout",
-            "price": "297.00",
-            "priceCurrency": "USD",
-            "description": "Up to 10 Researched B2B Recon Cards/Day in your 7:00 AM Queue with Live Web & Social Recon."
-          },
-          {
-            "@type": "Offer",
-            "name": "Tier 2: Commercial & Sub Permit Radar",
-            "price": "597.00",
-            "priceCurrency": "USD",
-            "description": "Up to 15 Recon Cards/Day with Nightly Suburban Building Portal Recon and Exact Permit Valuation Matching."
-          },
-          {
-            "@type": "Offer",
-            "name": "Tier 3: Full Territory Dominion",
-            "price": "897.00",
-            "priceCurrency": "USD",
-            "description": "Unlimited Qualified Territory Triggers, Residential Permits + CAD Property X-Ray, and 100% Zip Code Exclusivity."
-          }
-        ]
+        "@type": "Offer",
+        "name": "B2B Deal Scout (7-Day Free Trial)",
+        "price": "297.00",
+        "priceCurrency": "USD",
+        "description": "7-day free trial ($0.00 charged today), then $297/month for B2B commercial prospecting and daily briefings."
       },
       {
-        "@type": "ProfessionalService",
-        "name": "Tiberius AI — Tiberius Recon™ & Rent-to-Own Smart Sites",
-        "description": "Autonomous B2B permit intelligence, CAD parcel matching, and Rent-to-Own Smart Sites for commercial contractors, subcontractors, and residential trades.",
-        "priceRange": "$297 - $1,147/mo",
-        "areaServed": {
-          "@type": "Country",
-          "name": "United States"
-        },
-        "serviceType": [
-          "Commercial Permit Intelligence",
-          "County Appraisal District Tax Roll Recon",
-          "B2B Contractor Lead Intelligence",
-          "Rent-to-Own Contractor Smart Sites"
-        ]
+        "@type": "Offer",
+        "name": "Commercial & Sub Permit Radar (7-Day Free Trial)",
+        "price": "597.00",
+        "priceCurrency": "USD",
+        "description": "7-day free trial ($0.00 charged today), then $597/month for municipal commercial permit intelligence and subcontractor opportunities (max 2 contractors per trade per zip)."
+      },
+      {
+        "@type": "Offer",
+        "name": "Full Territory Dominion (7-Day Free Trial)",
+        "price": "897.00",
+        "priceCurrency": "USD",
+        "description": "7-day free trial ($0.00 charged today), then $897/month for commercial + residential permit intelligence, county property record matching, and single-contractor zip code exclusivity."
       }
     ]
   }
   </script>
 </head>
-
 <body class="g-root g3-root bg-[#09090B] text-bodyInk selection:bg-blue-600/40 selection:text-white">
+
+  <!-- ========================================================================
+       CONTEXTUAL PERSONALIZED RECON BRIEF CAMPAIGN BANNER
+       (Automatically revealed when arriving via ?brief=1, ?from=brief,
+        ?campaign=brief, ?utm_campaign=recon_brief, or ?token=preview-...)
+       ======================================================================== -->
+  <div id="personalized-brief-top-banner" class="hidden bg-gradient-to-r from-blue-950/95 via-slate-900 to-emerald-950/90 border-b border-emerald-400/30 px-4 py-3.5 relative z-50">
+    <div class="max-w-[1280px] mx-auto flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+      <div class="space-y-0.5">
+        <div class="inline-flex items-center gap-2 font-mono-telemetry text-[11px] text-emerald-300 font-bold uppercase tracking-wider">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>PERSONALIZED RECON BRIEF RECIPIENT</span>
+        </div>
+        <p class="font-display font-extrabold text-sm sm:text-base text-white">
+          You've Seen What Recon Found for Your Business. Imagine Getting a Fresh Briefing Every Morning.
+        </p>
+        <p class="text-xs text-slate-300 max-w-3xl">
+          Your personalized Recon Brief is just the beginning. With Tiberius Recon, you can receive ongoing research into potential opportunities in your territory, with the details you need to decide whom to contact next.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+        <a
+          id="brief-banner-reopen-link"
+          href="/recon/briefing?token=demo-7am-briefing"
+          class="hidden btn-outline-slate px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap"
+        >
+          Re-Open My Brief →
+        </a>
+        <a
+          href="#pricing"
+          class="btn-trust-emerald px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center gap-1.5"
+        >
+          <span>Start My 7-Day Free Trial</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- ========================================================================
        21ST.DEV 7-LAYER PROGRESSIVE BACKDROP-BLUR STICKY NAVBAR (.g3-glass-bar)
@@ -141,9 +174,11 @@
       </a>
 
       <!-- Center (Desktop Only): Clean Anchor Links -->
-      <nav aria-label="Primary Navigation" class="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-700">
-        <a href="#before-after-story" class="hover:text-blue-700 transition-colors">Before vs. After</a>
-        <a href="#simulator" class="hover:text-blue-700 transition-colors flex items-center gap-1.5">
+      <nav aria-label="Primary Navigation" class="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-700">
+        <a href="#featured-recon-card" class="hover:text-blue-700 transition-colors">Sample Briefing</a>
+        <a href="#video-walkthrough" class="hover:text-blue-700 transition-colors">Video Overview</a>
+        <a href="#before-after" class="hover:text-blue-700 transition-colors">Before vs. After</a>
+        <a href="#interactive-demo" class="hover:text-blue-700 transition-colors flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
           <span>7:00 AM Queue Demo</span>
         </a>
@@ -169,17 +204,16 @@
           href="#pricing"
           class="btn-trust-emerald px-5 py-2.5 rounded-lg text-sm tracking-tight whitespace-nowrap inline-flex items-center gap-1.5"
         >
-          <span>Start 7-Day Free Trial ($0 Today) →</span>
+          <span>Start My 7-Day Free Trial →</span>
         </a>
       </div>
     </div>
   </header>
 
-  <main>
+  <main id="top">
+
     <!-- ======================================================================
-         CHAPTER 1A (21ST.DEV G3 WEBGL SILK SHADER STAGE): CENTERED HERO SECTION
-         - Dedicated Hero Section for Callout (no pill), Headline, Subheadline,
-           Centered CTA Row, and Balanced Single-Line Trust Strip
+         SECTION 1 (21ST.DEV G3 WEBGL SILK SHADER STAGE): HERO SECTION
          ====================================================================== -->
     <section id="hero-overview" class="section-bg-white g3-hero-stage pt-12 pb-12 sm:pt-16 sm:pb-16 lg:pt-24 lg:pb-20 border-b border-slate-200/80" aria-label="Tiberius Recon Overview">
       <!-- 21st.dev WebGL1 'silk' Shader Canvas & Radial Vignette -->
@@ -188,74 +222,249 @@
         <div class="g3-hero-vignette"></div>
       </div>
 
-      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-4xl mx-auto text-center space-y-6 sm:space-y-7">
-
-          <!-- Clean Typographic Callout (No Pill) -->
-          <p class="font-mono-telemetry text-xs sm:text-sm font-bold tracking-[0.16em] uppercase text-amber-400">
-            FOR COMMERCIAL CONTRACTORS, SUBS &amp; HIGH-TICKET HOME TRADES
-          </p>
-
-          <!-- Balanced Centered H1 Headline -->
-          <h1 class="font-display font-extrabold text-3xl sm:text-5xl lg:text-[60px] text-[#0F172A] leading-[1.08] tracking-tight max-w-4xl mx-auto">
-            Close Your Next $50,000 Job in 90 Seconds Over Morning Coffee.
-          </h1>
-
-          <!-- Balanced Centered Story Subheadline -->
-          <p class="text-base sm:text-lg lg:text-[20px] text-[#334155] leading-relaxed max-w-3xl mx-auto font-normal">
-            Picture 6:45 AM tomorrow in your kitchen. While your competitors are still asleep, your Tiberius Scout has already finished its overnight recon—pulling last night's suburban building permits, verifying the property owners on the county tax rolls, and drafting your outreach. You just sip your coffee, tap "Send" three times, and roll out to the job site.
-          </p>
-
-          <!-- Centered CTA Row + Balanced Trust Micro-Strip -->
-          <div class="pt-2 space-y-5">
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3.5">
-              <a
-                href="#pricing"
-                class="btn-trust-emerald px-7 py-4 rounded-xl text-sm sm:text-base font-bold text-center sm:whitespace-nowrap inline-flex items-center justify-center gap-2"
-              >
-                <span>Start 7-Day Free Trial ($0 Today) →</span>
-              </a>
-              <button
-                id="hero-watch-overview-btn"
-                type="button"
-                class="btn-outline-slate px-6 py-4 rounded-xl text-sm sm:text-base font-semibold text-center sm:whitespace-nowrap inline-flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Watch 90-Second Overview ▶</span>
-              </button>
-            </div>
-
-            <!-- Balanced Single-Line Trust Micro-Strip -->
-            <div class="pt-1 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm font-semibold text-slate-600">
-              <span class="inline-flex items-center gap-1.5">
-                <span class="text-emerald-600 font-bold">✓</span>
-                <span>Nothing Sends Without Your Tap</span>
-              </span>
-              <span class="text-slate-300 hidden sm:inline" aria-hidden="true">•</span>
-              <span class="inline-flex items-center gap-1.5">
-                <span class="text-emerald-600 font-bold">✓</span>
-                <span>Keep Your Current Website</span>
-              </span>
-              <span class="text-slate-300 hidden sm:inline" aria-hidden="true">•</span>
-              <span class="inline-flex items-center gap-1.5">
-                <span class="text-emerald-600 font-bold">✓</span>
-                <span>Live City Permits &amp; County Tax Rolls</span>
-              </span>
-            </div>
+      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+          <!-- Eyebrow Badge -->
+          <div class="inline-flex flex-wrap items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-blue-500/40 mb-6 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="font-mono-telemetry text-xs text-slate-200">
+              AUTOMATED PERMIT, PROPERTY RECORD &amp; B2B OPPORTUNITY RESEARCH
+            </span>
           </div>
 
+          <!-- Primary Headline -->
+          <h1 class="font-display font-extrabold text-3xl sm:text-5xl lg:text-[56px] text-[#0F172A] tracking-tight leading-[1.08] mb-6">
+            Your Next Big Job Could Already Be Sitting in a Building Permit.
+          </h1>
+
+          <!-- Subheadline -->
+          <p class="text-base sm:text-xl text-[#334155] leading-relaxed mb-8 max-w-3xl mx-auto font-normal">
+            While you're busy running your business, Tiberius Recon searches local permits, property records, and commercial B2B activity for potential projects that match your trade. Wake up over morning coffee to researched opportunities, relevant contacts, and ready-to-edit outreach messages.
+          </p>
+
+          <!-- Primary & Secondary CTAs -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3.5 mb-7">
+            <a
+              href="#pricing"
+              class="btn-trust-emerald px-8 py-4 rounded-xl text-base sm:text-lg font-bold text-center inline-flex items-center justify-center gap-2 shadow-lg"
+            >
+              <span>Start My 7-Day Free Trial</span>
+              <span aria-hidden="true">→</span>
+            </a>
+            <a
+              href="#interactive-demo"
+              class="btn-outline-slate px-7 py-4 rounded-xl text-base sm:text-lg font-bold text-center inline-flex items-center justify-center gap-2"
+            >
+              <span>See Recon in Action</span>
+              <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+
+          <!-- Factually Supported Reassurance Statements -->
+          <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-[#334155] font-medium mb-5">
+            <span class="inline-flex items-center gap-2">
+              <span class="text-emerald-400 font-bold">✓</span>
+              <span>No new website required.</span>
+            </span>
+            <span class="inline-flex items-center gap-2">
+              <span class="text-emerald-400 font-bold">✓</span>
+              <span>You approve outreach before sending.</span>
+            </span>
+            <span class="inline-flex items-center gap-2">
+              <span class="text-emerald-400 font-bold">✓</span>
+              <span>Choose your territory and plan.</span>
+            </span>
+          </div>
+
+          <!-- Transparent Trial Billing & Cancellation Terms -->
+          <div class="max-w-2xl mx-auto p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+            <strong class="text-white">7-Day Free Trial Terms:</strong> $0.00 is charged today via Stripe checkout, and your full plan queue is unlocked immediately during your 7-day trial. Cancel anytime before Day 8 from your account portal or by replying to your welcome message to avoid being billed for your selected monthly plan ($297, $597, or $897/month).
+          </div>
         </div>
       </div>
     </section>
 
     <!-- ======================================================================
-         CHAPTER 1B: STANDALONE CENTERED WIDESCREEN VIDEO SHOWCASE SECTION
-         - Centered all by itself underneath the Hero Section
-         - "Watch how it works" directly above the large 16:9 player
+         SECTION 2: FEATURED RECON CARD — CENTERPIECE IMMEDIATELY BELOW HERO
+         ====================================================================== -->
+    <section id="featured-recon-card" class="section-bg-slate py-14 sm:py-20 border-b border-slate-200">
+      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Section Header -->
+        <div class="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 font-mono-telemetry text-xs text-amber-800 mb-3">
+            <span>EXAMPLE RECON BRIEFING • ILLUSTRATIVE DEMO RECORD</span>
+          </div>
+          <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mb-3">
+            See What a Researched Opportunity Looks Like at 7:00 AM
+          </h2>
+          <p class="text-sm sm:text-base text-[#334155] leading-relaxed">
+            Instead of digging through municipal portals or spreadsheets after a long day on the jobsite, here is how Recon organizes a potential project, supporting source records, and a suggested outreach draft for your review.
+          </p>
+        </div>
+
+        <!-- Trade Context Switcher for Featured Centerpiece Card -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-7" role="tablist" aria-label="Featured Recon Card Trade Selector">
+          <span class="font-mono-telemetry text-xs text-slate-400 mr-1">VIEW EXAMPLE FOR:</span>
+          <button
+            type="button"
+            data-featured-trade="concrete"
+            class="featured-trade-btn active px-3.5 py-2 rounded-xl border border-blue-500 bg-blue-600/20 text-white font-display font-bold text-xs cursor-pointer transition-all"
+          >
+            🏗️ Commercial Concrete &amp; Paving
+          </button>
+          <button
+            type="button"
+            data-featured-trade="roofing"
+            class="featured-trade-btn px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs cursor-pointer transition-all"
+          >
+            🏠 Commercial &amp; Metal Roofing
+          </button>
+          <button
+            type="button"
+            data-featured-trade="hvac"
+            class="featured-trade-btn px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs cursor-pointer transition-all"
+          >
+            ⚡ Electrical / HVAC (MEP)
+          </button>
+          <button
+            type="button"
+            data-featured-trade="b2b"
+            class="featured-trade-btn px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs cursor-pointer transition-all"
+          >
+            🏢 B2B Facility &amp; Property Services
+          </button>
+        </div>
+
+        <!-- Centerpiece Recon Card Container -->
+        <article class="enterprise-card g3-conic-card rounded-2xl border border-blue-500/40 shadow-2xl overflow-hidden max-w-5xl mx-auto">
+          <!-- Top Status Bar -->
+          <div class="bg-slate-950/90 border-b border-slate-800 px-5 sm:px-7 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2.5">
+              <span class="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                EXAMPLE RECON BRIEFING • ILLUSTRATIVE DEMO
+              </span>
+              <span id="featured-card-permit-pill" class="px-2.5 py-1 rounded-md bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-[11px] text-blue-300 font-bold">
+                PERMIT #BP-2026-08941 • $240,000 REPORTED VALUATION
+              </span>
+            </div>
+            <span class="font-mono-telemetry text-xs text-slate-400">
+              Territory: <strong class="text-white">78130 (New Braunfels, TX • Comal County)</strong>
+            </span>
+          </div>
+
+          <div class="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+
+            <!-- Left 7 Cols: Project Details, Source Reference, Relevance & Decision-Maker -->
+            <div class="lg:col-span-7 space-y-5">
+              <div>
+                <div id="featured-card-type-badge" class="font-mono-telemetry text-xs text-blue-400 font-bold uppercase tracking-wider mb-1">
+                  COMMERCIAL TENANT IMPROVEMENT &amp; STRUCTURAL FLATWORK • TRADE RELEVANCE: COMMERCIAL CONCRETE
+                </div>
+                <h3 id="featured-card-title" class="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight leading-snug">
+                  18,500 Sq Ft Commercial Buildout &amp; Dock Apron
+                </h3>
+                <p id="featured-card-location" class="text-sm text-slate-300 mt-1.5 font-medium">
+                  📍 <strong class="text-white">Location:</strong> 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 (Comal County Corridor)
+                </p>
+              </div>
+
+              <!-- Structured Intelligence Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <div class="font-mono-telemetry text-[10px] text-slate-400 uppercase">Permit / Record Reference</div>
+                  <div id="featured-card-record" class="font-bold text-white text-sm">
+                    Permit #BP-2026-08941 ($240,000)
+                  </div>
+                  <div id="featured-card-source" class="text-slate-300 text-[11px]">
+                    Source: City of New Braunfels EnerGov Portal + Comal CAD Parcel #CAD-78130-204719 ($1,850,000 Assessed • 2.4 Acres)
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <div class="font-mono-telemetry text-[10px] text-amber-300 uppercase">Why This Opportunity Matters</div>
+                  <div id="featured-card-why" class="font-semibold text-white text-xs leading-relaxed">
+                    Commercial TI permits are typically filed 30–60 days before specialty sub-bids close—creating an early window to introduce your crew before mobilization.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Available Company & Decision-Maker Info -->
+              <div class="p-4 rounded-xl bg-slate-900/95 border border-slate-800 space-y-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="font-mono-telemetry text-[10px] text-emerald-400 font-bold uppercase">
+                    AVAILABLE COMPANY &amp; DECISION-MAKER INFORMATION (SAMPLE RECORD)
+                  </span>
+                  <span class="font-mono-telemetry text-[10px] text-slate-400">
+                    Cross-Referenced from Filing &amp; Company Directory
+                  </span>
+                </div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+                  <div>
+                    <div id="featured-card-contact-name" class="font-display font-bold text-base text-white">
+                      Marcus Vance • Sr. Project Manager @ Apex Commercial Builders
+                    </div>
+                    <div id="featured-card-contact-meta" class="font-mono-telemetry text-xs text-slate-300 mt-0.5">
+                      ✉️ mvance@apexcommercialbuilders.com • 📞 (512) 555-0148 <span class="text-amber-300">(Simulated Demo Line)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right 5 Cols: Suggested Outreach Message & Action Controls -->
+            <div class="lg:col-span-5 bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div>
+                  <span class="font-mono-telemetry text-[10px] text-emerald-400 font-bold uppercase block">
+                    SUGGESTED OUTREACH MESSAGE
+                  </span>
+                  <span class="text-xs font-bold text-white">
+                    Prepared in Your Voice • You Approve Before Sending
+                  </span>
+                </div>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono-telemetry text-[10px]">
+                  Editable Draft
+                </span>
+              </div>
+
+              <div id="featured-card-draft" class="outreach-draft-box text-xs sm:text-sm leading-relaxed">
+                "Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our ACI-certified concrete crew just wrapped a 22,000 sq ft commercial tilt-wall &amp; dock apron project two miles east off FM 306 and passed city inspection ahead of schedule. We have a crew opening in our bid calendar next month and would love to drop off numbers on the foundation, dock apron, and flatwork scope. Mind if I send over our commercial spec sheet and COI this afternoon? — Travis Miller • Lone Star Commercial Concrete"
+              </div>
+
+              <div class="space-y-2.5 pt-1">
+                <a
+                  href="#interactive-demo"
+                  id="featured-card-demo-cta"
+                  class="btn-trust-emerald w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-2 shadow-md"
+                >
+                  <span>Approve &amp; See Conversation Flow in Demo</span>
+                  <span aria-hidden="true">↓</span>
+                </a>
+                <div class="flex items-center justify-between gap-2 text-[11px] font-mono-telemetry text-slate-400 px-1">
+                  <span>✓ Edit any word before sending</span>
+                  <a href="/recon/inbox?token=demo-7am-briefing" class="text-blue-400 hover:underline font-bold">
+                    Open Full Demo Room →
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         STANDALONE CENTERED WIDESCREEN VIDEO SHOWCASE SECTION
+         - Placed right between "See What a Researched Opportunity Looks Like at 7:00 AM"
+           and "THE RESEARCH BOTTLENECK VS. DAILY BRIEFINGS"
          - Scroll-into-view entrance animation (.video-scroll-reveal)
          ====================================================================== -->
     <section id="video-walkthrough" class="section-bg-white py-12 sm:py-16 lg:py-24 border-b border-slate-200/80 relative overflow-hidden" aria-label="Watch How Tiberius Recon Works">
       <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div id="hero-video-scroll-stage" class="video-scroll-reveal max-w-5xl mx-auto">
+        <div id="hero-video-scroll-stage" class="video-scroll-reveal is-in-view max-w-5xl mx-auto">
 
           <!-- "Watch how it works" Header Directly Above the Video -->
           <div class="text-center mb-6 sm:mb-8">
@@ -281,24 +490,30 @@
               <!-- TIBERIUS RECON OVERVIEW VIDEO -->
               <video
                 id="hero-overview-video"
-                poster="/recon/images/tiberius-recon-poster.jpg"
+                poster="images/tiberius-recon-poster.jpg"
                 preload="metadata"
                 controls
                 playsinline
                 class="relative z-10 w-full h-full object-contain bg-[#050507] rounded-xl sm:rounded-2xl"
               >
-                <source src="/recon/video/TIBERIUS%20RECON.mp4" type="video/mp4" />
                 <source src="video/TIBERIUS%20RECON.mp4" type="video/mp4" />
+                <source src="/recon/video/TIBERIUS%20RECON.mp4" type="video/mp4" />
                 Your browser does not support HTML5 video.
               </video>
 
-              <!-- CLEAN PLAY BUTTON OVERLAY (Hides on Click / Play) -->
+              <!-- CLEAN PLAY BUTTON OVERLAY WITH POSTER FALLBACK (Hides on Click / Play) -->
               <div
                 id="hero-video-poster-view"
                 onclick="this.classList.add('hidden'); var v = document.getElementById('hero-overview-video'); if (v) { v.controls = true; v.play(); }"
-                class="absolute inset-0 z-20 flex items-center justify-center bg-[#050507]/20 hover:bg-[#050507]/10 transition-colors duration-200 cursor-pointer"
+                class="absolute inset-0 z-20 flex items-center justify-center bg-[#050507]/20 hover:bg-[#050507]/10 transition-colors duration-200 cursor-pointer rounded-xl sm:rounded-2xl overflow-hidden"
               >
-                <div class="video-play-overlay-btn">
+                <img
+                  src="/recon/images/tiberius-recon-poster.jpg"
+                  onerror="this.onerror=null;this.src='images/tiberius-recon-poster.jpg';"
+                  alt="Tiberius Recon 90-Second System Walkthrough"
+                  class="absolute inset-0 w-full h-full object-cover"
+                />
+                <div class="relative z-10 video-play-overlay-btn">
                   <svg class="w-8 h-8 ml-0.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M8 5.14v14l11-7-11-7z" />
                   </svg>
@@ -308,7 +523,7 @@
 
             <!-- Video Caption -->
             <p class="text-xs sm:text-sm lg:text-base text-slate-600 font-medium text-center mt-3.5 sm:mt-4 px-2">
-              Watch how Tiberius Recon™ turns 2:00 AM city permit filings into 7:00 AM booked estimates.
+              Watch how Tiberius Recon™ searches overnight building permits and property records to prepare your 7:00 AM morning briefing.
             </p>
           </div>
 
@@ -324,420 +539,903 @@
     </div>
 
     <!-- ======================================================================
-         BEFORE VS. AFTER SECTION
+         SECTION 3: SIMPLIFIED BEFORE VS. AFTER COMPARISON
          ====================================================================== -->
-    <section id="before-after-story" class="section-bg-stone py-16 sm:py-24 border-b border-slate-200/80" aria-label="Before vs After Story Contrast">
+    <section id="before-after" class="section-bg-stone py-16 sm:py-24 border-b border-slate-200/80">
+      <div class="max-w-[1140px] mx-auto px-4 sm:px-6 lg:px-8">
+
+        <div class="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
+          <span class="font-mono-telemetry text-xs text-blue-400 uppercase tracking-wider font-bold">
+            THE RESEARCH BOTTLENECK VS. DAILY BRIEFINGS
+          </span>
+          <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mt-2 mb-3">
+            Stop Spending Your Evenings Digging Through Permit Portals.
+          </h2>
+          <p class="text-sm sm:text-base text-[#334155]">
+            Most contractors know public permits and property records hold valuable work—they just don't have two spare hours every night to hunt them down.
+          </p>
+        </div>
+
+        <!-- Clean 2-Column Desktop Comparison (Stacks on Mobile) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+
+          <!-- Column 1: Old Way -->
+          <div class="rounded-2xl bg-slate-900/75 border border-slate-800 p-6 sm:p-8 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-800">
+                <h3 class="font-display font-extrabold text-xl sm:text-2xl text-slate-200">
+                  Old Way
+                </h3>
+                <span class="font-mono-telemetry text-xs text-slate-400 uppercase">
+                  Manual Prospecting
+                </span>
+              </div>
+
+              <ul class="space-y-4 text-sm sm:text-base text-slate-300">
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✕</span>
+                  <span>Manually search permit portals and public records.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✕</span>
+                  <span>Spend hours identifying possible projects.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✕</span>
+                  <span>Research owners, companies, and decision-makers.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✕</span>
+                  <span>Figure out whom to contact and what to say.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✕</span>
+                  <span>Potentially discover opportunities after competitors.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800/80 text-xs font-mono-telemetry text-slate-400">
+              Result: Hours of administrative research before a single introduction is sent.
+            </div>
+          </div>
+
+          <!-- Column 2: With Tiberius Recon -->
+          <div class="rounded-2xl g3-conic-card border border-blue-500/40 p-6 sm:p-8 flex flex-col justify-between shadow-xl">
+            <div>
+              <div class="flex items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-800">
+                <h3 class="font-display font-extrabold text-xl sm:text-2xl text-white">
+                  With Tiberius Recon
+                </h3>
+                <span class="px-2.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+                  Automated Morning Briefing
+                </span>
+              </div>
+
+              <ul class="space-y-4 text-sm sm:text-base text-slate-100">
+                <li class="flex items-start gap-3">
+                  <span class="text-emerald-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✓</span>
+                  <span>Automated research based on your territory and criteria.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-emerald-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✓</span>
+                  <span>Potential opportunities organized into actionable briefings.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-emerald-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✓</span>
+                  <span>Available contacts and relevant project information collected.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-emerald-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✓</span>
+                  <span>Personalized outreach drafts prepared for your approval.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-emerald-400 font-bold mt-0.5 shrink-0" aria-hidden="true">✓</span>
+                  <span>More time to pursue opportunities instead of searching for them.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+              <span class="text-xs font-mono-telemetry text-emerald-300">
+                Review your briefing over morning coffee.
+              </span>
+              <a href="#pricing" class="text-xs font-display font-bold text-white hover:text-blue-300 underline">
+                Start My 7-Day Free Trial →
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 4: HOW IT WORKS — THREE SIMPLE STEPS + COLLAPSIBLE TECHNICAL DRAWER
+         ====================================================================== -->
+    <section id="how-it-works" class="section-bg-slate py-14 sm:py-20 border-b border-slate-200">
       <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Section Header -->
-        <div class="max-w-3xl mx-auto text-center mb-12 sm:mb-14">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-[#1E40AF] font-mono-telemetry text-xs mb-4 shadow-sm">
-            <span>BEFORE VS. AFTER • WHY MOST PERMIT HUNTING FAILS</span>
-          </div>
-          <h2 class="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-[#0F172A] tracking-tight mb-4">
-            You Don't Have a Work Ethic Problem. You Have a Recon Problem.
+        <div class="max-w-3xl mx-auto text-center mb-10 sm:mb-14">
+          <span class="font-mono-telemetry text-xs text-blue-400 uppercase tracking-wider font-bold">
+            HOW TIBERIUS RECON WORKS
+          </span>
+          <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mt-2 mb-3">
+            Three Simple Steps From Public Record to Conversation
           </h2>
-          <p class="text-[#334155] text-base sm:text-lg leading-relaxed">
-            Every $240,000 commercial buildout, 140-unit property sale, and custom home addition in your county leaves a public paper trail 30 to 60 days before a single shovel hits the dirt. The jobs are sitting right there in public records. Yet until today, getting your name in front of those owners meant choosing between two losing traps:
+          <p class="text-sm sm:text-base text-[#334155]">
+            No complicated CRM pipelines to build and no technical setup required.
           </p>
         </div>
 
-        <!-- THE BEFORE: The 2 Bad Options (2 Clean White Contrast Cards) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-14 sm:mb-16">
-          <!-- Trap #1 -->
-          <article class="enterprise-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between border-l-4 border-l-rose-600">
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="px-3 py-1 rounded-full bg-rose-50 border border-rose-200 font-mono-telemetry text-xs text-rose-800">
-                  OLD OPTION #1 • REPUTATION RISK
-                </span>
-                <span class="font-mono-telemetry text-xs text-slate-500">THE AGENCY TRAP</span>
-              </div>
+        <!-- 3 Simple Steps Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-10">
 
-              <h3 class="font-display font-extrabold text-xl sm:text-2xl text-[#0F172A] mb-3">
-                Trap #1: The "Lead Gen Agency" Spam Cannon
-              </h3>
-
-              <p class="text-[#334155] text-base leading-relaxed mb-6">
-                You wire a $3,500 monthly retainer to an agency that scrapes a dead 3-year-old list and blasts 5,000 robotic emails with your company name on them—burning twenty years of local reputation before lunch. Or worse, you buy "shared leads" where six other contractors are calling the same annoyed property owner every ten minutes.
-              </p>
-            </div>
-
-            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono-telemetry">
-              <div>
-                <span class="text-slate-500 block">DATA SOURCE</span>
-                <span class="text-rose-700 font-bold">Stale 3-Yr-Old Lists</span>
-              </div>
-              <div>
-                <span class="text-slate-500 block">REPUTATION</span>
-                <span class="text-rose-700 font-bold">Flagged as Spam</span>
-              </div>
-              <div>
-                <span class="text-slate-500 block">EXCLUSIVITY</span>
-                <span class="text-rose-700 font-bold">Shared w/ 6 Rivals</span>
-              </div>
-            </div>
-          </article>
-
-          <!-- Trap #2 -->
-          <article class="enterprise-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between border-l-4 border-l-amber-600">
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 font-mono-telemetry text-xs text-amber-800">
-                  OLD OPTION #2 • OWNER BURNOUT
-                </span>
-                <span class="font-mono-telemetry text-xs text-slate-500">MANUAL HUNTING</span>
-              </div>
-
-              <h3 class="font-display font-extrabold text-xl sm:text-2xl text-[#0F172A] mb-3">
-                Trap #2: The 9:00 PM Kitchen Table Grind
-              </h3>
-
-              <p class="text-[#334155] text-base leading-relaxed mb-6">
-                You work 10 hours in the field, eat dinner, and sit down at the kitchen table at 9:00 PM clicking through 2008-era city permit portals and county tax records by hand. You have 14 browser tabs open—copying parcel numbers from Accela into the County Appraisal District search bar—only to stop the second a crew truck breaks down on Tuesday.
-              </p>
-            </div>
-
-            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono-telemetry">
-              <div>
-                <span class="text-slate-500 block">PORTAL UX</span>
-                <span class="text-amber-800 font-bold">2008 Legacy Tables</span>
-              </div>
-              <div>
-                <span class="text-slate-500 block">NIGHTLY TIME</span>
-                <span class="text-amber-800 font-bold">2 Hrs After Dinner</span>
-              </div>
-              <div>
-                <span class="text-slate-500 block">PIPELINE</span>
-                <span class="text-amber-800 font-bold">Feast-or-Famine</span>
-              </div>
-            </div>
-          </article>
-        </div>
-
-        <!-- THE NEW WAY: 3-Step Visual Timeline on Clean White Cards -->
-        <div class="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#1E40AF] font-mono-telemetry text-xs mb-3">
-            <span>HOW IT WORKS • THE OVERNIGHT RECON LOOP</span>
-          </div>
-          <h3 class="font-display font-extrabold text-2xl sm:text-3xl text-[#0F172A] tracking-tight mb-4">
-            The Answer: Your Tiberius Scout Runs the 2:00 AM Recon and Hands You the Keys at 7:00 AM.
-          </h3>
-          <p class="max-w-3xl mx-auto text-[#334155] text-base sm:text-lg leading-relaxed">
-            You tell us your trade, target counties, and minimum job size once during onboarding. Every night after that, your dedicated Scout runs this three-step loop while you sleep and texts your phone before the crew rolls out.
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-7 items-stretch">
           <!-- Step 1 -->
-          <article class="enterprise-card enterprise-card-interactive rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+          <div class="enterprise-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 font-mono-telemetry text-xs text-amber-800">
-                  STEP 1 • 2:00 AM
+                <span class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 font-mono-telemetry font-bold text-sm text-blue-300 flex items-center justify-center">
+                  01
                 </span>
-                <span class="font-mono-telemetry text-xs text-slate-400">DEEP PORTAL RECON</span>
+                <span class="font-mono-telemetry text-xs text-slate-400">AUTOMATED RESEARCH</span>
               </div>
-
-              <h4 class="font-display font-extrabold text-xl text-[#0F172A] mb-2.5">
-                Your Tiberius Scout Sweeps the City Portals
-              </h4>
-
-              <p class="text-[#334155] text-sm sm:text-base leading-relaxed mb-5">
-                While your trucks are parked for the night, your Tiberius Scout opens a real browser and logs into suburban building portals (Accela and EnerGov) and commercial deed directories—running recon on every permit number, valuation, and project address filed in the last 24 hours.
+              <h3 class="font-display font-extrabold text-xl text-white mb-2.5">
+                Step 1 — Recon Finds Potential Jobs
+              </h3>
+              <p class="text-sm text-slate-300 leading-relaxed">
+                Your Scout searches relevant permits, public records, and other available sources for opportunities matching your business and territory.
               </p>
             </div>
-
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-mono-telemetry">
-              <span class="text-slate-500">SOURCES:</span>
-              <span class="text-[#1E40AF] font-bold">ACCELA • ENERGOV • B2B</span>
+            <div class="mt-5 pt-4 border-t border-slate-800 text-xs font-mono-telemetry text-slate-400">
+              Filtered by your target zip code, trade category, and minimum project valuation.
             </div>
-          </article>
+          </div>
 
           <!-- Step 2 -->
-          <article class="enterprise-card enterprise-card-interactive rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+          <div class="enterprise-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
-                  STEP 2 • 4:30 AM
+                <span class="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/40 font-mono-telemetry font-bold text-sm text-emerald-300 flex items-center justify-center">
+                  02
                 </span>
-                <span class="font-mono-telemetry text-xs text-slate-400">CAD TAX ROLL X-RAY</span>
+                <span class="font-mono-telemetry text-xs text-slate-400">7:00 AM BRIEFING</span>
               </div>
-
-              <h4 class="font-display font-extrabold text-xl text-[#0F172A] mb-2.5">
-                Cross-Checks Tax Rolls and Finds Direct Cell Numbers
-              </h4>
-
-              <p class="text-[#334155] text-sm sm:text-base leading-relaxed mb-5">
-                In 14 seconds per property, Tiberius Recon cross-references County Appraisal District (CAD) tax rolls to verify the real deeded owner, square footage, assessed dollar value, and the Project Manager's direct cell number and work email.
+              <h3 class="font-display font-extrabold text-xl text-white mb-2.5">
+                Step 2 — You Get the Details
+              </h3>
+              <p class="text-sm text-slate-300 leading-relaxed">
+                Review project information, available contact details, supporting sources, and suggested personalized introductions.
               </p>
             </div>
-
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-mono-telemetry">
-              <span class="text-slate-500">VERIFIED:</span>
-              <span class="text-[#1E40AF] font-bold">OWNER + SQ FT + DIRECT PM</span>
+            <div class="mt-5 pt-4 border-t border-slate-800 text-xs font-mono-telemetry text-slate-400">
+              Includes permit numbers, property records, and outreach drafted from your Shop Knowledge Base.
             </div>
-          </article>
+          </div>
 
           <!-- Step 3 -->
-          <article class="enterprise-card enterprise-card-interactive rounded-2xl p-6 sm:p-7 flex flex-col justify-between border-t-4 border-t-emerald-600">
+          <div class="enterprise-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
-                  STEP 3 • 7:00 AM
+                <span class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 font-mono-telemetry font-bold text-sm text-amber-300 flex items-center justify-center">
+                  03
                 </span>
-                <span class="font-mono-telemetry text-xs text-emerald-700">YOU APPROVE &amp; SEND</span>
+                <span class="font-mono-telemetry text-xs text-slate-400">HUMAN-IN-THE-LOOP</span>
               </div>
-
-              <h4 class="font-display font-extrabold text-xl text-[#0F172A] mb-2.5">
-                Three Ready-to-Send Deals Land on Your Phone
-              </h4>
-
-              <p class="text-[#334155] text-sm sm:text-base leading-relaxed mb-5">
-                At 6:45 AM, you pour your coffee and open one text link. You get three researched recon cards with permit proof on top and a custom 4-sentence intro below. Tap <code class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold">Approve &amp; Send</code> three times in 90 seconds—done before the crew rolls out.
+              <h3 class="font-display font-extrabold text-xl text-white mb-2.5">
+                Step 3 — You Decide Who to Contact
+              </h3>
+              <p class="text-sm text-slate-300 leading-relaxed">
+                Edit and approve outreach, then manage conversations and follow-up activity through the available communication tools.
               </p>
             </div>
-
-            <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between text-xs font-mono-telemetry">
-              <span class="text-emerald-800">CONTROL:</span>
-              <span class="text-emerald-800 font-bold">ZERO AUTO-SPAM • 1-TAP SEND ✓</span>
+            <div class="mt-5 pt-4 border-t border-slate-800 text-xs font-mono-telemetry text-slate-400">
+              Send via email or your phone's native SMS/email app—and track replies in the Conversation Room.
             </div>
-          </article>
+          </div>
+
         </div>
 
-        <!-- Bottom Transition Bridge -->
-        <div class="max-w-2xl mx-auto text-center mt-8 sm:mt-10 px-5 py-4 rounded-xl bg-slate-50 border border-slate-200">
-          <p class="text-[#334155] text-sm sm:text-base leading-relaxed font-medium">
-            Everything runs through a single morning text link with zero software dashboards to learn. Look below to inspect the exact 7:00 AM recon packet that hits your phone.
-          </p>
-        </div>
+        <!-- Collapsible "Behind the Scenes" Technical Architecture Drawer -->
+        <details class="max-w-4xl mx-auto rounded-2xl bg-slate-900/90 border border-slate-800 overflow-hidden group">
+          <summary class="px-6 py-4 cursor-pointer flex items-center justify-between gap-4 select-none hover:bg-slate-800/60 transition-colors">
+            <div class="flex items-center gap-3">
+              <span class="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 font-mono-telemetry text-[11px] text-blue-300 font-bold">
+                BEHIND THE SCENES
+              </span>
+              <span class="font-display font-bold text-sm sm:text-base text-white">
+                Technical Architecture: How Recon Searches Portals, Property Records &amp; Drafts Outreach
+              </span>
+            </div>
+            <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-300 leading-relaxed">
+            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+              <div class="font-mono-telemetry text-[11px] text-blue-400 font-bold">1. MUNICIPAL PERMIT PORTAL SWEEPS (TIERS 2 &amp; 3)</div>
+              <p>
+                Recon queries municipal building portals (such as Accela Citizen Access, Tyler EnerGov, and regional permit feeds) for newly filed commercial tenant improvements, new shells, CapEx retrofits, and high-value residential permits matching your trade and minimum valuation.
+              </p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+              <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">2. COUNTY APPRAISAL DISTRICT (CAD) CROSS-REFERENCING</div>
+              <p>
+                When property addresses are identified, Recon cross-references County Appraisal District parcel records to surface deeded ownership entities, assessed property values, building square footage, and lot acreage where available in public tax rolls.
+              </p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+              <div class="font-mono-telemetry text-[11px] text-amber-300 font-bold">3. SHOP KNOWLEDGE BASE ("SHOP DOSSIER") CALIBRATION</div>
+              <p>
+                During onboarding, Recon scans your existing website (or uses the capabilities, licenses, bonding, and past project examples you enter) so every suggested introduction references your actual trade credentials rather than generic AI filler.
+              </p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+              <div class="font-mono-telemetry text-[11px] text-purple-300 font-bold">4. THREAD-LOCKED EMAIL &amp; NATIVE SIM HANDOFF</div>
+              <p>
+                Approved outreach can be dispatched via cloud email with thread-locked reply routing into your 3-Pane Conversation Room, or opened directly in your mobile phone's native SMS or Mail app (`sms:` / `mailto:`) so you stay in full control of every conversation.
+              </p>
+            </div>
+          </div>
+        </details>
 
       </div>
     </section>
 
     <!-- ======================================================================
-         7:00 AM MORNING RECON BRIEFING PRODUCT SHOWCASE
+         SECTION 5: INTERACTIVE DEMONSTRATION — COMPLETE OPPORTUNITY-TO-CONVERSATION WORKFLOW
          ====================================================================== -->
-    <section id="simulator" class="section-bg-white py-16 sm:py-24 border-b border-slate-200/80" aria-label="7:00 AM Recon Briefing Product Showcase">
+    <section id="interactive-demo" class="section-bg-white py-14 sm:py-20 border-b border-slate-200">
       <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Section Header -->
-        <div class="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono-telemetry text-xs mb-4">
-            <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-            <span>LIVE RECON OUTPUT • THE 7:00 AM MORNING BRIEFING</span>
+        <div class="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 font-mono-telemetry text-xs text-amber-800 mb-3">
+            <span>ILLUSTRATIVE DEMO • OPPORTUNITY-TO-CONVERSATION WORKFLOW</span>
           </div>
-          <h2 class="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-[#0F172A] tracking-tight mb-4">
-            See the Proof: What Lands on Your Phone at 7:00 AM.
+          <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mb-3">
+            Test-Drive the Complete Morning Briefing to Conversation Workflow
           </h2>
-          <p class="text-[#334155] text-base sm:text-lg leading-relaxed">
-            Inspect an actual morning recon briefing below. Each card pairs a verified local permit or deed transfer with the decision-maker's direct cell and email, plus a 4-sentence intro written in your voice. Tap <span class="text-[#059669] font-bold">[ ✓ Approve &amp; Send ]</span> on any card to test the 90-second dispatch flow.
+          <p class="text-sm sm:text-base text-[#334155]">
+            Follow how a contractor opens their morning briefing, reviews project details and sources, edits or approves an introduction, and handles the prospect's reply in the Conversation Room.
           </p>
         </div>
 
-        <!-- Top Status Bar Above Cards -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 sm:px-6 py-3.5 mb-7">
-          <div class="flex items-center gap-2.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-            <span class="font-mono-telemetry text-xs sm:text-sm text-slate-800 font-bold">
-              07:00:00 AM MORNING RECON BRIEFING • 3 VERIFIED CARDS READY
-            </span>
+        <!-- 6-Step Guided Sequence Strip -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-8 text-xs">
+          <div id="workflow-step-pill-1" class="p-3 rounded-xl bg-blue-600/20 border border-blue-500 text-white">
+            <div class="font-mono-telemetry text-[10px] text-blue-300 font-bold">STEP 01</div>
+            <div class="font-display font-bold mt-0.5">1. Open Morning Briefing</div>
           </div>
-          <div class="flex flex-wrap items-center gap-3">
-            <span id="deals-fired-counter" class="px-3 py-1 rounded-lg bg-white border border-slate-200 font-mono-telemetry text-xs text-emerald-700 font-bold shadow-sm">
-              Deals Approved This Morning: 0/3
-            </span>
-            <button id="reset-all-simulator-btn" type="button" class="text-xs font-mono-telemetry text-blue-700 hover:text-blue-900 underline cursor-pointer">
-              Reset All ↺
-            </button>
-            <a href="briefing.html" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-mono-telemetry text-xs font-bold shadow-sm transition-colors">
-              Open Live 7:00 AM App ↗
-            </a>
+          <div id="workflow-step-pill-2" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+            <div class="font-mono-telemetry text-[10px] text-slate-400 font-bold">STEP 02</div>
+            <div class="font-display font-bold mt-0.5">2. Identify Project</div>
+          </div>
+          <div id="workflow-step-pill-3" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+            <div class="font-mono-telemetry text-[10px] text-slate-400 font-bold">STEP 03</div>
+            <div class="font-display font-bold mt-0.5">3. Review Sources</div>
+          </div>
+          <div id="workflow-step-pill-4" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+            <div class="font-mono-telemetry text-[10px] text-slate-400 font-bold">STEP 04</div>
+            <div class="font-display font-bold mt-0.5">4. Inspect Outreach</div>
+          </div>
+          <div id="workflow-step-pill-5" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+            <div class="font-mono-telemetry text-[10px] text-slate-400 font-bold">STEP 05</div>
+            <div class="font-display font-bold mt-0.5">5. Edit or Approve</div>
+          </div>
+          <div id="workflow-step-pill-6" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+            <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">STEP 06</div>
+            <div class="font-display font-bold mt-0.5">6. Conversation Room</div>
           </div>
         </div>
 
-        <!-- 3 Clean White Deal Cards in a 3-Column Grid -->
-        <div id="simulator-cards-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
+        <!-- Trade Selector Tabs & Counter Bar -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 mb-7 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                STEP 1: SELECT YOUR TRADE TO CALIBRATE THE SAMPLE BRIEFING CARDS
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-2" role="tablist" aria-label="Interactive Demo Trade Calibration">
+              <button
+                type="button"
+                data-trade="concrete"
+                class="trade-pill-btn active px-3.5 py-2 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+              >
+                🏗️ Commercial Concrete
+              </button>
+              <button
+                type="button"
+                data-trade="roofing"
+                class="trade-pill-btn px-3.5 py-2 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+              >
+                🏠 Roofing / Exteriors
+              </button>
+              <button
+                type="button"
+                data-trade="hvac"
+                class="trade-pill-btn px-3.5 py-2 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+              >
+                ⚡ Electrical / HVAC (MEP)
+              </button>
+              <button
+                type="button"
+                data-trade="pools"
+                class="trade-pill-btn px-3.5 py-2 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+              >
+                🏊 Custom Outdoor / Pools / Fencing
+              </button>
+              <button
+                type="button"
+                data-trade="b2b"
+                class="trade-pill-btn px-3.5 py-2 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+              >
+                🏢 B2B Commercial Services
+              </button>
+            </div>
+          </div>
 
-          <!-- Card 1 (Commercial Permit Trigger) -->
-          <article class="bg-white border border-slate-200 rounded-2xl shadow-md p-5 sm:p-6 flex flex-col justify-between" data-card-id="deal-1">
+          <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <div id="demo-approved-counter" class="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+              Sample Cards Approved: 0/3
+            </div>
+            <button
+              id="reset-demo-btn"
+              type="button"
+              class="btn-outline-slate px-3 py-2 rounded-xl text-xs font-mono-telemetry cursor-pointer"
+            >
+              ↺ Reset Demo
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Sample Recon Cards Grid (Steps 2, 3, 4 & 5) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch mb-8">
+
+          <!-- ==============================================================
+               SAMPLE CARD 1: COMMERCIAL PERMIT (#BP-2026-08941)
+               ============================================================== -->
+          <article id="recon-card-1" class="enterprise-card rounded-2xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
             <div>
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <span class="font-mono-telemetry text-[11px] text-[#1E40AF] font-bold">CARD 01 • COMMERCIAL PERMIT</span>
-                <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800">UNLOCKED #1</span>
+              <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800">
+                <span class="font-mono-telemetry text-[11px] font-bold text-slate-300">
+                  SAMPLE CARD 01 • COMMERCIAL PERMIT
+                </span>
+                <span class="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[10px] text-amber-300 font-bold">
+                  ILLUSTRATIVE DEMO
+                </span>
               </div>
 
-              <!-- Permit Alert Badge (Warm Ochre / Amber #D97706 on #FEF3C7) -->
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] border border-amber-300 font-mono-telemetry text-[11px] text-[#D97706] font-bold mb-3">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-300 font-mono-telemetry text-[11px] font-semibold text-[#D97706] mb-2.5">
                 <span>⚡</span>
-                <span>FILED 14 HRS AGO • $240,000 TI PERMIT</span>
+                <span id="card-1-pill">PERMIT #BP-2026-08941 • $240,000 TI BUILDOUT</span>
               </div>
 
-              <h3 class="font-display font-extrabold text-xl text-[#0F172A] leading-snug mb-1.5">
+              <h3 id="card-1-headline" class="font-display font-bold text-lg text-[#0F172A] leading-snug mb-1.5">
                 18,500 Sq Ft Commercial Buildout &amp; Dock Apron
               </h3>
-              <p class="text-xs text-[#64748B] font-medium mb-4">
-                Permit Address: 4820 Industrial Pkwy, Suite B • Municipal Accela Portal #BP-2026-08941
+
+              <p id="card-1-submeta" class="text-xs text-[#64748B] mb-3">
+                Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941
               </p>
 
-              <!-- Verified GC Project Manager Box -->
-              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-4">
-                <div class="font-mono-telemetry text-[10px] text-[#1E40AF] mb-0.5">VERIFIED GC PROJECT MANAGER:</div>
-                <div class="text-xs sm:text-sm font-bold text-[#0F172A]">Marcus Vance • Sr. PM @ Apex Commercial Builders</div>
-                <div class="text-[11px] text-[#64748B] mt-0.5">Direct Work Email + Cell Verified • 3.8 Miles From Your Shop</div>
+              <!-- Source & Relevance Box -->
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
+                <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-blue-400 font-bold">
+                  <span>SOURCE &amp; PROPERTY RECORD</span>
+                  <span>PARCEL #CAD-78130-204719</span>
+                </div>
+                <div id="card-1-why" class="text-slate-300 text-[11px] leading-relaxed">
+                  <strong class="text-white">Why it matters:</strong> $1,850,000 assessed industrial parcel (2.4 acres). Subcontractor numbers are typically collected 30–60 days after TI permit filing.
+                </div>
               </div>
 
-              <!-- Clean Light-Grey Message Box (#F8FAFC) -->
-              <div class="mb-5">
+              <!-- Sample Contact Info -->
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
+                <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">
+                  AVAILABLE DECISION-MAKER (SAMPLE RECORD):
+                </div>
+                <div id="card-1-contact" class="font-bold text-[#0F172A]">
+                  Marcus Vance • Sr. PM @ Apex Commercial Builders
+                </div>
+                <div class="text-[#64748B] font-mono-telemetry text-[11px]">
+                  mvance@apexcommercialbuilders.com • (512) 555-0148 (Demo)
+                </div>
+              </div>
+
+              <!-- Prepared Outreach Message (Editable) -->
+              <div class="mb-4">
                 <div class="flex items-center justify-between gap-2 mb-1.5">
-                  <span class="font-mono-telemetry text-[10px] text-[#64748B]">4-SENTENCE BID INTRO (YOUR VOICE):</span>
-                  <span class="font-mono-telemetry text-[10px] text-emerald-700 font-bold whitespace-nowrap">READY ✓</span>
+                  <span class="font-mono-telemetry text-[10px] text-[#64748B]">PREPARED OUTREACH DRAFT:</span>
+                  <button
+                    type="button"
+                    data-edit-card="1"
+                    class="demo-edit-draft-btn font-mono-telemetry text-[10px] text-blue-400 hover:underline font-bold cursor-pointer"
+                  >
+                    ✎ Edit Draft
+                  </button>
                 </div>
-                <div class="outreach-draft-box">
-                  "Hey Marcus — saw the $240,000 commercial TI buildout permit filed yesterday at 4820 Industrial Pkwy. Our commercial crew just wrapped a 22,000 sq ft project two miles east on Commerce Dr and passed city inspection ahead of schedule. We have a crew opening up next month and would love to drop off numbers on this scope. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"
+                <div id="card-1-draft" class="outreach-draft-box text-xs leading-relaxed">
+                  "Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our crew just wrapped a 22,000 sq ft commercial tilt-wall &amp; dock apron project two miles east off FM 306 and passed city inspection ahead of schedule. We have a crew opening next month and would love to drop off numbers on the foundation, dock apron &amp; flatwork scope. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"
                 </div>
+                <textarea
+                  id="card-1-editor"
+                  rows="5"
+                  aria-label="Edit outreach draft for Card 1"
+                  class="hidden enterprise-input text-xs leading-relaxed mt-1"
+                ></textarea>
               </div>
             </div>
 
+            <!-- Action Controls -->
             <div class="pt-3 border-t border-slate-200">
-              <button type="button" data-action="approve-send" data-card-id="deal-1" class="btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer">
-                [ ✓ Approve &amp; Send ]
-              </button>
-            </div>
-          </article>
-
-          <!-- Card 2 (B2B Property Manager Trigger) -->
-          <article class="bg-white border border-slate-200 rounded-2xl shadow-md p-5 sm:p-6 flex flex-col justify-between" data-card-id="deal-2">
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <span class="font-mono-telemetry text-[11px] text-[#1E40AF] font-bold">CARD 02 • B2B PROPERTY MANAGER</span>
-                <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800">UNLOCKED #2</span>
-              </div>
-
-              <!-- Badge -->
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] border border-amber-300 font-mono-telemetry text-[11px] text-[#D97706] font-bold mb-3">
-                <span>🏢</span>
-                <span>NEW ACQUISITION • 140-UNIT COMPLEX</span>
-              </div>
-
-              <h3 class="font-display font-extrabold text-xl text-[#0F172A] leading-snug mb-1.5">
-                Oakridge Commons &amp; 3 Adjacent Retail Pads
-              </h3>
-              <p class="text-xs text-[#64748B] font-medium mb-4">
-                Property Address: 6100 Westheimer Rd • Commercial Deed Transfer &amp; Vendor Re-Bid Window
-              </p>
-
-              <!-- Regional Property Manager Match Box -->
-              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-4">
-                <div class="font-mono-telemetry text-[10px] text-[#1E40AF] mb-0.5">REGIONAL PROPERTY MANAGER MATCH:</div>
-                <div class="text-xs sm:text-sm font-bold text-[#0F172A]">Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt</div>
-                <div class="text-[11px] text-[#64748B] mt-0.5">Direct Inbox + Office Line • Active Q4 CapEx Upgrade Budget</div>
-              </div>
-
-              <!-- Clean Light-Grey Message Box (#F8FAFC) -->
-              <div class="mb-5">
-                <div class="flex items-center justify-between gap-2 mb-1.5">
-                  <span class="font-mono-telemetry text-[10px] text-[#64748B]">4-SENTENCE VENDOR INTRO (YOUR VOICE):</span>
-                  <span class="font-mono-telemetry text-[10px] text-emerald-700 font-bold whitespace-nowrap">READY ✓</span>
-                </div>
-                <div class="outreach-draft-box">
-                  "Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage and specialize in weekend phased work so zero tenants lose access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"
+              <div id="card-1-actions" class="space-y-2">
+                <button
+                  type="button"
+                  data-approve-card="1"
+                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
+                >
+                  [ ✓ Approve &amp; Preview Reply in Conversation Room ]
+                </button>
+                <div class="flex items-center justify-between text-[11px] font-mono-telemetry text-slate-400 px-1">
+                  <span>Step 5: Approve draft</span>
+                  <span>→ Triggers Step 6 Reply below</span>
                 </div>
               </div>
-            </div>
 
-            <div class="pt-3 border-t border-slate-200">
-              <button type="button" data-action="approve-send" data-card-id="deal-2" class="btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer">
-                [ ✓ Approve &amp; Send ]
-              </button>
-            </div>
-          </article>
-
-          <!-- Card 3 (Residential Permit + CAD X-Ray) -->
-          <article class="bg-white border border-slate-200 rounded-2xl shadow-md p-5 sm:p-6 flex flex-col justify-between" data-card-id="deal-3">
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <span class="font-mono-telemetry text-[11px] text-[#1E40AF] font-bold">CARD 03 • RESIDENTIAL + CAD X-RAY</span>
-                <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800">UNLOCKED #3</span>
-              </div>
-
-              <!-- Badge -->
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-[11px] text-[#1E40AF] font-bold mb-3">
-                <span>🏡</span>
-                <span>CUSTOM ADDITION + CAD TAX ROLL MATCH</span>
-              </div>
-
-              <h3 class="font-display font-extrabold text-xl text-[#0F172A] leading-snug mb-1.5">
-                1140 Whispering Pines Ln — Custom Estate Addition
-              </h3>
-              <p class="text-xs text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 mb-3">
-                $940,000 Assessed Value • 4,120 Sq Ft • 1.4 Acres • Verified Homeowner
-              </p>
-
-              <!-- Verified Homeowner Box -->
-              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-4">
-                <div class="font-mono-telemetry text-[10px] text-[#1E40AF] mb-0.5">COUNTY APPRAISAL DISTRICT DEED MATCH:</div>
-                <div class="text-xs sm:text-sm font-bold text-[#0F172A]">Dr. Robert &amp; Elena Harrison • Verified Property Owners</div>
-                <div class="text-[11px] text-[#64748B] mt-0.5">Parcel #CAD-90418-A • Direct Owner Mobile &amp; Email Verified</div>
-              </div>
-
-              <!-- Clean Light-Grey Message Box (#F8FAFC) -->
-              <div class="mb-5">
-                <div class="flex items-center justify-between gap-2 mb-1.5">
-                  <span class="font-mono-telemetry text-[10px] text-[#64748B]">4-SENTENCE OWNER INTRO (YOUR VOICE):</span>
-                  <span class="font-mono-telemetry text-[10px] text-emerald-700 font-bold whitespace-nowrap">READY ✓</span>
+              <div id="card-1-dispatched" class="hidden dispatched-stamp rounded-xl p-3 text-center space-y-1">
+                <div class="font-mono-telemetry text-xs font-bold">
+                  ✓ OUTREACH APPROVED (DEMO) • MOVED TO CONVERSATION ROOM
                 </div>
-                <div class="outreach-draft-box">
-                  "Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate on Whispering Pines Ln. Our custom residential team specializes in high-end estate projects across the neighborhood with zero day-labor subs and a 100% clean-site guarantee. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a quick 10-minute site walk this week?"
-                </div>
-              </div>
-            </div>
-
-            <div class="pt-3 border-t border-slate-200">
-              <button type="button" data-action="approve-send" data-card-id="deal-3" class="btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer">
-                [ ✓ Approve &amp; Send ]
-              </button>
-            </div>
-          </article>
-
-        </div>
-
-        <!-- Docked Below the 3 Cards: The Locked Territory Vault Bar -->
-        <div id="locked-territory-vault" class="locked-vault-panel rounded-2xl p-5 sm:p-6 shadow-md">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
-            <div class="flex items-start sm:items-center gap-3">
-              <span class="text-xl sm:text-2xl flex-shrink-0" aria-hidden="true">🔒</span>
-              <div>
-                <h3 class="font-display font-extrabold text-sm sm:text-base text-amber-300">
-                  🔒 6+ Additional Recon Cards Spotted in Your Zip Code Last Night (Unlocked on 7-Day Free Trial)
-                </h3>
-                <p class="text-xs sm:text-sm text-slate-200 mt-1">
-                  Start your 7-Day Free Trial ($0.00 charged today) to immediately unblur and unlock full access to every daily recon card in your territory:
+                <p class="text-[11px] text-emerald-200">
+                  See Marcus Vance's reply in Step 6 immediately below ↓
                 </p>
               </div>
             </div>
+          </article>
 
-            <a href="#pricing" class="btn-trust-emerald px-5 py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center gap-2 self-start lg:self-center">
-              <span>Start 7-Day Free Trial ($0 Today) →</span>
+          <!-- ==============================================================
+               SAMPLE CARD 2: B2B PROPERTY ACQUISITION (OAKRIDGE COMMONS)
+               ============================================================== -->
+          <article id="recon-card-2" class="enterprise-card rounded-2xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
+            <div>
+              <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800">
+                <span class="font-mono-telemetry text-[11px] font-bold text-slate-300">
+                  SAMPLE CARD 02 • B2B PROPERTY RECORD
+                </span>
+                <span class="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[10px] text-amber-300 font-bold">
+                  ILLUSTRATIVE DEMO
+                </span>
+              </div>
+
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-300 font-mono-telemetry text-[11px] font-semibold text-[#D97706] mb-2.5">
+                <span>🏢</span>
+                <span id="card-2-pill">COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX</span>
+              </div>
+
+              <h3 id="card-2-headline" class="font-display font-bold text-lg text-[#0F172A] leading-snug mb-1.5">
+                Oakridge Commons &amp; 3 Adjacent Retail Pads
+              </h3>
+
+              <p id="card-2-submeta" class="text-xs text-[#64748B] mb-3">
+                Location: 2410 Gruene Rd &amp; Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635
+              </p>
+
+              <!-- Source & Relevance Box -->
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
+                <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-blue-400 font-bold">
+                  <span>SOURCE &amp; PROPERTY RECORD</span>
+                  <span>PARCEL #CAD-78130-218635</span>
+                </div>
+                <div id="card-2-why" class="text-slate-300 text-[11px] leading-relaxed">
+                  <strong class="text-white">Why it matters:</strong> $14,200,000 commercial acquisition (142,000 sq ft). New regional property management teams frequently review exterior trade vendors within 30 days of closing.
+                </div>
+              </div>
+
+              <!-- Sample Contact Info -->
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
+                <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">
+                  AVAILABLE DECISION-MAKER (SAMPLE RECORD):
+                </div>
+                <div id="card-2-contact" class="font-bold text-[#0F172A]">
+                  Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt
+                </div>
+                <div class="text-[#64748B] font-mono-telemetry text-[11px]">
+                  dsterling@crestviewcommercial.com • (512) 555-0182 (Demo)
+                </div>
+              </div>
+
+              <!-- Prepared Outreach Message (Editable) -->
+              <div class="mb-4">
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <span class="font-mono-telemetry text-[10px] text-[#64748B]">PREPARED OUTREACH DRAFT:</span>
+                  <button
+                    type="button"
+                    data-edit-card="2"
+                    class="demo-edit-draft-btn font-mono-telemetry text-[10px] text-blue-400 hover:underline font-bold cursor-pointer"
+                  >
+                    ✎ Edit Draft
+                  </button>
+                </div>
+                <div id="card-2-draft" class="outreach-draft-box text-xs leading-relaxed">
+                  "Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads at 2410 Gruene Rd &amp; Loop 337 in New Braunfels. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage ($2M GL) and specialize in weekend phased work on ADA concrete flatwork, bollard installations, and dumpster pad replacements so zero tenants lose parking access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"
+                </div>
+                <textarea
+                  id="card-2-editor"
+                  rows="5"
+                  aria-label="Edit outreach draft for Card 2"
+                  class="hidden enterprise-input text-xs leading-relaxed mt-1"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="pt-3 border-t border-slate-200">
+              <div id="card-2-actions" class="space-y-2">
+                <button
+                  type="button"
+                  data-approve-card="2"
+                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
+                >
+                  [ ✓ Approve &amp; Preview Reply in Conversation Room ]
+                </button>
+                <div class="flex items-center justify-between text-[11px] font-mono-telemetry text-slate-400 px-1">
+                  <span>Step 5: Approve draft</span>
+                  <span>→ Triggers Step 6 Reply below</span>
+                </div>
+              </div>
+
+              <div id="card-2-dispatched" class="hidden dispatched-stamp rounded-xl p-3 text-center space-y-1">
+                <div class="font-mono-telemetry text-xs font-bold">
+                  ✓ OUTREACH APPROVED (DEMO) • MOVED TO CONVERSATION ROOM
+                </div>
+                <p class="text-[11px] text-emerald-200">
+                  See Dana Sterling's reply in Step 6 immediately below ↓
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <!-- ==============================================================
+               SAMPLE CARD 3: RESIDENTIAL ADDITION + CAD RECORD
+               ============================================================== -->
+          <article id="recon-card-3" class="enterprise-card rounded-2xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
+            <div>
+              <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800">
+                <span class="font-mono-telemetry text-[11px] font-bold text-slate-300">
+                  SAMPLE CARD 03 • RESIDENTIAL PERMIT + CAD
+                </span>
+                <span class="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[10px] text-amber-300 font-bold">
+                  ILLUSTRATIVE DEMO
+                </span>
+              </div>
+
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 font-mono-telemetry text-[11px] font-semibold text-[#1E40AF] mb-2.5">
+                <span>🏡</span>
+                <span id="card-3-pill">CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH</span>
+              </div>
+
+              <h3 id="card-3-headline" class="font-display font-bold text-lg text-[#0F172A] leading-snug mb-1.5">
+                1140 Whispering Pines Ln — Custom Estate Addition &amp; Motor Court
+              </h3>
+
+              <p id="card-3-submeta" class="text-xs text-[#64748B] mb-3">
+                Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A
+              </p>
+
+              <!-- Source & Relevance Box -->
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
+                <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-blue-400 font-bold">
+                  <span>SOURCE &amp; PROPERTY RECORD</span>
+                  <span>PARCEL #CAD-78130-90418A</span>
+                </div>
+                <div id="card-3-why" class="text-slate-300 text-[11px] leading-relaxed">
+                  <strong class="text-white">Why it matters:</strong> $940,000 assessed estate property (4,120 sq ft on 1.4 acres). Included in Full Territory Dominion for high-ticket residential trades.
+                </div>
+              </div>
+
+              <!-- Sample Contact Info -->
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
+                <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">
+                  AVAILABLE PROPERTY RECORD (SAMPLE RECORD):
+                </div>
+                <div id="card-3-contact" class="font-bold text-[#0F172A]">
+                  Dr. Robert &amp; Elena Harrison • Sample Property Owners
+                </div>
+                <div class="text-[#64748B] font-mono-telemetry text-[11px]">
+                  rharrison.md@privateestate.org • (512) 555-0199 (Demo)
+                </div>
+              </div>
+
+              <!-- Prepared Outreach Message (Editable) -->
+              <div class="mb-4">
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <span class="font-mono-telemetry text-[10px] text-[#64748B]">PREPARED OUTREACH DRAFT:</span>
+                  <button
+                    type="button"
+                    data-edit-card="3"
+                    class="demo-edit-draft-btn font-mono-telemetry text-[10px] text-blue-400 hover:underline font-bold cursor-pointer"
+                  >
+                    ✎ Edit Draft
+                  </button>
+                </div>
+                <div id="card-3-draft" class="outreach-draft-box text-xs leading-relaxed">
+                  "Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft property at 1140 Whispering Pines Ln in Havenwood. Our custom residential team specializes in engineered post-tension foundation additions and architectural stamped motor courts across New Braunfels with a 100% clean-site guarantee. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a quick 10-minute site walk or estimate drop-off this week?"
+                </div>
+                <textarea
+                  id="card-3-editor"
+                  rows="5"
+                  aria-label="Edit outreach draft for Card 3"
+                  class="hidden enterprise-input text-xs leading-relaxed mt-1"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="pt-3 border-t border-slate-200">
+              <div id="card-3-actions" class="space-y-2">
+                <button
+                  type="button"
+                  data-approve-card="3"
+                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
+                >
+                  [ ✓ Approve &amp; Preview Reply in Conversation Room ]
+                </button>
+                <div class="flex items-center justify-between text-[11px] font-mono-telemetry text-slate-400 px-1">
+                  <span>Step 5: Approve draft</span>
+                  <span>→ Triggers Step 6 Reply below</span>
+                </div>
+              </div>
+
+              <div id="card-3-dispatched" class="hidden dispatched-stamp rounded-xl p-3 text-center space-y-1">
+                <div class="font-mono-telemetry text-xs font-bold">
+                  ✓ OUTREACH APPROVED (DEMO) • MOVED TO CONVERSATION ROOM
+                </div>
+                <p class="text-[11px] text-emerald-200">
+                  See Robert Harrison's reply in Step 6 immediately below ↓
+                </p>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- ================================================================
+             STEP 6 OF DEMO: INTERACTIVE CONVERSATION ROOM REPLY & FOLLOW-UP PREVIEW
+             + 90-SECOND SYSTEM WALKTHROUGH VIDEO
+             ================================================================ -->
+        <div id="demo-conversation-room-stage" class="enterprise-card g3-conic-card rounded-2xl border border-emerald-500/40 p-6 sm:p-8 shadow-2xl">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 mb-6 border-b border-slate-800">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold">
+                  STEP 6 OF 6 • CONVERSATION ROOM PREVIEW (ILLUSTRATIVE DEMO)
+                </span>
+                <span id="demo-conv-status-pill" class="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                  🔥 SIMULATED PROSPECT REPLY RECEIVED
+                </span>
+              </div>
+              <h3 class="font-display font-extrabold text-xl sm:text-2xl text-white">
+                What Happens After You Approve an Introduction
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-300 mt-0.5">
+                When a GC, Property Manager, or Property Owner replies to your approved outreach, the thread appears in your Conversation Room so you can draft a follow-up and schedule the site walk.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+              <a
+                href="/recon/inbox?token=demo-7am-briefing"
+                class="btn-outline-slate px-4 py-2.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
+              >
+                <span>Open Full 3-Pane Demo Room →</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+
+            <!-- Left 7 Cols: Live Interactive Thread Simulation -->
+            <div class="lg:col-span-7 bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                <div>
+                  <div id="demo-conv-thread-title" class="font-display font-bold text-base text-white">
+                    Marcus Vance • Sr. PM @ Apex Commercial Builders
+                  </div>
+                  <div id="demo-conv-thread-meta" class="font-mono-telemetry text-xs text-slate-400">
+                    Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 font-mono-telemetry text-[10px] text-slate-300">
+                  Simulated Thread
+                </span>
+              </div>
+
+              <!-- Conversation Messages Timeline -->
+              <div id="demo-conv-messages" class="space-y-3 max-h-[340px] overflow-y-auto pr-1">
+                <!-- Outbound Approved Intro -->
+                <div class="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-xs space-y-1">
+                  <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-blue-300">
+                    <span>YOU (APPROVED MORNING BRIEFING INTRO)</span>
+                    <span>07:02 AM</span>
+                  </div>
+                  <p id="demo-conv-outbound-body" class="text-slate-200 leading-relaxed">
+                    Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our crew just wrapped a 22,000 sq ft commercial tilt-wall &amp; dock apron project two miles east off FM 306 and passed city inspection ahead of schedule. Mind if I send over our commercial spec sheet and bid calendar this afternoon?
+                  </p>
+                </div>
+
+                <!-- Simulated Prospect Reply -->
+                <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-xs space-y-1">
+                  <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-emerald-300 font-bold">
+                    <span id="demo-conv-inbound-sender">MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY</span>
+                    <span>08:19 AM</span>
+                  </div>
+                  <p id="demo-conv-inbound-body" class="text-white leading-relaxed">
+                    "Hey Travis — timing is spot on. Our previous sub backed out on the concrete &amp; dock apron schedule at 1420 Industrial Pkwy, Suite B. Do you guys carry $2M commercial GL + bonding, and can you walk the site with my superintendent this Thursday at 9:00 AM to review the plan set?"
+                  </p>
+                </div>
+
+                <!-- Follow-Up Sent Bubble (Revealed when user clicks Send Follow-Up in Demo) -->
+                <div id="demo-conv-followup-bubble" class="hidden p-3.5 rounded-xl bg-blue-950/60 border border-emerald-400/50 text-xs space-y-1">
+                  <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-emerald-300 font-bold">
+                    <span>YOU (FOLLOW-UP SENT • SITE WALK CONFIRMED)</span>
+                    <span>Just Now (Demo)</span>
+                  </div>
+                  <p id="demo-conv-followup-sent-text" class="text-white leading-relaxed"></p>
+                </div>
+              </div>
+
+              <!-- 1-Tap Follow-Up Composer -->
+              <div class="pt-3 border-t border-slate-800 space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="font-mono-telemetry text-[10px] text-slate-400">
+                    TRY IT: DRAFT &amp; SEND THE FOLLOW-UP REPLY
+                  </span>
+                  <button
+                    type="button"
+                    id="demo-conv-draft-walk-btn"
+                    class="px-2.5 py-1 rounded bg-blue-600/20 border border-blue-500/40 font-mono-telemetry text-[10px] text-blue-300 hover:text-white font-bold cursor-pointer"
+                  >
+                    ⚡ Insert Suggested Site-Walk Reply
+                  </button>
+                </div>
+                <textarea
+                  id="demo-conv-reply-input"
+                  rows="3"
+                  aria-label="Simulated Conversation Room reply composer"
+                  class="enterprise-input text-xs leading-relaxed"
+                >Hey Marcus — yes, we carry $2M/$5M commercial GL and bonding, and our ACI-certified crew is ready for the schedule at 1420 Industrial Pkwy, Suite B. Locking us in for Thursday at 9:00 AM on-site with our COI, W-9, and unit-price sheet. — Travis Miller • Lone Star Commercial Concrete</textarea>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    id="demo-conv-send-reply-btn"
+                    class="btn-trust-emerald px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    [ ✓ Send Follow-Up &amp; Book Site Walk (Demo) ]
+                  </button>
+                  <span id="demo-conv-send-feedback" class="hidden font-mono-telemetry text-xs text-emerald-400 font-bold">
+                    ✓ Site Walk Confirmed for Thursday 9:00 AM (Illustrative Demo)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right 5 Cols: Linked Source Record & Conversation Room Capabilities -->
+            <div class="lg:col-span-5 space-y-3">
+              <div class="p-5 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                  <span class="font-mono-telemetry text-[11px] text-blue-400 font-bold">
+                    🏛️ LINKED SOURCE &amp; CONVERSATION CONTEXT
+                  </span>
+                  <span class="font-mono-telemetry text-[10px] text-slate-400">
+                    3-Pane Room View
+                  </span>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Inside the Conversation Room, every inbound reply stays attached to the original permit or property record so you never have to ask <em>"Which job is this?"</em> when a Project Manager writes back:
+                </p>
+                <div class="space-y-2.5 text-xs">
+                  <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
+                    <span class="font-mono-telemetry text-[11px] text-slate-400">LINKED PERMIT RECORD</span>
+                    <span class="font-mono-telemetry text-[11px] text-white font-bold">#BP-2026-08941 • $240,000</span>
+                  </div>
+                  <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
+                    <span class="font-mono-telemetry text-[11px] text-slate-400">PROJECT LOCATION</span>
+                    <span class="font-mono-telemetry text-[11px] text-emerald-300 font-bold">1420 Industrial Pkwy, Suite B</span>
+                  </div>
+                  <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
+                    <span class="font-mono-telemetry text-[11px] text-slate-400">REPLY SUGGESTIONS</span>
+                    <span class="font-mono-telemetry text-[11px] text-blue-300 font-bold">Shop Knowledge Base Assisted</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-[11px] font-mono-telemetry text-slate-400 pt-2 border-t border-slate-800">
+                  <a href="#video-walkthrough" class="text-blue-400 hover:underline font-bold">
+                    ↑ Watch 90-Sec Video Overview
+                  </a>
+                  <a href="#pricing" class="text-emerald-400 hover:underline font-bold">
+                    Start My 7-Day Free Trial →
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 21st.dev G5 Seam Light Shader Transition -->
+    <div class="g5-lights" aria-hidden="true">
+      <div class="g5-seam g5-seam-top"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
+      <div class="g5-seam g5-seam-bottom"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
+      <div class="g5-lights-glow"></div>
+    </div>
+
+    <!-- ======================================================================
+         SECTION 6: PERSONALIZED RECON BRIEF CONNECTION
+         (Dynamically expanded when arriving from a Personalized Recon Brief
+          campaign, or when a prospect clicks the toggle below)
+         ====================================================================== -->
+    <section id="personalized-brief-section" class="section-bg-slate py-12 sm:py-16 border-b border-slate-200">
+      <div class="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Default Prompt for General Visitors (Does not assume they already received a brief) -->
+        <div id="personalized-brief-CollapsedPrompt" class="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div class="space-y-1.5 max-w-2xl">
+            <div class="font-mono-telemetry text-xs text-blue-400 font-bold uppercase">
+              RECEIVED A SAMPLE BRIEF FROM OUR TEAM?
+            </div>
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-white">
+              Arriving From a Personalized Recon Brief Sent to Your Business?
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              We periodically send local contractors a complimentary Personalized Recon Brief highlighting recent permits or commercial activity in their area. Click below if you arrived from a sample brief—or start your 7-day free trial directly.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <button
+              type="button"
+              id="btn-reveal-personalized-brief-message"
+              class="btn-outline-slate px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer"
+            >
+              I Received a Personalized Brief →
+            </button>
+            <a
+              href="#pricing"
+              class="btn-trust-emerald px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
+            >
+              Start My 7-Day Free Trial →
             </a>
           </div>
+        </div>
 
-          <!-- 3 Semi-Blurred Preview Lines -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="locked-vault-pill rounded-xl px-3.5 py-3 flex items-center justify-between gap-2 text-xs">
-              <span class="font-bold text-amber-300 whitespace-nowrap">[LOCKED #04]</span>
-              <span class="text-white font-semibold truncate">$410,000 Commercial Shell Permit</span>
-              <span class="redacted-preview-text font-mono text-slate-300">Horizon GC • 4829 Main</span>
+        <!-- Contextual Personalized Recon Brief Message Card (Shown automatically for ?brief=1 / ?from=brief / ?token=preview-...) -->
+        <div id="personalized-brief-ExpandedCard" class="hidden enterprise-card g3-conic-card rounded-2xl border border-emerald-500/40 p-7 sm:p-10 shadow-2xl">
+          <div class="max-w-3xl mx-auto text-center space-y-4">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+              <span>✓ PERSONALIZED RECON BRIEF CONTINUATION</span>
             </div>
-            <div class="locked-vault-pill rounded-xl px-3.5 py-3 flex items-center justify-between gap-2 text-xs">
-              <span class="font-bold text-amber-300 whitespace-nowrap">[LOCKED #05]</span>
-              <span class="text-white font-semibold truncate">Regional PM — 4 Plazas Seeking Subs</span>
-              <span class="redacted-preview-text font-mono text-slate-300">Claire Sterling • 420k SF</span>
-            </div>
-            <div class="locked-vault-pill rounded-xl px-3.5 py-3 flex items-center justify-between gap-2 text-xs">
-              <span class="font-bold text-amber-300 whitespace-nowrap">[LOCKED #06]</span>
-              <span class="text-white font-semibold truncate">3,900 Sq Ft Build — $1.18M CAD Match</span>
-              <span class="redacted-preview-text font-mono text-slate-300">Lot 14B • Verified Owner</span>
+            <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-white tracking-tight leading-tight">
+              You've Seen What Recon Found for Your Business. Imagine Getting a Fresh Briefing Every Morning.
+            </h2>
+            <p class="text-sm sm:text-lg text-slate-200 leading-relaxed">
+              Your personalized Recon Brief is just the beginning. With Tiberius Recon, you can receive ongoing research into potential opportunities in your territory, with the details you need to decide whom to contact next.
+            </p>
+            <div class="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+              <a
+                href="#pricing"
+                class="btn-trust-emerald px-8 py-4 rounded-xl text-sm sm:text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg"
+              >
+                <span>Start My 7-Day Free Trial</span>
+                <span aria-hidden="true">→</span>
+              </a>
+              <a
+                id="brief-section-reopen-btn"
+                href="/recon/briefing?token=demo-7am-briefing"
+                class="btn-outline-slate px-6 py-4 rounded-xl text-sm font-bold inline-flex items-center justify-center gap-2"
+              >
+                <span>Explore Sample Briefing Workspace</span>
+              </a>
             </div>
           </div>
         </div>
@@ -745,343 +1443,304 @@
       </div>
     </section>
 
-    <!-- 21st.dev G5 Seam Light Shader Transition -->
-    <div class="g5-lights" aria-hidden="true">
-      <div class="g5-seam g5-seam-top"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
-      <div class="g5-seam g5-seam-bottom"><canvas class="g5-seam-canvas" data-g3-shader="silk"></canvas></div>
-      <div class="g5-lights-glow"></div>
-    </div>
-
     <!-- ======================================================================
-         TRANSPARENT PRICING TIERS + SMART SITE EQUITY TOGGLE
+         SECTION 7: THREE-TIER PRICING PRESENTATION + LIVE TERRITORY AVAILABILITY CHECKER
          ====================================================================== -->
-    <section id="pricing" class="section-bg-alabaster py-16 sm:py-24 border-b border-slate-200/80" aria-label="Transparent Pricing Tiers">
+    <section id="pricing" class="section-bg-white py-16 sm:py-24 border-b border-slate-200">
       <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Section Header -->
-        <div class="text-center max-w-3xl mx-auto mb-10">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#1E40AF] font-mono-telemetry text-xs mb-4">
-            <span>TERRITORY PRICING • LOCK IN YOUR COUNTY RECON</span>
+        <!-- Section Heading -->
+        <div class="max-w-3xl mx-auto text-center mb-10">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800 font-bold mb-3">
+            <span>7-DAY FREE TRIAL ON EVERY PLAN • $0.00 CHARGED TODAY</span>
           </div>
-          <h2 class="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-[#0F172A] tracking-tight mb-4">
-            Lock In Your Backyard Before a Competitor Down the Road Claims It.
+          <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-[#0F172A] tracking-tight mb-4">
+            Choose Your Territory &amp; Recon Plan
           </h2>
-          <p class="text-[#334155] text-base sm:text-lg leading-relaxed">
-            Buying software shouldn't feel like signing a blind agency retainer. Every tier begins with a <strong class="text-[#0F172A]">7-Day Free Trial ($0.00 charged today • Full Daily Queue Unlocked Immediately)</strong> so your Tiberius Scout puts real local jobs on your phone at 7:00 AM before you spend a dime. Cancel anytime in 2 clicks before Day 8. Run Tiberius Recon™ standalone with zero website changes, or bolt on a Rent-to-Own Tiberius Smart Site.
+          <p class="text-sm sm:text-lg text-[#334155] leading-relaxed">
+            Every plan begins with a <strong>7-day free trial</strong> ($0.00 charged today) with full access to your selected plan's daily queue. Cancel anytime before Day 8 to avoid your monthly subscription charge.
           </p>
         </div>
 
-        <!-- Centered Offense + Defense Toggle Switch Above Cards -->
-        <div class="max-w-4xl mx-auto mb-12">
-          <div class="pricing-toggle-shell rounded-2xl p-2 grid grid-cols-1 md:grid-cols-2 gap-2" role="group" aria-label="Standalone Recon vs Smart Site Bundle Toggle">
-            <!-- Default Mode A -->
-            <button
-              id="toggle-mode-standalone"
-              type="button"
-              data-pricing-mode="standalone"
-              aria-pressed="true"
-              class="pricing-mode-btn is-active rounded-xl px-4 py-3.5 text-left border border-transparent flex items-center gap-3"
-            >
-              <span class="text-lg shrink-0" aria-hidden="true">⚡</span>
-              <div>
-                <div class="font-display font-bold text-xs sm:text-sm">
-                  Standalone Recon Only (Keep Your Current Website)
-                </div>
-                <div class="text-[11px] opacity-80 mt-0.5">
-                  24/7 Outbound Permit &amp; B2B Morning Recon • $0 Setup
-                </div>
-              </div>
-            </button>
+        <!-- Live Territory Zip Code Availability Checker -->
+        <div class="max-w-4xl mx-auto mb-12 rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-lg">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <span class="font-mono-telemetry text-xs text-blue-400 font-bold uppercase">
+              📍 CHECK TERRITORY CAPACITY IN YOUR ZIP CODE BEFORE ENROLLING
+            </span>
+            <span class="font-mono-telemetry text-[11px] text-slate-400">
+              Tier 2: Max 2/Zip • Tier 3: 100% Single-Contractor Zip Exclusivity
+            </span>
+          </div>
 
-            <!-- Toggled Mode B -->
-            <button
-              id="toggle-mode-bundle"
-              type="button"
-              data-pricing-mode="bundle"
-              aria-pressed="false"
-              class="pricing-mode-btn rounded-xl px-4 py-3.5 text-left border border-transparent flex items-center gap-3 text-slate-700 hover:bg-slate-50"
-            >
-              <span class="text-lg shrink-0" aria-hidden="true">🛡️</span>
-              <div>
-                <div class="font-display font-bold text-xs sm:text-sm">
-                  Add Tiberius Smart Site (+$250/mo — $200/mo Credited to 100% Ownership Equity)
-                </div>
-                <div class="text-[11px] text-emerald-700 font-mono-telemetry mt-0.5">
-                  SAVE $50/MO + BUILD 100% RENT-TO-OWN CODE EQUITY
-                </div>
-              </div>
-            </button>
+          <form id="zip-checker-form" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+            <div class="sm:col-span-5">
+              <label for="zip-checker-trade" class="sr-only">Select Your Trade</label>
+              <select id="zip-checker-trade" class="enterprise-select text-xs sm:text-sm py-3">
+                <option value="Commercial Concrete">Commercial Concrete &amp; Paving</option>
+                <option value="Roofing / Exteriors">Roofing &amp; Exterior Restoration</option>
+                <option value="Electrical / HVAC">Electrical / HVAC &amp; Mechanical (MEP)</option>
+                <option value="Pools / Fencing / Custom Home">Custom Pools, Fencing &amp; Outdoor</option>
+                <option value="B2B / Commercial Services">B2B Facility &amp; Property Services</option>
+              </select>
+            </div>
+            <div class="sm:col-span-4">
+              <label for="zip-checker-input" class="sr-only">Target Zip Code</label>
+              <input
+                id="zip-checker-input"
+                type="text"
+                maxlength="10"
+                value="78130"
+                placeholder="Enter 5-Digit Zip (e.g., 78130)"
+                class="enterprise-input font-mono-telemetry text-xs sm:text-sm py-3"
+              />
+            </div>
+            <div class="sm:col-span-3">
+              <button
+                type="submit"
+                class="btn-executive-navy w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold cursor-pointer"
+              >
+                Check Zip Slot →
+              </button>
+            </div>
+          </form>
+
+          <div id="zip-checker-result" class="mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span id="zip-checker-status-text" class="font-mono-telemetry text-emerald-300 font-bold">
+              ✓ ZIP 78130 (New Braunfels, TX) OPEN — Commercial &amp; Sub Permit Radar (1 of 2 slots open) &amp; Full Territory Dominion Available
+            </span>
+            <span class="font-mono-telemetry text-[11px] text-slate-300">
+              Try <code class="text-amber-300">79999</code> to see a locked exclusive zip example
+            </span>
           </div>
         </div>
 
-        <!-- 3 Crisp #FFFFFF Pricing Cards -->
+        <!-- 3 Core Recon Pricing Cards -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-7 items-stretch">
 
-          <!-- TIER 1: $297/mo B2B Deal Scout -->
-          <article class="bg-white border border-slate-200 rounded-2xl shadow-md p-6 sm:p-8 flex flex-col justify-between">
+          <!-- ==============================================================
+               TIER 1: B2B DEAL SCOUT — $297/MONTH
+               ============================================================== -->
+          <article class="enterprise-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between border border-slate-800">
             <div>
-              <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="font-mono-telemetry text-xs text-slate-700 px-3 py-1 rounded-full bg-slate-100 border border-slate-200">
-                  TIER 01 • B2B RECON
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 font-mono-telemetry text-[11px] text-slate-300 font-bold">
+                  TIER 1 • B2B PROSPECTING
                 </span>
-                <span class="bundle-savings-badge hidden px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[11px] text-emerald-800 font-bold">
-                  $50/mo Bundle Savings
+                <span class="font-mono-telemetry text-xs text-emerald-400 font-bold">
+                  7-Day Free Trial
                 </span>
               </div>
 
-              <h3 class="font-display font-extrabold text-2xl text-[#0F172A] mb-2">
-                Tier 1: B2B Deal Scout
+              <h3 class="font-display font-extrabold text-2xl text-white">
+                B2B Deal Scout
               </h3>
-              <p class="text-xs sm:text-sm text-[#64748B] mb-6">
-                <strong class="text-[#334155]">Best for:</strong> Commercial Concrete, Electrical, HVAC, Fleet, Janitorial &amp; B2B Services.
+              <p class="text-xs text-slate-300 mt-1.5 min-h-[36px]">
+                <strong class="text-white">Best for:</strong> Commercial service providers, facility maintenance shops, and B2B trades targeting property managers and commercial accounts.
               </p>
 
-              <div class="mb-6 pb-6 border-b border-slate-200">
+              <!-- Price Block -->
+              <div class="my-6 pb-6 border-b border-slate-800">
                 <div class="flex items-baseline gap-1.5">
-                  <span id="price-tier-1" class="font-display font-extrabold text-4xl sm:text-5xl text-[#0F172A]">$297</span>
-                  <span class="text-[#64748B] font-mono-telemetry text-sm">/mo after 7-day trial</span>
+                  <span class="font-display font-extrabold text-4xl sm:text-5xl text-white">$297</span>
+                  <span class="text-sm text-slate-400 font-semibold">/month after 7-day trial</span>
                 </div>
-                <div id="price-sub-tier-1" class="text-xs font-mono-telemetry text-emerald-700 mt-1.5">
-                  7-DAY FREE TRIAL • $0.00 CHARGED TODAY • FULL ACCESS UNLOCKED
-                </div>
+                <p class="font-mono-telemetry text-xs text-emerald-400 mt-1.5 font-semibold">
+                  $0.00 charged today • Cancel anytime before Day 8
+                </p>
               </div>
 
-              <ul class="space-y-3.5 text-sm text-[#334155] mb-6">
-                <li class="flex items-start gap-2.5">
-                  <span class="text-emerald-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">Up to 10 Researched B2B Recon Cards/Day</strong> waiting on your phone at 7:00 AM</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-emerald-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">Direct Cell &amp; Work Email Recon</strong> for Local Property Managers, GCs &amp; Facility Directors</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-emerald-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">4-Sentence Email &amp; SMS Intros</strong> drafted by your Tiberius Scout in your exact shop voice</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-emerald-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">1-Tap Morning Approval</strong> (nothing sends without your tap)</span>
-                </li>
-              </ul>
-
-              <!-- Smart Site Bundle Panel (Revealed in Mode B) -->
-              <div class="smart-site-bonus-panel hidden mb-6 p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
-                <div>
-                  <div class="flex items-center justify-between text-[11px] font-mono-telemetry text-[#1E40AF] mb-1.5">
-                    <span>RENT-TO-OWN CODE EQUITY</span>
-                    <span>+$200/MO CREDITED</span>
-                  </div>
-                  <div class="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div class="equity-bar-fill h-full rounded-full" style="width: 80%;"></div>
-                  </div>
-                  <p class="text-[11px] text-[#334155] mt-1.5">
-                    <strong>$200 of every monthly payment</strong> builds 100% ownership equity in your custom Tiberius Smart Site.
-                  </p>
+              <!-- Core Benefits & Principal Feature Differences -->
+              <div class="space-y-3 text-xs sm:text-sm text-slate-200 mb-7">
+                <div class="font-mono-telemetry text-[11px] text-slate-400 uppercase font-bold">
+                  What's Included:
                 </div>
-                <div class="pt-2 border-t border-blue-200/80 space-y-1 text-xs text-[#0F172A]">
-                  <div class="font-mono-telemetry text-[10px] text-[#1E40AF]">INBOUND DEFENSE BONUSES INCLUDED:</div>
-                  <div>🛡️ <strong>10-Second Inbound CAD Property X-Ray</strong> inside the SMS Quote Dock</div>
-                  <div>🛡️ <strong>3-Second Missed-Call Text Rescue</strong></div>
-                  <div>🛡️ <strong>5-Star Review Shield</strong></div>
-                </div>
+                <ul class="space-y-3">
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>B2B Commercial Account Prospecting:</strong> Identifies regional property managers, facility directors, and commercial property transitions in your territory.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>Daily Morning Briefings:</strong> Up to 3 researched B2B opportunities each weekday morning in your primary zip code.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>Shop Knowledge Base Drafting:</strong> Personalized vendor &amp; bid introductions drafted in your voice for your approval.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>2-Way Conversation Room:</strong> Manage replies, follow-ups, and site-walk scheduling in one workspace.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5 text-slate-400 text-xs pt-1 border-t border-slate-800/80">
+                    <span class="text-slate-500 font-bold mt-0.5 shrink-0">•</span>
+                    <span><em>Note: Focused on B2B commercial accounts; does not include municipal building permit portal research.</em></span>
+                  </li>
+                </ul>
               </div>
             </div>
 
-            <div class="space-y-2.5">
+            <div class="space-y-3 pt-4 border-t border-slate-800">
               <a
-                id="stripe-cta-tier-1"
+                id="tier-1-checkout-link"
                 href="https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k"
-                data-stripe-standalone="https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k"
-                data-stripe-bundle="https://buy.stripe.com/bJebJ2e8Pb1hdzg77f2sM0n"
-                class="btn-executive-navy w-full py-3.5 px-5 rounded-xl font-bold text-sm text-center inline-flex items-center justify-center gap-2"
+                class="btn-outline-slate w-full py-4 px-5 rounded-xl text-sm font-bold text-center inline-flex items-center justify-center gap-2"
               >
-                <span id="stripe-label-tier-1">Start 7-Day Free Trial ($0 Today) →</span>
+                <span>Start My 7-Day Free Trial</span>
+                <span aria-hidden="true">→</span>
               </a>
-              <p class="text-[11px] font-mono-telemetry text-[#64748B] text-center">
-                $0.00 due today • Auto-bills Day 8 unless canceled in 2 clicks
+              <p class="text-[11px] font-mono-telemetry text-slate-400 text-center">
+                $0.00 today • Billed at $297/mo after 7 days unless canceled
               </p>
             </div>
           </article>
 
-          <!-- TIER 2: $597/mo Commercial & Sub Permit Radar [MOST POPULAR FOR SUBS & COMMERCIAL] -->
-          <article class="g3-conic-card bg-white border-2 border-blue-600 rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col justify-between relative">
-            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-[#0034FF] to-[#4F6FFF] text-white font-mono-telemetry font-bold text-[11px] tracking-wider shadow-[0_6px_20px_-4px_rgba(0,52,255,0.85)] border border-white/20 whitespace-nowrap">
-              MOST POPULAR FOR SUBS &amp; COMMERCIAL
-            </div>
-
+          <!-- ==============================================================
+               TIER 2: COMMERCIAL & SUB PERMIT RADAR — $597/MONTH (RECOMMENDED)
+               ============================================================== -->
+          <article class="enterprise-card tier-2-featured-border g3-conic-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative shadow-2xl">
             <div>
-              <div class="flex items-center justify-between gap-2 mb-4 mt-1">
-                <span class="font-mono-telemetry text-xs text-[#1E40AF] px-3 py-1 rounded-full bg-blue-50 border border-blue-200">
-                  TIER 02 • PERMIT RADAR
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-1 rounded-md bg-blue-600 text-white font-mono-telemetry text-[11px] font-bold">
+                  ★ RECOMMENDED FOR PERMIT TRADES
                 </span>
-                <span class="bundle-savings-badge hidden px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[11px] text-emerald-800 font-bold">
-                  $50/mo Bundle Savings
+                <span class="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                  MAX 2 / ZIP
                 </span>
               </div>
 
-              <h3 class="font-display font-extrabold text-2xl text-[#0F172A] mb-2">
-                Tier 2: Commercial &amp; Sub Permit Radar
+              <h3 class="font-display font-extrabold text-2xl text-white">
+                Commercial &amp; Sub Permit Radar
               </h3>
-              <p class="text-xs sm:text-sm text-[#64748B] mb-6">
-                <strong class="text-[#334155]">Best for:</strong> Subcontractors, Commercial Roofers, Remodelers &amp; Supply Houses.
+              <p class="text-xs text-slate-200 mt-1.5 min-h-[36px]">
+                <strong class="text-white">Best for:</strong> Commercial subcontractors &amp; GCs (Concrete, Roofing, MEP, Framing, Interior, Paving) who bid from newly filed commercial permits.
               </p>
 
-              <div class="mb-6 pb-6 border-b border-slate-200">
+              <!-- Price Block -->
+              <div class="my-6 pb-6 border-b border-slate-800">
                 <div class="flex items-baseline gap-1.5">
-                  <span id="price-tier-2" class="font-display font-extrabold text-4xl sm:text-5xl text-[#1E40AF]">$597</span>
-                  <span class="text-[#64748B] font-mono-telemetry text-sm">/mo after 7-day trial</span>
+                  <span class="font-display font-extrabold text-4xl sm:text-5xl text-white">$597</span>
+                  <span class="text-sm text-slate-300 font-semibold">/month after 7-day trial</span>
                 </div>
-                <div id="price-sub-tier-2" class="text-xs font-mono-telemetry text-[#1E40AF] mt-1.5">
-                  7-DAY FREE TRIAL • $0.00 CHARGED TODAY • FULL ACCESS UNLOCKED
-                </div>
+                <p class="font-mono-telemetry text-xs text-emerald-400 mt-1.5 font-semibold">
+                  $0.00 charged today • Cancel anytime before Day 8
+                </p>
               </div>
 
-              <ul class="space-y-3.5 text-sm text-[#334155] mb-6">
-                <li class="flex items-start gap-2.5">
-                  <span class="text-blue-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">Everything in Tier 1 + Up to 15 Recon Cards/Day</strong> in your 7:00 AM Queue</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-blue-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">2:00 AM Suburban Building Portal Recon</strong> (Commercial Shells, $100K+ TI Buildouts &amp; Upstream GC Permits)</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-blue-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">Exact Permit Dollar Valuation &amp; Scope Matching</strong> so your Tiberius Scout filters out small handyman jobs</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-blue-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">Max 2 Contractors per Trade per Zip</strong> territory capacity protection</span>
-                </li>
-              </ul>
-
-              <!-- Smart Site Bundle Panel (Revealed in Mode B) -->
-              <div class="smart-site-bonus-panel hidden mb-6 p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
-                <div>
-                  <div class="flex items-center justify-between text-[11px] font-mono-telemetry text-[#1E40AF] mb-1.5">
-                    <span>RENT-TO-OWN CODE EQUITY</span>
-                    <span>+$200/MO CREDITED</span>
-                  </div>
-                  <div class="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div class="equity-bar-fill h-full rounded-full" style="width: 85%;"></div>
-                  </div>
-                  <p class="text-[11px] text-[#334155] mt-1.5">
-                    <strong>$200 of every monthly payment</strong> builds 100% ownership equity in your custom Tiberius Smart Site.
-                  </p>
+              <!-- Core Benefits & Principal Feature Differences -->
+              <div class="space-y-3 text-xs sm:text-sm text-slate-100 mb-7">
+                <div class="font-mono-telemetry text-[11px] text-blue-300 uppercase font-bold">
+                  Everything in B2B Deal Scout, Plus:
                 </div>
-                <div class="pt-2 border-t border-blue-200/80 space-y-1 text-xs text-[#0F172A]">
-                  <div class="font-mono-telemetry text-[10px] text-[#1E40AF]">INBOUND DEFENSE BONUSES INCLUDED:</div>
-                  <div>🛡️ <strong>10-Second Inbound CAD Property X-Ray</strong> inside the SMS Quote Dock</div>
-                  <div>🛡️ <strong>3-Second Missed-Call Text Rescue</strong></div>
-                  <div>🛡️ <strong>5-Star Review Shield</strong></div>
-                </div>
+                <ul class="space-y-3">
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>Municipal Commercial Permit Research:</strong> Searches local building portals for newly filed commercial buildouts (TI), new shells, CapEx retrofits, and industrial permits.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>Full Daily Territory Queue (Up to 9 Cards/Day):</strong> Unlocks your full daily commercial permit &amp; B2B briefing queue across your primary zip code and metro corridor.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>GC &amp; Estimator Contact Matching:</strong> Collects available General Contractor, project manager, and property owner details tied to each permit.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>Permit-Specific Bid Introductions:</strong> Drafts outreach referencing the exact permit number, address, and relevant trade scope.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-amber-300 font-bold mt-0.5 shrink-0">★</span>
+                    <span><strong>Protected Territory Capacity:</strong> Capped at a maximum of <strong>2 contractors per trade</strong> in your primary zip code.</span>
+                  </li>
+                </ul>
               </div>
             </div>
 
-            <div class="space-y-2.5">
+            <div class="space-y-3 pt-4 border-t border-slate-800">
               <a
-                id="stripe-cta-tier-2"
+                id="tier-2-checkout-link"
                 href="https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l"
-                data-stripe-standalone="https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l"
-                data-stripe-bundle="https://buy.stripe.com/8x228s7Kr4CT3YG63b2sM0o"
-                class="btn-trust-emerald w-full py-4 px-5 rounded-xl font-bold text-sm text-center inline-flex items-center justify-center gap-2"
+                class="btn-trust-emerald w-full py-4 px-5 rounded-xl text-sm sm:text-base font-bold text-center inline-flex items-center justify-center gap-2 shadow-lg"
               >
-                <span id="stripe-label-tier-2">Start 7-Day Free Trial ($0 Today) →</span>
+                <span>Start My 7-Day Free Trial</span>
+                <span aria-hidden="true">→</span>
               </a>
-              <p class="text-[11px] font-mono-telemetry text-[#64748B] text-center">
-                $0.00 due today • Auto-bills Day 8 unless canceled in 2 clicks
+              <p class="text-[11px] font-mono-telemetry text-slate-300 text-center">
+                $0.00 today • Billed at $597/mo after 7 days unless canceled
               </p>
             </div>
           </article>
 
-          <!-- TIER 3: $897/mo Full Territory Dominion [100% ZIP EXCLUSIVE] -->
-          <article class="bg-white border border-slate-200 rounded-2xl shadow-md p-6 sm:p-8 flex flex-col justify-between relative">
-            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-emerald-700 text-white font-mono-telemetry font-bold text-[11px] tracking-wider shadow-md whitespace-nowrap">
-              100% ZIP EXCLUSIVE
-            </div>
-
+          <!-- ==============================================================
+               TIER 3: FULL TERRITORY DOMINION — $897/MONTH
+               ============================================================== -->
+          <article class="enterprise-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between border border-slate-800">
             <div>
-              <div class="flex items-center justify-between gap-2 mb-4 mt-1">
-                <span class="font-mono-telemetry text-xs text-emerald-800 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200">
-                  TIER 03 • CAD + DOMINION
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                  TIER 3 • 100% ZIP EXCLUSIVITY
                 </span>
-                <span class="bundle-savings-badge hidden px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[11px] text-emerald-800 font-bold">
-                  $50/mo Bundle Savings
+                <span class="font-mono-telemetry text-xs text-emerald-400 font-bold">
+                  1 OF 1 SLOT / ZIP
                 </span>
               </div>
 
-              <h3 class="font-display font-extrabold text-2xl text-[#0F172A] mb-2">
-                Tier 3: Full Territory Dominion
+              <h3 class="font-display font-extrabold text-2xl text-white">
+                Full Territory Dominion
               </h3>
-              <p class="text-xs sm:text-sm text-[#64748B] mb-6">
-                <strong class="text-[#334155]">Best for:</strong> Custom Home Trades, High-Ticket Roofers, Pools, Fencing, Solar &amp; Generators.
+              <p class="text-xs text-slate-300 mt-1.5 min-h-[36px]">
+                <strong class="text-white">Best for:</strong> Commercial &amp; high-ticket residential contractors wanting commercial + residential coverage and exclusive zip code lock.
               </p>
 
-              <div class="mb-6 pb-6 border-b border-slate-200">
+              <!-- Price Block -->
+              <div class="my-6 pb-6 border-b border-slate-800">
                 <div class="flex items-baseline gap-1.5">
-                  <span id="price-tier-3" class="font-display font-extrabold text-4xl sm:text-5xl text-[#0F172A]">$897</span>
-                  <span class="text-[#64748B] font-mono-telemetry text-sm">/mo after 7-day trial</span>
+                  <span class="font-display font-extrabold text-4xl sm:text-5xl text-white">$897</span>
+                  <span class="text-sm text-slate-400 font-semibold">/month after 7-day trial</span>
                 </div>
-                <div id="price-sub-tier-3" class="text-xs font-mono-telemetry text-emerald-700 mt-1.5">
-                  7-DAY FREE TRIAL • $0.00 CHARGED TODAY • 100% ZIP EXCLUSIVE
-                </div>
+                <p class="font-mono-telemetry text-xs text-emerald-400 mt-1.5 font-semibold">
+                  $0.00 charged today • Cancel anytime before Day 8
+                </p>
               </div>
 
-              <ul class="space-y-3.5 text-sm text-[#334155] mb-6">
-                <li class="flex items-start gap-2.5">
-                  <span class="text-emerald-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">Everything in Tiers 1 &amp; 2 + Unlimited Qualified Recon Triggers</strong></span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-emerald-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">Residential New-Build &amp; Addition Permits</strong> matched by your Tiberius Scout against <strong class="text-[#0F172A]">County Appraisal District (CAD) Tax Rolls</strong> (Deeded Owner, $600K+ Assessed Value, Sq Ft &amp; Acreage Filter)</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-emerald-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">Weekly Competitor Promo &amp; 1-Star Review Recon</strong> delivered every Monday at 7:00 AM</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <span class="text-emerald-600 font-bold mt-0.5">✓</span>
-                  <span><strong class="text-[#0F172A]">100% Zip Code Exclusivity</strong> (Locks out every direct competitor in your trade)</span>
-                </li>
-              </ul>
-
-              <!-- Smart Site Bundle Panel (Revealed in Mode B) -->
-              <div class="smart-site-bonus-panel hidden mb-6 p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
-                <div>
-                  <div class="flex items-center justify-between text-[11px] font-mono-telemetry text-[#1E40AF] mb-1.5">
-                    <span>RENT-TO-OWN CODE EQUITY</span>
-                    <span>+$200/MO CREDITED</span>
-                  </div>
-                  <div class="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div class="equity-bar-fill h-full rounded-full" style="width: 92%;"></div>
-                  </div>
-                  <p class="text-[11px] text-[#334155] mt-1.5">
-                    <strong>$200 of every monthly payment</strong> builds 100% ownership equity in your custom Tiberius Smart Site.
-                  </p>
+              <!-- Core Benefits & Principal Feature Differences -->
+              <div class="space-y-3 text-xs sm:text-sm text-slate-200 mb-7">
+                <div class="font-mono-telemetry text-[11px] text-amber-300 uppercase font-bold">
+                  Everything in Commercial Permit Radar, Plus:
                 </div>
-                <div class="pt-2 border-t border-blue-200/80 space-y-1 text-xs text-[#0F172A]">
-                  <div class="font-mono-telemetry text-[10px] text-[#1E40AF]">INBOUND DEFENSE BONUSES INCLUDED:</div>
-                  <div>🛡️ <strong>10-Second Inbound CAD Property X-Ray</strong> inside the SMS Quote Dock</div>
-                  <div>🛡️ <strong>3-Second Missed-Call Text Rescue</strong></div>
-                  <div>🛡️ <strong>5-Star Review Shield</strong></div>
-                </div>
+                <ul class="space-y-3">
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-amber-300 font-bold mt-0.5 shrink-0">🔒</span>
+                    <span><strong>100% Single-Contractor Zip Exclusivity:</strong> Locks your primary zip code for your trade (1 of 1 slot)—preventing competitors in your trade from enrolling in that zip while your plan is active.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>Residential Permit + County Property Record Coverage:</strong> Adds high-value residential permits (custom additions, roofs, pools, estates, generators) cross-referenced with County Appraisal District (CAD) records.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>Expanded Metro Corridor Coverage:</strong> Broader territory research across your primary zip code and adjacent zip codes.</span>
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                    <span><strong>Multi-Seat Estimator Access:</strong> Share morning briefings and Conversation Room threads across your estimating and sales team.</span>
+                  </li>
+                </ul>
               </div>
             </div>
 
-            <div class="space-y-2.5">
+            <div class="space-y-3 pt-4 border-t border-slate-800">
               <a
-                id="stripe-cta-tier-3"
+                id="tier-3-checkout-link"
                 href="https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m"
-                data-stripe-standalone="https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m"
-                data-stripe-bundle="https://buy.stripe.com/7sY3cwggXc5l3YGdvD2sM0p"
-                class="btn-executive-navy w-full py-3.5 px-5 rounded-xl font-bold text-sm text-center inline-flex items-center justify-center gap-2"
+                class="btn-executive-navy w-full py-4 px-5 rounded-xl text-sm font-bold text-center inline-flex items-center justify-center gap-2"
               >
-                <span id="stripe-label-tier-3">Start 7-Day Free Trial ($0 Today) →</span>
+                <span>Start My 7-Day Free Trial</span>
+                <span aria-hidden="true">→</span>
               </a>
-              <p class="text-[11px] font-mono-telemetry text-[#64748B] text-center">
-                $0.00 due today • Auto-bills Day 8 unless canceled in 2 clicks
+              <p class="text-[11px] font-mono-telemetry text-slate-400 text-center">
+                $0.00 today • Billed at $897/mo after 7 days unless canceled
               </p>
             </div>
           </article>
@@ -1091,172 +1750,188 @@
     </section>
 
     <!-- ======================================================================
-         OUTCOME-FIRST FAQ ACCORDION
-         Questions #1 and #3 Open by Default
+         SECTION 8: OPTIONAL TIBERIUS SMART SITE ADD-ON (SEPARATE FROM RECON PLANS)
          ====================================================================== -->
-    <section id="faq" class="section-bg-white py-16 sm:py-24 border-b border-slate-200/80" aria-label="Frequently Asked Questions">
-      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="smart-site-addon" class="section-bg-slate py-14 sm:py-20 border-b border-slate-200">
+      <div class="max-w-[1140px] mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div class="max-w-3xl mx-auto text-center mb-12">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-mono-telemetry text-xs mb-4">
-            <span>STRAIGHT ANSWERS FOR SKEPTICAL CONTRACTORS</span>
-          </div>
-          <h2 class="font-display font-extrabold text-3xl sm:text-4xl text-[#0F172A] tracking-tight mb-3">
-            Straight Answers for Skeptical Contractors.
-          </h2>
-          <p class="text-[#334155] text-base sm:text-lg">
-            If you've been burned by lead agencies or overpromised software before, you should be skeptical. Here is how your Tiberius Scout runs the 2:00 AM recon—and why nothing ever sends without your tap.
-          </p>
-        </div>
+        <div class="enterprise-card rounded-2xl border border-slate-800 p-6 sm:p-10 shadow-xl">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 
-        <!-- Single-Column Accordion (max-width: 820px) with Crisp #E2E8F0 Dividers -->
-        <div id="faq-accordion" class="border-t border-[#E2E8F0]" style="max-width: 820px; margin: 0 auto;">
+            <!-- Left 7 Cols: Explanation of Optional Add-On -->
+            <div class="lg:col-span-7 space-y-4">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-xs text-blue-300 font-bold">
+                <span>OPTIONAL ADD-ON • NO NEW WEBSITE REQUIRED FOR RECON</span>
+              </div>
 
-          <!-- FAQ #1 (OPEN BY DEFAULT) -->
-          <div class="faq-accordion-item is-open">
-            <button type="button" class="faq-accordion-trigger" aria-expanded="true">
-              <span class="font-display font-bold text-base sm:text-lg text-[#0F172A]">
-                1. What is Tiberius Recon™ in plain English?
-              </span>
-              <span class="faq-chevron w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold">
-                ▼
-              </span>
-            </button>
-            <div class="faq-accordion-content text-sm sm:text-base">
-              <p>
-                Think of Tiberius Recon™ as a tireless <strong>$25/hr overnight research assistant—your Tiberius Scout</strong>—working from 2:00 AM to 6:45 AM every single night. While you sleep, your Tiberius Scout logs into clunky suburban city building permit portals (like Accela and EnerGov), looks up the parcel ID on the County Appraisal District (CAD) tax roll to see who owns the property and what it’s worth, finds the verified General Contractor Project Manager or homeowner cell and email, and drafts a custom 4-sentence intro in your voice. At <strong>7:00 AM</strong>, it texts you a morning recon briefing link where you tap <strong>Approve &amp; Send</strong> three times in 90 seconds over morning coffee.
+              <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+                Want a Better Website Working Alongside Recon?
+              </h2>
+
+              <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+                Tiberius Recon works with your existing website—or even if you don't have one. However, if you want a modern, conversion-focused contractor website so GCs, property managers, and property owners see a credible showcase when they look you up after receiving your outreach, you can add a <strong class="text-white">Tiberius Smart Site</strong> for <strong class="text-white">$250/month</strong>.
               </p>
+
+              <ul class="space-y-2.5 text-xs sm:text-sm text-slate-200 pt-1">
+                <li class="flex items-start gap-2.5">
+                  <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                  <span><strong>$200/Month Ownership Credit:</strong> $200 of every $250 monthly payment is credited toward your $2,400 website buyout target—giving you 100% ownership after 12 monthly payments (or early buyout anytime for the remaining balance).</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                  <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                  <span><strong>Built for Contractor Credibility:</strong> Showcases your trade capabilities, licenses, bonding, project gallery, and verified customer reviews.</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                  <span class="text-emerald-400 font-bold mt-0.5 shrink-0">✓</span>
+                  <span><strong>Inbound Lead Capture &amp; Review Workflows:</strong> Includes an interactive project inquiry dock, missed-call text-back rescue, and compliant post-job customer review request workflows.</span>
+                </li>
+              </ul>
             </div>
-          </div>
 
-          <!-- FAQ #2 -->
-          <div class="faq-accordion-item">
-            <button type="button" class="faq-accordion-trigger" aria-expanded="false">
-              <span class="font-display font-bold text-base sm:text-lg text-[#0F172A]">
-                2. How does this actually help me land bigger $25,000 to $250,000+ jobs?
-              </span>
-              <span class="faq-chevron w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold">
-                ▼
-              </span>
-            </button>
-            <div class="faq-accordion-content text-sm sm:text-base">
-              <p>
-                Timing and specificity win high-ticket bids. Instead of waiting for a homeowner or GC to Google six contractors after they’re already in a rush, your Tiberius Scout lets you reach out <strong>the morning after a $240,000 permit or property acquisition hits the county record</strong>—referencing the exact street address, square footage, and project scope. Because you show up first looking like a sharp, prepared local pro, you get invited to walk the site before your competitors even know the job exists.
-              </p>
-            </div>
-          </div>
-
-          <!-- FAQ #3 (OPEN BY DEFAULT — The $20 Bot vs. 2:00 AM Night Crew Comparison) -->
-          <div class="faq-accordion-item is-open">
-            <button type="button" class="faq-accordion-trigger" aria-expanded="true">
-              <span class="font-display font-bold text-base sm:text-lg text-[#0F172A]">
-                3. Why can't a $20/mo AI bot (like ChatGPT, Grok, or Muse) do this for me?
-              </span>
-              <span class="faq-chevron w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold">
-                ▼
-              </span>
-            </button>
-            <div class="faq-accordion-content text-sm sm:text-base space-y-3">
-              <p>
-                Buying a $20/mo AI subscription is like buying <strong>80-pound bags of concrete at Home Depot</strong>. The material is sitting there, but you still have to load the truck, mix it, pour it, and finish the slab yourself at 9:00 PM after a 10-hour day in the sun. Your Tiberius Scout is the <strong>night crew that shows up at 2:00 AM, pours and finishes the slab while you sleep, and hands you the keys at 7:00 AM.</strong>
-              </p>
-              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                <div>
-                  <div class="font-mono-telemetry text-xs text-rose-700 font-bold mb-1">❌ $20/MO CHAT BOT (BAGS OF CONCRETE AT HOME DEPOT)</div>
-                  <p class="text-slate-600">Sits inside an empty chat window waiting for you to type prompts. It cannot wake up at 2:00 AM, click through 14 pages of city building department tables, solve session timeouts, or look up parcel IDs on the county tax roll.</p>
+            <!-- Right 5 Cols: Optional Bundle Enrollment Links -->
+            <div class="lg:col-span-5 bg-slate-950/90 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
+              <div class="border-b border-slate-800 pb-3">
+                <div class="font-mono-telemetry text-xs text-amber-300 font-bold uppercase">
+                  OPTIONAL RECON + SMART SITE BUNDLES
                 </div>
-                <div>
-                  <div class="font-mono-telemetry text-xs text-emerald-700 font-bold mb-1">✓ YOUR TIBERIUS SCOUT (FINISHED SLAB AT 7:00 AM)</div>
-                  <p class="text-slate-700 font-medium">Logs into suburban permit portals while you sleep, runs recon on the permit number, square footage, and owner's cell number in 14 seconds, and texts you ready-to-send deals before your first cup of coffee.</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span class="font-display font-extrabold text-2xl sm:text-3xl text-white">+$250/month</span>
+                  <span class="text-xs text-slate-400">($200/mo credited toward $2,400 buyout)</span>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- FAQ #4 -->
-          <div class="faq-accordion-item">
-            <button type="button" class="faq-accordion-trigger" aria-expanded="false">
-              <span class="font-display font-bold text-base sm:text-lg text-[#0F172A]">
-                4. Will this spam people or make my company look like an automated robot?
-              </span>
-              <span class="faq-chevron w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold">
-                ▼
-              </span>
-            </button>
-            <div class="faq-accordion-content text-sm sm:text-base">
-              <p>
-                <strong>Never.</strong> With your Tiberius Scout, <strong>nothing ever sends without your tap</strong>. Nothing leaves your outbox automatically. Instead of blasting 5,000 generic emails, you send 3 to 15 specific, one-to-one notes referencing a real local permit or property sale that happened yesterday—and you can edit any word before tapping <code class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800">Approve &amp; Send</code>.
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Prefer to launch Recon alongside a new Smart Site? Select a bundled plan below (includes the 7-day free trial on Recon):
+              </p>
+
+              <div class="space-y-2.5 text-xs">
+                <a
+                  href="https://buy.stripe.com/bJebJ2e8Pb1hdzg77f2sM0n"
+                  class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-display font-bold flex items-center justify-between transition-colors"
+                >
+                  <span>B2B Deal Scout + Smart Site</span>
+                  <span class="font-mono-telemetry text-emerald-400">$547/mo after trial →</span>
+                </a>
+                <a
+                  href="https://buy.stripe.com/8x228s7Kr4CT3YG63b2sM0o"
+                  class="w-full py-3 px-4 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-white font-display font-bold flex items-center justify-between transition-colors"
+                >
+                  <span>Commercial Permit Radar + Smart Site</span>
+                  <span class="font-mono-telemetry text-emerald-300">$847/mo after trial →</span>
+                </a>
+                <a
+                  href="https://buy.stripe.com/7sY3cwggXc5l3YGdvD2sM0p"
+                  class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-display font-bold flex items-center justify-between transition-colors"
+                >
+                  <span>Full Territory Dominion + Smart Site</span>
+                  <span class="font-mono-telemetry text-emerald-400">$1,147/mo after trial →</span>
+                </a>
+              </div>
+
+              <p class="text-[11px] font-mono-telemetry text-slate-400 text-center">
+                Or start with any standalone Recon plan above and add a Smart Site later from your Command Portal.
               </p>
             </div>
-          </div>
 
-          <!-- FAQ #5 -->
-          <div class="faq-accordion-item">
-            <button type="button" class="faq-accordion-trigger" aria-expanded="false">
-              <span class="font-display font-bold text-base sm:text-lg text-[#0F172A]">
-                5. How does the County Appraisal District (CAD) tax roll and contact matching work?
-              </span>
-              <span class="faq-chevron w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold">
-                ▼
-              </span>
-            </button>
-            <div class="faq-accordion-content text-sm sm:text-base">
-              <p>
-                When your Tiberius Scout spots a building permit or commercial deed transfer at 2:00 AM, our 4:30 AM X-Ray engine takes the street address and parcel number straight to the County Appraisal District (CAD) tax roll. In 14 seconds, it verifies the true deeded owner, assessed property value (so you can filter for $600,000 to $2M+ estates), living square footage, and lot acreage, then matches the decision-maker's verified cell number and work email.
-              </p>
-            </div>
           </div>
+        </div>
 
-          <!-- FAQ #6 -->
-          <div class="faq-accordion-item">
-            <button type="button" class="faq-accordion-trigger" aria-expanded="false">
-              <span class="font-display font-bold text-base sm:text-lg text-[#0F172A]">
-                6. Do I have to change my current website, phone number, or CRM to use this?
-              </span>
-              <span class="faq-chevron w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold">
-                ▼
-              </span>
-            </button>
-            <div class="faq-accordion-content text-sm sm:text-base">
-              <p>
-                <strong>Zero website changes required.</strong> Your Tiberius Scout runs completely standalone alongside your existing website, domain, phone number, and email. (If you ever want to upgrade your website later, you can bolt on a Rent-to-Own Tiberius Smart Site where $200/mo of your payment credits toward 100% code ownership—but it is completely optional.)
-              </p>
-            </div>
-          </div>
+      </div>
+    </section>
 
-          <!-- FAQ #7 -->
-          <div class="faq-accordion-item">
-            <button type="button" class="faq-accordion-trigger" aria-expanded="false">
-              <span class="font-display font-bold text-base sm:text-lg text-[#0F172A]">
-                7. How does the 7-Day Free Trial ($0 Today) work?
-              </span>
-              <span class="faq-chevron w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold">
-                ▼
-              </span>
-            </button>
-            <div class="faq-accordion-content text-sm sm:text-base">
-              <p>
-                Pick your tier above and start your <strong>7-Day Free Trial with $0.00 charged today</strong> (card required on file to prevent territory squatting). Right after checkout, you complete a quick 2-minute onboarding to lock your zip code slot, auto-scan your website into your Shop Knowledge Base, and <strong>unlock full unblurred access to all daily recon cards immediately</strong>. Your subscription only auto-bills on Day 8 unless you cancel in 2 clicks before then.
-              </p>
-            </div>
-          </div>
+    <!-- ======================================================================
+         SECTION 9: CREDIBILITY-BUILDING FAQ
+         ====================================================================== -->
+    <section id="faq" class="section-bg-white py-14 sm:py-20 border-b border-slate-200">
+      <div class="max-w-[1024px] mx-auto px-4 sm:px-6 lg:px-8">
 
-          <!-- FAQ #8 -->
-          <div class="faq-accordion-item">
-            <button type="button" class="faq-accordion-trigger" aria-expanded="false">
-              <span class="font-display font-bold text-base sm:text-lg text-[#0F172A]">
-                8. How does Zip Code Exclusivity work, and what if my competitor signs up?
-              </span>
-              <span class="faq-chevron w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold">
-                ▼
-              </span>
-            </button>
-            <div class="faq-accordion-content text-sm sm:text-base">
-              <p>
-                Lead agencies go broke on ethics by selling the same homeowner lead to six contractors at once. We strictly cap territory capacity so two guys in the same trade aren't sending the same morning note. <strong>Tier 2</strong> is capped at a maximum of 2 contractors per trade per zip code, and <strong>Tier 3 (Full Territory Dominion)</strong> grants you <strong>100% Zip Code Exclusivity</strong>—locking out every direct competitor in your trade for that territory.
-              </p>
-            </div>
-          </div>
+        <div class="text-center mb-10 sm:mb-12">
+          <span class="font-mono-telemetry text-xs text-blue-400 uppercase tracking-wider font-bold">
+            STRAIGHT ANSWERS BEFORE YOU START
+          </span>
+          <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mt-2">
+            Frequently Asked Questions
+          </h2>
+        </div>
+
+        <div class="space-y-4">
+
+          <!-- FAQ 1 -->
+          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group" open>
+            <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
+              <span>1. How does Tiberius Recon find potential opportunities, and what sources are used?</span>
+              <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-3 pt-3 border-t border-slate-800">
+              Depending on your plan tier and territory, Recon searches municipal building permit portals (such as Accela and EnerGov), County Appraisal District (CAD) property and deed records, and public commercial directories. It filters records by your target zip code, trade relevance, and minimum project valuation to organize morning briefings.
+            </p>
+          </details>
+
+          <!-- FAQ 2 -->
+          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+            <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
+              <span>2. Are direct decision-maker contacts guaranteed on every single permit or record?</span>
+              <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-3 pt-3 border-t border-slate-800">
+              Public permit and property filings vary by municipality and project type. When a permit lists a General Contractor, project applicant, or deeded owner entity, Recon cross-references available public business records and company directories to collect relevant contact information (such as a project manager, estimating desk, or office line) and always displays the underlying permit or parcel source reference so you can evaluate the lead before reaching out.
+            </p>
+          </details>
+
+          <!-- FAQ 3 -->
+          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+            <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
+              <span>3. Does Recon send emails or texts automatically without my approval?</span>
+              <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-3 pt-3 border-t border-slate-800">
+              No. You are always in control of your reputation and outreach. Recon prepares a suggested introduction for each card using your Shop Knowledge Base, and you can edit any word, skip any project, or approve the message when you are ready to send.
+            </p>
+          </details>
+
+          <!-- FAQ 4 -->
+          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+            <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
+              <span>4. How does the 7-day free trial work, and how do I cancel if it's not a fit?</span>
+              <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-3 pt-3 border-t border-slate-800">
+              When you enroll via Stripe checkout, <strong>$0.00 is charged today</strong> and your selected plan's full daily territory queue is unlocked immediately for 7 days. If you decide Recon isn't right for your shop, you can cancel anytime before Day 8 through your account portal or by replying to your welcome message and you will not be charged. After the 7-day trial, your subscription renews month-to-month at your chosen plan rate ($297, $597, or $897/month) with no long-term lock-in contracts.
+            </p>
+          </details>
+
+          <!-- FAQ 5 -->
+          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+            <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
+              <span>5. What is the difference between B2B Deal Scout ($297), Commercial Permit Radar ($597), and Full Territory Dominion ($897)?</span>
+              <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-3 pt-3 border-t border-slate-800">
+              <strong>B2B Deal Scout ($297/mo)</strong> focuses on B2B commercial prospecting (property managers, facility directors, and commercial property transitions) without municipal permit sweeps. <strong>Commercial &amp; Sub Permit Radar ($597/mo)</strong> adds municipal commercial building permit intelligence (TI buildouts, new shells, CapEx retrofits) with a capacity limit of 2 contractors per trade per zip code. <strong>Full Territory Dominion ($897/mo)</strong> adds high-value residential permits, County Appraisal District (CAD) property record matching, and 100% single-contractor zip code exclusivity (1 of 1 slot) for your trade.
+            </p>
+          </details>
+
+          <!-- FAQ 6 -->
+          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+            <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
+              <span>6. Do I need a new website to use Tiberius Recon?</span>
+              <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-3 pt-3 border-t border-slate-800">
+              No. Tiberius Recon is a standalone opportunity research and outreach platform. During onboarding, Recon can scan your existing website (or use the details you enter manually) to build your Shop Knowledge Base. The Tiberius Smart Site ($250/month with $200/month ownership credit toward the $2,400 buyout) is completely optional.
+            </p>
+          </details>
+
+          <!-- FAQ 7 -->
+          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+            <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
+              <span>7. Are the sample cards on this sales page live customer intelligence?</span>
+              <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-3 pt-3 border-t border-slate-800">
+              The examples shown on this public sales page and in the public Demo Sandbox (such as Permit #BP-2026-08941 at 1420 Industrial Pkwy, Suite B) are labeled <em>Example Recon Briefings / Illustrative Demo Records</em> with simulated phone numbers so prospective contractors can test the approval and Conversation Room workflow safely without exposing active client intelligence. When you activate your trial, your workspace is configured for your actual territory and trade.
+            </p>
+          </details>
 
         </div>
       </div>
@@ -1270,132 +1945,76 @@
     </div>
 
     <!-- ======================================================================
-         3-STEP STATIC 7-DAY FREE TRIAL BREAKDOWN (WITH 21ST.DEV -8DEG MARQUEE)
+         SECTION 10: FINAL CALL TO ACTION (WITH 21ST.DEV -8DEG MARQUEE)
          ====================================================================== -->
-    <section id="activation-vault" class="section-bg-stone g-closing-stage py-16 sm:py-24 px-4 sm:px-6 lg:px-8" aria-label="Try RECON Live in Your Territory for 7 Mornings">
+    <section id="final-cta" class="section-bg-stone g-closing-stage py-16 sm:py-24 px-4 sm:px-6 lg:px-8" aria-label="Start Your 7-Day Free Trial">
       <!-- 21st.dev -8deg Tilted Drifting Telemetry Marquee Backdrop -->
       <div class="g-closing-bg" aria-hidden="true">
         <div class="g-closing-row">
           <div class="g-closing-tile">⚡ PERMIT #BP-2026-08941 • $240,000 TI BUILDOUT • ACCELA PORTAL</div>
-          <div class="g-closing-tile">🏛️ PARCEL #TCAD-014017 • $1.84M ASSESSED • VERIFIED OWNER CELL</div>
+          <div class="g-closing-tile">🏛️ PARCEL #TCAD-014017 • $1.84M ASSESSED • PROPERTY RECORD MATCH</div>
           <div class="g-closing-tile">☕ 07:00:00 AM BRIEFING • FULL DAILY QUEUE UNLOCKED • 1-TAP APPROVE</div>
           <div class="g-closing-tile">🏢 140-UNIT MULTIFAMILY DEED TRANSFER • CAPEX VENDOR WINDOW</div>
           <div class="g-closing-tile">⚡ PERMIT #BP-2026-08941 • $240,000 TI BUILDOUT • ACCELA PORTAL</div>
-          <div class="g-closing-tile">🏛️ PARCEL #TCAD-014017 • $1.84M ASSESSED • VERIFIED OWNER CELL</div>
+          <div class="g-closing-tile">🏛️ PARCEL #TCAD-014017 • $1.84M ASSESSED • PROPERTY RECORD MATCH</div>
           <div class="g-closing-tile">☕ 07:00:00 AM BRIEFING • FULL DAILY QUEUE UNLOCKED • 1-TAP APPROVE</div>
           <div class="g-closing-tile">🏢 140-UNIT MULTIFAMILY DEED TRANSFER • CAPEX VENDOR WINDOW</div>
         </div>
         <div class="g-closing-row g-closing-row-reverse">
           <div class="g-closing-tile">🏡 4,120 SQ FT CUSTOM ADDITION • $940K CAD TAX ROLL MATCH</div>
-          <div class="g-closing-tile">🛡️ 100% ZIP EXCLUSIVITY • NOTHING SENDS WITHOUT YOUR TAP</div>
-          <div class="g-closing-tile">💎 RENT-TO-OWN SMART SITE • +$200/MO CODE OWNERSHIP EQUITY</div>
-          <div class="g-closing-tile">🔍 02:00 AM ENER-GOV &amp; ACCELA SWEEP • 14-SECOND CAD X-RAY</div>
+          <div class="g-closing-tile">🛡️ TERRITORY EXCLUSIVITY OPTIONS • NOTHING SENDS WITHOUT YOUR TAP</div>
+          <div class="g-closing-tile">💎 OPTIONAL SMART SITE ADD-ON • +$200/MO CODE OWNERSHIP EQUITY</div>
+          <div class="g-closing-tile">🔍 OVERNIGHT ENER-GOV &amp; ACCELA SWEEP • COUNTY PARCEL CROSS-CHECK</div>
           <div class="g-closing-tile">🏡 4,120 SQ FT CUSTOM ADDITION • $940K CAD TAX ROLL MATCH</div>
-          <div class="g-closing-tile">🛡️ 100% ZIP EXCLUSIVITY • NOTHING SENDS WITHOUT YOUR TAP</div>
-          <div class="g-closing-tile">💎 RENT-TO-OWN SMART SITE • +$200/MO CODE OWNERSHIP EQUITY</div>
-          <div class="g-closing-tile">🔍 02:00 AM ENER-GOV &amp; ACCELA SWEEP • 14-SECOND CAD X-RAY</div>
+          <div class="g-closing-tile">🛡️ TERRITORY EXCLUSIVITY OPTIONS • NOTHING SENDS WITHOUT YOUR TAP</div>
+          <div class="g-closing-tile">💎 OPTIONAL SMART SITE ADD-ON • +$200/MO CODE OWNERSHIP EQUITY</div>
+          <div class="g-closing-tile">🔍 OVERNIGHT ENER-GOV &amp; ACCELA SWEEP • COUNTY PARCEL CROSS-CHECK</div>
         </div>
       </div>
 
-      <!-- Centered G3 Obsidian 3-Step Static Breakdown Card -->
-      <div class="enterprise-card bg-white border border-slate-200 rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 max-w-4xl mx-auto relative overflow-hidden">
-        <!-- Crisp Top Accent Bar -->
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#0034FF] via-[#10B981] to-[#4F6FFF]" aria-hidden="true"></div>
-
-        <div class="text-center max-w-2xl mx-auto mb-8">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono-telemetry text-xs mb-3">
-            <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-            <span>7-DAY FREE TRIAL • $0.00 CHARGED TODAY • FULL ACCESS UNLOCKED</span>
+      <div class="max-w-[1024px] mx-auto relative z-10">
+        <div class="enterprise-card g3-conic-card rounded-3xl border border-blue-500/40 p-8 sm:p-12 text-center shadow-2xl space-y-6">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+            <span>START YOUR 7-DAY FREE TRIAL TODAY • $0.00 DUE NOW</span>
           </div>
 
-          <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mb-3 leading-tight">
-            Try RECON Live in Your Territory for 7 Mornings ($0 Today)
+          <h2 class="font-display font-extrabold text-2xl sm:text-4xl lg:text-[42px] text-white tracking-tight leading-tight max-w-3xl mx-auto">
+            Recon helps you discover potential jobs, understand the opportunity, and prepare the next conversation—without spending hours doing the research yourself.
           </h2>
 
-          <p class="text-[#334155] text-sm sm:text-base leading-relaxed">
-            No sales calls, no blind agency retainers, and $0.00 charged today. Lock in your territory zip code, unlock your full unblurred daily recon queue immediately, and let your Tiberius Scout prove itself over morning coffee for 7 full mornings.
+          <p class="text-sm sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Choose your territory and plan, review your morning briefings over coffee, and approve only the introductions you want to send.
           </p>
-        </div>
 
-        <!-- Clean 3-Step Static Breakdown Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-          <!-- Step 1 -->
-          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
-            <div>
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 font-mono-telemetry text-[11px] text-amber-800 font-bold mb-3">
-                <span>STEP 01 • $0.00 DUE TODAY</span>
-              </div>
-              <h3 class="font-display font-extrabold text-lg text-[#0F172A] mb-2">
-                1. Claim 1 of 2 Zip Code Slots for $0 Today
-              </h3>
-              <p class="text-xs sm:text-sm text-[#334155] leading-relaxed">
-                Select your tier above and start your 7-day free trial on Stripe Checkout. You are charged <strong class="text-[#0F172A]">$0.00 today</strong> (a card on file simply prevents competitors from squatting on open territory slots).
-              </p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-200 font-mono-telemetry text-[11px] text-emerald-700 font-bold">
-              ✓ MAX 2 PER ZIP (OR 100% EXCLUSIVE)
-            </div>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 pt-2">
+            <a
+              href="#pricing"
+              class="btn-trust-emerald px-8 py-4 rounded-xl text-base sm:text-lg font-bold inline-flex items-center justify-center gap-2 shadow-lg"
+            >
+              <span>Start My 7-Day Free Trial</span>
+              <span aria-hidden="true">→</span>
+            </a>
+            <a
+              href="#interactive-demo"
+              class="btn-outline-slate px-7 py-4 rounded-xl text-base sm:text-lg font-bold inline-flex items-center justify-center gap-2"
+            >
+              <span>See Recon in Action</span>
+            </a>
           </div>
 
-          <!-- Step 2 -->
-          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
-            <div>
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-[11px] text-[#1E40AF] font-bold mb-3">
-                <span>STEP 02 • INSTANT UNLOCK</span>
-              </div>
-              <h3 class="font-display font-extrabold text-lg text-[#0F172A] mb-2">
-                2. Unlock Today's Live Briefing Immediately
-              </h3>
-              <p class="text-xs sm:text-sm text-[#334155] leading-relaxed">
-                Right after checkout, you're taken straight to instant onboarding to enter your target zip code, auto-scan your website into your Shop Knowledge Base, and <strong class="text-[#0F172A]">unlock full access to all daily cards immediately</strong>.
-              </p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-200 font-mono-telemetry text-[11px] text-[#1E40AF] font-bold">
-              ✓ ALL DAILY CARDS UNBLURRED DAY 1
-            </div>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
-            <div>
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[11px] text-emerald-800 font-bold mb-3">
-                <span>STEP 03 • 07:00 AM SMS</span>
-              </div>
-              <h3 class="font-display font-extrabold text-lg text-[#0F172A] mb-2">
-                3. Wake Up to Fresh Permits at 7:00 AM
-              </h3>
-              <p class="text-xs sm:text-sm text-[#334155] leading-relaxed">
-                Every night at 2:00 AM, your Tiberius Scout sweeps city building portals and county CAD tax rolls, texting your briefing link at 6:45 AM. <strong class="text-[#0F172A]">Cancel anytime in 2 clicks before Day 8</strong> and owe nothing.
-              </p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-200 font-mono-telemetry text-[11px] text-emerald-700 font-bold">
-              ✓ CANCEL ANYTIME IN 2 CLICKS
-            </div>
-          </div>
-        </div>
-
-        <!-- Primary CTA Button & Trust Strip -->
-        <div class="text-center space-y-4">
-          <a
-            href="#pricing"
-            class="btn-trust-emerald w-full sm:w-auto py-4 px-8 rounded-xl text-base sm:text-lg font-extrabold tracking-tight inline-flex items-center justify-center gap-2"
-          >
-            <span>Start 7-Day Free Trial ($0 Today) →</span>
-          </a>
-
-          <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 text-[11px] font-mono-telemetry text-[#64748B]">
-            <span>✓ $0.00 CHARGED TODAY</span>
-            <span>✓ FULL ACCESS TO ALL CARDS UNLOCKED</span>
-            <span>✓ NOTHING SENDS WITHOUT YOUR TAP</span>
-            <span>✓ CANCEL IN 2 CLICKS BEFORE DAY 8</span>
+          <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-300 font-mono-telemetry pt-2">
+            <span>✓ No new website required</span>
+            <span>✓ You approve outreach before sending</span>
+            <span>✓ Cancel anytime before Day 8</span>
           </div>
         </div>
       </div>
     </section>
+
   </main>
 
   <!-- ========================================================================
-       LIGHT-MODE ENTERPRISE FOOTER (WARM OFF-WHITE #F8FAFC)
+       ENTERPRISE FOOTER WITH 21ST.DEV CANVAS 2D PIXEL-GRID WORDMARK LOCKUP
        ======================================================================== -->
   <footer class="section-bg-alabaster border-t border-slate-200 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
@@ -1409,23 +2028,25 @@
           />
         </a>
         <p class="text-xs sm:text-sm text-[#64748B] max-w-md">
-          Tiberius Recon™ — Your 24/7 Tiberius Scout for Commercial Contractors, Subcontractors &amp; High-Ticket Home Trades. Nothing Sends Without Your Tap.
+          Tiberius Recon™ — Permit, property record, and B2B opportunity research for commercial contractors, subcontractors &amp; high-ticket home trades. Nothing sends without your approval.
         </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-6 text-xs sm:text-sm font-semibold text-slate-700">
         <a href="#hero-overview" class="hover:text-blue-700 transition-colors">Overview</a>
-        <a href="#before-after-story" class="hover:text-blue-700 transition-colors">Before vs. After</a>
-        <a href="#simulator" class="hover:text-blue-700 transition-colors">7:00 AM Queue Demo</a>
+        <a href="#featured-recon-card" class="hover:text-blue-700 transition-colors">Sample Briefing</a>
+        <a href="#video-walkthrough" class="hover:text-blue-700 transition-colors">Video Overview</a>
+        <a href="#before-after" class="hover:text-blue-700 transition-colors">Before vs. After</a>
+        <a href="#interactive-demo" class="hover:text-blue-700 transition-colors">7:00 AM Queue Demo</a>
         <a href="#pricing" class="hover:text-blue-700 transition-colors">Pricing Tiers</a>
         <a href="#faq" class="hover:text-blue-700 transition-colors">FAQ</a>
-        <a href="#pricing" class="text-emerald-700 hover:text-emerald-800 transition-colors">Start 7-Day Free Trial ($0 Today) →</a>
+        <a href="#pricing" class="text-emerald-700 hover:text-emerald-800 transition-colors">Start My 7-Day Free Trial →</a>
       </div>
     </div>
 
     <div class="max-w-[1280px] mx-auto mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B] font-mono-telemetry">
       <span>© 2026 TIBERIUS AI. ALL RIGHTS RESERVED.</span>
-      <span>NOTHING SENDS WITHOUT YOUR TAP • ZERO AUTOMATED SPAM • ZERO WEBSITE CHANGES REQUIRED</span>
+      <span>YOU APPROVE OUTREACH BEFORE SENDING • NO NEW WEBSITE REQUIRED • ALL DEMO CARDS ARE ILLUSTRATIVE EXAMPLES</span>
     </div>
 
     <!-- 21st.dev Canvas 2D Pixel-Grid Wordmark Lockup -->
@@ -1435,6 +2056,6 @@
   </footer>
 
   <!-- Application Logic (Supports both /recon and local root) -->
-  <script src="/recon/app.js?v=3.0" onerror="this.onerror=null;this.src='app.js?v=3.0';"></script>
+  <script src="/recon/app.js?v=3.2" onerror="this.onerror=null;this.src='app.js?v=3.2';"></script>
 </body>
 </html>

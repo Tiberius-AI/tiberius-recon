@@ -534,6 +534,14 @@
               >
                 ⚡ Simulate "Yes, send it!" Reply
               </button>
+              <a
+                href="${escapeHtml(p.googleDocUrl || 'https://drive.google.com/drive/folders/1kvnCDZOBjQXkdbWXDE3mY_sYZJE4ulS-')}"
+                target="_blank"
+                rel="noopener"
+                class="px-3 py-2 rounded-xl bg-blue-500/20 border border-blue-400/40 text-blue-200 hover:bg-blue-500/30 text-xs font-bold inline-flex items-center gap-1"
+              >
+                📄 Open Google Doc Dossier
+              </a>
             </div>
             <a
               href="/recon/briefing?token=${encodeURIComponent(p.previewToken || 'demo-7am-briefing')}"
@@ -550,8 +558,22 @@
 
   async function loadMetaReconInitial() {
     if (!metaProspectsGrid) return;
+    const jwt = localStorage.getItem('tiberius_recon_session_jwt');
+    if (!jwt) return;
     try {
-      const resp = await fetch('/api/recon/meta-outreach');
+      const authResp = await fetch('/api/recon/auth', {
+        headers: { Authorization: `Bearer ${jwt}` }
+      });
+      const authData = await authResp.json();
+      if (!authData || !authData.authenticated || authData.role !== 'ADMIN') {
+        return;
+      }
+      const metaModuleEl = document.getElementById('meta-recon-module');
+      if (metaModuleEl) metaModuleEl.classList.remove('hidden');
+
+      const resp = await fetch('/api/recon/meta-outreach', {
+        headers: { Authorization: `Bearer ${jwt}` }
+      });
       const data = await resp.json();
       if (data && data.ok && data.metaRecon) {
         renderMetaRecon(data.metaRecon);

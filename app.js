@@ -1,117 +1,704 @@
 /**
- * TIBERIUS RECON™ — ENTERPRISE LIGHT-MODE INTERACTIVE ENGINE
- * 1. Sticky Light-Mode Navbar Scroll State & Smooth Anchor Navigation
- * 2. Chapter 1: 16:9 Executive Video Overview Card & "Watch 90-Second Overview ▶" Trigger
- * 3. Chapter 3: 7:00 AM "Silver Platter" Product Showcase (3 Clean White Deal Cards + 1-Tap Send)
- * 4. Chapter 4: Offense + Defense Smart Site Equity Pricing Toggle ($297 / $597 / $897)
- * 5. Chapter 5: Outcome-First FAQ Accordion (Questions #1 & #3 Open by Default)
- * 6. Chapter 6: Single-Card Territory Activation Vault + Live 07:00:00 AM Countdown
+ * TIBERIUS RECON™ — SALES PAGE INTERACTIVE CONTROLLER (app.js / recon-app.js)
+ *
+ * Powers:
+ *   1. Contextual Personalized Recon Brief Campaign Banner & Section (?brief=1, ?from=brief, ?token=preview-...)
+ *   2. Featured Recon Card Centerpiece Trade Switcher (Permit #BP-2026-08941 at 1420 Industrial Pkwy, Suite B)
+ *   3. 6-Step Interactive Opportunity-to-Conversation Demonstration:
+ *      - Trade Calibration across 5 Trades
+ *      - Inline Outreach Draft Editing
+ *      - 1-Tap Approve & Move to Conversation Room Preview
+ *      - Interactive Conversation Room Reply & Site-Walk Confirmation
+ *   4. Live Territory Zip Code Availability Checker (/api/recon/availability)
+ *   5. 21st.dev ("G3") WebGL1 'Silk' Shader & Pixel-Grid Footer Wordmark
  */
 
 (function () {
   'use strict';
 
-  if (typeof window === 'undefined') {
-    if (typeof module !== 'undefined') {
-      try {
-        module.exports = require('./server');
-      } catch (_e) {
-        // Ignore when located in subfolder
-      }
-    }
-    return;
-  }
-  if (window.__TIBERIUS_RECON_LIGHT_INITIALIZED__) return;
-  window.__TIBERIUS_RECON_LIGHT_INITIALIZED__ = true;
+  if (typeof window === 'undefined') return;
+  if (window.__TIBERIUS_RECON_SALES_APP_INITIALIZED__) return;
+  window.__TIBERIUS_RECON_SALES_APP_INITIALIZED__ = true;
 
   /* ==========================================================================
-     1. STICKY NAVBAR SCROLL STATE & SMOOTH ANCHOR SCROLLING
+     1. PERSONALIZED RECON BRIEF CAMPAIGN DETECTION & TOGGLE
      ========================================================================== */
-  const commandNavbar = document.getElementById('command-navbar');
+  const urlParams = new URLSearchParams(window.location.search);
+  const briefParam =
+    urlParams.get('brief') ||
+    urlParams.get('from') ||
+    urlParams.get('campaign') ||
+    urlParams.get('utm_campaign') ||
+    '';
+  const previewToken = urlParams.get('token') || urlParams.get('t') || '';
+  const isFromPersonalizedBrief =
+    briefParam === '1' ||
+    briefParam === 'true' ||
+    /brief|recon_brief|trojan|meta/i.test(briefParam) ||
+    previewToken.startsWith('preview-');
 
-  function syncNavbarScrollState() {
-    if (!commandNavbar) return;
-    if (window.scrollY > 16) {
-      commandNavbar.classList.add('is-scrolled');
-    } else {
-      commandNavbar.classList.remove('is-scrolled');
+  const topBriefBanner = document.getElementById('personalized-brief-top-banner');
+  const briefBannerReopenLink = document.getElementById('brief-banner-reopen-link');
+  const briefCollapsedPrompt = document.getElementById('personalized-brief-CollapsedPrompt');
+  const briefExpandedCard = document.getElementById('personalized-brief-ExpandedCard');
+  const briefSectionReopenBtn = document.getElementById('brief-section-reopen-btn');
+  const btnRevealBriefMessage = document.getElementById('btn-reveal-personalized-brief-message');
+
+  function activatePersonalizedBriefExperience() {
+    if (topBriefBanner) topBriefBanner.classList.remove('hidden');
+    if (briefCollapsedPrompt) briefCollapsedPrompt.classList.add('hidden');
+    if (briefExpandedCard) briefExpandedCard.classList.remove('hidden');
+
+    if (previewToken) {
+      const targetHref = `/recon/briefing?token=${encodeURIComponent(previewToken)}`;
+      if (briefBannerReopenLink) {
+        briefBannerReopenLink.href = targetHref;
+        briefBannerReopenLink.classList.remove('hidden');
+      }
+      if (briefSectionReopenBtn) {
+        briefSectionReopenBtn.href = targetHref;
+        briefSectionReopenBtn.textContent = 'Re-Open My Personalized Recon Brief →';
+      }
     }
   }
 
-  window.addEventListener('scroll', syncNavbarScrollState, { passive: true });
-  syncNavbarScrollState();
+  if (isFromPersonalizedBrief) {
+    activatePersonalizedBriefExperience();
+  }
 
-  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-    anchor.addEventListener('click', (e) => {
-      const targetId = anchor.getAttribute('href');
-      if (!targetId || targetId === '#') return;
-      const targetEl = document.querySelector(targetId);
-      if (targetEl) {
-        e.preventDefault();
-        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (btnRevealBriefMessage) {
+    btnRevealBriefMessage.addEventListener('click', () => {
+      activatePersonalizedBriefExperience();
+    });
+  }
+
+  /* ==========================================================================
+     2. UNIFIED TRADE DATA FOR FEATURED CARD & 6-STEP INTERACTIVE DEMO
+        (Consistent Address: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130)
+     ========================================================================== */
+  const TRADE_DEMO_DATA = {
+    concrete: {
+      tradeLabel: 'COMMERCIAL CONCRETE & PAVING',
+      featuredTypeBadge:
+        'COMMERCIAL TENANT IMPROVEMENT & STRUCTURAL FLATWORK • TRADE RELEVANCE: COMMERCIAL CONCRETE',
+      featuredWhy:
+        'Commercial TI permits are typically filed 30–60 days before specialty sub-bids close—creating an early window to introduce your concrete crew before site mobilization.',
+      featuredDraft:
+        '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our ACI-certified concrete crew just wrapped a 22,000 sq ft commercial tilt-wall & dock apron project two miles east off FM 306 and passed city inspection ahead of schedule. We have a crew opening in our bid calendar next month and would love to drop off numbers on the foundation, dock apron, and flatwork scope. Mind if I send over our commercial spec sheet and COI this afternoon? — Travis Miller • Lone Star Commercial Concrete"',
+      cards: {
+        1: {
+          pill: 'PERMIT #BP-2026-08941 • $240,000 TI BUILDOUT',
+          headline: '18,500 Sq Ft Commercial Buildout & Dock Apron',
+          submeta:
+            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
+          why: 'Why it matters: $1,850,000 assessed industrial parcel (2.4 acres). Subcontractor numbers are typically collected 30–60 days after TI permit filing.',
+          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          draft:
+            '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our crew just wrapped a 22,000 sq ft commercial tilt-wall & dock apron project two miles east off FM 306 and passed city inspection ahead of schedule. We have a crew opening next month and would love to drop off numbers on the foundation, dock apron & flatwork scope. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"',
+          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          replyBody:
+            '"Hey Travis — timing is spot on. Our previous sub backed out on the concrete & dock apron schedule at 1420 Industrial Pkwy, Suite B. Do you guys carry $2M commercial GL + bonding, and can you walk the site with my superintendent this Thursday at 9:00 AM to review the plan set?"',
+          suggestedFollowUp:
+            'Hey Marcus — yes, we carry $2M/$5M commercial GL and bonding, and our ACI-certified crew is ready for the schedule at 1420 Industrial Pkwy, Suite B. Locking us in for Thursday at 9:00 AM on-site with our COI, W-9, and unit-price sheet. — Travis Miller • Lone Star Commercial Concrete'
+        },
+        2: {
+          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons & 3 Adjacent Retail Pads',
+          submeta:
+            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
+          why: 'Why it matters: $14,200,000 commercial acquisition (142,000 sq ft). New regional property management teams frequently review exterior trade vendors within 30 days of closing.',
+          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          draft:
+            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads at 2410 Gruene Rd & Loop 337 in New Braunfels. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage ($2M GL) and specialize in weekend phased work on ADA concrete flatwork, bollard installations, and dumpster pad replacements so zero tenants lose parking access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"',
+          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Travis, thanks for reaching out. We are onboarding two new preferred concrete & flatwork vendors for Oakridge Commons this quarter. Can you reply with your COI, W-9, and warranty summary so I can add your shop to Thursday\'s 9:00 AM property walk?"',
+          suggestedFollowUp:
+            'Hi Dana — happy to send our vendor packet right over. We carry $2M/$5M commercial GL and specialize in zero-disruption ADA flatwork and dumpster pad replacements. Locking in Thursday at 9:00 AM at 2410 Gruene Rd with our COI and W-9 in hand. — Travis Miller • Lone Star Commercial Concrete'
+        },
+        3: {
+          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
+          headline: '1140 Whispering Pines Ln — Custom Estate Addition & Motor Court',
+          submeta:
+            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
+          why: 'Why it matters: $940,000 assessed estate property (4,120 sq ft on 1.4 acres). Included in Full Territory Dominion for high-ticket residential trades.',
+          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          draft:
+            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft property at 1140 Whispering Pines Ln in Havenwood. Our custom residential team specializes in engineered post-tension foundation additions and architectural stamped motor courts across New Braunfels with a 100% clean-site guarantee. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a quick 10-minute site walk or estimate drop-off this week?"',
+          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Travis — we have been looking for a concrete contractor who can handle both the engineered foundation addition and the stamped motor court. Are you available Thursday morning around 9:00 AM to look at the structural drawings on site?"',
+          suggestedFollowUp:
+            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. I will bring portfolio photos of our recent Havenwood motor courts and review your structural foundation plans on site. — Travis Miller • Lone Star Commercial Concrete'
+        }
+      }
+    },
+    roofing: {
+      tradeLabel: 'COMMERCIAL & METAL ROOFING',
+      featuredTypeBadge:
+        'COMMERCIAL TENANT IMPROVEMENT & ROOF ENVELOPE • TRADE RELEVANCE: COMMERCIAL ROOFING',
+      featuredWhy:
+        'Commercial TI and shell permits often require TPO membrane, curb flashing, or standing-seam metal work—giving commercial roofers an early bid window.',
+      featuredDraft:
+        '"Hey Marcus — saw the $240,000 commercial buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our RCAT-licensed commercial roofing crew just wrapped a 24,000 sq ft TPO & sheet-metal coping package two miles east off FM 306 and passed inspection ahead of schedule. We have capacity opening next month and would love to drop off numbers on the 60-mil TPO membrane, tapered insulation, and RTU curb flashing scope. Mind if I send over our commercial spec sheet and 20-year NDL warranty details this afternoon? — Jack Williams • A-lert Roof Systems"',
+      cards: {
+        1: {
+          pill: 'PERMIT #BP-2026-08941 • $240,000 COMMERCIAL ROOF & TI',
+          headline: '18,500 Sq Ft Commercial Buildout & TPO Roof System',
+          submeta:
+            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
+          why: 'Why it matters: $1,850,000 assessed commercial parcel. Mechanical curb flashing and roof membrane packages are locked in 30–60 days after filing.',
+          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          draft:
+            '"Hey Marcus — saw the $240,000 commercial buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our RCAT-licensed commercial roofing crew just wrapped a 24,000 sq ft TPO & sheet-metal coping package two miles east off FM 306 and passed inspection ahead of schedule. We have a crew opening next month and would love to drop off numbers on the 60-mil TPO membrane, tapered insulation & curb flashing scope. Mind if I send over our spec sheet and COI this afternoon?"',
+          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          replyBody:
+            '"Hey Jack — good timing. We need a licensed commercial roofer for the TPO membrane and new RTU curb flashings at 1420 Industrial Pkwy, Suite B. Can you walk the roof with our superintendent Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hey Marcus — Thursday at 9:00 AM at 1420 Industrial Pkwy, Suite B works great. Our estimator will bring our RCAT license, $5M commercial GL COI, and 20-year NDL warranty specs. — Jack Williams • A-lert Roof Systems'
+        },
+        2: {
+          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons & 3 Adjacent Retail Pads — CapEx Roof Scope',
+          submeta:
+            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
+          why: 'Why it matters: $14,200,000 property acquisition. New asset managers frequently schedule roof inspections, elastomeric coatings, and CapEx reroofs right after closing.',
+          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          draft:
+            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex at 2410 Gruene Rd & Loop 337 in New Braunfels. During the first 30 days of a transition, new ownership usually audits roof warranties and CapEx restoration budgets. We are RCAT-licensed and specialize in commercial roof restoration, elastomeric coatings, and 20-year NDL leak warranty transfers with zero tenant disruption. Can I swing by Thursday to provide a complimentary drone core & CapEx condition report?"',
+          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Jack — we actually need a baseline roof condition report on Buildings B and C at Oakridge Commons for our Q4 CapEx budget. Can you meet our facilities lead on site Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hi Dana — locked in for Thursday at 9:00 AM at 2410 Gruene Rd. We will inspect Buildings B and C and deliver a photo-documented CapEx roof report and COI. — Jack Williams • A-lert Roof Systems'
+        },
+        3: {
+          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
+          headline: '1140 Whispering Pines Ln — Custom Estate Addition & Standing-Seam Metal Roof',
+          submeta:
+            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
+          why: 'Why it matters: $940,000 estate addition permit requiring architectural 24-gauge standing-seam metal roofing to match the main residence.',
+          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          draft:
+            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at 1140 Whispering Pines Ln in Havenwood. Our architectural metal team specializes in 24-gauge standing-seam metal roofing and custom copper flashing across New Braunfels with a weathertightness guarantee. Would you be open to a quick 10-minute site walk or color-sample drop-off this week?"',
+          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Jack — yes, we want to make sure the new standing-seam metal roof on the addition matches our main roof profile. Can you bring Kynar color samples by 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hi Robert — see you Thursday at 9:00 AM at 1140 Whispering Pines Ln with our 24-gauge standing-seam panel profiles and Kynar color chart. — Jack Williams • A-lert Roof Systems'
+        }
+      }
+    },
+    hvac: {
+      tradeLabel: 'ELECTRICAL / HVAC (MEP)',
+      featuredTypeBadge:
+        'COMMERCIAL TENANT IMPROVEMENT & 800A MEP UPGRADE • TRADE RELEVANCE: ELECTRICAL & HVAC',
+      featuredWhy:
+        'Commercial TI permits with mechanical and electrical upgrades give TDLR/TACLA licensed MEP contractors an early window to bid RTUs, switchgear, and high-bay lighting.',
+      featuredDraft:
+        '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our TDLR/TACLA-licensed MEP crew just wrapped a 22,000 sq ft commercial tenant finish-out two miles east off FM 306 and passed city inspection ahead of schedule. We have a crew opening next month and would love to drop off numbers on the 800A 3-phase switchgear, high-bay LED package, and 25-ton RTU mechanical scope. Mind if I send over our MEP spec sheet and COI this afternoon? — Carlos Mendez • Alamo Mechanical & Electrical"',
+      cards: {
+        1: {
+          pill: 'PERMIT #BP-2026-08941 • $240,000 MEP & TI BUILDOUT',
+          headline: '18,500 Sq Ft Commercial TI Buildout & 800A MEP Upgrade',
+          submeta:
+            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
+          why: 'Why it matters: $1,850,000 assessed industrial facility requiring 3-phase power distribution, LED lighting, and packaged rooftop HVAC units.',
+          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          draft:
+            '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our licensed MEP crew just wrapped a 22,000 sq ft commercial tenant finish-out two miles east off FM 306 and passed city inspection ahead of schedule. We would love to drop off numbers on the 800A 3-phase switchgear, LED high-bay package & 25-ton RTU mechanical scope. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"',
+          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          replyBody:
+            '"Hey Carlos — we are still collecting MEP numbers for the 25-ton RTU curbed units and 800A panel upgrade at 1420 Industrial Pkwy, Suite B. Can your lead estimator walk the building Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hey Marcus — locking us in for Thursday at 9:00 AM at 1420 Industrial Pkwy, Suite B. I will bring our TDLR/TACLA licenses, $2M GL COI, and RTU lead-time sheet. — Carlos Mendez • Alamo Mechanical & Electrical'
+        },
+        2: {
+          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons & 3 Adjacent Retail Pads — HVAC PM & LED Retrofit',
+          submeta:
+            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
+          why: 'Why it matters: $14,200,000 multi-pad commercial acquisition seeking quarterly HVAC preventative maintenance and parking lot LED retrofits.',
+          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          draft:
+            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex at 2410 Gruene Rd & Loop 337 in New Braunfels. Usually during the first 30 days of a transition, inherited mechanical and electrical vendors get re-evaluated. We carry full commercial coverage and specialize in common-area LED parking lot retrofits, breaker panel upgrades, and quarterly HVAC PM with a 4-hour emergency SLA. Can I swing by Thursday to leave you a clean CapEx & PM proposal?"',
+          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Carlos — we are looking for a responsive local MEP vendor for quarterly RTU maintenance and exterior parking lot lighting at Oakridge Commons. Can you walk the property Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hi Dana — Thursday at 9:00 AM at 2410 Gruene Rd works great. I will bring our quarterly commercial HVAC PM checklist, COI, and W-9. — Carlos Mendez • Alamo Mechanical & Electrical'
+        },
+        3: {
+          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
+          headline: '1140 Whispering Pines Ln — Estate Addition, 48kW Generator & VRF HVAC',
+          submeta:
+            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
+          why: 'Why it matters: $940,000 estate addition permit ideal for service panel expansion, multi-zone VRF HVAC, and whole-home standby generator installation.',
+          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          draft:
+            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at 1140 Whispering Pines Ln in Havenwood. Our residential MEP team specializes in service panel expansions, 48kW standby generator transfer switches, and multi-zone VRF HVAC across New Braunfels. Would you be open to a quick 10-minute site walk or load-calculation review this week?"',
+          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Carlos — we definitely want to add a whole-home standby generator and dedicated zoned HVAC while the addition electrical is open. Can you meet us at 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hi Robert — locked in for Thursday at 9:00 AM at 1140 Whispering Pines Ln to review the panel load calculation and generator pad placement. — Carlos Mendez • Alamo Mechanical & Electrical'
+        }
+      }
+    },
+    pools: {
+      tradeLabel: 'CUSTOM OUTDOOR, POOLS & FENCING',
+      featuredTypeBadge:
+        'COMMERCIAL SITE ENCLOSURE & PERIMETER SECURITY • TRADE RELEVANCE: FENCING, GATES & HARDSCAPE',
+      featuredWhy:
+        'Commercial buildouts and industrial yard permits frequently require perimeter security fencing, cantilever slide gates, bollards, and outdoor amenity hardscaping.',
+      featuredDraft:
+        '"Hey Marcus — saw the $240,000 commercial buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our AWS-certified site & perimeter crew just wrapped a multi-pad commercial security fencing and automated cantilever gate package two miles east off FM 306 ahead of schedule. We have a crew opening next month and would love to drop off numbers on the perimeter fencing, automated security gates, and masonry dumpster enclosure scope. Mind if I send over our commercial spec sheet and COI this afternoon? — Luke Mercer • Hill Country Outdoor & Perimeter"',
+      cards: {
+        1: {
+          pill: 'PERMIT #BP-2026-08941 • $240,000 PERIMETER & SITE SCOPE',
+          headline: '18,500 Sq Ft Commercial Buildout — Security Fencing & Gate Package',
+          submeta:
+            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
+          why: 'Why it matters: $1,850,000 industrial parcel (2.4 acres) requiring laydown yard security fencing, UL-325 gate operators, and steel bollards.',
+          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          draft:
+            '"Hey Marcus — saw the $240,000 commercial buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our crew just wrapped a multi-pad commercial hardscape and controlled-access perimeter package two miles east off FM 306 ahead of schedule. We would love to drop off numbers on the commercial architectural perimeter fencing, automated security gates & hardscape plaza. Mind if I send over our spec sheet and bid calendar this afternoon?"',
+          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          replyBody:
+            '"Hey Luke — yes, we need pricing on 640 linear feet of 8-ft security fencing and two motorized cantilever gates at 1420 Industrial Pkwy, Suite B. Can you walk the perimeter Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hey Marcus — Thursday at 9:00 AM at 1420 Industrial Pkwy, Suite B works great. I will bring our UL-325 gate operator specs, COI, and linear-foot pricing sheet. — Luke Mercer • Hill Country Outdoor & Perimeter'
+        },
+        2: {
+          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons & 3 Adjacent Retail Pads — Amenity & Perimeter Upgrade',
+          submeta:
+            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
+          why: 'Why it matters: $14,200,000 multi-family & retail acquisition upgrading pool amenity decks, shade structures, and wrought-iron access gates.',
+          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          draft:
+            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex at 2410 Gruene Rd & Loop 337 in New Braunfels. Usually during the first 30 days of a transition, exterior amenity and perimeter security vendors get re-evaluated. We carry full commercial coverage and specialize in commercial amenity modernization and wrought-iron perimeter security enclosures. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"',
+          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Luke — we are planning to replace the perimeter access gates and resurface the pool courtyard deck at Oakridge Commons this quarter. Can you meet on site Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hi Dana — locked in for Thursday at 9:00 AM at 2410 Gruene Rd to measure the perimeter gate openings and courtyard deck. Bringing our COI and W-9. — Luke Mercer • Hill Country Outdoor & Perimeter'
+        },
+        3: {
+          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
+          headline: '1140 Whispering Pines Ln — Estate Addition, Negative-Edge Pool & Cabana',
+          submeta:
+            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
+          why: 'Why it matters: $940,000 estate addition on 1.4 acres in Havenwood—prime fit for custom gunite pool, outdoor kitchen pavilion, and privacy masonry.',
+          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          draft:
+            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at 1140 Whispering Pines Ln in Havenwood. Our custom outdoor team specializes in negative-edge gunite pools, outdoor kitchen pavilions, and estate privacy masonry across New Braunfels. Because we coordinate directly with your addition grading and framing schedule, we keep your backyard build seamless. Would you be open to a quick 10-minute site walk this week?"',
+          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Luke — we are hoping to start our outdoor kitchen cabana and pool excavation right after the addition slab is poured. Can you walk the backyard at 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. I will bring 3D design examples from our recent Havenwood estate builds. — Luke Mercer • Hill Country Outdoor & Perimeter'
+        }
+      }
+    },
+    b2b: {
+      tradeLabel: 'B2B FACILITY & PROPERTY SERVICES',
+      featuredTypeBadge:
+        'COMMERCIAL BUILDOUT & POST-CONSTRUCTION TURNOVER • TRADE RELEVANCE: B2B COMMERCIAL SERVICES',
+      featuredWhy:
+        'Commercial buildouts and property management transitions create immediate demand for post-construction final clean, exterior restoration, lot striping, and recurring facility contracts.',
+      featuredDraft:
+        '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our OSHA-certified commercial turnover crew just wrapped a 22,000 sq ft commercial post-construction detailing & lot striping package two miles east off FM 306 ahead of CO inspection. We have capacity next month and would love to drop off numbers on the post-construction final clean, glass detailing, and exterior pressure restoration scope. Mind if I send over our commercial rate sheet and COI this afternoon? — Granteson Cole • Lone Star Facility Services"',
+      cards: {
+        1: {
+          pill: 'PERMIT #BP-2026-08941 • $240,000 TURNOVER & FACILITY SCOPE',
+          headline: '18,500 Sq Ft Commercial Buildout & Post-Construction Turnkey',
+          submeta:
+            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
+          why: 'Why it matters: Every commercial TI buildout requires a bonded post-construction final clean, floor prep, and exterior detailing before Certificate of Occupancy.',
+          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          draft:
+            '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our crew just wrapped a 22,000 sq ft commercial turnover package two miles east off FM 306 ahead of schedule. We would love to drop off numbers on the post-construction final spec detailing, exterior pressure restoration & ongoing facility contract. Mind if I send over our commercial spec sheet and COI this afternoon?"',
+          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          replyBody:
+            '"Hey Granteson — we always need reliable post-construction final clean and parking lot striping subs before CO walk-throughs. Can you walk 1420 Industrial Pkwy, Suite B this Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hey Marcus — locking us in for Thursday at 9:00 AM at 1420 Industrial Pkwy, Suite B with our per-square-foot turnover rate sheet, COI, and W-9. — Granteson Cole • Lone Star Facility Services'
+        },
+        2: {
+          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons & 3 Adjacent Retail Pads — Annual Facility Contract',
+          submeta:
+            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
+          why: 'Why it matters: $14,200,000 property transition. Ideal fit for B2B Deal Scout ($297/mo) targeting recurring exterior maintenance and porter contracts.',
+          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          draft:
+            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex at 2410 Gruene Rd & Loop 337 in New Braunfels. Usually during the first 30 days of a transition, inherited facility maintenance vendors get re-evaluated. We carry full commercial coverage and specialize in annual exterior facility maintenance, common-area porter services, and day-1 vendor transitions. Can I swing by Thursday to leave you a clean service proposal?"',
+          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Granteson — we are actively rebidding the exterior pressure washing, lot sweeping, and weekly common-area porter contract for Oakridge Commons. Can you walk the property with me Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hi Dana — Thursday at 9:00 AM at 2410 Gruene Rd works great. I will bring our commercial SLA checklist, COI, W-9, and monthly contract pricing. — Granteson Cole • Lone Star Facility Services'
+        },
+        3: {
+          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
+          headline: '1140 Whispering Pines Ln — Custom Estate Turn-Key Detailing & Maintenance',
+          submeta:
+            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
+          why: 'Why it matters: $940,000 estate addition requiring post-construction fine detailing, window restoration, and exterior stone sealing.',
+          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          draft:
+            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at 1140 Whispering Pines Ln in Havenwood. Our team specializes in custom estate post-construction commissioning, exterior limestone sealing, and preventative maintenance schedules across New Braunfels. Would you be open to a quick 10-minute site walk or estimate drop-off this week?"',
+          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
+          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          replyBody:
+            '"Hi Granteson — we will definitely need a thorough post-construction clean and exterior stone wash once the addition wraps up. Can you stop by 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
+          suggestedFollowUp:
+            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. I will bring our estate detailing checklist and references. — Granteson Cole • Lone Star Facility Services'
+        }
+      }
+    }
+  };
+
+  let currentTradeKey = 'concrete';
+  let activeConversationCardIndex = 1;
+  const approvedCardsState = { 1: false, 2: false, 3: false };
+
+  function setWorkflowActiveStep(stepNum) {
+    for (let i = 1; i <= 6; i++) {
+      const pill = document.getElementById(`workflow-step-pill-${i}`);
+      if (!pill) continue;
+      if (i <= stepNum) {
+        pill.className = 'p-3 rounded-xl bg-blue-600/20 border border-blue-500 text-white transition-all';
+      } else {
+        pill.className = 'p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 transition-all';
+      }
+    }
+  }
+
+  function updateFeaturedCardUI(tradeKey) {
+    const data = TRADE_DEMO_DATA[tradeKey] || TRADE_DEMO_DATA.concrete;
+    const c1 = data.cards[1];
+
+    const typeBadgeEl = document.getElementById('featured-card-type-badge');
+    const titleEl = document.getElementById('featured-card-title');
+    const pillEl = document.getElementById('featured-card-permit-pill');
+    const whyEl = document.getElementById('featured-card-why');
+    const draftEl = document.getElementById('featured-card-draft');
+
+    if (typeBadgeEl) typeBadgeEl.textContent = data.featuredTypeBadge;
+    if (titleEl) titleEl.textContent = c1.headline;
+    if (pillEl) pillEl.textContent = c1.pill;
+    if (whyEl) whyEl.textContent = data.featuredWhy;
+    if (draftEl) draftEl.textContent = data.featuredDraft;
+
+    document.querySelectorAll('.featured-trade-btn').forEach((btn) => {
+      const isSelected = btn.getAttribute('data-featured-trade') === tradeKey;
+      btn.className = isSelected
+        ? 'featured-trade-btn active px-3.5 py-2 rounded-xl border border-blue-500 bg-blue-600/20 text-white font-display font-bold text-xs cursor-pointer transition-all'
+        : 'featured-trade-btn px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs cursor-pointer transition-all';
+    });
+  }
+
+  function updateDemoConversationPreview(cardIdx) {
+    activeConversationCardIndex = cardIdx;
+    const data = TRADE_DEMO_DATA[currentTradeKey] || TRADE_DEMO_DATA.concrete;
+    const cardData = data.cards[cardIdx] || data.cards[1];
+
+    const customDraftEl = document.getElementById(`card-${cardIdx}-draft`);
+    const outboundText = customDraftEl
+      ? customDraftEl.textContent.trim().replace(/^"|"$/g, '')
+      : cardData.draft.replace(/^"|"$/g, '');
+
+    const titleEl = document.getElementById('demo-conv-thread-title');
+    const metaEl = document.getElementById('demo-conv-thread-meta');
+    const outboundEl = document.getElementById('demo-conv-outbound-body');
+    const inboundSenderEl = document.getElementById('demo-conv-inbound-sender');
+    const inboundBodyEl = document.getElementById('demo-conv-inbound-body');
+    const replyInputEl = document.getElementById('demo-conv-reply-input');
+    const followUpBubbleEl = document.getElementById('demo-conv-followup-bubble');
+    const sendFeedbackEl = document.getElementById('demo-conv-send-feedback');
+
+    if (titleEl) titleEl.textContent = cardData.contact;
+    if (metaEl) metaEl.textContent = cardData.replyMeta;
+    if (outboundEl) outboundEl.textContent = outboundText;
+    if (inboundSenderEl) inboundSenderEl.textContent = cardData.replySender;
+    if (inboundBodyEl) inboundBodyEl.textContent = cardData.replyBody;
+    if (replyInputEl) replyInputEl.value = cardData.suggestedFollowUp;
+    if (followUpBubbleEl) followUpBubbleEl.classList.add('hidden');
+    if (sendFeedbackEl) sendFeedbackEl.classList.add('hidden');
+  }
+
+  function applyTradeToDemoCards(tradeKey) {
+    currentTradeKey = TRADE_DEMO_DATA[tradeKey] ? tradeKey : 'concrete';
+    const data = TRADE_DEMO_DATA[currentTradeKey];
+
+    updateFeaturedCardUI(currentTradeKey);
+
+    document.querySelectorAll('.trade-pill-btn').forEach((btn) => {
+      const isSelected = btn.getAttribute('data-trade') === currentTradeKey;
+      btn.classList.toggle('active', isSelected);
+    });
+
+    [1, 2, 3].forEach((idx) => {
+      const c = data.cards[idx];
+      if (!c) return;
+      const pillEl = document.getElementById(`card-${idx}-pill`);
+      const headlineEl = document.getElementById(`card-${idx}-headline`);
+      const submetaEl = document.getElementById(`card-${idx}-submeta`);
+      const whyEl = document.getElementById(`card-${idx}-why`);
+      const contactEl = document.getElementById(`card-${idx}-contact`);
+      const draftEl = document.getElementById(`card-${idx}-draft`);
+      const editorEl = document.getElementById(`card-${idx}-editor`);
+
+      if (pillEl) pillEl.textContent = c.pill;
+      if (headlineEl) headlineEl.textContent = c.headline;
+      if (submetaEl) submetaEl.textContent = c.submeta;
+      if (whyEl) whyEl.innerHTML = `<strong class="text-white">Why it matters:</strong> ${c.why.replace(/^Why it matters:\s*/i, '')}`;
+      if (contactEl) contactEl.textContent = c.contact;
+      if (draftEl) {
+        draftEl.textContent = c.draft;
+        draftEl.classList.remove('hidden');
+      }
+      if (editorEl) {
+        editorEl.value = c.draft;
+        editorEl.classList.add('hidden');
+      }
+    });
+
+    updateDemoConversationPreview(activeConversationCardIndex);
+  }
+
+  // Bind Featured Card trade switcher buttons
+  document.querySelectorAll('.featured-trade-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tradeKey = btn.getAttribute('data-featured-trade') || 'concrete';
+      applyTradeToDemoCards(tradeKey);
+    });
+  });
+
+  // Bind Interactive Demo trade calibration buttons
+  document.querySelectorAll('.trade-pill-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tradeKey = btn.getAttribute('data-trade') || 'concrete';
+      applyTradeToDemoCards(tradeKey);
+      setWorkflowActiveStep(2);
+    });
+  });
+
+  // Bind Inline Draft Editor buttons on Sample Cards 1, 2, 3
+  document.querySelectorAll('.demo-edit-draft-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = btn.getAttribute('data-edit-card');
+      const draftEl = document.getElementById(`card-${idx}-draft`);
+      const editorEl = document.getElementById(`card-${idx}-editor`);
+      if (!draftEl || !editorEl) return;
+
+      const isEditing = !editorEl.classList.contains('hidden');
+      if (isEditing) {
+        draftEl.textContent = editorEl.value.trim() || draftEl.textContent;
+        editorEl.classList.add('hidden');
+        draftEl.classList.remove('hidden');
+        btn.textContent = '✎ Edit Draft';
+        setWorkflowActiveStep(5);
+      } else {
+        editorEl.value = draftEl.textContent.trim();
+        draftEl.classList.add('hidden');
+        editorEl.classList.remove('hidden');
+        editorEl.focus();
+        btn.textContent = '✓ Save Draft';
+        setWorkflowActiveStep(4);
       }
     });
   });
 
-  /* ==========================================================================
-     2. CHAPTER 1: 16:9 EXECUTIVE VIDEO OVERVIEW PLAYER CARD
-     ========================================================================== */
-  const videoPlayerCard = document.getElementById('hero-video-player-card');
-  const videoPosterView = document.getElementById('hero-video-poster-view');
-  const videoActiveView = document.getElementById('hero-video-active-view');
-  const heroOverviewVideo = document.getElementById('hero-overview-video');
-  const videoCloseBtn = document.getElementById('hero-video-close-btn');
-  const heroWatchOverviewBtn = document.getElementById('hero-watch-overview-btn');
-  const walkthroughStepBadge = document.getElementById('walkthrough-step-badge');
-  const walkthroughStepTitle = document.getElementById('walkthrough-step-title');
-  const walkthroughStepDesc = document.getElementById('walkthrough-step-desc');
-  const walkthroughStepTelemetry = document.getElementById('walkthrough-step-telemetry');
-  const walkthroughStepButtons = Array.from(document.querySelectorAll('[data-walkthrough-step]'));
-
-  const WALKTHROUGH_STEPS = [
-    {
-      badge: 'STEP 1 OF 3 • 2:00 AM DEEP PORTAL RECON',
-      title: '2:00 AM: Overnight Permit Recon While the City Sleeps',
-      desc: 'At 2:04 AM, while your trucks are parked for the night, your Tiberius Scout logs into suburban building departments (Accela & EnerGov) and runs recon on every $240,000+ commercial buildout, shell permit, and custom addition filed in the last 24 hours.',
-      telemetry: 'LIVE CAPTURE: PERMIT #BP-2026-08941 • $240,000 TI PERMIT • FILED 14 HRS AGO'
-    },
-    {
-      badge: 'STEP 2 OF 3 • 4:30 AM COUNTY TAX ROLL X-RAY',
-      title: '4:30 AM: Pulls Parcel ID, Sq Ft & Owner Cell in 14 Seconds',
-      desc: 'Your Tiberius Scout runs each street address and parcel ID through the County Appraisal District (CAD) tax roll—verifying the deeded owner, assessed property value, square footage, and direct GC Project Manager or Property Manager cell and work email.',
-      telemetry: 'CAD X-RAY MATCH: $940,000 ASSESSED VALUE • 4,120 SQ FT • 1.4 ACRES • VERIFIED OWNER'
-    },
-    {
-      badge: 'STEP 3 OF 3 • 7:00 AM RECON BRIEFING',
-      title: '7:00 AM: Pour Your Coffee & Tap Send 3 Times in 90 Seconds',
-      desc: 'At 6:45 AM, your Tiberius Scout texts you one link. Three verified recon cards sit on your screen with the permit proof on top and a custom 4-sentence intro written in your voice below. Tap [ ✓ Approve & Send ] and roll out to the job site.',
-      telemetry: '07:00:00 AM RECON BRIEFING READY: 3 VERIFIED CARDS • NOTHING SENDS WITHOUT YOUR TAP ✓'
+  function updateApprovedCounterUI() {
+    const count = Object.values(approvedCardsState).filter(Boolean).length;
+    const counterEl = document.getElementById('demo-approved-counter');
+    if (counterEl) {
+      counterEl.textContent = `Sample Cards Approved: ${count}/3`;
     }
-  ];
+  }
 
-  let walkthroughTimer = null;
+  // Bind 1-Tap Approve & Move to Conversation Room buttons
+  document.querySelectorAll('[data-approve-card]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.getAttribute('data-approve-card') || 1);
+      const editorEl = document.getElementById(`card-${idx}-editor`);
+      const draftEl = document.getElementById(`card-${idx}-draft`);
+      if (editorEl && !editorEl.classList.contains('hidden') && draftEl) {
+        draftEl.textContent = editorEl.value.trim() || draftEl.textContent;
+        editorEl.classList.add('hidden');
+        draftEl.classList.remove('hidden');
+      }
 
-  function renderWalkthroughStep(index) {
-    const step = WALKTHROUGH_STEPS[index] || WALKTHROUGH_STEPS[0];
-    if (walkthroughStepBadge) walkthroughStepBadge.textContent = step.badge;
-    if (walkthroughStepTitle) walkthroughStepTitle.textContent = step.title;
-    if (walkthroughStepDesc) walkthroughStepDesc.textContent = step.desc;
-    if (walkthroughStepTelemetry) walkthroughStepTelemetry.textContent = step.telemetry;
+      approvedCardsState[idx] = true;
+      updateApprovedCounterUI();
 
-    walkthroughStepButtons.forEach((btn, idx) => {
-      if (idx === index) {
-        btn.className =
-          'walkthrough-pill px-2.5 py-1 rounded text-[10px] font-mono-telemetry bg-blue-600 text-white cursor-pointer';
-      } else {
-        btn.className =
-          'walkthrough-pill px-2.5 py-1 rounded text-[10px] font-mono-telemetry bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
+      const actionsEl = document.getElementById(`card-${idx}-actions`);
+      const dispatchedEl = document.getElementById(`card-${idx}-dispatched`);
+      if (actionsEl) actionsEl.classList.add('hidden');
+      if (dispatchedEl) dispatchedEl.classList.remove('hidden');
+
+      setWorkflowActiveStep(6);
+      updateDemoConversationPreview(idx);
+
+      const convStageEl = document.getElementById('demo-conversation-room-stage');
+      if (convStageEl) {
+        convStageEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  });
+
+  // Bind Featured Centerpiece Card CTA to trigger Step 6 Conversation Flow preview
+  const featuredCardDemoCta = document.getElementById('featured-card-demo-cta');
+  if (featuredCardDemoCta) {
+    featuredCardDemoCta.addEventListener('click', () => {
+      setWorkflowActiveStep(5);
+      updateDemoConversationPreview(1);
+    });
+  }
+
+  // Bind Reset Demo Button
+  const resetDemoBtn = document.getElementById('reset-demo-btn');
+  if (resetDemoBtn) {
+    resetDemoBtn.addEventListener('click', () => {
+      [1, 2, 3].forEach((idx) => {
+        approvedCardsState[idx] = false;
+        const actionsEl = document.getElementById(`card-${idx}-actions`);
+        const dispatchedEl = document.getElementById(`card-${idx}-dispatched`);
+        if (actionsEl) actionsEl.classList.remove('hidden');
+        if (dispatchedEl) dispatchedEl.classList.add('hidden');
+      });
+      updateApprovedCounterUI();
+      applyTradeToDemoCards(currentTradeKey);
+      setWorkflowActiveStep(1);
+    });
+  }
+
+  // Bind Step 6 Conversation Room Reply Composer buttons
+  const demoConvDraftWalkBtn = document.getElementById('demo-conv-draft-walk-btn');
+  const demoConvReplyInput = document.getElementById('demo-conv-reply-input');
+  const demoConvSendReplyBtn = document.getElementById('demo-conv-send-reply-btn');
+  const demoConvFollowupBubble = document.getElementById('demo-conv-followup-bubble');
+  const demoConvFollowupSentText = document.getElementById('demo-conv-followup-sent-text');
+  const demoConvSendFeedback = document.getElementById('demo-conv-send-feedback');
+  const demoConvStatusPill = document.getElementById('demo-conv-status-pill');
+
+  if (demoConvDraftWalkBtn && demoConvReplyInput) {
+    demoConvDraftWalkBtn.addEventListener('click', () => {
+      const data = TRADE_DEMO_DATA[currentTradeKey] || TRADE_DEMO_DATA.concrete;
+      const cardData = data.cards[activeConversationCardIndex] || data.cards[1];
+      demoConvReplyInput.value = cardData.suggestedFollowUp;
+      demoConvReplyInput.focus();
+    });
+  }
+
+  if (demoConvSendReplyBtn && demoConvReplyInput) {
+    demoConvSendReplyBtn.addEventListener('click', () => {
+      const text = demoConvReplyInput.value.trim();
+      if (!text) return;
+      if (demoConvFollowupSentText) {
+        demoConvFollowupSentText.textContent = text;
+      }
+      if (demoConvFollowupBubble) {
+        demoConvFollowupBubble.classList.remove('hidden');
+      }
+      if (demoConvSendFeedback) {
+        demoConvSendFeedback.classList.remove('hidden');
+      }
+      if (demoConvStatusPill) {
+        demoConvStatusPill.textContent = '📅 SITE WALK BOOKED — THU 9:00 AM (DEMO)';
+        demoConvStatusPill.className =
+          'px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold';
       }
     });
   }
 
+  /* ==========================================================================
+     3. LIVE TERRITORY ZIP CODE AVAILABILITY CHECKER (/api/recon/availability)
+     ========================================================================== */
+  const zipCheckerForm = document.getElementById('zip-checker-form');
+  const zipCheckerTrade = document.getElementById('zip-checker-trade');
+  const zipCheckerInput = document.getElementById('zip-checker-input');
+  const zipCheckerResult = document.getElementById('zip-checker-result');
+  const zipCheckerStatusText = document.getElementById('zip-checker-status-text');
+
+  if (zipCheckerForm) {
+    zipCheckerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const rawZip = zipCheckerInput ? zipCheckerInput.value.trim() : '78130';
+      const trade = zipCheckerTrade ? zipCheckerTrade.value : 'Commercial Concrete';
+      const cleanZip = (rawZip.match(/\b\d{5}\b/) || ['78130'])[0];
+
+      if (zipCheckerStatusText) {
+        zipCheckerStatusText.textContent = `Checking live territory capacity for ${trade} in ${cleanZip}...`;
+      }
+
+      try {
+        const resp = await fetch(
+          `/api/recon/availability?zip=${encodeURIComponent(cleanZip)}&trade=${encodeURIComponent(
+            trade
+          )}&tier=${encodeURIComponent('Tier 2: Commercial Permits')}`
+        );
+        const data = await resp.json();
+        if (data && data.ok && zipCheckerStatusText && zipCheckerResult) {
+          if (data.isAvailable) {
+            zipCheckerResult.className =
+              'mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs';
+            zipCheckerStatusText.className = 'font-mono-telemetry text-emerald-300 font-bold';
+            zipCheckerStatusText.textContent = `✓ ZIP ${data.zipCode} (${data.city}) OPEN FOR ${trade.toUpperCase()} — ${data.statusBadge}`;
+          } else {
+            zipCheckerResult.className =
+              'mt-3 p-3 rounded-xl bg-amber-950/50 border border-amber-500/50 flex flex-wrap items-center justify-between gap-2 text-xs';
+            zipCheckerStatusText.className = 'font-mono-telemetry text-amber-300 font-bold';
+            zipCheckerStatusText.textContent = `🔒 ${data.statusBadge} — ${data.statusReason}`;
+          }
+          return;
+        }
+      } catch (_err) {
+        // Fallback if offline
+      }
+
+      if (zipCheckerStatusText && zipCheckerResult) {
+        if (cleanZip === '79999') {
+          zipCheckerResult.className =
+            'mt-3 p-3 rounded-xl bg-amber-950/50 border border-amber-500/50 flex flex-wrap items-center justify-between gap-2 text-xs';
+          zipCheckerStatusText.className = 'font-mono-telemetry text-amber-300 font-bold';
+          zipCheckerStatusText.textContent = `🔒 LOCKED • TIER 3 EXCLUSIVE CLAIMED IN 79999 — Adjacent open territories: 78130, 78132, 78258.`;
+        } else {
+          zipCheckerResult.className =
+            'mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs';
+          zipCheckerStatusText.className = 'font-mono-telemetry text-emerald-300 font-bold';
+          zipCheckerStatusText.textContent = `✓ ZIP ${cleanZip} OPEN FOR ${trade.toUpperCase()} — Commercial & Sub Permit Radar & Full Territory Dominion Available`;
+        }
+      }
+    });
+  }
+
+  /* ==========================================================================
+     4. 16:9 EXECUTIVE VIDEO OVERVIEW PLAYER & 21ST.DEV ("G3") VISUAL ENGINE
+     ========================================================================== */
+  const videoPlayerCard = document.getElementById('hero-video-player-card');
+  const videoPosterView = document.getElementById('hero-video-poster-view');
+  const heroOverviewVideo = document.getElementById('hero-overview-video');
+
   function openVideoWalkthrough() {
     if (!videoPlayerCard || !videoPosterView) return;
-
     if (heroOverviewVideo) {
       videoPosterView.classList.add('hidden');
       heroOverviewVideo.controls = true;
@@ -119,46 +706,6 @@
       if (playPromise && typeof playPromise.catch === 'function') {
         playPromise.catch(() => {});
       }
-      return;
-    }
-
-    if (!videoActiveView) return;
-
-    const customVideoSrc = videoPlayerCard.getAttribute('data-video-src');
-    if (customVideoSrc && customVideoSrc.trim() !== '') {
-      videoPosterView.classList.add('hidden');
-      videoActiveView.classList.remove('hidden');
-      videoActiveView.innerHTML = `
-        <video src="${customVideoSrc}" controls autoplay playsinline class="w-full h-full object-contain bg-[#050507] rounded-xl"></video>
-      `;
-      return;
-    }
-
-    videoPosterView.classList.add('hidden');
-    videoActiveView.classList.remove('hidden');
-    let currentStepIdx = 0;
-    renderWalkthroughStep(currentStepIdx);
-
-    if (walkthroughTimer) clearInterval(walkthroughTimer);
-    walkthroughTimer = setInterval(() => {
-      currentStepIdx = (currentStepIdx + 1) % WALKTHROUGH_STEPS.length;
-      renderWalkthroughStep(currentStepIdx);
-    }, 5000);
-  }
-
-  function closeVideoWalkthrough(e) {
-    if (e) e.stopPropagation();
-    if (walkthroughTimer) {
-      clearInterval(walkthroughTimer);
-      walkthroughTimer = null;
-    }
-    if (heroOverviewVideo) {
-      heroOverviewVideo.pause();
-      heroOverviewVideo.controls = false;
-    }
-    if (videoPosterView && videoActiveView) {
-      videoActiveView.classList.add('hidden');
-      videoPosterView.classList.remove('hidden');
     }
   }
 
@@ -171,628 +718,19 @@
 
   if (videoPlayerCard) {
     videoPlayerCard.addEventListener('click', (e) => {
-      if (
-        e.target.closest('#hero-video-close-btn') ||
-        e.target.closest('[data-walkthrough-step]') ||
-        e.target.closest('a')
-      ) {
-        return;
-      }
-      if (videoPosterView && videoPosterView.classList.contains('hidden')) {
-        return;
-      }
-      if (videoActiveView && !videoActiveView.classList.contains('hidden')) {
-        return;
-      }
-      openVideoWalkthrough();
-    });
-
-    videoPlayerCard.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        if (videoPosterView && videoPosterView.classList.contains('hidden')) {
-          return;
-        }
-        e.preventDefault();
-        openVideoWalkthrough();
-      }
-    });
-  }
-
-  if (heroWatchOverviewBtn) {
-    heroWatchOverviewBtn.addEventListener('click', () => {
-      if (videoPlayerCard) {
-        videoPlayerCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      if (e.target.closest('a')) return;
+      if (videoPosterView && videoPosterView.classList.contains('hidden')) return;
       openVideoWalkthrough();
     });
   }
 
-  if (videoCloseBtn) {
-    videoCloseBtn.addEventListener('click', closeVideoWalkthrough);
-  }
-
-  walkthroughStepButtons.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (walkthroughTimer) {
-        clearInterval(walkthroughTimer);
-        walkthroughTimer = null;
-      }
-      const stepIdx = parseInt(btn.getAttribute('data-walkthrough-step') || '0', 10);
-      renderWalkthroughStep(stepIdx);
-    });
-  });
-
-  /* ==========================================================================
-     3. CHAPTER 3: CLEAN 7:00 AM "SILVER PLATTER" PRODUCT SHOWCASE
-        (3 Clean White Deal Cards + 1-Tap Approve & Send Confirmation)
-     ========================================================================== */
-  const MORNING_DEAL_CARDS = [
-    {
-      id: 'deal-1',
-      cardNumber: 'CARD 01 • COMMERCIAL PERMIT',
-      unlockedBadge: 'UNLOCKED #1',
-      pillText: 'FILED 14 HRS AGO • $240,000 TI PERMIT',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      pillIcon: '⚡',
-      headline: '18,500 Sq Ft Commercial Buildout & Dock Apron',
-      subMeta: 'Permit Address: 4820 Industrial Pkwy, Suite B • Municipal Accela Portal #BP-2026-08941',
-      cadCallout: null,
-      contactHeader: 'VERIFIED GC PROJECT MANAGER:',
-      contactName: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
-      contactShort: 'Marcus Vance (Apex Commercial Builders)',
-      contactMeta: 'Direct Work Email + Cell Verified • 3.8 Miles From Your Shop',
-      draftLabel: '4-SENTENCE BID INTRO (YOUR VOICE):',
-      draftBody:
-        '"Hey Marcus — saw the $240,000 commercial TI buildout permit filed yesterday at 4820 Industrial Pkwy. Our commercial crew just wrapped a 22,000 sq ft project two miles east on Commerce Dr and passed city inspection ahead of schedule. We have a crew opening up next month and would love to drop off numbers on this scope. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"'
-    },
-    {
-      id: 'deal-2',
-      cardNumber: 'CARD 02 • B2B PROPERTY MANAGER',
-      unlockedBadge: 'UNLOCKED #2',
-      pillText: 'NEW ACQUISITION • 140-UNIT COMPLEX',
-      pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      pillIcon: '🏢',
-      headline: 'Oakridge Commons & 3 Adjacent Retail Pads',
-      subMeta: 'Property Address: 6100 Westheimer Rd • Commercial Deed Transfer & Vendor Re-Bid Window',
-      cadCallout: null,
-      contactHeader: 'REGIONAL PROPERTY MANAGER MATCH:',
-      contactName: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
-      contactShort: 'Dana Sterling (Crestview Commercial Mgmt)',
-      contactMeta: 'Direct Inbox + Office Line • Active Q4 CapEx Upgrade Budget',
-      draftLabel: '4-SENTENCE VENDOR INTRO (YOUR VOICE):',
-      draftBody:
-        '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage and specialize in weekend phased work so zero tenants lose access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"'
-    },
-    {
-      id: 'deal-3',
-      cardNumber: 'CARD 03 • RESIDENTIAL + CAD X-RAY',
-      unlockedBadge: 'UNLOCKED #3',
-      pillText: 'CUSTOM ADDITION + CAD TAX ROLL MATCH',
-      pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      pillIcon: '🏡',
-      headline: '1140 Whispering Pines Ln — Custom Estate Addition',
-      subMeta: null,
-      cadCallout: '$940,000 Assessed Value • 4,120 Sq Ft • 1.4 Acres • Verified Homeowner',
-      contactHeader: 'COUNTY APPRAISAL DISTRICT DEED MATCH:',
-      contactName: 'Dr. Robert & Elena Harrison • Verified Property Owners',
-      contactShort: 'Dr. Robert & Elena Harrison',
-      contactMeta: 'Parcel #CAD-90418-A • Direct Owner Mobile & Email Verified',
-      draftLabel: '4-SENTENCE OWNER INTRO (YOUR VOICE):',
-      draftBody:
-        '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate on Whispering Pines Ln. Our custom residential team specializes in high-end estate projects across the neighborhood with zero day-labor subs and a 100% clean-site guarantee. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a quick 10-minute site walk this week?"'
-    }
-  ];
-
-  const cardStates = {
-    'deal-1': 'ready',
-    'deal-2': 'ready',
-    'deal-3': 'ready'
-  };
-
-  const simulatorCardsGrid = document.getElementById('simulator-cards-grid');
-  const dealsFiredCounterEl = document.getElementById('deals-fired-counter');
-  const resetAllSimulatorBtn = document.getElementById('reset-all-simulator-btn');
-
-  function updateDealsFiredHeader() {
-    const firedCount = MORNING_DEAL_CARDS.reduce((acc, card) => {
-      return acc + (cardStates[card.id] === 'sent' ? 1 : 0);
-    }, 0);
-
-    if (dealsFiredCounterEl) {
-      dealsFiredCounterEl.textContent = `Deals Approved This Morning: ${firedCount}/3`;
-    }
-  }
-
-  function renderSimulatorCards() {
-    if (!simulatorCardsGrid) return;
-
-    simulatorCardsGrid.innerHTML = MORNING_DEAL_CARDS.map((card, idx) => {
-      const state = cardStates[card.id] || 'ready';
-
-      if (state === 'sent') {
-        return `
-          <article class="bg-emerald-50/70 border-2 border-emerald-600 rounded-2xl shadow-md p-5 sm:p-6 flex flex-col justify-between transition-all duration-200" data-card-id="${card.id}">
-            <div>
-              <div class="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-emerald-200">
-                <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold">
-                  ✓ Sent in 3.2 Seconds — Ready for Coffee
-                </span>
-                <span class="font-mono-telemetry text-[11px] text-emerald-800">07:01:${12 + idx * 14} AM</span>
-              </div>
-
-              <div class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-3.5 shadow-sm">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-
-              <div class="font-mono-telemetry text-[11px] text-emerald-800 font-bold mb-1">${card.cardNumber}</div>
-              <h3 class="font-display font-extrabold text-xl text-[#0F172A] mb-2">
-                Dispatched to ${card.contactShort}
-              </h3>
-
-              <p class="text-[#334155] text-sm leading-relaxed mb-4">
-                In real life, that custom 4-sentence intro from your Tiberius Scout just landed directly in their inbox from your address while your competitors are still asleep.
-              </p>
-
-              <div class="p-3.5 rounded-xl bg-white border border-emerald-200 mb-4">
-                <div class="font-mono-telemetry text-[10px] text-emerald-800 font-bold mb-1">SENT MESSAGE LOG:</div>
-                <p class="text-xs text-slate-600 italic line-clamp-3">${card.draftBody}</p>
-              </div>
-            </div>
-
-            <div class="pt-3 border-t border-emerald-200 flex items-center justify-between">
-              <span class="font-mono-telemetry text-[11px] text-emerald-800 font-bold">✓ YOU APPROVE &amp; SEND</span>
-              <button
-                type="button"
-                data-action="reset-card"
-                data-card-id="${card.id}"
-                class="text-xs text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer"
-              >
-                Reset Demo
-              </button>
-            </div>
-          </article>
-        `;
-      }
-
-      return `
-        <article class="bg-white border border-slate-200 rounded-2xl shadow-md p-5 sm:p-6 flex flex-col justify-between" data-card-id="${card.id}">
-          <div>
-            <div class="flex items-center justify-between gap-2 mb-3">
-              <span class="font-mono-telemetry text-[11px] text-[#1E40AF] font-bold">${card.cardNumber}</span>
-              <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800">${card.unlockedBadge}</span>
-            </div>
-
-            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono-telemetry text-[11px] font-bold mb-3 ${card.pillClass}">
-              <span>${card.pillIcon}</span>
-              <span>${card.pillText}</span>
-            </div>
-
-            <h3 class="font-display font-extrabold text-xl text-[#0F172A] leading-snug mb-1.5">
-              ${card.headline}
-            </h3>
-
-            ${
-              card.cadCallout
-                ? `<p class="text-xs text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 mb-3">${card.cadCallout}</p>`
-                : `<p class="text-xs text-[#64748B] font-medium mb-4">${card.subMeta}</p>`
-            }
-
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-4">
-              <div class="font-mono-telemetry text-[10px] text-[#1E40AF] mb-0.5">${card.contactHeader}</div>
-              <div class="text-xs sm:text-sm font-bold text-[#0F172A]">${card.contactName}</div>
-              <div class="text-[11px] text-[#64748B] mt-0.5">${card.contactMeta}</div>
-            </div>
-
-            <div class="mb-5">
-              <div class="flex items-center justify-between gap-2 mb-1.5">
-                <span class="font-mono-telemetry text-[10px] text-[#64748B]">${card.draftLabel}</span>
-                <span class="font-mono-telemetry text-[10px] text-emerald-700 font-bold whitespace-nowrap">READY ✓</span>
-              </div>
-              <div class="outreach-draft-box">
-                ${card.draftBody}
-              </div>
-            </div>
-          </div>
-
-          <div class="pt-3 border-t border-slate-200">
-            <button
-              type="button"
-              data-action="approve-send"
-              data-card-id="${card.id}"
-              class="btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
-            >
-              [ ✓ Approve &amp; Send ]
-            </button>
-          </div>
-        </article>
-      `;
-    }).join('');
-
-    updateDealsFiredHeader();
-  }
-
-  if (simulatorCardsGrid) {
-    simulatorCardsGrid.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action]');
-      if (!btn) return;
-
-      const action = btn.getAttribute('data-action');
-      const cardId = btn.getAttribute('data-card-id');
-      if (!cardId) return;
-
-      if (action === 'approve-send') {
-        cardStates[cardId] = 'sent';
-        renderSimulatorCards();
-      } else if (action === 'reset-card') {
-        cardStates[cardId] = 'ready';
-        renderSimulatorCards();
-      }
-    });
-  }
-
-  if (resetAllSimulatorBtn) {
-    resetAllSimulatorBtn.addEventListener('click', () => {
-      Object.keys(cardStates).forEach((k) => {
-        cardStates[k] = 'ready';
-      });
-      renderSimulatorCards();
-    });
-  }
-
-  /* ==========================================================================
-     4. CHAPTER 4: PRICING TIERS + SMART SITE EQUITY TOGGLE
-     ========================================================================== */
-  const toggleStandaloneBtn = document.getElementById('toggle-mode-standalone');
-  const toggleBundleBtn = document.getElementById('toggle-mode-bundle');
-  const priceTier1El = document.getElementById('price-tier-1');
-  const priceTier2El = document.getElementById('price-tier-2');
-  const priceTier3El = document.getElementById('price-tier-3');
-  const priceSub1El = document.getElementById('price-sub-tier-1');
-  const priceSub2El = document.getElementById('price-sub-tier-2');
-  const priceSub3El = document.getElementById('price-sub-tier-3');
-  const stripeCta1El = document.getElementById('stripe-cta-tier-1');
-  const stripeCta2El = document.getElementById('stripe-cta-tier-2');
-  const stripeCta3El = document.getElementById('stripe-cta-tier-3');
-  const stripeLabel1El = document.getElementById('stripe-label-tier-1');
-  const stripeLabel2El = document.getElementById('stripe-label-tier-2');
-  const stripeLabel3El = document.getElementById('stripe-label-tier-3');
-  const bundleSavingsBadges = Array.from(document.querySelectorAll('.bundle-savings-badge'));
-  const smartSiteBonusPanels = Array.from(document.querySelectorAll('.smart-site-bonus-panel'));
-  const vaultSmartSiteCheckbox = document.getElementById('vault-smart-site-checkbox');
-
-  const STRIPE_PAYMENT_LINKS = {
-    standalone: {
-      tier1: 'https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k',
-      tier2: 'https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l',
-      tier3: 'https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m'
-    },
-    bundle: {
-      tier1: 'https://buy.stripe.com/bJebJ2e8Pb1hdzg77f2sM0n',
-      tier2: 'https://buy.stripe.com/8x228s7Kr4CT3YG63b2sM0o',
-      tier3: 'https://buy.stripe.com/7sY3cwggXc5l3YGdvD2sM0p'
-    }
-  };
-
-  function getStripeLinkForSelection(tierString, isBundle) {
-    const modeLinks = isBundle ? STRIPE_PAYMENT_LINKS.bundle : STRIPE_PAYMENT_LINKS.standalone;
-    const t = String(tierString || '').toLowerCase();
-    if (t.includes('tier 1')) return modeLinks.tier1;
-    if (t.includes('tier 3')) return modeLinks.tier3;
-    return modeLinks.tier2;
-  }
-
-  function setPricingMode(mode) {
-    const isBundle = mode === 'bundle';
-
-    if (toggleStandaloneBtn && toggleBundleBtn) {
-      toggleStandaloneBtn.setAttribute('aria-pressed', (!isBundle).toString());
-      toggleBundleBtn.setAttribute('aria-pressed', isBundle.toString());
-
-      if (isBundle) {
-        toggleStandaloneBtn.classList.remove('is-active');
-        toggleStandaloneBtn.classList.add('text-slate-700', 'hover:bg-slate-50');
-        toggleBundleBtn.classList.add('is-active-bundle');
-        toggleBundleBtn.classList.remove('text-slate-700', 'hover:bg-slate-50');
-      } else {
-        toggleStandaloneBtn.classList.add('is-active');
-        toggleStandaloneBtn.classList.remove('text-slate-700', 'hover:bg-slate-50');
-        toggleBundleBtn.classList.remove('is-active-bundle');
-        toggleBundleBtn.classList.add('text-slate-700', 'hover:bg-slate-50');
-      }
-    }
-
-    if (priceTier1El) priceTier1El.textContent = isBundle ? '$547' : '$297';
-    if (priceTier2El) priceTier2El.textContent = isBundle ? '$847' : '$597';
-    if (priceTier3El) priceTier3El.textContent = isBundle ? '$1,147' : '$897';
-
-    if (stripeCta1El) {
-      stripeCta1El.href = isBundle ? STRIPE_PAYMENT_LINKS.bundle.tier1 : STRIPE_PAYMENT_LINKS.standalone.tier1;
-    }
-    if (stripeCta2El) {
-      stripeCta2El.href = isBundle ? STRIPE_PAYMENT_LINKS.bundle.tier2 : STRIPE_PAYMENT_LINKS.standalone.tier2;
-    }
-    if (stripeCta3El) {
-      stripeCta3El.href = isBundle ? STRIPE_PAYMENT_LINKS.bundle.tier3 : STRIPE_PAYMENT_LINKS.standalone.tier3;
-    }
-    if (stripeLabel1El) {
-      stripeLabel1El.textContent = 'Start 7-Day Free Trial ($0 Today) →';
-    }
-    if (stripeLabel2El) {
-      stripeLabel2El.textContent = 'Start 7-Day Free Trial ($0 Today) →';
-    }
-    if (stripeLabel3El) {
-      stripeLabel3El.textContent = 'Start 7-Day Free Trial ($0 Today) →';
-    }
-
-    if (priceSub1El) {
-      priceSub1El.textContent = isBundle
-        ? '7-DAY FREE TRIAL ($0 TODAY) • INCLUDES SMART SITE (+$200/MO EQUITY)'
-        : '7-DAY FREE TRIAL • $0.00 CHARGED TODAY • FULL ACCESS UNLOCKED';
-    }
-    if (priceSub2El) {
-      priceSub2El.textContent = isBundle
-        ? '7-DAY FREE TRIAL ($0 TODAY) • INCLUDES SMART SITE (+$200/MO EQUITY)'
-        : '7-DAY FREE TRIAL • $0.00 CHARGED TODAY • FULL ACCESS UNLOCKED';
-    }
-    if (priceSub3El) {
-      priceSub3El.textContent = isBundle
-        ? '7-DAY FREE TRIAL ($0 TODAY) • 100% ZIP EXCLUSIVE + SMART SITE EQUITY'
-        : '7-DAY FREE TRIAL • $0.00 CHARGED TODAY • 100% ZIP EXCLUSIVE';
-    }
-
-    bundleSavingsBadges.forEach((badge) => {
-      badge.classList.toggle('hidden', !isBundle);
-    });
-
-    smartSiteBonusPanels.forEach((panel) => {
-      panel.classList.toggle('hidden', !isBundle);
-    });
-
-    if (vaultSmartSiteCheckbox) {
-      vaultSmartSiteCheckbox.checked = isBundle;
-    }
-  }
-
-  if (toggleStandaloneBtn) {
-    toggleStandaloneBtn.addEventListener('click', () => setPricingMode('standalone'));
-  }
-  if (toggleBundleBtn) {
-    toggleBundleBtn.addEventListener('click', () => setPricingMode('bundle'));
-  }
-
-  /* ==========================================================================
-     5. CHAPTER 5: OUTCOME-FIRST FAQ ACCORDION
-     ========================================================================== */
-  const faqItems = Array.from(document.querySelectorAll('#faq-accordion .faq-accordion-item'));
-
-  faqItems.forEach((item) => {
-    const trigger = item.querySelector('.faq-accordion-trigger');
-    if (!trigger) return;
-
-    trigger.addEventListener('click', () => {
-      const isOpen = item.classList.contains('is-open');
-      item.classList.toggle('is-open', !isOpen);
-      trigger.setAttribute('aria-expanded', (!isOpen).toString());
-    });
-  });
-
-  /* ==========================================================================
-     6. CHAPTER 6: SINGLE-CARD TERRITORY ACTIVATION VAULT
-     ========================================================================== */
-  const vaultTradeSelect = document.getElementById('vault-trade-select-mobile');
-  const vaultTierSelect = document.getElementById('vault-tier-select-mobile');
-  const vaultZipInputEl = document.getElementById('vault-zip-input');
-  const vaultAvailabilityBanner = document.getElementById('vault-live-availability-banner');
-  const vaultAvailabilityText = document.getElementById('vault-availability-text');
-  const pricingTierCtas = Array.from(document.querySelectorAll('.pricing-tier-cta[data-select-tier]'));
-  const activationForm = document.getElementById('territory-activation-form');
-  const vaultFormView = document.getElementById('vault-form-view');
-  const vaultConfirmationView = document.getElementById('vault-confirmation-view');
-  const vaultResetBtn = document.getElementById('vault-reset-btn');
-
-  const confirmTradeVal = document.getElementById('confirm-trade-val');
-  const confirmZipVal = document.getElementById('confirm-zip-val');
-  const confirmTierVal = document.getElementById('confirm-tier-val');
-  const confirmContactVal = document.getElementById('confirm-contact-val');
-  const confirmOpenBriefingLink = document.getElementById('confirm-open-briefing-link');
-  const confirmOpenInboxLink = document.getElementById('confirm-open-inbox-link');
-  const confirmOpenCommandLink = document.getElementById('confirm-open-command-link');
-  const sevenAmCountdownEl = document.getElementById('seven-am-countdown');
-
-  let countdownInterval = null;
-  let zipCheckDebounce = null;
-
-  async function refreshVaultTerritoryAvailability() {
-    const zip = vaultZipInputEl && vaultZipInputEl.value.trim() ? vaultZipInputEl.value.trim() : '78130';
-    const trade = vaultTradeSelect ? vaultTradeSelect.value : 'Commercial Concrete';
-    const tier = vaultTierSelect ? vaultTierSelect.value : 'Tier 2: Commercial Permits';
-
-    try {
-      const resp = await fetch(
-        `/api/recon/availability?zip=${encodeURIComponent(zip)}&trade=${encodeURIComponent(trade)}&tier=${encodeURIComponent(tier)}`
-      );
-      if (!resp.ok) return;
-      const data = await resp.json();
-      if (data && data.ok && vaultAvailabilityText && vaultAvailabilityBanner) {
-        vaultAvailabilityText.textContent = data.statusBadge;
-        if (data.isAvailable) {
-          vaultAvailabilityBanner.className =
-            'p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-2 text-xs font-mono-telemetry text-emerald-800';
-        } else {
-          vaultAvailabilityBanner.className =
-            'p-3 rounded-xl bg-rose-50/80 border border-rose-200 flex items-center justify-between gap-2 text-xs font-mono-telemetry text-rose-800';
-        }
-      }
-    } catch (_err) {
-      // Keep default banner if offline
-    }
-  }
-
-  if (vaultZipInputEl) {
-    vaultZipInputEl.addEventListener('input', () => {
-      if (zipCheckDebounce) clearTimeout(zipCheckDebounce);
-      zipCheckDebounce = setTimeout(refreshVaultTerritoryAvailability, 260);
-    });
-  }
-  if (vaultTradeSelect) vaultTradeSelect.addEventListener('change', refreshVaultTerritoryAvailability);
-  if (vaultTierSelect) vaultTierSelect.addEventListener('change', refreshVaultTerritoryAvailability);
-
-  pricingTierCtas.forEach((cta) => {
-    cta.addEventListener('click', () => {
-      const tier = cta.getAttribute('data-select-tier');
-      if (tier && vaultTierSelect) {
-        vaultTierSelect.value = tier;
-        refreshVaultTerritoryAvailability();
-      }
-    });
-  });
-
-  function formatSecondsToHHMMSS(totalSeconds) {
-    const hrs = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    return [hrs, mins, secs].map((n) => String(n).padStart(2, '0')).join(':');
-  }
-
-  function getSecondsUntilNextSevenAM() {
-    const now = new Date();
-    const target7AM = new Date(now);
-    target7AM.setHours(7, 0, 0, 0);
-    if (now >= target7AM) {
-      target7AM.setDate(target7AM.getDate() + 1);
-    }
-    return Math.max(1, Math.floor((target7AM.getTime() - now.getTime()) / 1000));
-  }
-
-  function startSevenAMCountdown() {
-    if (countdownInterval) clearInterval(countdownInterval);
-    let remaining = getSecondsUntilNextSevenAM();
-    if (sevenAmCountdownEl) {
-      sevenAmCountdownEl.textContent = formatSecondsToHHMMSS(remaining);
-    }
-    countdownInterval = setInterval(() => {
-      remaining = Math.max(0, remaining - 1);
-      if (sevenAmCountdownEl) {
-        sevenAmCountdownEl.textContent = formatSecondsToHHMMSS(remaining);
-      }
-    }, 1000);
-  }
-
-  if (activationForm) {
-    activationForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const zipInput = document.getElementById('vault-zip-input');
-      const phoneInput = document.getElementById('vault-phone-input');
-      const emailInput = document.getElementById('vault-email-input');
-      const companyInput = document.getElementById('vault-company-input');
-      const websiteInput = document.getElementById('vault-website-input');
-      const passwordInput = document.getElementById('vault-password-input');
-
-      const selectedTrade = vaultTradeSelect ? vaultTradeSelect.value : 'Commercial Concrete';
-      const selectedTier = vaultTierSelect ? vaultTierSelect.value : 'Tier 2: Commercial Permits';
-      const zipVal = zipInput && zipInput.value.trim() ? zipInput.value.trim() : '78130';
-      const phoneVal = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : 'SMS Queue Armed';
-      const emailVal = emailInput && emailInput.value.trim() ? emailInput.value.trim() : 'Primary Inbox Armed';
-      const companyVal = companyInput && companyInput.value.trim() ? companyInput.value.trim() : '';
-      const websiteVal = websiteInput && websiteInput.value.trim() ? websiteInput.value.trim() : '';
-      const passwordVal = passwordInput && passwordInput.value.trim() ? passwordInput.value.trim() : '';
-      const includeSmartSite = Boolean(vaultSmartSiteCheckbox && vaultSmartSiteCheckbox.checked);
-
-      if (confirmTradeVal) confirmTradeVal.textContent = selectedTrade;
-      if (confirmZipVal) confirmZipVal.textContent = zipVal;
-      if (confirmTierVal) {
-        confirmTierVal.textContent = includeSmartSite
-          ? `${selectedTier} + Smart Site Equity`
-          : selectedTier;
-      }
-      if (confirmContactVal) {
-        confirmContactVal.textContent = `DISPATCH ARMED FOR: ${phoneVal.toUpperCase()} • ${emailVal.toUpperCase()}`;
-      }
-
-      const confirmStripeUpgradeLink = document.getElementById('confirm-stripe-upgrade-link');
-      if (confirmStripeUpgradeLink) {
-        const baseStripeUrl = getStripeLinkForSelection(selectedTier, includeSmartSite);
-        confirmStripeUpgradeLink.href =
-          emailVal && emailVal.includes('@')
-            ? `${baseStripeUrl}?prefilled_email=${encodeURIComponent(emailVal)}`
-            : baseStripeUrl;
-      }
-
-      if (vaultFormView && vaultConfirmationView) {
-        vaultFormView.classList.add('hidden');
-        vaultConfirmationView.classList.remove('hidden');
-      }
-
-      startSevenAMCountdown();
-
-      try {
-        const resp = await fetch('/api/recon/activate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            companyName: companyVal,
-            websiteUrl: websiteVal,
-            accountPassword: passwordVal,
-            primaryTrade: selectedTrade,
-            tierLevel: selectedTier,
-            includeSmartSiteBundle: includeSmartSite,
-            territoryZip: zipVal,
-            mobilePhone: phoneVal,
-            bestEmail: emailVal
-          })
-        });
-        const data = await resp.json();
-        if (data && data.ok && data.briefing) {
-          const token = data.briefing.magicToken;
-          localStorage.setItem('tiberius_recon_token', token);
-          if (data.sessionToken) {
-            localStorage.setItem('tiberius_recon_session_jwt', data.sessionToken);
-          }
-          if (data.contractor) {
-            localStorage.setItem('tiberius_recon_account', JSON.stringify(data.contractor));
-          }
-          if (confirmZipVal) {
-            confirmZipVal.textContent = `${data.briefing.territoryZip} (${data.briefing.metroCity})`;
-          }
-          if (confirmOpenBriefingLink) {
-            confirmOpenBriefingLink.href = `briefing.html?token=${encodeURIComponent(token)}`;
-          }
-          if (confirmOpenInboxLink) {
-            confirmOpenInboxLink.href = `inbox.html?token=${encodeURIComponent(token)}`;
-          }
-          if (confirmOpenCommandLink) {
-            confirmOpenCommandLink.href = `command.html?token=${encodeURIComponent(token)}`;
-          }
-        }
-      } catch (_err) {
-        // Offline fallback preserves UI state
-      }
-    });
-  }
-
-  if (vaultResetBtn) {
-    vaultResetBtn.addEventListener('click', () => {
-      if (vaultFormView && vaultConfirmationView) {
-        vaultConfirmationView.classList.add('hidden');
-        vaultFormView.classList.remove('hidden');
-      }
-    });
-  }
-
-  /* ==========================================================================
-     7. 21ST.DEV ("G3") WEBGL1 'SILK' SHADER, 3D TILT & PIXEL-GRID ENGINE
-     ========================================================================== */
   function initG3VisualEngine() {
     document.documentElement.classList.add('dark');
     if (document.body) {
       document.body.classList.add('g-root', 'g3-root');
     }
 
-    // 7A. Scroll-Into-View Entrance Animation & 3D Scroll-Tilted Stage (--tilt-progress)
+    // 4A. Scroll-Into-View Entrance Animation & 3D Scroll-Tilted Stage (--tilt-progress)
     const videoScrollStage = document.getElementById('hero-video-scroll-stage');
     const videoShowcaseShell = videoScrollStage ? videoScrollStage.querySelector('.video-showcase-shell') : null;
 
@@ -829,7 +767,7 @@
     window.addEventListener('scroll', syncHeroTilt, { passive: true });
     syncHeroTilt();
 
-    // 7B. Authentic 21st.dev WebGL1 'silk' Fragment Shader (OKLab + Film Grain)
+    // 4B. Authentic 21st.dev WebGL1 'silk' Fragment Shader (OKLab + Film Grain)
     const VERT_SRC = [
       'attribute vec2 a_pos;',
       'varying vec2 v_uv;',
@@ -988,7 +926,7 @@
 
     document.querySelectorAll('canvas[data-g3-shader="silk"]').forEach(mountSilkShader);
 
-    // 7C. 21st.dev Canvas 2D Pixel-Grid Wordmark Footer
+    // 4C. 21st.dev Canvas 2D Pixel-Grid Wordmark Footer
     function renderPixelFooter(canvas) {
       const word = canvas.getAttribute('data-pixel-word') || 'TIBERIUS RECON';
       const dpr = Math.min(window.devicePixelRatio || 1, 2);

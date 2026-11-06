@@ -1126,9 +1126,9 @@ const METRO_PROFILES = {
     state: 'TX',
     countyCad: 'Comal Appraisal District (Comal CAD)',
     portalName: 'City of New Braunfels EnerGov & Regional Corridor Portal',
-    industrialCorridor: 'IH-35 Corridor & FM 306 Commercial Pkwy',
-    commercialAvenue: 'Gruene Rd & Loop 337',
-    estateNeighborhood: 'Havenwood at Hunters Crossing',
+    industrialCorridor: '1420 Industrial Pkwy, Suite B',
+    commercialAvenue: '2410 Gruene Rd & Loop 337',
+    estateNeighborhood: '1140 Whispering Pines Ln (Havenwood)',
     landmarkStreet: 'two miles east off FM 306',
     nearbyZips: ['78132', '78133', '78163', '78666']
   },
@@ -1159,7 +1159,7 @@ const METRO_PROFILES = {
     state: 'TX',
     countyCad: 'Collin Central Appraisal District (Collin CAD)',
     portalName: 'Plano / Frisco EnerGov Citizen Access',
-    industrialCorridor: '4820 Industrial Pkwy, Suite B',
+    industrialCorridor: '1420 Industrial Pkwy, Suite B',
     commercialAvenue: 'Legacy West & Preston Rd',
     estateNeighborhood: '1140 Whispering Pines Ln (Willow Bend)',
     landmarkStreet: 'two miles east on Commerce Dr',
@@ -1221,8 +1221,8 @@ function resolveMetroProfile(zipOrCityRaw) {
     state: 'TX',
     countyCad: `${resolvedCity} County Appraisal District (CAD)`,
     portalName: 'Municipal Accela & EnerGov Building Portal',
-    industrialCorridor: '4820 Industrial Pkwy, Suite B',
-    commercialAvenue: '6100 Westheimer Rd',
+    industrialCorridor: '1420 Industrial Pkwy, Suite B',
+    commercialAvenue: '2410 Gruene Rd & Loop 337',
     estateNeighborhood: '1140 Whispering Pines Ln',
     landmarkStreet: 'two miles east on Commerce Dr',
     nearbyZips: ['75024', '75034', '78130', '78746']
@@ -3601,10 +3601,10 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
         buildingSqFt: '18,500 Sq Ft',
         lotAcres: '2.4 Acres'
       },
-      contactHeader: 'VERIFIED GC PROJECT MANAGER:',
+      contactHeader: 'SAMPLE GC PROJECT MANAGER (ILLUSTRATIVE DEMO):',
       contactName: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
       contactShort: 'Marcus Vance (Apex Commercial Builders)',
-      contactMeta: `Direct Work Email + Cell Verified • 3.8 Miles From Your Shop (${metro.zip})`,
+      contactMeta: `Sample Contact & Simulated Line • 3.8 Miles From Your Shop (${metro.zip})`,
       contactEmail: 'mvance@apexcommercialbuilders.com',
       contactPhone: '(512) 555-0148',
       draftLabel: '4-SENTENCE BID INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
@@ -3635,10 +3635,10 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
         buildingSqFt: '142,000 Sq Ft',
         lotAcres: '8.6 Acres'
       },
-      contactHeader: 'REGIONAL PROPERTY MANAGER MATCH:',
+      contactHeader: 'SAMPLE REGIONAL PROPERTY MANAGER (ILLUSTRATIVE DEMO):',
       contactName: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
       contactShort: 'Dana Sterling (Crestview Commercial Mgmt)',
-      contactMeta: `Direct Inbox + Office Line • Active Q4 CapEx Upgrade Budget (${metro.city})`,
+      contactMeta: `Sample Contact & Simulated Line • Active Q4 CapEx Upgrade Budget (${metro.city})`,
       contactEmail: 'dsterling@crestviewcommercial.com',
       contactPhone: '(512) 555-0182',
       draftLabel: '4-SENTENCE VENDOR INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
@@ -3659,8 +3659,8 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
       pillText: 'CUSTOM ADDITION + CAD TAX ROLL MATCH',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
       headline: `${metro.estateNeighborhood} — ${tradeTpl.card3Headline}`,
-      subMeta: `Permit Address: ${metro.estateNeighborhood} (${metro.city}, ${metro.state} ${metro.zip}) • ${metro.countyCad} Verified`,
-      cadCallout: '$940,000 Assessed Value • 4,120 Sq Ft • 1.4 Acres • Verified Homeowner',
+      subMeta: `Permit Address: ${metro.estateNeighborhood} (${metro.city}, ${metro.state} ${metro.zip}) • ${metro.countyCad} Record`,
+      cadCallout: '$940,000 Assessed Value • 4,120 Sq Ft • 1.4 Acres • Sample Property Record',
       cadDetails: {
         parcelId: `CAD-${metro.zip}-90418A`,
         countyName: metro.countyCad,
@@ -3669,10 +3669,10 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
         buildingSqFt: '4,120 Sq Ft',
         lotAcres: '1.4 Acres'
       },
-      contactHeader: 'COUNTY APPRAISAL DISTRICT DEED MATCH:',
-      contactName: 'Dr. Robert & Elena Harrison • Verified Property Owners',
+      contactHeader: 'SAMPLE COUNTY PROPERTY RECORD MATCH (ILLUSTRATIVE DEMO):',
+      contactName: 'Dr. Robert & Elena Harrison • Sample Property Owners',
       contactShort: 'Dr. Robert & Elena Harrison',
-      contactMeta: `Parcel #CAD-90418-A (${metro.countyCad}) • Direct Owner Mobile & Email Verified`,
+      contactMeta: `Parcel #CAD-${metro.zip}-90418A (${metro.countyCad}) • Sample Contact & Simulated Line`,
       contactEmail: 'rharrison.md@privateestate.org',
       contactPhone: '(512) 555-0199',
       draftLabel: '4-SENTENCE OWNER INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
@@ -3772,10 +3772,10 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
     headline: item.title,
     subMeta: `Permit Address: ${item.redacted} • ${metro.portalName} #BP-2026-091${item.rank}`,
     cadCallout: item.cadSummary,
-    contactHeader: 'VERIFIED DECISION-MAKER MATCH:',
+    contactHeader: 'SAMPLE DECISION-MAKER MATCH (ILLUSTRATIVE DEMO):',
     contactName: item.contactName,
     contactShort: item.contactName.split('•')[0].trim(),
-    contactMeta: `Direct Email + Mobile Verified • ${metro.countyCad}`,
+    contactMeta: `Sample Contact & Simulated Line • ${metro.countyCad}`,
     contactEmail: item.contactEmail,
     contactPhone: item.contactPhone,
     redactedPreview: item.redacted,
@@ -4633,6 +4633,21 @@ function loadStore() {
             ...defaultStore.conversationThreads,
             ...(parsed.conversationThreads || {})
           };
+          // Ensure demo-7am-briefing and its conversationThreads always use unified 1420 Industrial Pkwy, Suite B address
+          if (
+            parsed.briefings['demo-7am-briefing'] &&
+            Array.isArray(parsed.briefings['demo-7am-briefing'].cards) &&
+            (!String(parsed.briefings['demo-7am-briefing'].cards[0]?.subMeta || '').includes(
+              '1420 Industrial Pkwy, Suite B'
+            ) ||
+              String(parsed.briefings['demo-7am-briefing'].cards[0]?.contactHeader || '').includes(
+                'VERIFIED GC PROJECT MANAGER'
+              ))
+          ) {
+            parsed.briefings['demo-7am-briefing'] = defaultStore.briefings['demo-7am-briefing'];
+            parsed.conversationThreads['demo-7am-briefing'] =
+              defaultStore.conversationThreads['demo-7am-briefing'];
+          }
           parsed.scoutAlertLogs = {
             ...defaultStore.scoutAlertLogs,
             ...(parsed.scoutAlertLogs || {})

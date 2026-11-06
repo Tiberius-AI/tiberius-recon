@@ -117,12 +117,15 @@
           <div>
             <div class="flex flex-wrap items-center gap-2 mb-2">
               <span class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 font-mono-telemetry text-xs text-emerald-300 font-bold">
-                💬 LIVE 2-WAY REPLY &amp; FOLLOW-UP ROOM
+                💬 2-WAY REPLY &amp; FOLLOW-UP ROOM
+              </span>
+              <span id="inbox-demo-banner" class="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-xs text-amber-300 font-bold">
+                ILLUSTRATIVE DEMO • SAMPLE RECORDS &amp; SIMULATED REPLIES
               </span>
               <span id="inbox-kb-badge" class="px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-xs text-blue-300">
                 🧠 SHOP KNOWLEDGE BASE CONNECTED
               </span>
-              <span id="inbox-pretrip-header-badge" class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+              <span id="inbox-pretrip-header-badge" class="hidden px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
                 🩺 5:30 AM Pre-Trip Watchdog: PASS
               </span>
             </div>
@@ -138,7 +141,7 @@
             <button
               id="test-scout-7am-sms-btn"
               type="button"
-              class="btn-outline-slate px-3.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              class="hidden btn-outline-slate px-3.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
             >
               <span>📲 Test 6:45 AM Scout SMS Alert</span>
             </button>
@@ -147,7 +150,7 @@
               type="button"
               class="btn-executive-navy px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
             >
-              <span>⚡ Simulate Live Prospect Reply</span>
+              <span>⚡ Simulate Sample Prospect Reply</span>
             </button>
             <a
               id="header-briefing-btn"
@@ -357,9 +360,9 @@
           </form>
 
           <!-- ================================================================
-               🧪 LIVE EMAIL (RESEND) & SMS (TWILIO) DELIVERY TESTER
+               🧪 LIVE EMAIL (RESEND) & SMS (TWILIO) DELIVERY TESTER (ADMIN ONLY)
                ================================================================ -->
-          <div class="p-4 rounded-xl bg-slate-800/95 border border-emerald-500/40 space-y-3 mt-2">
+          <div id="live-delivery-tester-panel" class="hidden p-4 rounded-xl bg-slate-800/95 border border-emerald-500/40 space-y-3 mt-2">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">
@@ -503,8 +506,8 @@
         <!-- PANE 3 (RIGHT): 1-TAP CALL/VOICEMAIL + PERMIT/CAD X-RAY + ACTIVE KNOWLEDGE BASE -->
         <div class="lg:col-span-4 space-y-6">
 
-          <!-- CARD PRE-TRIP: 5:30 AM NATIVE PRE-TRIP WATCHDOG & CIRCUIT BREAKER -->
-          <section id="pretrip-watchdog-card" class="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-3.5">
+          <!-- CARD PRE-TRIP: 5:30 AM NATIVE PRE-TRIP WATCHDOG & CIRCUIT BREAKER (ADMIN ONLY) -->
+          <section id="pretrip-watchdog-card" class="hidden bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-3.5">
             <div class="flex items-center justify-between border-b border-slate-700 pb-3">
               <div>
                 <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">🩺 5:30 AM PRE-TRIP WATCHDOG</div>
@@ -563,7 +566,7 @@
                 READ VERBATIM IF PROSPECT GOES TO VOICEMAIL:
               </div>
               <p id="voicemail-script-text" class="text-xs text-slate-100 leading-relaxed italic">
-                "Hey Marcus, this is Travis Miller with Lone Star Commercial Concrete &amp; Paving. Saw the $240,000 filing (#BP-2026-08941) at 1420 Industrial Pkwy..."
+                "Hey Marcus, this is Travis Miller with Lone Star Commercial Concrete &amp; Paving. Saw the $240,000 filing (#BP-2026-08941) at 1420 Industrial Pkwy, Suite B..."
               </p>
             </div>
 
@@ -604,7 +607,7 @@
                   $240,000 Commercial Concrete &amp; Tilt-Wall Permit
                 </div>
                 <div id="dossier-address" class="text-slate-300 mt-0.5">
-                  1420 Industrial Pkwy, New Braunfels, TX 78130
+                  1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130
                 </div>
               </div>
 
@@ -725,7 +728,7 @@
                 <button
                   id="btn-toggle-a2p-stage"
                   type="button"
-                  class="btn-outline-slate w-full py-2 px-3 rounded-lg text-[11px] font-bold cursor-pointer"
+                  class="hidden btn-outline-slate w-full py-2 px-3 rounded-lg text-[11px] font-bold cursor-pointer"
                 >
                   ⚡ Promote to Stage 2 Dedicated Subaccount
                 </button>
