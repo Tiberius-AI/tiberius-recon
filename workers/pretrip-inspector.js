@@ -117,81 +117,181 @@ function buildAntigravityRepairPrompt({ failures = [], heals = [], timestamp }) 
 }
 
 /**
- * Probes a single HTTP URL or falls back to local route verification when running in-process tests.
+ * Detects whether a hostname or URL points to a Vercel deployment-hash / preview URL
+ * (e.g. `tiberius-recon-7lhd3lout-tiberius-projects-d57bebb2.vercel.app`) that is gated
+ * behind Vercel Standard Deployment Protection (HTTP 401 SSO redirect).
+ */
+function isProtectedVercelDeploymentUrl(hostOrUrl = '') {
+  const cleanHost = String(hostOrUrl || '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .split('/')[0]
+    .split('?')[0]
+    .toLowerCase();
+  if (!cleanHost || !cleanHost.endsWith('.vercel.app')) return false;
+  if (cleanHost === 'tiberius-recon.vercel.app') return false;
+  return (
+    cleanHost.includes('-projects-') ||
+    /^tiberius-recon-[a-z0-9]+/i.test(cleanHost) ||
+    cleanHost.split('-').length >= 4
+  );
+}
+
+/**
+ * Normalizes a candidate fleet baseUrl so Vercel Cron invocations on protected deployment-hash
+ * URLs (`*-tiberius-projects-*.vercel.app`) automatically target the public production domain
+ * (`https://www.tiberius.ai` or `PUBLIC_BASE_URL`) instead of failing with HTTP 401.
+ */
+function normalizeFleetBaseUrl(rawBaseUrl = '') {
+  const candidate = String(rawBaseUrl || '').trim().replace(/\/$/, '');
+  if (candidate && /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(candidate)) {
+    return candidate;
+  }
+  if (candidate && !isProtectedVercelDeploymentUrl(candidate)) {
+    return candidate.startsWith('http') ? candidate : `https://${candidate}`;
+  }
+
+  const envPublic = String(process.env.PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
+  if (envPublic && !isProtectedVercelDeploymentUrl(envPublic)) {
+    return envPublic.startsWith('http') ? envPublic : `https://${envPublic}`;
+  }
+
+  const envProdHost = String(process.env.VERCEL_PROJECT_PRODUCTION_URL || '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/$/, '');
+  if (envProdHost && !isProtectedVercelDeploymentUrl(envProdHost)) {
+    return `https://${envProdHost}`;
+  }
+
+  const envVercelUrl = String(process.env.VERCEL_URL || '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/$/, '');
+  if (envVercelUrl && !isProtectedVercelDeploymentUrl(envVercelUrl)) {
+    return `https://${envVercelUrl}`;
+  }
+
+  if (candidate || process.env.VERCEL || process.env.VERCEL_URL) {
+    return 'https://www.tiberius.ai';
+  }
+
+  return `http://127.0.0.1:${process.env.PORT || 3000}`;
+}
+
+/**
+ * Probes a single HTTP URL or falls back to public production URLs / local route verification
+ * when running under Vercel Deployment Protection or in-process tests.
  */
 async function probeFleetEndpoint(endpointSpec, { baseUrl, timeoutMs = 10000 } = {}) {
   const { label, pathOrUrl, fallbackCheck } = endpointSpec;
   const isExternal = /^https?:\/\//i.test(pathOrUrl);
-  const defaultBaseUrl =
-    process.env.PUBLIC_BASE_URL ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : '') ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
-    (process.env.VERCEL ? 'https://www.tiberius.ai' : `http://127.0.0.1:${process.env.PORT || 3000}`);
-  const fullUrl = isExternal
-    ? pathOrUrl
-    : `${String(baseUrl || defaultBaseUrl).replace(/\/$/, '')}${pathOrUrl}`;
+  const resolvedBaseUrl = normalizeFleetBaseUrl(baseUrl);
+  const primaryUrl = isExternal ? pathOrUrl : `${resolvedBaseUrl}${pathOrUrl}`;
+  const isLocalTarget = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/i.test(primaryUrl);
 
-  const started = Date.now();
-  try {
-    const resp = await fetch(fullUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Tiberius-PreTrip-Watchdog/1.0',
-        Accept: 'text/html,application/json,*/*'
-      },
-      signal: AbortSignal.timeout(timeoutMs)
-    });
-    const latencyMs = Date.now() - started;
-    if (resp.status >= 200 && resp.status < 400) {
-      return {
-        endpoint: label,
-        url: fullUrl,
-        ok: true,
-        status: resp.status,
-        latencyMs,
-        mode: 'HTTP_LIVE'
-      };
-    }
-    return {
-      endpoint: label,
-      url: fullUrl,
-      ok: false,
-      status: resp.status,
-      latencyMs,
-      error: `HTTP ${resp.status}`
-    };
-  } catch (err) {
-    const latencyMs = Date.now() - started;
-    // If running inside a CLI test runner where local server isn't bound or external DNS is sandboxed,
-    // verify the handler/asset directly if a fallbackCheck is provided.
-    if (typeof fallbackCheck === 'function') {
-      try {
-        const fallbackOk = await fallbackCheck();
-        if (fallbackOk) {
-          return {
-            endpoint: label,
-            url: fullUrl,
-            ok: true,
-            status: 200,
-            latencyMs,
-            mode: isExternal ? 'EXTERNAL_SANDBOX_FALLBACK' : 'IN_PROCESS_VERIFIED'
-          };
-        }
-      } catch (_fallbackErr) {
-        // Fall through to error
+  const candidateUrls = [primaryUrl];
+  if (!isExternal && !isLocalTarget) {
+    for (const prodBase of ['https://www.tiberius.ai', 'https://tiberius-recon.vercel.app']) {
+      const altUrl = `${prodBase}${pathOrUrl}`;
+      if (!candidateUrls.includes(altUrl)) {
+        candidateUrls.push(altUrl);
       }
     }
-    return {
+  }
+
+  const headers = {
+    'User-Agent': 'Tiberius-PreTrip-Watchdog/1.0',
+    Accept: 'text/html,application/json,*/*'
+  };
+  if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
+    headers['x-vercel-protection-bypass'] = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  }
+
+  let lastFailure = null;
+
+  for (const fullUrl of candidateUrls) {
+    const started = Date.now();
+    try {
+      const resp = await fetch(fullUrl, {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      const latencyMs = Date.now() - started;
+      if (resp.status >= 200 && resp.status < 400) {
+        return {
+          endpoint: label,
+          url: fullUrl,
+          ok: true,
+          status: resp.status,
+          latencyMs,
+          mode: 'HTTP_LIVE'
+        };
+      }
+      lastFailure = {
+        endpoint: label,
+        url: fullUrl,
+        ok: false,
+        status: resp.status,
+        latencyMs,
+        error: `HTTP ${resp.status}`
+      };
+      // If a remote Vercel URL returned 401/403 (Deployment Protection), continue to next public production candidate
+      if (!isExternal && (resp.status === 401 || resp.status === 403)) {
+        continue;
+      }
+      break;
+    } catch (err) {
+      const latencyMs = Date.now() - started;
+      lastFailure = {
+        endpoint: label,
+        url: fullUrl,
+        ok: false,
+        status: 0,
+        latencyMs,
+        error: err.message || 'Endpoint unreachable'
+      };
+    }
+  }
+
+  // If running inside a CLI test runner where local server isn't bound, external DNS is sandboxed,
+  // or Vercel Deployment Protection blocked an internal self-probe with HTTP 401/403,
+  // verify the handler/asset directly if a fallbackCheck is provided.
+  if (
+    typeof fallbackCheck === 'function' &&
+    (!lastFailure ||
+      lastFailure.status === 0 ||
+      (!isExternal && (lastFailure.status === 401 || lastFailure.status === 403)))
+  ) {
+    const started = Date.now();
+    try {
+      const fallbackOk = await fallbackCheck();
+      if (fallbackOk) {
+        return {
+          endpoint: label,
+          url: primaryUrl,
+          ok: true,
+          status: 200,
+          latencyMs: (lastFailure && lastFailure.latencyMs) || Date.now() - started,
+          mode: isExternal ? 'EXTERNAL_SANDBOX_FALLBACK' : 'IN_PROCESS_VERIFIED'
+        };
+      }
+    } catch (_fallbackErr) {
+      // Fall through to error
+    }
+  }
+
+  return (
+    lastFailure || {
       endpoint: label,
-      url: fullUrl,
+      url: primaryUrl,
       ok: false,
       status: 0,
-      latencyMs,
-      error: err.message || 'Endpoint unreachable'
-    };
-  }
+      latencyMs: 0,
+      error: 'Endpoint unreachable'
+    }
+  );
 }
 
 /**
@@ -805,7 +905,7 @@ async function runPreTripInspection(options = {}) {
       smsReceipt = await dispatchPreTripAdminSms({
         report,
         toPhone: options.toPhone,
-        baseUrl: options.baseUrl,
+        baseUrl: normalizeFleetBaseUrl(options.baseUrl),
         providerConfig: options.providerConfig,
         simulateOnly: simulateComms
       });
@@ -837,6 +937,8 @@ if (require.main === module) {
 module.exports = {
   inspectRecordForContamination,
   buildAntigravityRepairPrompt,
+  isProtectedVercelDeploymentUrl,
+  normalizeFleetBaseUrl,
   probeFleetEndpoint,
   runPreTripInspection
 };

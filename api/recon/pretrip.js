@@ -18,7 +18,11 @@ const {
   getLatestPreTripReport,
   savePreTripReport
 } = require('../../db/store');
-const { runPreTripInspection } = require('../../workers/pretrip-inspector');
+const {
+  runPreTripInspection,
+  isProtectedVercelDeploymentUrl,
+  normalizeFleetBaseUrl
+} = require('../../workers/pretrip-inspector');
 
 function resolveRequestBaseUrl(req) {
   const rawHost =
@@ -29,12 +33,17 @@ function resolveRequestBaseUrl(req) {
   const host = String(rawHost).split(',')[0].trim();
   if (host) {
     const isLocal = /^(127\.0\.0\.1|localhost)(:\d+)?$/i.test(host);
-    const rawProto =
-      (req && req.headers && req.headers['x-forwarded-proto']) || (isLocal ? 'http' : 'https');
-    const proto = String(rawProto).split(',')[0].trim() || (isLocal ? 'http' : 'https');
+    if (isLocal) {
+      return `http://${host}`;
+    }
+    if (isProtectedVercelDeploymentUrl(host)) {
+      return normalizeFleetBaseUrl(host);
+    }
+    const rawProto = (req && req.headers && req.headers['x-forwarded-proto']) || 'https';
+    const proto = String(rawProto).split(',')[0].trim() || 'https';
     return `${proto}://${host}`;
   }
-  return 'https://www.tiberius.ai';
+  return normalizeFleetBaseUrl('https://www.tiberius.ai');
 }
 
 module.exports = async function handler(req, res) {
