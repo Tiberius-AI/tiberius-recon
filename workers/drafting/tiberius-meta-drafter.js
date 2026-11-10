@@ -107,11 +107,21 @@ function generateTiberiusMetaOutreachSequence({
   baitPermits = [],
   playbook = 'FULL_BUNDLE_OFFENSE_DEFENSE',
   previewBriefingUrl = 'https://www.tiberius.ai/recon/briefing?token=preview-demo',
+  googleDocUrl = '',
+  loomVideoUrl = 'https://www.tiberius.ai/recon/watch',
   openSlotsInZip = 1,
   maxSlotsInZip = 2,
   senderName = 'Billy',
   senderCompany = 'Tiberius AI'
 } = {}) {
+  const effectiveGoogleDocUrl =
+    googleDocUrl ||
+    prospect.googleDocUrl ||
+    'https://drive.google.com/drive/folders/1kvnCDZOBjQXkdbWXDE3mY_sYZJE4ulS-';
+  const effectiveLoomUrl =
+    loomVideoUrl ||
+    prospect.loomVideoUrl ||
+    'https://www.tiberius.ai/recon/watch';
   const ownerFirst = String(prospect.contactFirstName || prospect.contactName || 'there')
     .replace(/^(Mr\.|Ms\.|Mrs\.|Dr\.)\s+/i, '')
     .trim()
@@ -313,9 +323,11 @@ function generateTiberiusMetaOutreachSequence({
   const autoReplyDemoMessage = [
     `${greeting}`,
     ``,
-    `Here is ${prospect.companyName}'s live 7:00 AM Recon Briefing & 3-Leak Site Breakdown for ${city} (${zip}):`,
+    `Here is ${prospect.companyName}'s custom Google Doc Dossier, 90-second video walkthrough, and live 7:00 AM Recon Briefing for ${city} (${zip}):`,
     ``,
-    `👉 Live Permit Queue (${prospect.companyName} Sandbox): ${previewBriefingUrl}`,
+    `📄 Custom Google Doc Dossier (3 Pulled Permits + Site X-Ray): ${effectiveGoogleDocUrl}`,
+    `🎥 90-Second Personal Loom Walkthrough: ${effectiveLoomUrl}`,
+    `👉 Interactive Live Sandbox (${prospect.companyName} Queue): ${previewBriefingUrl}`,
     ``,
     `What's inside right now:`,
     `1. Permit #${primaryPermit.permitNumber} (${primaryPermit.valuationFormatted}) at ${primaryPermit.address} — ${primaryPermit.gcContact} (${primaryPermit.gcCompany}) direct phone & email verified.`,

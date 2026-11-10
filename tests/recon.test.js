@@ -11,6 +11,7 @@
  */
 
 const assert = require('assert');
+const net = require('node:net');
 const { createReconServer } = require('../server');
 const {
   SYNTHETIC_DEMO_PERMIT_NUMBERS,
@@ -41,15 +42,29 @@ const {
 } = require('../workers/pretrip-inspector');
 const {
   formatPreTripEmailManifest,
-  dispatchPreTripAdminSms
+  dispatchPreTripAdminSms,
+  isFictionalEmailAddress,
+  hasResolvableEmailDomain
 } = require('../workers/comms-dispatcher');
 const {
   buildLivePermitGreeting,
   resolvePermitValuation
 } = require('../workers/live-zero-api-agent');
 
+if (!process.env.TIBERIUS_LIVE_EMAIL_TEST) {
+  process.env.TIBERIUS_TEST_SIMULATE_EMAIL = '1';
+}
+
 async function runTests() {
   clearSeenPermits();
+  assert.strictEqual(isFictionalEmailAddress('mdelgado@gvconcretepaving.com'), true);
+  assert.strictEqual(isFictionalEmailAddress('garrett@hillcountrystandingseam.com'), true);
+  assert.strictEqual(isFictionalEmailAddress('grant@comalmep.com'), true);
+  assert.strictEqual(isFictionalEmailAddress('chenderson@balconesflatwork.com'), true);
+  assert.strictEqual(isFictionalEmailAddress('feedbackdaisy@gmail.com'), false);
+  assert.strictEqual(isFictionalEmailAddress('feedbackdaisy+concrete@gmail.com'), false);
+  assert.strictEqual(await hasResolvableEmailDomain('mdelgado@gvconcretepaving.com'), false);
+  assert.strictEqual(await hasResolvableEmailDomain('feedbackdaisy@gmail.com'), true);
   const server = createReconServer();
   await new Promise((resolve) => server.listen(0, resolve));
   const { port } = server.address();
@@ -1864,6 +1879,171 @@ async function runTests() {
     const adminRestoreData = await adminRestoreResp.json();
     assert.strictEqual(adminRestoreData.ok, true, 'Restoring default Master Admin credentials must succeed');
 
+    console.log('[30/30] Testing Client-Owned Outbound Email (Mail App Handoff + Encrypted Shop SMTP) & Native Phone SMS...');
+    // 1. Day-1 Default Handoff (Zero Setup) on /api/recon/approve
+    const handoffEmailResp = await fetch(`${baseUrl}/api/recon/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        action: 'approve-send',
+        cardId: 'deal-2',
+        dispatchChannel: 'CLIENT_EMAIL'
+      })
+    });
+    const handoffEmailData = await handoffEmailResp.json();
+    assert.strictEqual(handoffEmailData.ok, true);
+    assert.strictEqual(handoffEmailData.dispatchReceipt.provider, 'CLIENT_NATIVE_EMAIL_HANDOFF');
+    assert.strictEqual(handoffEmailData.dispatchReceipt.handoffRequired, true);
+    assert.ok(handoffEmailData.dispatchReceipt.mailtoUri.startsWith('mailto:'));
+    assert.ok(handoffEmailData.dispatchReceipt.gmailWebUri.startsWith('https://mail.google.com/'));
+    assert.ok(handoffEmailData.dispatchReceipt.outlookWebUri.startsWith('https://outlook.office.com/'));
+
+    const handoffSmsResp = await fetch(`${baseUrl}/api/recon/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        action: 'approve-send',
+        cardId: 'deal-3',
+        dispatchChannel: 'NATIVE_SMS'
+      })
+    });
+    const handoffSmsData = await handoffSmsResp.json();
+    assert.strictEqual(handoffSmsData.ok, true);
+    assert.strictEqual(handoffSmsData.dispatchReceipt.provider, 'NATIVE_SIM_PROTOCOL');
+    assert.ok(handoffSmsData.dispatchReceipt.nativeSimUri.startsWith('sms:+1'));
+
+    // 2. Tier B: Local Loopback Mock SMTP Server + Encrypted Shop SMTP 1-Tap Dispatch
+    const capturedSmtpPayloads = [];
+    const mockSmtpServer = net.createServer((sock) => {
+      sock.write('220 127.0.0.1 ESMTP ShopMockReady\r\n');
+      let inDataMode = false;
+      let dataBuf = '';
+      let lineRemainder = '';
+
+      sock.on('data', (chunk) => {
+        const str = chunk.toString('utf8');
+        if (inDataMode) {
+          dataBuf += str;
+          if (dataBuf.includes('\r\n.\r\n')) {
+            capturedSmtpPayloads.push(dataBuf);
+            inDataMode = false;
+            dataBuf = '';
+            sock.write('250 2.0.0 OK Queued by Client Shop SMTP\r\n');
+          }
+          return;
+        }
+        lineRemainder += str;
+        const lines = lineRemainder.split('\r\n');
+        lineRemainder = lines.pop();
+        for (const rawLine of lines) {
+          const upper = rawLine.toUpperCase();
+          if (upper.startsWith('EHLO') || upper.startsWith('HELO')) {
+            sock.write('250-127.0.0.1 Hello\r\n250 AUTH PLAIN LOGIN\r\n');
+          } else if (upper.startsWith('AUTH PLAIN')) {
+            sock.write('235 2.7.0 Authentication successful\r\n');
+          } else if (upper.startsWith('MAIL FROM:') || upper.startsWith('RCPT TO:')) {
+            sock.write('250 2.1.0 OK\r\n');
+          } else if (upper === 'DATA') {
+            inDataMode = true;
+            sock.write('354 End data with <CR><LF>.<CR><LF>\r\n');
+          } else if (upper === 'QUIT') {
+            sock.write('221 2.0.0 Bye\r\n');
+            sock.end();
+          } else {
+            sock.write('250 OK\r\n');
+          }
+        }
+      });
+    });
+
+    await new Promise((resolve) => mockSmtpServer.listen(0, '127.0.0.1', resolve));
+    const mockSmtpPort = mockSmtpServer.address().port;
+
+    try {
+      // Save encrypted Shop SMTP config on the contractor account
+      const saveSmtpResp = await fetch(`${baseUrl}/api/recon/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_profile',
+          token,
+          clientEmailConfig: {
+            mode: 'CLIENT_SMTP',
+            preferredComposeTarget: 'GMAIL_WEB',
+            providerPreset: 'custom',
+            smtpHost: '127.0.0.1',
+            smtpPort: mockSmtpPort,
+            smtpUser: 'feedbackdaisy@gmail.com',
+            fromEmail: 'feedbackdaisy@gmail.com',
+            smtpPass: 'shop-app-pass-2026'
+          }
+        })
+      });
+      const saveSmtpData = await saveSmtpResp.json();
+      assert.strictEqual(saveSmtpData.ok, true);
+      assert.strictEqual(saveSmtpData.account.clientEmailConfig.hasSmtpPassword, true);
+      assert.strictEqual(saveSmtpData.account.clientEmailConfig.isSmtpReady, true);
+      assert.strictEqual(
+        saveSmtpData.account.clientEmailConfig.smtpPassEncrypted,
+        undefined,
+        'Encrypted SMTP secret must never leak in API JSON'
+      );
+
+      // Verify Shop SMTP Self-Test endpoint
+      const testSmtpResp = await fetch(`${baseUrl}/api/recon/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'test_client_smtp',
+          token,
+          testRecipientEmail: 'feedbackdaisy@gmail.com'
+        })
+      });
+      const testSmtpData = await testSmtpResp.json();
+      assert.strictEqual(testSmtpData.ok, true);
+      assert.strictEqual(testSmtpData.receipt.provider, 'CLIENT_SMTP_LIVE');
+      assert.strictEqual(capturedSmtpPayloads.length, 1);
+
+      // Verify 1-Tap Morning Briefing approval dispatches live via contractor's own Shop SMTP
+      const liveSmtpApproveResp = await fetch(`${baseUrl}/api/recon/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          action: 'approve-send',
+          cardId: 'deal-4',
+          dispatchChannel: 'CLIENT_EMAIL'
+        })
+      });
+      const liveSmtpApproveData = await liveSmtpApproveResp.json();
+      assert.strictEqual(liveSmtpApproveData.ok, true);
+      assert.strictEqual(liveSmtpApproveData.providerDispatched, true);
+      assert.strictEqual(liveSmtpApproveData.dispatchReceipt.provider, 'CLIENT_SMTP_LIVE');
+      assert.strictEqual(liveSmtpApproveData.dispatchReceipt.handoffRequired, false);
+
+      // Verify 3-Pane Conversation Room reply dispatches live via contractor's own Shop SMTP
+      const liveSmtpReplyResp = await fetch(`${baseUrl}/api/recon/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          threadId: firstThreadId,
+          channel: 'CLIENT_EMAIL',
+          messageBody: 'Sending directly from our own shop mailbox — zero third-party Resend outreach.'
+        })
+      });
+      const liveSmtpReplyData = await liveSmtpReplyResp.json();
+      assert.strictEqual(liveSmtpReplyData.ok, true);
+      assert.strictEqual(liveSmtpReplyData.handoffRequired, false);
+      assert.strictEqual(liveSmtpReplyData.providerReceipt.provider, 'CLIENT_SMTP_LIVE');
+      assert.ok(capturedSmtpPayloads.length >= 3);
+      assert.ok(capturedSmtpPayloads[capturedSmtpPayloads.length - 1].includes('Reply-To:'));
+    } finally {
+      mockSmtpServer.close();
+    }
+
     // Reset state for idempotent test runs
     clearSeenPermits();
     setPreTripHoldDispatch(false, 'Test suite cleanup');
@@ -1900,7 +2080,7 @@ async function runTests() {
     });
     clearSeenPermits();
 
-    console.log('\n✅ ALL 29 TIBERIUS RECON™ & META-RECON™ AUTONOMOUS LEAD-GEN END-TO-END TESTS PASSED.');
+    console.log('\n✅ ALL 30 TIBERIUS RECON™ & META-RECON™ AUTONOMOUS LEAD-GEN END-TO-END TESTS PASSED.');
   } finally {
     server.close();
   }

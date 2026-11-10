@@ -529,42 +529,80 @@
               </div>
             </div>
 
-            <!-- 1-Tap Approve & Send + Native Handoff Buttons -->
+            <!-- Client-Owned Email + Personal Phone SMS Dispatch Buttons -->
             <div class="pt-3 border-t border-slate-200 space-y-2">
-              <button
-                type="button"
-                data-action="approve-send"
-                data-channel="CLOUD_DISPATCH"
-                data-card-id="${card.id}"
-                class="btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
-              >
-                [ ✓ Approve &amp; Send ]
-              </button>
+              ${
+                state.contractor &&
+                state.contractor.clientEmailConfig &&
+                state.contractor.clientEmailConfig.isSmtpReady
+                  ? `
+                    <button
+                      type="button"
+                      data-action="approve-send"
+                      data-channel="CLIENT_EMAIL"
+                      data-card-id="${card.id}"
+                      class="btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
+                    >
+                      ⚡ Approve &amp; 1-Tap Send (My Shop Email)
+                    </button>
+                    <button
+                      type="button"
+                      data-action="approve-send"
+                      data-channel="NATIVE_SMS"
+                      data-card-id="${card.id}"
+                      class="btn-outline-slate w-full py-2.5 px-3 rounded-xl text-xs font-bold text-center cursor-pointer"
+                    >
+                      📱 Approve &amp; Text from My Phone
+                    </button>
+                  `
+                  : `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        data-action="approve-send"
+                        data-channel="CLIENT_EMAIL"
+                        data-card-id="${card.id}"
+                        class="btn-trust-emerald py-2.5 px-3 rounded-xl text-xs font-bold text-center cursor-pointer"
+                      >
+                        ✉️ Send from My Email
+                      </button>
+                      <button
+                        type="button"
+                        data-action="approve-send"
+                        data-channel="NATIVE_SMS"
+                        data-card-id="${card.id}"
+                        class="btn-outline-slate py-2.5 px-3 rounded-xl text-xs font-bold text-center cursor-pointer"
+                      >
+                        📱 Text from My Phone
+                      </button>
+                    </div>
+                  `
+              }
 
               <div class="grid grid-cols-3 gap-1.5">
-                <a
-                  href="${smsHref}"
-                  data-action="native-handoff"
-                  data-channel="NATIVE_SMS"
+                <button
+                  type="button"
+                  data-action="approve-send"
+                  data-channel="GMAIL_WEB"
                   data-card-id="${card.id}"
-                  class="btn-outline-slate py-2 px-2 rounded-lg text-[11px] font-bold text-center inline-flex items-center justify-center gap-1"
+                  class="btn-outline-slate py-1.5 px-2 rounded-lg text-[11px] font-bold text-center inline-flex items-center justify-center gap-1 cursor-pointer"
                 >
-                  <span>📱 Text</span>
-                </a>
-                <a
-                  href="${mailtoHref}"
-                  data-action="native-handoff"
-                  data-channel="NATIVE_EMAIL"
+                  <span>📨 Gmail</span>
+                </button>
+                <button
+                  type="button"
+                  data-action="approve-send"
+                  data-channel="OUTLOOK_WEB"
                   data-card-id="${card.id}"
-                  class="btn-outline-slate py-2 px-2 rounded-lg text-[11px] font-bold text-center inline-flex items-center justify-center gap-1"
+                  class="btn-outline-slate py-1.5 px-2 rounded-lg text-[11px] font-bold text-center inline-flex items-center justify-center gap-1 cursor-pointer"
                 >
-                  <span>✉️ Mail</span>
-                </a>
+                  <span>📨 Outlook</span>
+                </button>
                 <button
                   type="button"
                   data-action="copy-intro"
                   data-card-id="${card.id}"
-                  class="btn-outline-slate py-2 px-2 rounded-lg text-[11px] font-bold text-center inline-flex items-center justify-center gap-1 cursor-pointer"
+                  class="btn-outline-slate py-1.5 px-2 rounded-lg text-[11px] font-bold text-center inline-flex items-center justify-center gap-1 cursor-pointer"
                 >
                   <span>📋 Copy</span>
                 </button>
@@ -866,6 +904,24 @@
         state.isHistoricalView = Boolean(data.briefing.isHistoricalView);
         state.editingCardId = null;
         renderAll();
+
+        const dr = data.dispatchReceipt;
+        if (payload.action === 'approve-send' && dr) {
+          const ch = String(payload.dispatchChannel || 'CLIENT_EMAIL').toUpperCase();
+          if (ch.includes('SMS') && dr.nativeSimUri) {
+            window.location.href = dr.nativeSimUri;
+          } else if (dr.handoffRequired) {
+            if (ch === 'GMAIL_WEB' && dr.gmailWebUri) {
+              window.open(dr.gmailWebUri, '_blank', 'noopener');
+            } else if (ch === 'OUTLOOK_WEB' && dr.outlookWebUri) {
+              window.open(dr.outlookWebUri, '_blank', 'noopener');
+            } else if (dr.preferredComposeUri && dr.preferredComposeUri.startsWith('https://')) {
+              window.open(dr.preferredComposeUri, '_blank', 'noopener');
+            } else if (dr.mailtoUri) {
+              window.location.href = dr.mailtoUri;
+            }
+          }
+        }
       }
     } catch (_err) {
       // Optimistic UI fallback if offline
@@ -873,7 +929,7 @@
         const card = state.briefing.cards.find((c) => c.id === payload.cardId);
         if (card && payload.action === 'approve-send') {
           card.approvalStatus = 'sent';
-          card.dispatchChannel = payload.dispatchChannel || 'CLOUD_DISPATCH';
+          card.dispatchChannel = payload.dispatchChannel || 'CLIENT_EMAIL';
           card.approvedTimeLabel = '07:01:18 AM';
         } else if (card && payload.action === 'reset-card') {
           card.approvalStatus = 'ready';
@@ -917,7 +973,7 @@
       if (action === 'approve-send') {
         const editorEl = document.getElementById(`draft-editor-${cardId}`);
         const updatedText = editorEl ? editorEl.value : undefined;
-        const channel = target.getAttribute('data-channel') || 'CLOUD_DISPATCH';
+        const channel = target.getAttribute('data-channel') || 'CLIENT_EMAIL';
         sendCardAction({
           action: 'approve-send',
           cardId,
@@ -928,10 +984,13 @@
       }
 
       if (action === 'native-handoff') {
+        const editorEl = document.getElementById(`draft-editor-${cardId}`);
+        const updatedText = editorEl ? editorEl.value : undefined;
         const channel = target.getAttribute('data-channel') || 'NATIVE_SMS';
         sendCardAction({
           action: 'approve-send',
           cardId,
+          updatedDraftBody: updatedText,
           dispatchChannel: channel
         });
         return;

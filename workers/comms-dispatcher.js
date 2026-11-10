@@ -17,7 +17,53 @@
  *        Twilio Subaccount / Bridge Pool.
  */
 
+const dns = require('node:dns').promises;
+const {
+  decryptSmtpSecret,
+  resolveSmtpPresetDefaults,
+  sanitizeClientEmailConfig,
+  buildClientMailHandoffLinks,
+  sendViaClientSmtp
+} = require('./client-smtp-sender');
+
 const INBOUND_REPLY_DOMAIN = process.env.RECON_INBOUND_DOMAIN || 'inbound.tiberius.ai';
+const DEFAULT_TEST_OWNER_EMAIL = process.env.ADMIN_ALERT_EMAIL || 'feedbackdaisy@gmail.com';
+
+const FICTIONAL_DEMO_EMAIL_REGEX =
+  /^(your-email@gmail\.com|you@company\.com|client@company\.com|name@company\.com)$|@(gvconcretepaving\.com|hillcountrystandingseam\.com|comalmep\.com|balconesflatwork\.com|creeksidecustompools\.com|alamoturnover\.com|apexcommercialbuilders\.com|crestviewcommercial\.com|horizoncommercialgc\.com|contractor\.com|company\.com|example\.com|tiberius\.site|gmail-demo\.com|privateestate\.org|vantageretail\.com|prescotcapital\.com|medcorebuilders\.com|ironcladindustrial\.com|austinortho\.com|spawglass\.com|r-o\.com|arlucasconstruction\.com|tsbyrne\.com|joeris\.com|bartlettcocke\.com|guidoconstruction\.com|chasco\.com|sabrecommercial\.com|lottbrothers\.com|cadencemcshane\.com|streamrealty\.com|kellermartin\.com|vaughnconstruction\.com|rcpageconstruction\.com|structurainc\.com|gwmitchell\.com|browningconstruction\.com|catamountinc\.com|embreydc\.com|whiteconst\.com|aquilacommercial\.com|metrocontracting\.com|transwestern\.com|endeavor-re\.com|lpc\.com|cbre\.com|alamohvac\.com|centexroofing\.com|brazoscommercial\.com|brazoselectric\.com|hillcountryconcrete\.com|sanantonioroofing\.com|lonestarconcrete\.com|corridorcontractors\.com|commercialcorridor\.com|stoddardconstruction\.com|faco-tx\.com|rosendin\.com|sundt\.com|hines\.com|flintco\.com|hoar\.com|beckgroup\.com|drymalla\.com)$/i;
+
+const mxValidationCache = new Map();
+
+function isFictionalEmailAddress(rawEmail) {
+  const clean = String(rawEmail || '').trim().toLowerCase();
+  if (!clean || !clean.includes('@')) return true;
+  return FICTIONAL_DEMO_EMAIL_REGEX.test(clean);
+}
+
+async function hasResolvableEmailDomain(rawEmail) {
+  const clean = String(rawEmail || '').trim().toLowerCase();
+  if (isFictionalEmailAddress(clean)) return false;
+  const domain = clean.split('@')[1] || '';
+  if (!domain) return false;
+  if (mxValidationCache.has(domain)) {
+    return mxValidationCache.get(domain);
+  }
+  try {
+    const mxRecords = await Promise.race([
+      dns.resolveMx(domain),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DNS_TIMEOUT')), 2500))
+    ]);
+    const valid =
+      Array.isArray(mxRecords) &&
+      mxRecords.length > 0 &&
+      mxRecords.some((r) => r && r.exchange && String(r.exchange).trim().length > 0);
+    mxValidationCache.set(domain, valid);
+    return valid;
+  } catch (_err) {
+    mxValidationCache.set(domain, false);
+    return false;
+  }
+}
 
 function normalizePhoneE164(rawPhone) {
   const digits = String(rawPhone || '').replace(/\D/g, '');
@@ -126,17 +172,21 @@ async function dispatchViaResendEmail({
   const emailSubject =
     subject || `Quick question regarding your project permit (${contractor.companyName || 'Local Bid'})`;
 
-  const replyToList = contractor.workEmail
-    ? [replyToAddress, contractor.workEmail]
-    : [replyToAddress];
+  const replyToList =
+    contractor.workEmail && !isFictionalEmailAddress(contractor.workEmail)
+      ? [replyToAddress, contractor.workEmail]
+      : [replyToAddress];
 
   let providerError = null;
-  const isFictionalDemoRecipient =
-    /@(apexcommercialbuilders\.com|crestviewcommercial\.com|horizoncommercialgc\.com|contractor\.com|gmail-demo\.com|privateestate\.org|vantageretail\.com|prescotcapital\.com|medcorebuilders\.com|ironcladindustrial\.com|austinortho\.com|spawglass\.com|r-o\.com|arlucasconstruction\.com|tsbyrne\.com|joeris\.com|bartlettcocke\.com|guidoconstruction\.com|chasco\.com|sabrecommercial\.com|lottbrothers\.com|cadencemcshane\.com|streamrealty\.com|kellermartin\.com|vaughnconstruction\.com|rcpageconstruction\.com|structurainc\.com|gwmitchell\.com|browningconstruction\.com|catamountinc\.com|embreydc\.com|whiteconst\.com|aquilacommercial\.com|metrocontracting\.com|transwestern\.com|endeavor-re\.com|lpc\.com|cbre\.com)$/i.test(
-      String(recipientEmail || '').trim()
-    );
+  const simulateTestMode = process.env.TIBERIUS_TEST_SIMULATE_EMAIL === '1';
+  const isFictionalDemoRecipient = isFictionalEmailAddress(recipientEmail);
+  const canDeliverMx =
+    !simulateTestMode &&
+    !isFictionalDemoRecipient &&
+    Boolean(resendApiKey && recipientEmail) &&
+    (await hasResolvableEmailDomain(recipientEmail));
 
-  if (resendApiKey && recipientEmail && !isFictionalDemoRecipient) {
+  if (canDeliverMx) {
     const candidateFromAddresses = [
       ...new Set([fromEmail, 'recon@send.tiberius.ai', 'onboarding@resend.dev'])
     ];
@@ -197,10 +247,135 @@ async function dispatchViaResendEmail({
     providerError,
     providerMessageId: `re_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     from: `${senderDisplay} <${fromEmail}>`,
-    to: recipientEmail || 'verified-prospect@contractor.com',
+    to: recipientEmail || DEFAULT_TEST_OWNER_EMAIL,
     recipientName: recipientName || 'Prospect',
     subject: emailSubject,
     replyToAddress,
+    dispatchedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Dispatches client-owned outreach email WITHOUT ever touching Tiberius AI's Resend account:
+ *   - Tier B (`CLIENT_SMTP`): If the contractor configured their own Shop SMTP credentials in Command
+ *     Settings (and channel isn't explicitly forcing `NATIVE_EMAIL` / `GMAIL_WEB` / `OUTLOOK_WEB`),
+ *     dispatches 1-tap directly through their own mailbox.
+ *   - Tier A (`NATIVE_APP` Day-1 Default): Returns `mailtoUri`, `gmailWebUri`, `outlookWebUri`, and
+ *     `preferredComposeUri` so the client's device/browser opens their own email app pre-filled.
+ */
+async function dispatchClientOwnedEmail({
+  contractor = {},
+  recipientEmail,
+  recipientName,
+  subject,
+  bodyText,
+  token = 'demo-7am-briefing',
+  threadId = 'thread-deal-1',
+  requestedChannel = 'CLIENT_EMAIL'
+} = {}) {
+  const replyToAddress = buildThreadReplyToAddress(token, threadId);
+  const senderName = `${contractor.ownerName || 'Estimator'} (${
+    contractor.companyName || 'Local Trade Partner'
+  })`;
+  const shopEmail = String(contractor.workEmail || '').trim();
+  const cleanBody = String(bodyText || '').replace(/^"|"$/g, '').trim();
+  const emailSubject =
+    subject ||
+    `Quick question regarding your project permit (${contractor.companyName || 'Local Bid'})`;
+
+  const rawClientCfg = contractor.clientEmailConfig || {};
+  const sanitizedCfg = sanitizeClientEmailConfig(rawClientCfg, shopEmail);
+
+  let effectiveTarget = sanitizedCfg.preferredComposeTarget || 'MAILTO';
+  if (requestedChannel === 'GMAIL_WEB') effectiveTarget = 'GMAIL_WEB';
+  if (requestedChannel === 'OUTLOOK_WEB') effectiveTarget = 'OUTLOOK_WEB';
+  if (requestedChannel === 'NATIVE_EMAIL') effectiveTarget = 'MAILTO';
+
+  const handoffLinks = buildClientMailHandoffLinks({
+    toEmail: recipientEmail,
+    subject: emailSubject,
+    bodyText: cleanBody,
+    preferredComposeTarget: effectiveTarget
+  });
+
+  const forceNativeHandoff = ['NATIVE_EMAIL', 'GMAIL_WEB', 'OUTLOOK_WEB'].includes(
+    String(requestedChannel || '').toUpperCase()
+  );
+
+  let smtpError = null;
+  if (!forceNativeHandoff && sanitizedCfg.isSmtpReady && recipientEmail) {
+    const resolved = resolveSmtpPresetDefaults(
+      rawClientCfg.providerPreset,
+      rawClientCfg.smtpHost,
+      rawClientCfg.smtpPort
+    );
+    const smtpPass =
+      decryptSmtpSecret(rawClientCfg.smtpPassEncrypted) || String(rawClientCfg.smtpPass || '').trim();
+    const isLocalSmtp = resolved.host === '127.0.0.1' || resolved.host === 'localhost';
+    const canDeliverRecipient =
+      isLocalSmtp ||
+      (!isFictionalEmailAddress(recipientEmail) && (await hasResolvableEmailDomain(recipientEmail)));
+
+    if (smtpPass && canDeliverRecipient) {
+      const replyToList =
+        shopEmail && !isFictionalEmailAddress(shopEmail)
+          ? [shopEmail, replyToAddress]
+          : [replyToAddress];
+
+      const smtpResult = await sendViaClientSmtp({
+        smtpHost: resolved.host,
+        smtpPort: resolved.port,
+        smtpUser: sanitizedCfg.smtpUser,
+        smtpPass,
+        fromName: senderName,
+        fromEmail: sanitizedCfg.fromEmail || sanitizedCfg.smtpUser,
+        toEmail: recipientEmail,
+        replyToAddresses: replyToList,
+        subject: emailSubject,
+        bodyText: cleanBody,
+        headers: {
+          'X-Tiberius-Token': String(token),
+          'X-Tiberius-Thread-Id': String(threadId)
+        }
+      });
+
+      if (smtpResult.ok) {
+        return {
+          ok: true,
+          liveDispatched: true,
+          handoffRequired: false,
+          provider: 'CLIENT_SMTP_LIVE',
+          deliveryStatus: 'SENT_VIA_CLIENT_OWN_SMTP',
+          providerMessageId: smtpResult.messageId,
+          from: smtpResult.from,
+          to: recipientEmail,
+          recipientName: recipientName || 'Prospect',
+          subject: emailSubject,
+          replyToAddress,
+          ...handoffLinks,
+          dispatchedAt: smtpResult.dispatchedAt
+        };
+      }
+      smtpError = smtpResult.error;
+    }
+  }
+
+  return {
+    ok: true,
+    liveDispatched: false,
+    handoffRequired: true,
+    provider: 'CLIENT_NATIVE_EMAIL_HANDOFF',
+    deliveryStatus: smtpError
+      ? `HANDOFF_TO_CLIENT_EMAIL_APP (SMTP Fallback: ${smtpError})`
+      : 'HANDOFF_TO_CLIENT_EMAIL_APP',
+    smtpError,
+    providerMessageId: `client_mail_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    from: shopEmail ? `${senderName} <${shopEmail}>` : senderName,
+    to: recipientEmail || '',
+    recipientName: recipientName || 'Prospect',
+    subject: emailSubject,
+    replyToAddress,
+    ...handoffLinks,
     dispatchedAt: new Date().toISOString()
   };
 }
@@ -809,12 +984,16 @@ async function dispatchPreTripAdminSms({
 
 module.exports = {
   INBOUND_REPLY_DOMAIN,
+  DEFAULT_TEST_OWNER_EMAIL,
+  isFictionalEmailAddress,
+  hasResolvableEmailDomain,
   normalizePhoneE164,
   buildThreadReplyToAddress,
   parseThreadReplyToAddress,
   stripQuotedEmailChain,
   buildNativeSimSmsUri,
   dispatchViaResendEmail,
+  dispatchClientOwnedEmail,
   getContractorTwilioA2PState,
   sendMasterTwilioSmsToContractor,
   dispatchScoutMorningAlertSms,

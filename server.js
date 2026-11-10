@@ -35,6 +35,7 @@ const sendHandler = require('./api/recon/send');
 const alertsHandler = require('./api/recon/alerts');
 const pretripHandler = require('./api/recon/pretrip');
 const metaOutreachHandler = require('./api/recon/meta-outreach');
+const watchHandler = require('./api/recon/watch');
 const resendWebhookHandler = require('./api/webhooks/resend');
 const twilioWebhookHandler = require('./api/webhooks/twilio');
 
@@ -54,6 +55,7 @@ const API_ROUTES = {
   '/api/recon/alerts': alertsHandler,
   '/api/recon/pretrip': pretripHandler,
   '/api/recon/meta-outreach': metaOutreachHandler,
+  '/api/recon/watch': watchHandler,
   '/api/webhooks/resend': resendWebhookHandler,
   '/api/webhooks/twilio': twilioWebhookHandler
 };
@@ -86,6 +88,7 @@ const NFT_BUNDLED_FILES = {
   '/login.html': path.join(__dirname, 'login.html'),
   '/inbox.html': path.join(__dirname, 'inbox.html'),
   '/onboarding.html': path.join(__dirname, 'onboarding.html'),
+  '/watch.html': path.join(__dirname, 'watch.html'),
   '/styles.css': path.join(__dirname, 'styles.css'),
   '/app.js': path.join(__dirname, 'recon-app.js'),
   '/recon-app.js': path.join(__dirname, 'recon-app.js'),
@@ -94,12 +97,17 @@ const NFT_BUNDLED_FILES = {
   '/login.js': path.join(__dirname, 'login.js'),
   '/inbox.js': path.join(__dirname, 'inbox.js'),
   '/onboarding.js': path.join(__dirname, 'onboarding.js'),
+  '/watch.js': path.join(__dirname, 'watch.js'),
   '/TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.docx': path.join(__dirname, 'TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.docx'),
   '/TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.md': path.join(__dirname, 'TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.md'),
   '/images/logo4.png': path.join(__dirname, 'images', 'logo4.png'),
   '/images/tiberius-ai.png': path.join(__dirname, 'images', 'tiberius-ai.png'),
   '/images/tiberius-recon-poster.jpg': path.join(__dirname, 'images', 'tiberius-recon-poster.jpg'),
-  '/video/TIBERIUS RECON.mp4': path.join(__dirname, 'video', 'TIBERIUS RECON.mp4')
+  '/video/TIBERIUS RECON.mp4': path.join(__dirname, 'video', 'TIBERIUS RECON.mp4'),
+  '/voiceovers/recon-sample-expr-voice-2-m.wav': path.join(__dirname, 'voiceovers', 'recon-sample-expr-voice-2-m.wav'),
+  '/voiceovers/recon-sample-expr-voice-3-m.wav': path.join(__dirname, 'voiceovers', 'recon-sample-expr-voice-3-m.wav'),
+  '/voiceovers/recon-sample-expr-voice-4-m.wav': path.join(__dirname, 'voiceovers', 'recon-sample-expr-voice-4-m.wav'),
+  '/voiceovers/recon-sample-expr-voice-5-m.wav': path.join(__dirname, 'voiceovers', 'recon-sample-expr-voice-5-m.wav')
 };
 
 function createExpressStyleHelpers(req, res, parsedUrl, bodyObj) {
@@ -199,6 +207,9 @@ async function handleRequest(req, res) {
     if (pathname === '/onboarding' || pathname === '/welcome' || pathname === '/afterpay' || pathname === '/setup') {
       pathname = '/onboarding.html';
     }
+    if (pathname === '/watch' || pathname === '/loom' || pathname === '/video') {
+      pathname = '/watch.html';
+    }
 
     const relPath = pathname.replace(/^\/+/, '');
     let safeFilePath = NFT_BUNDLED_FILES[pathname] || path.join(ROOT_DIR, relPath);
@@ -292,7 +303,7 @@ function createReconServer() {
 }
 
 if (require.main === module) {
-  const port = Number(process.env.PORT) || 3080;
+  const port = Number(process.env.PORT) || 3000;
   const server = createReconServer();
   server.listen(port, () => {
     console.log(`Tiberius Recon™ server running at http://localhost:${port}`);

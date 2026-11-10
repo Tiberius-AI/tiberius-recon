@@ -330,10 +330,10 @@
                   id="reply-channel-select"
                   class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs font-mono-telemetry"
                 >
-                  <option value="RESEND_EMAIL">☁️ Resend Email (Auto Reply-To Routing)</option>
-                  <option value="TWILIO_TEST_SMS">📲 Twilio Programmable SMS (Live Test)</option>
-                  <option value="NATIVE_SIM_SMS">📱 Native SIM Text (sms: Protocol • $0 A2P Risk)</option>
-                  <option value="NATIVE_EMAIL">✉️ Native Mail App</option>
+                  <option value="CLIENT_EMAIL">✉️ My Own Email (Shop SMTP or Mail App)</option>
+                  <option value="NATIVE_SIM_SMS">📱 My Own Phone SMS (Native SIM)</option>
+                  <option value="GMAIL_WEB">📨 Open in Gmail Web Compose</option>
+                  <option value="OUTLOOK_WEB">📨 Open in Outlook Web Compose</option>
                 </select>
               </div>
 
@@ -350,12 +350,12 @@
                   type="submit"
                   class="btn-trust-emerald px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span>☁️ Send Email Reply (Resend)</span>
+                  <span>✉️ Send from My Email</span>
                 </button>
               </div>
             </div>
             <div id="reply-send-feedback" class="font-mono-telemetry text-xs text-emerald-400 font-bold hidden">
-              ✓ REPLY DISPATCHED VIA RESEND &amp; LOGGED IN CONVERSATION TIMELINE
+              ✓ REPLY DISPATCHED FROM YOUR ACCOUNT &amp; LOGGED IN CONVERSATION TIMELINE
             </div>
           </form>
 

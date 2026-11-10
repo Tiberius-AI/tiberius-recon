@@ -2,10 +2,10 @@
   "outputDirectory": ".",
   "functions": {
     "*.js": {
-      "includeFiles": "{*.html,*.css,*.js,images/**,video/**}"
+      "includeFiles": "{*.html,*.css,*.js,images/**,video/**,voiceovers/**}"
     },
     "api/**/*.js": {
-      "includeFiles": "{*.html,*.css,*.js}"
+      "includeFiles": "{*.html,*.css,*.js,voiceovers/**}"
     }
   },
   "crons": [

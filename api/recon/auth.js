@@ -12,13 +12,15 @@ const {
   activateTerritory,
   hydrateAccountFromSession,
   updateAccountProfile,
-  ensureCloudAccountsSynced
+  ensureCloudAccountsSynced,
+  getRawContractorForDispatch
 } = require('../../db/store');
 const {
   extractSessionFromRequest,
   setSessionCookie,
   clearSessionCookie
 } = require('../../db/auth');
+const { dispatchClientOwnedEmail } = require('../../workers/comms-dispatcher');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -81,6 +83,7 @@ module.exports = async function handler(req, res) {
         primaryTrade: body.primaryTrade,
         territoryZip: body.territoryZip !== undefined ? body.territoryZip : body.baseZip,
         tierLevel: body.tierLevel,
+        clientEmailConfig: body.clientEmailConfig,
         currentPassword: body.currentPassword,
         newPassword: body.newPassword !== undefined ? body.newPassword : body.password
       });
@@ -93,6 +96,63 @@ module.exports = async function handler(req, res) {
         setSessionCookie(res, updateResult.sessionToken);
       }
       return res.status(200).json(updateResult);
+    }
+
+    if (action === 'test_client_smtp') {
+      const sessionClaims = extractSessionFromRequest(req);
+      const rawContractor = getRawContractorForDispatch({
+        token: body.token || body.magicToken,
+        contractorId: body.accountId || body.contractorId,
+        sessionClaims
+      });
+      if (!rawContractor) {
+        return res.status(401).json({ ok: false, error: 'Sign in required to test Shop SMTP.' });
+      }
+      const inlineCfg =
+        body.clientEmailConfig && typeof body.clientEmailConfig === 'object'
+          ? body.clientEmailConfig
+          : {};
+      const mergedEmailCfg = {
+        ...(rawContractor.clientEmailConfig || {}),
+        ...inlineCfg,
+        mode: 'CLIENT_SMTP'
+      };
+      if (!inlineCfg.smtpPass) {
+        delete mergedEmailCfg.smtpPass;
+      }
+      const testContractor = {
+        ...rawContractor,
+        clientEmailConfig: mergedEmailCfg
+      };
+      const targetTestEmail = String(
+        body.testRecipientEmail || mergedEmailCfg.smtpUser || rawContractor.workEmail || ''
+      ).trim();
+
+      const receipt = await dispatchClientOwnedEmail({
+        contractor: testContractor,
+        recipientEmail: targetTestEmail,
+        recipientName: rawContractor.ownerName || rawContractor.companyName || 'Shop Owner',
+        subject: `✓ Shop SMTP Verified — ${rawContractor.companyName || 'Tiberius Recon'}`,
+        bodyText: `Your own Shop Email (${mergedEmailCfg.smtpUser || rawContractor.workEmail}) is connected to Tiberius Recon.\n\nAll approved permit intros and Conversation Room replies will send 100% directly from your mailbox — never from third-party bulk servers.\n\n— ${rawContractor.ownerName || 'Shop Owner'} • ${rawContractor.companyName || ''}`,
+        token: rawContractor.magicToken || body.token || 'demo-7am-briefing',
+        threadId: 'smtp-self-test',
+        requestedChannel: 'CLIENT_EMAIL'
+      });
+
+      if (receipt.provider !== 'CLIENT_SMTP_LIVE') {
+        return res.status(400).json({
+          ok: false,
+          error:
+            receipt.smtpError ||
+            'Could not send live via Shop SMTP. Check your SMTP Host, Port, Login Email, and App Password.',
+          receipt
+        });
+      }
+
+      return res.status(200).json({
+        ok: true,
+        receipt
+      });
     }
 
     if (action === 'register') {

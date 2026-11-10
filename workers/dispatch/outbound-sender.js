@@ -11,18 +11,24 @@
 
 const {
   buildThreadReplyToAddress,
-  buildNativeSimSmsUri
+  buildNativeSimSmsUri,
+  dispatchClientOwnedEmail
 } = require('../comms-dispatcher');
 
 /**
- * Dispatches an approved 4-sentence intro email on behalf of the contractor.
- * Never runs automatically — only invoked when the contractor taps `[ ✓ Approve & Send ]`.
+ * Dispatches an approved 4-sentence intro on behalf of the contractor using 100% Client-Owned channels
+ * (Zero Resend / Zero Twilio A2P cold risk):
+ *   - SMS: Contractor's own phone via Native SIM (`sms:+1...`)
+ *   - Email: Contractor's own connected Shop SMTP (`CLIENT_SMTP_LIVE`) OR Day-1 Native Email App / Gmail / Outlook handoff (`mailto:` / web compose)
  */
-async function dispatchApprovedOutreach({ card, contractor, briefing, channel = 'CLOUD_EMAIL' }) {
+async function dispatchApprovedOutreach({ card, contractor, briefing, channel = 'CLIENT_EMAIL' }) {
   const senderCompany = (contractor && contractor.companyName) || 'Lone Star Commercial Trades';
-  const senderEmail = (contractor && contractor.workEmail) || 'dispatch@tiberius.ai';
+  const senderEmail = (contractor && contractor.workEmail) || '';
   const senderPhone = (contractor && contractor.mobilePhone) || '(830) 555-0194';
-  const token = (briefing && briefing.magicToken) || (contractor && contractor.magicToken) || 'demo-7am-briefing';
+  const token =
+    (briefing && briefing.magicToken) ||
+    (contractor && contractor.magicToken) ||
+    'demo-7am-briefing';
   const threadId = `thread-${card.id || 'deal-1'}`;
   const threadReplyTo = buildThreadReplyToAddress(token, threadId);
 
@@ -33,13 +39,32 @@ async function dispatchApprovedOutreach({ card, contractor, briefing, channel = 
   const emailSubject =
     card.draftSubject || `Project Bid Inquiry — ${card.headline || 'Recent Permit Filing'}`;
 
-  const fullTextBody = `${cleanBody}\n\n—\n${senderCompany}\nDirect: ${senderPhone} | ${senderEmail}`;
+  const sigContact = senderEmail ? `${senderPhone} | ${senderEmail}` : senderPhone;
+  const fullTextBody = `${cleanBody}\n\n—\n${senderCompany}\nDirect: ${sigContact}`;
   const nativeSimUri = buildNativeSimSmsUri(card.contactPhone, cleanBody);
+  const isSmsChannel = String(channel || '').toUpperCase().includes('SMS');
+
+  let emailResult = null;
+  if (!isSmsChannel) {
+    emailResult = await dispatchClientOwnedEmail({
+      contractor: contractor || {},
+      recipientEmail: card.contactEmail,
+      recipientName: card.contactShort || card.contactName,
+      subject: emailSubject,
+      bodyText: fullTextBody,
+      token,
+      threadId,
+      requestedChannel: channel
+    });
+  }
 
   const dispatchReceipt = {
     receiptId: `rcpt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     channel,
-    fromDisplay: `${senderCompany} <recon@tiberius.ai>`,
+    provider: isSmsChannel
+      ? 'NATIVE_SIM_PROTOCOL'
+      : (emailResult && emailResult.provider) || 'CLIENT_NATIVE_EMAIL_HANDOFF',
+    fromDisplay: senderEmail ? `${senderCompany} <${senderEmail}>` : senderCompany,
     replyTo: threadReplyTo,
     contractorReplyTo: senderEmail,
     threadId,
@@ -47,87 +72,28 @@ async function dispatchApprovedOutreach({ card, contractor, briefing, channel = 
     toEmail: card.contactEmail,
     toPhone: card.contactPhone,
     nativeSimUri,
-    a2pComplianceMode: channel.includes('SMS')
+    mailtoUri: emailResult ? emailResult.mailtoUri : undefined,
+    gmailWebUri: emailResult ? emailResult.gmailWebUri : undefined,
+    outlookWebUri: emailResult ? emailResult.outlookWebUri : undefined,
+    preferredComposeUri: emailResult ? emailResult.preferredComposeUri : undefined,
+    handoffRequired: isSmsChannel
+      ? true
+      : Boolean(!emailResult || emailResult.handoffRequired),
+    a2pComplianceMode: isSmsChannel
       ? 'NATIVE_SIM_HANDOFF_ZERO_A2P_RISK'
-      : 'RESEND_EMAIL_WITH_INBOUND_WEBHOOK_ROUTING',
+      : 'CLIENT_OWNED_EMAIL_ZERO_SHARED_DOMAIN_RISK',
     subject: emailSubject,
     bodyText: fullTextBody,
     permitReference: card.cardNumber,
     propertyHeadline: card.headline,
-    providerStatus: 'SIMULATED_SANDBOX_OK',
-    liveDispatched: false,
+    providerStatus: isSmsChannel
+      ? 'HANDOFF_TO_CONTRACTOR_PERSONAL_SIM'
+      : (emailResult && emailResult.deliveryStatus) || 'HANDOFF_TO_CLIENT_EMAIL_APP',
+    liveDispatched: Boolean(emailResult && emailResult.liveDispatched),
     timestamp: new Date().toISOString()
   };
 
-  // 1. Live Resend Email API Dispatch (if RESEND_API_KEY is configured in environment)
-  if (process.env.RESEND_API_KEY && card.contactEmail) {
-    try {
-      const resp = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: process.env.RECON_FROM_EMAIL || `${senderCompany} <recon@tiberius.ai>`,
-          reply_to: [threadReplyTo, senderEmail],
-          to: [card.contactEmail],
-          subject: emailSubject,
-          text: fullTextBody,
-          headers: {
-            'X-Tiberius-Token': token,
-            'X-Tiberius-Thread-Id': threadId
-          }
-        })
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        dispatchReceipt.liveDispatched = true;
-        dispatchReceipt.providerStatus = `RESEND_DELIVERED (${data.id || 'ok'})`;
-      }
-    } catch (_err) {
-      dispatchReceipt.providerStatus = 'RESEND_FALLBACK_SANDBOX';
-    }
-  }
-
-  // 2. Live Twilio SMS API Dispatch (if TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM_NUMBER are set)
-  if (
-    channel.includes('SMS') &&
-    process.env.TWILIO_ACCOUNT_SID &&
-    process.env.TWILIO_AUTH_TOKEN &&
-    process.env.TWILIO_FROM_NUMBER &&
-    card.contactPhone
-  ) {
-    try {
-      const sid = process.env.TWILIO_ACCOUNT_SID;
-      const auth = Buffer.from(`${sid}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64');
-      const form = new URLSearchParams();
-      form.append('To', card.contactPhone);
-      form.append('From', process.env.TWILIO_FROM_NUMBER);
-      form.append('Body', `${cleanBody} - ${senderCompany} (${senderPhone})`);
-
-      const resp = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${auth}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: form.toString()
-        }
-      );
-      if (resp.ok) {
-        const data = await resp.json();
-        dispatchReceipt.liveDispatched = true;
-        dispatchReceipt.providerStatus = `TWILIO_SMS_QUEUED (${data.sid || 'ok'})`;
-      }
-    } catch (_err) {
-      dispatchReceipt.providerStatus = 'TWILIO_FALLBACK_SANDBOX';
-    }
-  }
-
-  // 3. Downstream Webhook Forwarding (Make / Zapier / Tiberius Forge)
+  // Downstream Webhook Forwarding (Make / Zapier / Tiberius Forge) if configured
   if (process.env.OUTREACH_DISPATCH_WEBHOOK_URL) {
     try {
       const resp = await fetch(process.env.OUTREACH_DISPATCH_WEBHOOK_URL, {
@@ -137,7 +103,8 @@ async function dispatchApprovedOutreach({ card, contractor, briefing, channel = 
           event: 'TIBERIUS_RECON_1TAP_APPROVED_DISPATCH',
           briefingToken: briefing ? briefing.magicToken : 'demo-7am-briefing',
           dispatchReceipt
-        })
+        }),
+        signal: AbortSignal.timeout(6000)
       });
       if (resp.ok) {
         dispatchReceipt.liveDispatched = true;
@@ -187,7 +154,8 @@ async function dispatchMorningBriefingSmsToContractor({ contractor, briefing, ba
             Authorization: `Basic ${auth}`,
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: form.toString()
+          body: form.toString(),
+          signal: AbortSignal.timeout(8000)
         }
       );
       twilioSent = resp.ok;

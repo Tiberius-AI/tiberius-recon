@@ -19,9 +19,10 @@
 const {
   getConversationRoomState,
   processConversationAction,
+  getRawContractorForDispatch,
   ensureCloudAccountsSynced
 } = require('../../db/store');
-const { dispatchViaResendEmail } = require('../../workers/comms-dispatcher');
+const { dispatchClientOwnedEmail } = require('../../workers/comms-dispatcher');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -50,11 +51,13 @@ module.exports = async function handler(req, res) {
       await ensureCloudAccountsSynced({ token });
       const action = body.action;
       const threadId = body.threadId;
-      const channel = body.channel || 'RESEND_EMAIL';
+      const channel = body.channel || 'CLIENT_EMAIL';
 
       let providerReceipt = null;
       if (action === 'send_message' && body.messageBody) {
         const currentState = getConversationRoomState(token);
+        const rawContractor =
+          getRawContractorForDispatch({ token }) || currentState.contractor || {};
         const activeThread =
           (currentState &&
             Array.isArray(currentState.threads) &&
@@ -63,14 +66,15 @@ module.exports = async function handler(req, res) {
           {};
 
         if (!String(channel).includes('SMS')) {
-          providerReceipt = await dispatchViaResendEmail({
-            contractor: currentState.contractor || {},
+          providerReceipt = await dispatchClientOwnedEmail({
+            contractor: rawContractor,
             recipientEmail: activeThread.contactEmail,
             recipientName: activeThread.contactShort || activeThread.contactName,
             subject: `Re: ${activeThread.headline || 'Permit Bid'} (${activeThread.permitNumber || ''})`,
             bodyText: body.messageBody,
             token,
-            threadId: activeThread.id || threadId
+            threadId: activeThread.id || threadId,
+            requestedChannel: channel
           });
         }
       }

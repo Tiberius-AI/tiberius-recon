@@ -13,6 +13,7 @@
 const {
   processBriefingAction,
   getBriefingByToken,
+  getRawContractorForDispatch,
   ensureCloudAccountsSynced
 } = require('../../db/store');
 const { dispatchApprovedOutreach } = require('../../workers/dispatch/outbound-sender');
@@ -40,7 +41,7 @@ module.exports = async function handler(req, res) {
     action,
     cardId: body.cardId,
     updatedDraftBody: body.updatedDraftBody,
-    dispatchChannel: body.dispatchChannel || 'CLOUD_EMAIL',
+    dispatchChannel: body.dispatchChannel || 'CLIENT_EMAIL',
     upgradeTier: body.upgradeTier,
     primaryTrade: body.primaryTrade,
     territoryZip: body.territoryZip,
@@ -54,14 +55,19 @@ module.exports = async function handler(req, res) {
 
   let dispatchReceipt = null;
   if (action === 'approve-send' && result.card) {
-    const context = getBriefingByToken(token) || {};
-    dispatchReceipt = await dispatchApprovedOutreach({
-      card: result.card,
-      contractor: context.contractor,
-      briefing: result.briefing,
-      channel: body.dispatchChannel || 'CLOUD_EMAIL'
-    });
-    result.card.dispatchReceipt = dispatchReceipt;
+    if (result.alreadySent && result.card.dispatchReceipt) {
+      dispatchReceipt = result.card.dispatchReceipt;
+    } else {
+      const context = getBriefingByToken(token) || {};
+      const rawContractor = getRawContractorForDispatch({ token }) || context.contractor;
+      dispatchReceipt = await dispatchApprovedOutreach({
+        card: result.card,
+        contractor: rawContractor,
+        briefing: result.briefing,
+        channel: body.dispatchChannel || 'CLIENT_EMAIL'
+      });
+      result.card.dispatchReceipt = dispatchReceipt;
+    }
   }
 
   return res.status(200).json({

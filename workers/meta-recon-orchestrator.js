@@ -27,6 +27,17 @@ const { sweepTiberiusProspects } = require('./scrapers/tiberius-prospect-scout')
 const { runSiteLeakXRay } = require('./enrichment/site-leak-xray');
 const { generateTiberiusMetaOutreachSequence } = require('./drafting/tiberius-meta-drafter');
 
+const PROSPECT_GOOGLE_DOCS_REGISTRY = {
+  'prospect-comal-concrete-01': '15nU_pz7SfdxTcyMZtlZBcRDnxCZ3dtiET16giYpA7xk',
+  'prospect-comal-roofing-02': '1zMo9Oqj1gqdQZynd8DvpKzlgUtizHeFrLRtJp3uCuxY',
+  'prospect-comal-mep-03': '1uv3e_ERJiX4bv1HwRvi753DaNlUfXUYDwzEZwHQgHLo',
+  'prospect-austin-concrete-04': '1PP_SBztlyLZPUVAcqcPCIwu680DdhIxcdIU_T6Cwegg',
+  'prospect-comal-outdoor-05': '1PzGP4TUhOIIrDRZwzJ0muyN-loK3pQNPywNGNZZxwDY',
+  'prospect-sa-b2b-06': '11TvDqCI_0-NZOxCMs1u0Z2xVKByU3PcqzlQcdsgyX2A'
+};
+const PROSPECT_DOSSIERS_DRIVE_FOLDER_URL =
+  'https://drive.google.com/drive/folders/1kvnCDZOBjQXkdbWXDE3mY_sYZJE4ulS-';
+
 /**
  * Classifies an inbound reply from a prospect (including 1-2-3 breakup responses).
  */
@@ -97,18 +108,48 @@ async function runMetaReconAgentSweep({
     baseUrl
   });
 
+  const existingStore = loadStore();
+  const existingById = new Map(
+    ((existingStore.metaRecon && existingStore.metaRecon.prospects) || []).map((p) => [p.id, p])
+  );
+
   const enrichedProspects = [];
   for (const prospect of gathered.prospects) {
+    const prev = existingById.get(prospect.id) || {};
+    const googleDocId =
+      prev.googleDocId ||
+      prospect.googleDocId ||
+      PROSPECT_GOOGLE_DOCS_REGISTRY[prospect.id] ||
+      '';
+    const googleDocUrl =
+      prev.googleDocUrl ||
+      prospect.googleDocUrl ||
+      (googleDocId ? `https://docs.google.com/document/d/${googleDocId}/edit` : PROSPECT_DOSSIERS_DRIVE_FOLDER_URL);
+    const cleanBase = String(baseUrl || 'https://www.tiberius.ai').replace(/\/$/, '');
+    const defaultStandaloneWatchUrl = prospect.previewToken
+      ? `${cleanBase}/recon/watch?token=${encodeURIComponent(prospect.previewToken)}`
+      : `${cleanBase}/recon/watch`;
+    const prevLoom =
+      prev.loomVideoUrl && !String(prev.loomVideoUrl).includes('loom.com/share/tiberius-recon')
+        ? prev.loomVideoUrl
+        : '';
+    const loomVideoUrl =
+      prevLoom ||
+      prospect.loomVideoUrl ||
+      defaultStandaloneWatchUrl;
+
     const siteLeakXRay = await runSiteLeakXRay(prospect, {
       fetchLiveDom: fetchLiveWeb
     });
 
     const sequence = generateTiberiusMetaOutreachSequence({
-      prospect,
+      prospect: { ...prospect, googleDocId, googleDocUrl, loomVideoUrl },
       siteLeakXRay,
       baitPermits: prospect.baitPermits,
       playbook,
       previewBriefingUrl: prospect.previewBriefingUrl,
+      googleDocUrl,
+      loomVideoUrl,
       openSlotsInZip: prospect.territoryAvailability.openSlots,
       maxSlotsInZip: prospect.territoryAvailability.maxSlots
     });
@@ -137,6 +178,10 @@ async function runMetaReconAgentSweep({
       previewToken: prospect.previewToken,
       previewBriefingUrl: prospect.previewBriefingUrl,
       previewCommandUrl: prospect.previewCommandUrl,
+      googleDocId,
+      googleDocUrl,
+      googleDriveFolderUrl: PROSPECT_DOSSIERS_DRIVE_FOLDER_URL,
+      loomVideoUrl,
       baitPermits: prospect.baitPermits.map((bp) => ({
         permitNumber: bp.permitNumber,
         address: bp.address,

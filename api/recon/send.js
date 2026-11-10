@@ -1,18 +1,20 @@
 /**
  * POST /api/recon/send
- * Unified Outbound Dispatch Router (from `Communication Notes.txt` Section 2):
- *   - Dispatches Email via Resend API with custom thread Reply-To (`reply+<token>+<threadId>@inbound.tiberius.ai`)
- *   - Generates Native SIM (`sms:+1...`) URI for cold Recon prospect texting (Zero A2P 10DLC risk)
+ * Unified Client-Owned Outbound Dispatch Router:
+ *   - Dispatches Email via the Contractor's Own Shop SMTP (1-Tap) or Native Email App Handoff (`mailto:` / Gmail / Outlook Web)
+ *   - Generates Native SIM (`sms:+1...`) URI so contractors text prospects directly from their own phone
  *   - Logs the outbound bubble in the 3-Pane Conversation Room timeline
  */
 
 const {
   getConversationRoomState,
   processConversationAction,
+  getRawContractorForDispatch,
   ensureCloudAccountsSynced
 } = require('../../db/store');
 const { extractSessionFromRequest } = require('../../db/auth');
 const {
+  dispatchClientOwnedEmail,
   dispatchViaResendEmail,
   sendMasterTwilioSmsToContractor,
   buildNativeSimSmsUri
@@ -39,7 +41,7 @@ module.exports = async function handler(req, res) {
     const token = body.token || 'demo-7am-briefing';
     await ensureCloudAccountsSynced({ token });
     const threadId = body.threadId || 'thread-deal-1';
-    const channel = body.channel || 'RESEND_EMAIL';
+    const channel = body.channel || 'CLIENT_EMAIL';
     const messageBody = String(body.messageBody || body.draftBody || '').trim();
     const sessionClaims = extractSessionFromRequest(req);
     const isAdminSession = Boolean(sessionClaims && sessionClaims.role === 'ADMIN');
@@ -68,6 +70,8 @@ module.exports = async function handler(req, res) {
 
     const targetEmail = overrideEmail || activeThread.contactEmail;
     const targetPhone = overridePhone || activeThread.contactPhone;
+    const rawContractor =
+      getRawContractorForDispatch({ token, sessionClaims }) || currentState.contractor || {};
 
     let providerReceipt = null;
     if (channel === 'TWILIO_TEST_SMS') {
@@ -76,9 +80,9 @@ module.exports = async function handler(req, res) {
         bodyText: messageBody,
         providerConfig
       });
-    } else if (!String(channel).includes('SMS')) {
+    } else if (isAdminSession && channel === 'ADMIN_RESEND_TEST') {
       providerReceipt = await dispatchViaResendEmail({
-        contractor: currentState.contractor || {},
+        contractor: rawContractor,
         recipientEmail: targetEmail,
         recipientName: activeThread.contactShort || activeThread.contactName,
         subject:
@@ -89,14 +93,28 @@ module.exports = async function handler(req, res) {
         threadId: activeThread.id || threadId,
         providerConfig
       });
+    } else if (!String(channel).includes('SMS')) {
+      providerReceipt = await dispatchClientOwnedEmail({
+        contractor: rawContractor,
+        recipientEmail: targetEmail,
+        recipientName: activeThread.contactShort || activeThread.contactName,
+        subject:
+          body.subject ||
+          `Re: ${activeThread.headline || 'Permit Bid'} (${activeThread.permitNumber || ''})`,
+        bodyText: messageBody,
+        token,
+        threadId: activeThread.id || threadId,
+        requestedChannel: channel
+      });
     } else {
       providerReceipt = {
         ok: true,
+        handoffRequired: true,
         provider: 'NATIVE_SIM_PROTOCOL',
         deliveryStatus: 'HANDOFF_TO_CONTRACTOR_PERSONAL_SIM',
         toPhone: targetPhone,
         a2pComplianceNote:
-          'Cold permit SMS routed via Native SIM (sms:+1...) to protect Twilio A2P 10DLC reputation.',
+          'Cold permit SMS routed via Native SIM (sms:+1...) so messages send directly from the contractor phone.',
         nativeSimUri: buildNativeSimSmsUri(targetPhone, messageBody),
         dispatchedAt: new Date().toISOString()
       };
@@ -118,6 +136,11 @@ module.exports = async function handler(req, res) {
       JSON.stringify({
         ...updated,
         nativeSimUri: providerReceipt.nativeSimUri || updated.nativeSimUri,
+        mailtoUri: providerReceipt.mailtoUri || null,
+        gmailWebUri: providerReceipt.gmailWebUri || null,
+        outlookWebUri: providerReceipt.outlookWebUri || null,
+        preferredComposeUri: providerReceipt.preferredComposeUri || null,
+        handoffRequired: Boolean(providerReceipt.handoffRequired),
         providerReceipt
       })
     );

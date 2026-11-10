@@ -173,6 +173,86 @@
   const acctPinInput = document.getElementById('acct-pin-input');
   const acctNewPasswordInput = document.getElementById('acct-new-password-input');
 
+  const cmdClientEmailForm = document.getElementById('cmd-client-email-form');
+  const cmdClientEmailFeedback = document.getElementById('cmd-client-email-feedback');
+  const clientEmailStatusPill = document.getElementById('client-email-status-pill');
+  const clientEmailModeSelect = document.getElementById('client-email-mode-select');
+  const clientEmailComposeSelect = document.getElementById('client-email-compose-select');
+  const clientSmtpFieldsWrap = document.getElementById('client-smtp-fields-wrap');
+  const clientSmtpPresetSelect = document.getElementById('client-smtp-preset-select');
+  const clientSmtpHostInput = document.getElementById('client-smtp-host-input');
+  const clientSmtpPortInput = document.getElementById('client-smtp-port-input');
+  const clientSmtpUserInput = document.getElementById('client-smtp-user-input');
+  const clientSmtpPassInput = document.getElementById('client-smtp-pass-input');
+  const clientSmtpTestBtn = document.getElementById('client-smtp-test-btn');
+
+  const SMTP_PRESET_MAP = {
+    gmail: { host: 'smtp.gmail.com', port: 465 },
+    m365: { host: 'smtp.office365.com', port: 587 },
+    privateemail: { host: 'mail.privateemail.com', port: 465 },
+    yahoo: { host: 'smtp.mail.yahoo.com', port: 465 },
+    zoho: { host: 'smtp.zoho.com', port: 465 },
+    custom: { host: '', port: 465 }
+  };
+
+  function syncClientEmailFieldsVisibility() {
+    if (!clientSmtpFieldsWrap || !clientEmailModeSelect) return;
+    const isSmtp = clientEmailModeSelect.value === 'CLIENT_SMTP';
+    clientSmtpFieldsWrap.classList.toggle('hidden', !isSmtp);
+  }
+
+  if (clientEmailModeSelect) {
+    clientEmailModeSelect.addEventListener('change', syncClientEmailFieldsVisibility);
+  }
+  if (clientSmtpPresetSelect) {
+    clientSmtpPresetSelect.addEventListener('change', () => {
+      const p = SMTP_PRESET_MAP[clientSmtpPresetSelect.value] || SMTP_PRESET_MAP.custom;
+      if (clientSmtpHostInput && p.host) clientSmtpHostInput.value = p.host;
+      if (clientSmtpPortInput && p.port) clientSmtpPortInput.value = String(p.port);
+    });
+  }
+
+  function renderClientEmailSettings(c = {}) {
+    const cfg = (c && c.clientEmailConfig) || {};
+    if (clientEmailModeSelect) {
+      clientEmailModeSelect.value = cfg.mode === 'CLIENT_SMTP' ? 'CLIENT_SMTP' : 'NATIVE_APP';
+    }
+    if (clientEmailComposeSelect) {
+      clientEmailComposeSelect.value = cfg.preferredComposeTarget || 'MAILTO';
+    }
+    if (clientSmtpPresetSelect) {
+      clientSmtpPresetSelect.value = cfg.providerPreset || 'gmail';
+    }
+    const presetDefaults = SMTP_PRESET_MAP[cfg.providerPreset || 'gmail'] || SMTP_PRESET_MAP.gmail;
+    if (clientSmtpHostInput) {
+      clientSmtpHostInput.value = cfg.smtpHost || presetDefaults.host;
+    }
+    if (clientSmtpPortInput) {
+      clientSmtpPortInput.value = String(cfg.smtpPort || presetDefaults.port || 465);
+    }
+    if (clientSmtpUserInput) {
+      clientSmtpUserInput.value = cfg.smtpUser || c.workEmail || '';
+    }
+    if (clientSmtpPassInput) {
+      clientSmtpPassInput.value = '';
+      clientSmtpPassInput.placeholder = cfg.hasSmtpPassword
+        ? '•••••••••••• (Encrypted — leave blank to keep)'
+        : 'xxxx xxxx xxxx xxxx';
+    }
+    if (clientEmailStatusPill) {
+      if (cfg.isSmtpReady) {
+        clientEmailStatusPill.textContent = '⚡ EMAIL: 1-TAP SHOP SMTP ACTIVE';
+        clientEmailStatusPill.className =
+          'px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800 font-bold';
+      } else {
+        clientEmailStatusPill.textContent = '✉️ EMAIL: MY MAIL APP';
+        clientEmailStatusPill.className =
+          'px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-[10px] text-[#1E40AF] font-bold';
+      }
+    }
+    syncClientEmailFieldsVisibility();
+  }
+
   function renderAccountProfile(c = {}) {
     if (acctUsernameInput && c.username) acctUsernameInput.value = c.username;
     if (acctOwnerInput && c.ownerName) acctOwnerInput.value = c.ownerName;
@@ -181,6 +261,7 @@
     if (acctPhoneInput && c.mobilePhone) acctPhoneInput.value = c.mobilePhone;
     if (acctPinInput && (c.accessPin || c.baseZip)) acctPinInput.value = c.accessPin || c.baseZip;
     if (acctNewPasswordInput) acctNewPasswordInput.value = '';
+    renderClientEmailSettings(c);
   }
 
   async function loadCommandState() {
@@ -428,6 +509,111 @@
             'mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-mono-telemetry font-bold';
           cmdAccountFeedback.classList.remove('hidden');
         }
+      }
+    });
+  }
+
+  function collectClientEmailConfigPayload() {
+    const cfg = {
+      mode: clientEmailModeSelect ? clientEmailModeSelect.value : 'NATIVE_APP',
+      preferredComposeTarget: clientEmailComposeSelect ? clientEmailComposeSelect.value : 'MAILTO',
+      providerPreset: clientSmtpPresetSelect ? clientSmtpPresetSelect.value : 'gmail',
+      smtpHost: clientSmtpHostInput ? clientSmtpHostInput.value.trim() : '',
+      smtpPort: clientSmtpPortInput ? Number(clientSmtpPortInput.value) || 465 : 465,
+      smtpUser: clientSmtpUserInput ? clientSmtpUserInput.value.trim() : '',
+      fromEmail: clientSmtpUserInput ? clientSmtpUserInput.value.trim() : ''
+    };
+    const rawPass = clientSmtpPassInput ? clientSmtpPassInput.value.trim() : '';
+    if (rawPass) {
+      cfg.smtpPass = rawPass;
+    }
+    return cfg;
+  }
+
+  function showClientEmailFeedback(msg, isError = false) {
+    if (!cmdClientEmailFeedback) return;
+    cmdClientEmailFeedback.textContent = msg;
+    cmdClientEmailFeedback.className = isError
+      ? 'mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-mono-telemetry font-bold'
+      : 'mb-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono-telemetry font-bold';
+    cmdClientEmailFeedback.classList.remove('hidden');
+  }
+
+  if (cmdClientEmailForm) {
+    cmdClientEmailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (cmdClientEmailFeedback) cmdClientEmailFeedback.classList.add('hidden');
+
+      try {
+        const resp = await fetch('/api/recon/auth', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            action: 'update_profile',
+            token: activeToken,
+            clientEmailConfig: collectClientEmailConfigPayload()
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          showClientEmailFeedback(
+            `⚠️ ${(data && data.error) || 'Could not save outbound email settings.'}`,
+            true
+          );
+          return;
+        }
+        if (data.sessionToken) {
+          localStorage.setItem('tiberius_recon_session_jwt', data.sessionToken);
+        }
+        if (data.account) {
+          localStorage.setItem('tiberius_recon_account', JSON.stringify(data.account));
+          renderClientEmailSettings(data.account);
+        }
+        const savedCfg = (data.account && data.account.clientEmailConfig) || {};
+        showClientEmailFeedback(
+          savedCfg.isSmtpReady
+            ? `✓ 1-TAP SHOP SMTP SAVED & ENCRYPTED (${savedCfg.smtpUser} via ${savedCfg.smtpHost}:${savedCfg.smtpPort})`
+            : `✓ CLIENT-OWNED MAIL APP HANDOFF ACTIVE (${savedCfg.preferredComposeTarget || 'MAILTO'})`
+        );
+      } catch (err) {
+        showClientEmailFeedback(`⚠️ Error: ${err.message}`, true);
+      }
+    });
+  }
+
+  if (clientSmtpTestBtn) {
+    clientSmtpTestBtn.addEventListener('click', async () => {
+      if (cmdClientEmailFeedback) cmdClientEmailFeedback.classList.add('hidden');
+      const origLabel = clientSmtpTestBtn.textContent;
+      clientSmtpTestBtn.textContent = '🧪 Testing Shop SMTP...';
+      clientSmtpTestBtn.disabled = true;
+
+      try {
+        const resp = await fetch('/api/recon/auth', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            action: 'test_client_smtp',
+            token: activeToken,
+            clientEmailConfig: collectClientEmailConfigPayload()
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          showClientEmailFeedback(
+            `⚠️ ${(data && data.error) || 'Shop SMTP test failed.'}`,
+            true
+          );
+          return;
+        }
+        showClientEmailFeedback(
+          `✅ LIVE SHOP SMTP TEST DELIVERED FROM ${data.receipt.from} → ${data.receipt.to} (${data.receipt.providerMessageId})`
+        );
+      } catch (err) {
+        showClientEmailFeedback(`⚠️ Error: ${err.message}`, true);
+      } finally {
+        clientSmtpTestBtn.textContent = origLabel;
+        clientSmtpTestBtn.disabled = false;
       }
     });
   }

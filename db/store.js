@@ -30,6 +30,10 @@ const {
   buildNativeSimSmsUri,
   getContractorTwilioA2PState
 } = require('../workers/comms-dispatcher');
+const {
+  encryptSmtpSecret,
+  sanitizeClientEmailConfig
+} = require('../workers/client-smtp-sender');
 
 const LOCAL_STORE_PATH = process.env.RECON_STORE_PATH
   ? path.resolve(process.env.RECON_STORE_PATH)
@@ -5394,7 +5398,53 @@ function sanitizeContractor(contractor) {
     copy.username = deriveDefaultUsername(copy.workEmail, copy.ownerName, copy.companyName);
   }
   delete copy.passwordHash;
+  copy.clientEmailConfig = sanitizeClientEmailConfig(copy.clientEmailConfig, copy.workEmail);
   return copy;
+}
+
+function getRawContractorForDispatch({ token = '', contractorId = '', sessionClaims = null } = {}) {
+  const store = loadStore();
+  if (contractorId && store.contractors && store.contractors[contractorId]) {
+    return store.contractors[contractorId];
+  }
+  const cleanTok = String(token || '').trim();
+  if (cleanTok) {
+    if (
+      store.briefings &&
+      store.briefings[cleanTok] &&
+      store.contractors[store.briefings[cleanTok].contractorId]
+    ) {
+      return store.contractors[store.briefings[cleanTok].contractorId];
+    }
+    const byToken = Object.values(store.contractors || {}).find(
+      (c) => c && c.magicToken === cleanTok
+    );
+    if (byToken) return byToken;
+  }
+  if (
+    sessionClaims &&
+    sessionClaims.sub &&
+    store.contractors &&
+    store.contractors[sessionClaims.sub]
+  ) {
+    return store.contractors[sessionClaims.sub];
+  }
+  if (
+    sessionClaims &&
+    sessionClaims.magicToken &&
+    store.briefings &&
+    store.briefings[sessionClaims.magicToken]
+  ) {
+    const b = store.briefings[sessionClaims.magicToken];
+    if (b && store.contractors[b.contractorId]) return store.contractors[b.contractorId];
+  }
+  if (
+    cleanTok === 'demo-7am-briefing' &&
+    store.contractors['11111111-2222-3333-4444-555555555555']
+  ) {
+    return store.contractors['11111111-2222-3333-4444-555555555555'];
+  }
+  return null;
 }
 
 function buildSessionClaimsForContractor(contractor, briefingToken) {
@@ -6779,6 +6829,7 @@ function updateAccountProfile({
   primaryTrade,
   territoryZip,
   tierLevel,
+  clientEmailConfig,
   currentPassword,
   newPassword,
   isAdminOverride = false
@@ -7069,6 +7120,55 @@ function updateAccountProfile({
   }
   if (accessPin !== undefined && String(accessPin).trim()) {
     contractor.accessPin = String(accessPin).trim();
+  }
+
+  if (clientEmailConfig && typeof clientEmailConfig === 'object') {
+    const existingCfg =
+      contractor.clientEmailConfig && typeof contractor.clientEmailConfig === 'object'
+        ? contractor.clientEmailConfig
+        : {};
+    const nextCfg = { ...existingCfg };
+
+    if (clientEmailConfig.mode !== undefined) {
+      nextCfg.mode = clientEmailConfig.mode === 'CLIENT_SMTP' ? 'CLIENT_SMTP' : 'NATIVE_APP';
+    }
+    if (clientEmailConfig.preferredComposeTarget !== undefined) {
+      nextCfg.preferredComposeTarget = ['MAILTO', 'GMAIL_WEB', 'OUTLOOK_WEB'].includes(
+        clientEmailConfig.preferredComposeTarget
+      )
+        ? clientEmailConfig.preferredComposeTarget
+        : 'MAILTO';
+    }
+    if (clientEmailConfig.providerPreset !== undefined) {
+      nextCfg.providerPreset = String(clientEmailConfig.providerPreset || 'gmail')
+        .trim()
+        .toLowerCase();
+    }
+    if (clientEmailConfig.smtpHost !== undefined) {
+      nextCfg.smtpHost = String(clientEmailConfig.smtpHost || '').trim();
+    }
+    if (clientEmailConfig.smtpPort !== undefined) {
+      const p = Number(clientEmailConfig.smtpPort);
+      if (p > 0) nextCfg.smtpPort = p;
+    }
+    if (clientEmailConfig.smtpUser !== undefined) {
+      nextCfg.smtpUser = String(clientEmailConfig.smtpUser || '').trim();
+    }
+    if (clientEmailConfig.fromEmail !== undefined) {
+      nextCfg.fromEmail = String(clientEmailConfig.fromEmail || '').trim();
+    }
+    if (clientEmailConfig.clearSmtpPassword === true) {
+      delete nextCfg.smtpPassEncrypted;
+      delete nextCfg.smtpPass;
+    } else if (
+      clientEmailConfig.smtpPass !== undefined &&
+      String(clientEmailConfig.smtpPass).trim()
+    ) {
+      nextCfg.smtpPassEncrypted = encryptSmtpSecret(String(clientEmailConfig.smtpPass).trim());
+      delete nextCfg.smtpPass;
+    }
+    nextCfg.updatedAt = new Date().toISOString();
+    contractor.clientEmailConfig = nextCfg;
   }
 
   let briefing =
@@ -7469,7 +7569,7 @@ function getConversationRoomState(token) {
     preTripState: getPreTripState(),
     scoutAlertLogs: store.scoutAlertLogs[briefing.magicToken],
     commsPolicy: {
-      primaryOutboundChannel: 'RESEND_EMAIL_WITH_REPLY_TO',
+      primaryOutboundChannel: 'CLIENT_OWN_EMAIL_AND_NATIVE_SIM_SMS',
       coldSmsPolicy: 'NATIVE_SIM_HANDOFF_ONLY',
       twilioSubaccountStatus: twilioA2PState.twoStageProvisioning.currentStage
     },
@@ -8072,8 +8172,13 @@ async function ensureCloudAccountsSynced({ identifier, token } = {}) {
     });
     if (foundLocal) return store;
 
-    // Skip network lookup for fictional unit-test emails
-    if (/@(apexcommercialbuilders\.com|contractor\.com|brazoselectric\.com)$/i.test(cleanId)) {
+    // Skip network lookup for fictional unit-test emails or simulated test mode
+    if (
+      process.env.TIBERIUS_TEST_SIMULATE_EMAIL === '1' ||
+      /@(apexcommercialbuilders\.com|contractor\.com|brazoselectric\.com|sanantonioroofing\.com|centexroofing\.com|gvconcretepaving\.com|hillcountrystandingseam\.com|comalmep\.com|balconesflatwork\.com|creeksidecustompools\.com|alamoturnover\.com|example\.com|company\.com|tiberius\.site)$/i.test(
+        cleanId
+      )
+    ) {
       return store;
     }
   }
@@ -8293,6 +8398,7 @@ module.exports = {
   getAdminAgencyOverview,
   ensureCloudAccountsSynced,
   sanitizeContractor,
+  getRawContractorForDispatch,
   loadStore,
   saveStore
 };
