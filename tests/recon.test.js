@@ -34,7 +34,11 @@ const {
   saveStore,
   buildRealClientBriefingCards
 } = require('../db/store');
-const { runPreTripInspection } = require('../workers/pretrip-inspector');
+const {
+  runPreTripInspection,
+  isProtectedVercelDeploymentUrl,
+  normalizeFleetBaseUrl
+} = require('../workers/pretrip-inspector');
 const {
   formatPreTripEmailManifest,
   dispatchPreTripAdminSms
@@ -1224,6 +1228,27 @@ async function runTests() {
     assert.strictEqual(preTripCleanPass.failures.length, 0);
     assert.strictEqual(preTripCleanPass.agRepairPrompt, null);
 
+    // Verify Vercel Cron protected deployment-hash URL normalization (prevents HTTP 401 on *-tiberius-projects-*.vercel.app)
+    assert.strictEqual(
+      isProtectedVercelDeploymentUrl(
+        'https://tiberius-recon-7lhd3lout-tiberius-projects-d57bebb2.vercel.app'
+      ),
+      true,
+      'Must identify Vercel deployment-hash preview URLs gated by Vercel Deployment Protection'
+    );
+    assert.strictEqual(
+      isProtectedVercelDeploymentUrl('https://www.tiberius.ai'),
+      false,
+      'Public production domain must not be flagged as protected Vercel deployment URL'
+    );
+    assert.strictEqual(
+      normalizeFleetBaseUrl(
+        'https://tiberius-recon-7lhd3lout-tiberius-projects-d57bebb2.vercel.app'
+      ),
+      'https://www.tiberius.ai',
+      'Protected Vercel deployment-hash URL must normalize to https://www.tiberius.ai'
+    );
+
     console.log('[24/25] Testing Pre-Trip Check 5 RED_TAGGED, Antigravity Repair Prompt & 6:45 AM Circuit Breaker Lock on /api/recon/cron-morning...');
     const redTagReport = await runPreTripInspection({
       token: 'recon-78130-2101s6',
@@ -1562,10 +1587,289 @@ async function runTests() {
       'command.html must render #meta-recon-module (Module 04: Tiberius Meta-Recon)'
     );
 
+    console.log('[28/28] Testing Standalone Loom-Style Video Player (/watch & /api/recon/watch), 3-Mode Personalizer & 3% + 97% AI Stitch Engine...');
+    const watchPageResp = await fetch(`${baseUrl}/recon/watch`);
+    assert.strictEqual(watchPageResp.status, 200, 'Expected 200 for /recon/watch');
+    const watchPageHtml = await watchPageResp.text();
+    assert.ok(
+      watchPageHtml.includes('id="loom-player-stage"') &&
+        watchPageHtml.includes('id="loom-main-video"') &&
+        watchPageHtml.includes('id="loom-avatar-bubble"') &&
+        watchPageHtml.includes('id="loom-studio-drawer"'),
+      'watch.html must render standalone Loom theater player, circular speaker bubble, and studio drawer'
+    );
+
+    // Mode 1: Pure Pre-Made Video (No Personalization)
+    const watchStandardResp = await fetch(`${baseUrl}/api/recon/watch`);
+    const watchStandardData = await watchStandardResp.json();
+    assert.strictEqual(watchStandardData.ok, true);
+    assert.strictEqual(watchStandardData.mode, 'PREMADE_STANDARD');
+    assert.strictEqual(watchStandardData.isPersonalized, false);
+    assert.strictEqual(watchStandardData.player.masterVideoUrl, '/recon/video/TIBERIUS%20RECON.mp4');
+
+    // Mode 2: Personalized Prospect Wrapper (?token=preview-...)
+    const watchProspectResp = await fetch(
+      `${baseUrl}/api/recon/watch?token=${encodeURIComponent(firstProspect.previewToken)}`
+    );
+    const watchProspectData = await watchProspectResp.json();
+    assert.strictEqual(watchProspectData.ok, true);
+    assert.strictEqual(watchProspectData.mode, 'PERSONALIZED_WRAPPER');
+    assert.strictEqual(watchProspectData.isPersonalized, true);
+    assert.strictEqual(watchProspectData.prospect.companyName, firstProspect.companyName);
+    assert.strictEqual(watchProspectData.sidebarPermits.length, 3);
+
+    // Mode 3: 3% AI Intro + 97% Master Video Stitch Generation & Save
+    const genIntroResp = await fetch(`${baseUrl}/api/recon/watch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'generate_ai_intro',
+        companyName: firstProspect.companyName,
+        contactName: firstProspect.contactName,
+        territoryZip: firstProspect.zipCode,
+        tradeName: firstProspect.primaryTrade
+      })
+    });
+    const genIntroData = await genIntroResp.json();
+    assert.strictEqual(genIntroData.ok, true);
+    assert.strictEqual(genIntroData.mode, 'AI_STITCH_3_97');
+    assert.ok(genIntroData.introScript.includes('Marcus'));
+    assert.ok(genIntroData.introAudioUrl.includes('/recon/voiceovers/'));
+
+    const saveWatchResp = await fetch(`${baseUrl}/api/recon/watch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save_watch_config',
+        mode: 'AI_STITCH_3_97',
+        token: firstProspect.previewToken,
+        companyName: firstProspect.companyName,
+        contactName: firstProspect.contactName,
+        territoryZip: firstProspect.zipCode,
+        tradeName: firstProspect.primaryTrade,
+        introScript: genIntroData.introScript,
+        introAudioUrl: genIntroData.introAudioUrl
+      })
+    });
+    const saveWatchData = await saveWatchResp.json();
+    assert.strictEqual(saveWatchData.ok, true);
+    assert.strictEqual(saveWatchData.watch.mode, 'AI_STITCH_3_97');
+    assert.ok(saveWatchData.shareUrl.includes('/recon/watch?token='));
+
+    // Track Video Play Telemetry
+    const trackPlayResp = await fetch(`${baseUrl}/api/recon/watch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'track_event',
+        videoId: saveWatchData.videoId,
+        token: firstProspect.previewToken,
+        companyName: firstProspect.companyName,
+        contactName: firstProspect.contactName,
+        eventType: 'VIDEO_PLAYED'
+      })
+    });
+    const trackPlayData = await trackPlayResp.json();
+    assert.strictEqual(trackPlayData.ok, true);
+    assert.ok(
+      trackPlayData.founderAlertReceipt && trackPlayData.founderAlertReceipt.ok,
+      'Playing a personalized preview video must trigger founder hot-alert SMS receipt'
+    );
+
+    console.log('[29/29] Testing Contractor & Master Admin Self-Service Profile, Username, Email & Password Updates...');
+    // 1. Activate a test contractor account to test self-service profile & password updates
+    const profileTestEmail = 'profiletest@sanantonioroofing.com';
+    const profileActivateResp = await fetch(`${baseUrl}/api/recon/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        companyName: 'San Antonio Commercial Roofing',
+        ownerName: 'Marcus Vance',
+        workEmail: profileTestEmail,
+        mobilePhone: '(210) 884-2910',
+        territoryZip: '78205',
+        primaryTrade: 'Roofing / Exteriors',
+        password: 'InitialPassword2026!',
+        pin: '78205'
+      })
+    });
+    const profileActivateData = await profileActivateResp.json();
+    assert.strictEqual(profileActivateData.ok, true);
+    const contractorSessionToken = profileActivateData.sessionToken;
+    const contractorIdForTest = profileActivateData.contractor.id;
+
+    // 2. Contractor self-service profile & password update via POST /api/recon/auth (action: 'update_profile')
+    const selfUpdateResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${contractorSessionToken}`
+      },
+      body: JSON.stringify({
+        action: 'update_profile',
+        username: 'marcus_vance_sa',
+        ownerName: 'Marcus J. Vance',
+        companyName: 'San Antonio Premier Commercial Roofing',
+        workEmail: profileTestEmail,
+        mobilePhone: '(210) 884-9999',
+        accessPin: '9999',
+        currentPassword: 'InitialPassword2026!',
+        newPassword: 'UpdatedContractorPass2026!'
+      })
+    });
+    const selfUpdateData = await selfUpdateResp.json();
+    assert.strictEqual(selfUpdateData.ok, true, 'Contractor self-service profile & password update should succeed');
+    assert.strictEqual(selfUpdateData.passwordChanged, true);
+    assert.strictEqual(selfUpdateData.account.username, 'marcus_vance_sa');
+    assert.strictEqual(selfUpdateData.account.ownerName, 'Marcus J. Vance');
+    assert.strictEqual(selfUpdateData.account.companyName, 'San Antonio Premier Commercial Roofing');
+    assert.strictEqual(selfUpdateData.account.mobilePhone, '(210) 884-9999');
+    assert.strictEqual(selfUpdateData.account.accessPin, '9999');
+    assert.ok(selfUpdateData.sessionToken, 'Updated sessionToken must be returned');
+
+    // Verify login with old password fails, and login with new username + newPassword succeeds
+    const oldPassLoginResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        identifier: 'marcus_vance_sa',
+        secret: 'InitialPassword2026!'
+      })
+    });
+    assert.strictEqual(oldPassLoginResp.status, 401, 'Old password must be rejected after password change');
+
+    const newUsernameLoginResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        identifier: 'marcus_vance_sa',
+        secret: 'UpdatedContractorPass2026!'
+      })
+    });
+    const newUsernameLoginData = await newUsernameLoginResp.json();
+    assert.strictEqual(newUsernameLoginData.ok, true, 'Contractor must be able to sign in with new username and new password');
+    assert.strictEqual(newUsernameLoginData.account.id, contractorIdForTest);
+
+    // 3. Master Admin self-service profile & password update via POST /api/recon/admin (action: 'update_admin_profile')
+    const adminLoginForProfileResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        identifier: 'admin@tiberius.ai',
+        secret: 'TiberiusAdmin2026!'
+      })
+    });
+    const adminLoginForProfileData = await adminLoginForProfileResp.json();
+    assert.strictEqual(adminLoginForProfileData.ok, true);
+    const adminSessionToken = adminLoginForProfileData.sessionToken;
+
+    const adminUpdateResp = await fetch(`${baseUrl}/api/recon/admin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminSessionToken}`
+      },
+      body: JSON.stringify({
+        action: 'update_admin_profile',
+        username: 'tiberius_boss',
+        workEmail: 'founder@tiberius.ai',
+        ownerName: 'Tiberius Founder',
+        companyName: 'Tiberius HQ Command',
+        mobilePhone: '(830) 555-0199',
+        currentPassword: 'TiberiusAdmin2026!',
+        newPassword: 'NewMasterAdminPass2026!'
+      })
+    });
+    const adminUpdateData = await adminUpdateResp.json();
+    assert.strictEqual(adminUpdateData.ok, true, 'Master Admin self-profile & password update should succeed');
+    assert.strictEqual(adminUpdateData.passwordChanged, true);
+    assert.strictEqual(adminUpdateData.account.username, 'tiberius_boss');
+    assert.strictEqual(adminUpdateData.account.email, 'founder@tiberius.ai');
+    const updatedAdminSessionToken = adminUpdateData.sessionToken;
+
+    // Verify Master Admin can log in with new username + new password
+    const adminNewLoginResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        identifier: 'tiberius_boss',
+        secret: 'NewMasterAdminPass2026!'
+      })
+    });
+    const adminNewLoginData = await adminNewLoginResp.json();
+    assert.strictEqual(adminNewLoginData.ok, true, 'Admin must be able to log in with updated username and password');
+    assert.strictEqual(adminNewLoginData.account.role, 'ADMIN');
+
+    // 4. Master Admin editing a client contractor's profile & resetting password via POST /api/recon/admin (action: 'update_client_account')
+    const adminEditClientResp = await fetch(`${baseUrl}/api/recon/admin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${updatedAdminSessionToken}`
+      },
+      body: JSON.stringify({
+        action: 'update_client_account',
+        contractorId: contractorIdForTest,
+        username: 'marcus_admin_override',
+        ownerName: 'Marcus Vance (Verified)',
+        companyName: 'San Antonio Commercial Roofing LLC',
+        workEmail: profileTestEmail,
+        mobilePhone: '(210) 884-7777',
+        accessPin: '7777',
+        territoryZip: '78205',
+        newPassword: 'AdminResetClientPass2026!'
+      })
+    });
+    const adminEditClientData = await adminEditClientResp.json();
+    assert.strictEqual(adminEditClientData.ok, true, 'Master Admin client override should succeed');
+    assert.strictEqual(adminEditClientData.passwordChanged, true);
+    assert.strictEqual(adminEditClientData.account.username, 'marcus_admin_override');
+    assert.strictEqual(adminEditClientData.account.accessPin, '7777');
+
+    // Verify client can log in with the Admin-reset password
+    const clientAfterAdminResetResp = await fetch(`${baseUrl}/api/recon/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        identifier: 'marcus_admin_override',
+        secret: 'AdminResetClientPass2026!'
+      })
+    });
+    const clientAfterAdminResetData = await clientAfterAdminResetResp.json();
+    assert.strictEqual(clientAfterAdminResetData.ok, true, 'Client must be able to sign in with Admin-reset password');
+
+    // Restore Master Admin back to default credentials so test runs remain idempotent
+    const adminRestoreResp = await fetch(`${baseUrl}/api/recon/admin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${updatedAdminSessionToken}`
+      },
+      body: JSON.stringify({
+        action: 'update_admin_profile',
+        username: 'admin',
+        workEmail: 'admin@tiberius.ai',
+        ownerName: 'Master Admin',
+        companyName: 'Tiberius Agency Command',
+        mobilePhone: '(830) 555-0100',
+        currentPassword: 'NewMasterAdminPass2026!',
+        newPassword: 'TiberiusAdmin2026!'
+      })
+    });
+    const adminRestoreData = await adminRestoreResp.json();
+    assert.strictEqual(adminRestoreData.ok, true, 'Restoring default Master Admin credentials must succeed');
+
     // Reset state for idempotent test runs
     clearSeenPermits();
     setPreTripHoldDispatch(false, 'Test suite cleanup');
     const finalStore = loadStore();
+    if (finalStore.watchVideos) finalStore.watchVideos = {};
+    if (finalStore.watchTelemetry) finalStore.watchTelemetry = [];
     if (finalStore.briefings) {
       for (const k of Object.keys(finalStore.briefings)) {
         if (k.startsWith('preview-')) delete finalStore.briefings[k];
@@ -1573,7 +1877,9 @@ async function runTests() {
     }
     if (finalStore.contractors) {
       for (const k of Object.keys(finalStore.contractors)) {
-        if (k.startsWith('prospect-ctr-')) delete finalStore.contractors[k];
+        if (k.startsWith('prospect-ctr-') || finalStore.contractors[k].workEmail === profileTestEmail) {
+          delete finalStore.contractors[k];
+        }
       }
     }
     const alertCtr = finalStore.contractors['44444444-5555-6666-7777-888888888888'];
@@ -1594,7 +1900,7 @@ async function runTests() {
     });
     clearSeenPermits();
 
-    console.log('\n✅ ALL 27 TIBERIUS RECON™ & META-RECON™ AUTONOMOUS LEAD-GEN END-TO-END TESTS PASSED.');
+    console.log('\n✅ ALL 29 TIBERIUS RECON™ & META-RECON™ AUTONOMOUS LEAD-GEN END-TO-END TESTS PASSED.');
   } finally {
     server.close();
   }

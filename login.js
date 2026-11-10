@@ -122,12 +122,103 @@
     }
   }
 
+  const sessionToggleProfileBtn = document.getElementById('session-toggle-profile-btn');
+  const sessionToggleProfileChevron = document.getElementById('session-toggle-profile-chevron');
+  const selfProfileForm = document.getElementById('self-profile-form');
+  const selfProfileFeedback = document.getElementById('self-profile-feedback');
+  const selfProfileAuthVerifyRow = document.getElementById('self-profile-auth-verify-row');
+  const selfProfileIdentifier = document.getElementById('self-profile-identifier');
+  const selfProfileCurrentPassword = document.getElementById('self-profile-current-password');
+  const selfProfileUsername = document.getElementById('self-profile-username');
+  const selfProfileOwner = document.getElementById('self-profile-owner');
+  const selfProfileCompany = document.getElementById('self-profile-company');
+  const selfProfileEmail = document.getElementById('self-profile-email');
+  const selfProfilePhone = document.getElementById('self-profile-phone');
+  const selfProfilePinWrap = document.getElementById('self-profile-pin-wrap');
+  const selfProfilePin = document.getElementById('self-profile-pin');
+  const selfProfileNewPassword = document.getElementById('self-profile-new-password');
+  const selfProfileConfirmPassword = document.getElementById('self-profile-confirm-password');
+
+  const adminSelfProfileForm = document.getElementById('admin-self-profile-form');
+  const adminSelfUsername = document.getElementById('admin-self-username');
+  const adminSelfEmail = document.getElementById('admin-self-email');
+  const adminSelfOwner = document.getElementById('admin-self-owner');
+  const adminSelfCompany = document.getElementById('admin-self-company');
+  const adminSelfPhone = document.getElementById('admin-self-phone');
+  const adminSelfNewPassword = document.getElementById('admin-self-new-password');
+  const adminSelfSaveStatus = document.getElementById('admin-self-save-status');
+
+  let currentAuthRole = null;
+  let currentAuthAccount = null;
+
+  function escapeAttr(val) {
+    return String(val || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function populateSelfProfileForm(role, account) {
+    if (!account) {
+      if (selfProfileAuthVerifyRow) selfProfileAuthVerifyRow.classList.remove('hidden');
+      return;
+    }
+    if (selfProfileAuthVerifyRow) selfProfileAuthVerifyRow.classList.add('hidden');
+    if (selfProfileIdentifier) {
+      selfProfileIdentifier.value = account.workEmail || account.email || account.username || '';
+    }
+    if (selfProfileCurrentPassword) selfProfileCurrentPassword.value = '';
+    if (selfProfileUsername) selfProfileUsername.value = account.username || '';
+    if (selfProfileOwner) selfProfileOwner.value = account.ownerName || '';
+    if (selfProfileCompany) selfProfileCompany.value = account.companyName || '';
+    if (selfProfileEmail) selfProfileEmail.value = account.workEmail || account.email || '';
+    if (selfProfilePhone) selfProfilePhone.value = account.mobilePhone || '';
+    if (selfProfilePin) selfProfilePin.value = account.accessPin || account.baseZip || '';
+    if (selfProfilePinWrap) {
+      if (role === 'ADMIN') {
+        selfProfilePinWrap.classList.add('hidden');
+      } else {
+        selfProfilePinWrap.classList.remove('hidden');
+      }
+    }
+    if (selfProfileNewPassword) selfProfileNewPassword.value = '';
+    if (selfProfileConfirmPassword) selfProfileConfirmPassword.value = '';
+
+    if (role === 'ADMIN') {
+      if (adminSelfUsername) adminSelfUsername.value = account.username || 'admin';
+      if (adminSelfEmail) adminSelfEmail.value = account.workEmail || account.email || 'admin@tiberius.ai';
+      if (adminSelfOwner) adminSelfOwner.value = account.ownerName || 'Master Admin';
+      if (adminSelfCompany) adminSelfCompany.value = account.companyName || 'Tiberius Master Agency Command';
+      if (adminSelfPhone) adminSelfPhone.value = account.mobilePhone || '(830) 555-0100';
+      if (adminSelfNewPassword) adminSelfNewPassword.value = '';
+    }
+  }
+
+  function showSelfProfileFeedback(type, text) {
+    if (!selfProfileFeedback) return;
+    if (!text) {
+      selfProfileFeedback.classList.add('hidden');
+      return;
+    }
+    selfProfileFeedback.textContent = text;
+    selfProfileFeedback.className =
+      type === 'error'
+        ? 'p-2.5 rounded-lg bg-rose-500/20 border border-rose-400/50 text-rose-200 text-xs font-mono-telemetry font-semibold'
+        : 'p-2.5 rounded-lg bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 text-xs font-mono-telemetry font-semibold';
+    selfProfileFeedback.classList.remove('hidden');
+  }
+
   function renderAuthenticatedSession(role, account) {
+    currentAuthRole = role;
+    currentAuthAccount = account;
+
     if (!account) {
       if (navAuthBadge) navAuthBadge.textContent = 'Not Signed In';
       if (navLogoutBtn) navLogoutBtn.classList.add('hidden');
       if (activeSessionCard) activeSessionCard.classList.add('hidden');
       if (masterAdminPanel) masterAdminPanel.classList.add('hidden');
+      populateSelfProfileForm(null, null);
       return;
     }
 
@@ -138,8 +229,8 @@
     if (navAuthBadge) {
       navAuthBadge.textContent =
         role === 'ADMIN'
-          ? `★ MASTER ADMIN (${account.workEmail})`
-          : `✓ ${account.companyName} (${account.baseZip || ''})`;
+          ? `★ MASTER ADMIN (${account.username ? '@' + account.username + ' • ' : ''}${account.workEmail})`
+          : `✓ ${account.companyName} (${account.username ? '@' + account.username + ' • ' : ''}${account.baseZip || ''})`;
       navAuthBadge.className =
         role === 'ADMIN'
           ? 'px-3 py-1.5 rounded-lg bg-slate-900 text-amber-300 text-xs font-mono-telemetry font-bold'
@@ -159,10 +250,11 @@
       sessionCompanyName.textContent = account.companyName || 'Authenticated Account';
     }
     if (sessionMetaLine) {
+      const userTag = account.username ? `@${account.username} • ` : '';
       sessionMetaLine.textContent =
         role === 'ADMIN'
-          ? `${account.workEmail} • Full Multi-Client Agency Access`
-          : `${account.ownerName || 'Owner'} • ${account.primaryTrade || ''} • Zip ${account.baseZip || ''} • ${account.tierLevel || ''}`;
+          ? `${userTag}${account.ownerName || 'Master Admin'} • ${account.workEmail} • Full Multi-Client Agency Access`
+          : `${userTag}${account.ownerName || 'Owner'} • ${account.workEmail || ''} • ${account.primaryTrade || ''} • Zip ${account.baseZip || ''}`;
     }
     if (sessionOpenBriefingBtn) {
       sessionOpenBriefingBtn.href = `briefing.html?token=${encodeURIComponent(magicToken)}`;
@@ -174,6 +266,8 @@
     if (sessionOpenCommandBtn) {
       sessionOpenCommandBtn.href = `command.html?token=${encodeURIComponent(magicToken)}`;
     }
+
+    populateSelfProfileForm(role, account);
 
     if (role === 'ADMIN') {
       if (masterAdminPanel) masterAdminPanel.classList.remove('hidden');
@@ -197,6 +291,9 @@
     if (data.preTripState) {
       renderAdminPreTripState(data.preTripState);
     }
+    if (data.adminProfile) {
+      populateSelfProfileForm('ADMIN', data.adminProfile);
+    }
 
     if (!adminClientsGrid) return;
     adminClientsGrid.innerHTML = '';
@@ -215,18 +312,18 @@
                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                 : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
             }">
-              ZIP ${client.baseZip} • ${client.tierLevel}
+              ZIP ${escapeAttr(client.baseZip)} • ${escapeAttr(client.tierLevel)}
             </span>
             <span class="text-sm font-mono-telemetry font-bold text-amber-300">
               $${client.monthlyRate}/mo
             </span>
           </div>
-          <h4 class="font-display font-extrabold text-white text-lg tracking-tight">${client.companyName}</h4>
+          <h4 class="font-display font-extrabold text-white text-lg tracking-tight">${escapeAttr(client.companyName)}</h4>
           <p class="text-xs text-slate-200">
-            <strong class="text-white">Owner:</strong> ${client.ownerName} • <strong class="text-white">Trade:</strong> ${client.primaryTrade}
+            <strong class="text-white">Owner:</strong> ${escapeAttr(client.ownerName)} • <strong class="text-white">Username:</strong> <span class="font-mono-telemetry text-blue-300">@${escapeAttr(client.username || '')}</span> • <strong class="text-white">Trade:</strong> ${escapeAttr(client.primaryTrade)}
           </p>
           <p class="text-xs font-mono-telemetry text-slate-300">
-            Login: <span class="text-white">${client.workEmail}</span> • Phone: <span class="text-white">${client.mobilePhone}</span> • PIN: <span class="text-amber-300 font-bold">${client.accessPin || client.baseZip}</span>
+            Email: <span class="text-white">${escapeAttr(client.workEmail)}</span> • Phone: <span class="text-white">${escapeAttr(client.mobilePhone)}</span> • PIN: <span class="text-amber-300 font-bold">${escapeAttr(client.accessPin || client.baseZip)}</span>
           </p>
           <div class="pt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-mono-telemetry">
             <span class="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-700 text-slate-200">
@@ -243,35 +340,99 @@
         <div class="pt-3.5 border-t border-slate-700/80 flex flex-wrap items-center gap-2">
           <a
             href="briefing.html?token=${encodeURIComponent(client.magicToken)}"
-            data-switch-token="${client.magicToken}"
+            data-switch-token="${escapeAttr(client.magicToken)}"
             class="client-impersonate-link px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-display font-bold text-xs transition-colors"
           >
             ☕ 7:00 AM Briefing →
           </a>
           <a
             href="inbox.html?token=${encodeURIComponent(client.magicToken)}"
-            data-switch-token="${client.magicToken}"
+            data-switch-token="${escapeAttr(client.magicToken)}"
             class="client-impersonate-link px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-display font-bold text-xs transition-colors"
           >
             💬 Conversation Room →
           </a>
           <a
             href="command.html?token=${encodeURIComponent(client.magicToken)}"
-            data-switch-token="${client.magicToken}"
+            data-switch-token="${escapeAttr(client.magicToken)}"
             class="client-impersonate-link px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-display font-bold text-xs transition-colors"
           >
             🧠 Knowledge Base &amp; Command →
           </a>
           <button
             type="button"
-            data-sweep-token="${client.magicToken}"
-            data-sweep-trade="${client.primaryTrade}"
-            data-sweep-company="${client.companyName}"
+            data-edit-client-toggle="${escapeAttr(client.id)}"
+            class="admin-edit-client-toggle-btn px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono-telemetry font-bold text-[11px] transition-colors cursor-pointer"
+          >
+            ✏️ Edit Profile &amp; Password
+          </button>
+          <button
+            type="button"
+            data-sweep-token="${escapeAttr(client.magicToken)}"
+            data-sweep-trade="${escapeAttr(client.primaryTrade)}"
+            data-sweep-company="${escapeAttr(client.companyName)}"
             class="admin-sweep-client-btn px-3.5 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono-telemetry font-bold text-[11px] transition-colors cursor-pointer"
           >
             ⚡ Run Live Zero-API Sweep
           </button>
         </div>
+
+        <!-- Inline Admin Client Profile & Password Editor -->
+        <form
+          data-client-edit-form="${escapeAttr(client.id)}"
+          data-client-id="${escapeAttr(client.id)}"
+          data-client-token="${escapeAttr(client.magicToken)}"
+          class="hidden pt-4 border-t border-slate-700 space-y-3 bg-slate-900/95 p-4 rounded-xl"
+        >
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono-telemetry font-bold uppercase text-amber-300">
+              ✏️ EDIT CLIENT PROFILE, USERNAME, EMAIL &amp; PASSWORD
+            </span>
+            <span class="text-[10px] font-mono-telemetry text-slate-400">ID: ${escapeAttr(client.magicToken)}</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <div>
+              <label class="block text-[10px] font-mono-telemetry uppercase text-slate-300 mb-1">Company Name</label>
+              <input name="companyName" type="text" required value="${escapeAttr(client.companyName)}" class="enterprise-input w-full px-2.5 py-1.5 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-telemetry uppercase text-slate-300 mb-1">Owner / Estimator Name</label>
+              <input name="ownerName" type="text" required value="${escapeAttr(client.ownerName)}" class="enterprise-input w-full px-2.5 py-1.5 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-telemetry uppercase text-slate-300 mb-1">Username</label>
+              <input name="username" type="text" required value="${escapeAttr(client.username || '')}" class="enterprise-input w-full px-2.5 py-1.5 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-telemetry uppercase text-slate-300 mb-1">Work Email (Login ID)</label>
+              <input name="workEmail" type="email" required value="${escapeAttr(client.workEmail)}" class="enterprise-input w-full px-2.5 py-1.5 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-telemetry uppercase text-slate-300 mb-1">Mobile Phone</label>
+              <input name="mobilePhone" type="text" required value="${escapeAttr(client.mobilePhone)}" class="enterprise-input w-full px-2.5 py-1.5 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-telemetry uppercase text-slate-300 mb-1">Backup Access PIN</label>
+              <input name="accessPin" type="text" value="${escapeAttr(client.accessPin || client.baseZip)}" class="enterprise-input w-full px-2.5 py-1.5 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-telemetry uppercase text-slate-300 mb-1">Territory ZIP</label>
+              <input name="territoryZip" type="text" required value="${escapeAttr(client.baseZip)}" class="enterprise-input w-full px-2.5 py-1.5 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-telemetry uppercase text-amber-300 mb-1">New Password (Leave Blank to Keep)</label>
+              <input name="newPassword" type="password" placeholder="Set new password..." class="enterprise-input w-full px-2.5 py-1.5 rounded-lg text-xs" />
+            </div>
+          </div>
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="submit"
+              class="btn-trust-emerald px-4 py-2 rounded-xl font-display font-bold text-xs cursor-pointer"
+            >
+              ✓ Save Client Profile &amp; Password
+            </button>
+          </div>
+        </form>
       `;
 
       adminClientsGrid.appendChild(card);
@@ -281,6 +442,63 @@
       link.addEventListener('click', () => {
         const tok = link.getAttribute('data-switch-token');
         if (tok) localStorage.setItem('tiberius_recon_token', tok);
+      });
+    });
+
+    adminClientsGrid.querySelectorAll('.admin-edit-client-toggle-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const cid = btn.getAttribute('data-edit-client-toggle');
+        const form = adminClientsGrid.querySelector(`[data-client-edit-form="${cid}"]`);
+        if (form) {
+          form.classList.toggle('hidden');
+        }
+      });
+    });
+
+    adminClientsGrid.querySelectorAll('[data-client-edit-form]').forEach((form) => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const contractorId = form.getAttribute('data-client-id');
+        const magicToken = form.getAttribute('data-client-token');
+        const formData = new FormData(form);
+        const payload = {
+          action: 'update_client_account',
+          contractorId,
+          magicToken,
+          companyName: String(formData.get('companyName') || '').trim(),
+          ownerName: String(formData.get('ownerName') || '').trim(),
+          username: String(formData.get('username') || '').trim(),
+          workEmail: String(formData.get('workEmail') || '').trim(),
+          mobilePhone: String(formData.get('mobilePhone') || '').trim(),
+          accessPin: String(formData.get('accessPin') || '').trim(),
+          territoryZip: String(formData.get('territoryZip') || '').trim(),
+          newPassword: String(formData.get('newPassword') || '').trim()
+        };
+
+        try {
+          const resp = await fetch('/api/recon/admin', {
+            method: 'POST',
+            headers: getSessionHeaders(),
+            body: JSON.stringify(payload)
+          });
+          const resData = await resp.json();
+          if (!resp.ok || !resData.ok) {
+            if (adminActionStatus) {
+              adminActionStatus.textContent = `⚠️ ${(resData && resData.error) || 'Failed to update client account.'}`;
+            }
+            return;
+          }
+          if (adminActionStatus) {
+            adminActionStatus.textContent = `✓ Updated ${resData.updatedClient.companyName} (@${resData.updatedClient.username} • ${resData.updatedClient.workEmail})${
+              resData.passwordChanged ? ' + Password Updated' : ''
+            }`;
+          }
+          renderAdminOverview(resData.overview);
+        } catch (err) {
+          if (adminActionStatus) {
+            adminActionStatus.textContent = `Error updating client: ${err.message}`;
+          }
+        }
       });
     });
 
@@ -455,11 +673,137 @@
     });
   }
 
+  if (sessionToggleProfileBtn && selfProfileForm) {
+    sessionToggleProfileBtn.addEventListener('click', () => {
+      const isHidden = selfProfileForm.classList.toggle('hidden');
+      if (sessionToggleProfileChevron) {
+        sessionToggleProfileChevron.textContent = isHidden ? '▼' : '▲';
+      }
+      if (!isHidden && !currentAuthAccount) {
+        if (selfProfileIdentifier && identifierInput && !selfProfileIdentifier.value.trim()) {
+          selfProfileIdentifier.value = identifierInput.value.trim();
+        }
+        if (selfProfileCurrentPassword && passwordInput && !selfProfileCurrentPassword.value.trim()) {
+          selfProfileCurrentPassword.value = passwordInput.value.trim();
+        }
+      }
+      showSelfProfileFeedback(null, '');
+    });
+  }
+
+  if (selfProfileForm) {
+    selfProfileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showSelfProfileFeedback(null, '');
+
+      const newPass = selfProfileNewPassword ? selfProfileNewPassword.value.trim() : '';
+      const confirmPass = selfProfileConfirmPassword ? selfProfileConfirmPassword.value.trim() : '';
+      if (newPass && confirmPass && newPass !== confirmPass) {
+        showSelfProfileFeedback('error', 'New password and confirmation do not match.');
+        return;
+      }
+
+      const lookupId = selfProfileIdentifier ? selfProfileIdentifier.value.trim() : '';
+      const currentPass = selfProfileCurrentPassword ? selfProfileCurrentPassword.value.trim() : '';
+
+      const payload = {
+        action: 'update_profile',
+        identifier: lookupId || undefined,
+        currentPassword: currentPass || undefined,
+        targetRole: currentAuthRole || undefined,
+        accountId: currentAuthAccount ? currentAuthAccount.id : undefined,
+        token: currentAuthAccount ? currentAuthAccount.magicToken : undefined,
+        username: selfProfileUsername && selfProfileUsername.value.trim() ? selfProfileUsername.value.trim() : undefined,
+        ownerName: selfProfileOwner && selfProfileOwner.value.trim() ? selfProfileOwner.value.trim() : undefined,
+        companyName: selfProfileCompany && selfProfileCompany.value.trim() ? selfProfileCompany.value.trim() : undefined,
+        workEmail: selfProfileEmail && selfProfileEmail.value.trim() ? selfProfileEmail.value.trim() : undefined,
+        mobilePhone: selfProfilePhone && selfProfilePhone.value.trim() ? selfProfilePhone.value.trim() : undefined,
+        accessPin: selfProfilePin && selfProfilePin.value.trim() ? selfProfilePin.value.trim() : undefined,
+        newPassword: newPass || undefined
+      };
+
+      try {
+        const resp = await fetch('/api/recon/auth', {
+          method: 'POST',
+          headers: getSessionHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          showSelfProfileFeedback('error', (data && data.error) || 'Failed to update profile.');
+          return;
+        }
+        if (data.sessionToken) {
+          localStorage.setItem('tiberius_recon_session_jwt', data.sessionToken);
+        }
+        renderAuthenticatedSession(data.role, data.account);
+        showSelfProfileFeedback(
+          'success',
+          `✓ Profile saved (@${data.account.username} • ${data.account.workEmail})${
+            data.passwordChanged ? ' & password updated!' : '!'
+          }`
+        );
+      } catch (err) {
+        showSelfProfileFeedback('error', `Update failed: ${err.message}`);
+      }
+    });
+  }
+
+  if (adminSelfProfileForm) {
+    adminSelfProfileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (adminSelfSaveStatus) adminSelfSaveStatus.textContent = 'Saving Admin Profile...';
+
+      const payload = {
+        action: 'update_admin_profile',
+        username: adminSelfUsername ? adminSelfUsername.value.trim() : undefined,
+        workEmail: adminSelfEmail ? adminSelfEmail.value.trim() : undefined,
+        ownerName: adminSelfOwner ? adminSelfOwner.value.trim() : undefined,
+        companyName: adminSelfCompany ? adminSelfCompany.value.trim() : undefined,
+        mobilePhone: adminSelfPhone ? adminSelfPhone.value.trim() : undefined,
+        newPassword: adminSelfNewPassword ? adminSelfNewPassword.value.trim() : undefined
+      };
+
+      try {
+        const resp = await fetch('/api/recon/admin', {
+          method: 'POST',
+          headers: getSessionHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          if (adminSelfSaveStatus) {
+            adminSelfSaveStatus.textContent = `⚠️ ${(data && data.error) || 'Failed to update admin profile.'}`;
+          }
+          return;
+        }
+        if (data.sessionToken) {
+          localStorage.setItem('tiberius_recon_session_jwt', data.sessionToken);
+        }
+        renderAuthenticatedSession('ADMIN', data.account);
+        if (data.overview) {
+          renderAdminOverview(data.overview);
+        }
+        if (adminSelfSaveStatus) {
+          adminSelfSaveStatus.textContent = `✓ Saved Admin (@${data.account.username} • ${data.account.workEmail})${
+            data.passwordChanged ? ' + Password Changed!' : '!'
+          }`;
+        }
+      } catch (err) {
+        if (adminSelfSaveStatus) {
+          adminSelfSaveStatus.textContent = `Error: ${err.message}`;
+        }
+      }
+    });
+  }
+
   if (adminCreateClientForm) {
     adminCreateClientForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const newClientUserEl = document.getElementById('new-client-username');
       const payload = {
         action: 'create_client',
+        username: newClientUserEl ? newClientUserEl.value.trim() : '',
         companyName: document.getElementById('new-client-company').value.trim(),
         ownerName: document.getElementById('new-client-owner').value.trim(),
         primaryTrade: document.getElementById('new-client-trade').value,

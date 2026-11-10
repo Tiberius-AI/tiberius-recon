@@ -457,8 +457,119 @@
           </form>
         </section>
 
-        <!-- RIGHT COLUMN: SMART SITE EQUITY LEDGER + 10-SEC INBOUND CAD X-RAY TOOL -->
+        <!-- RIGHT COLUMN: ACCOUNT PROFILE & PASSWORD + SMART SITE EQUITY LEDGER + 10-SEC INBOUND CAD X-RAY TOOL -->
         <div class="lg:col-span-5 space-y-7">
+
+          <!-- ACCOUNT PROFILE, USERNAME, EMAIL & PASSWORD EDITOR -->
+          <section id="account-profile-module" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-7">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="font-mono-telemetry text-xs text-[#1E40AF]">ACCOUNT PROFILE &amp; CREDENTIALS</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-[11px] text-blue-800 font-bold">
+                🔐 LOGIN &amp; SECURITY
+              </span>
+            </div>
+
+            <h2 class="font-display font-extrabold text-xl text-[#0F172A] mb-1.5">
+              Profile, Email, Username &amp; Password
+            </h2>
+            <p class="text-xs text-[#334155] mb-4">
+              Update your company name, owner name, login username, work email, mobile phone, territory PIN, or account password.
+            </p>
+
+            <div id="cmd-account-feedback" class="hidden mb-3 p-3 rounded-xl text-xs font-mono-telemetry font-bold"></div>
+
+            <form id="cmd-account-profile-form" class="space-y-3" novalidate>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label for="acct-username-input" class="block text-[11px] font-bold uppercase tracking-wider text-[#0F172A] mb-1">
+                    Username
+                  </label>
+                  <input
+                    id="acct-username-input"
+                    type="text"
+                    placeholder="e.g. travis"
+                    class="enterprise-input text-xs sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="acct-owner-input" class="block text-[11px] font-bold uppercase tracking-wider text-[#0F172A] mb-1">
+                    Owner / Estimator Name
+                  </label>
+                  <input
+                    id="acct-owner-input"
+                    type="text"
+                    placeholder="e.g. Travis Miller"
+                    class="enterprise-input text-xs sm:text-sm"
+                  />
+                </div>
+                <div class="sm:col-span-2">
+                  <label for="acct-company-input" class="block text-[11px] font-bold uppercase tracking-wider text-[#0F172A] mb-1">
+                    Company Name
+                  </label>
+                  <input
+                    id="acct-company-input"
+                    type="text"
+                    placeholder="e.g. Lone Star Commercial Concrete"
+                    class="enterprise-input text-xs sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="acct-email-input" class="block text-[11px] font-bold uppercase tracking-wider text-[#0F172A] mb-1">
+                    Work Email (Login ID)
+                  </label>
+                  <input
+                    id="acct-email-input"
+                    type="email"
+                    placeholder="name@company.com"
+                    class="enterprise-input text-xs sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="acct-phone-input" class="block text-[11px] font-bold uppercase tracking-wider text-[#0F172A] mb-1">
+                    Mobile Phone
+                  </label>
+                  <input
+                    id="acct-phone-input"
+                    type="text"
+                    placeholder="(830) 555-0194"
+                    class="enterprise-input text-xs sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="acct-pin-input" class="block text-[11px] font-bold uppercase tracking-wider text-[#0F172A] mb-1">
+                    Backup Territory PIN
+                  </label>
+                  <input
+                    id="acct-pin-input"
+                    type="text"
+                    placeholder="e.g. 78130"
+                    class="enterprise-input text-xs sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="acct-new-password-input" class="block text-[11px] font-bold uppercase tracking-wider text-[#0F172A] mb-1">
+                    New Password (Optional)
+                  </label>
+                  <input
+                    id="acct-new-password-input"
+                    type="password"
+                    placeholder="Leave blank to keep current"
+                    class="enterprise-input text-xs sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              <div class="pt-1 flex items-center justify-between gap-2">
+                <button
+                  id="acct-save-btn"
+                  type="submit"
+                  class="btn-trust-emerald w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold cursor-pointer"
+                >
+                  ✓ Save Profile, Email, Username &amp; Password
+                </button>
+              </div>
+            </form>
+          </section>
 
           <!-- MODULE 02: RENT-TO-OWN SMART SITE EQUITY LEDGER -->
           <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-7">
@@ -581,6 +692,14 @@
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+            <a
+              href="/recon/watch?studio=1"
+              target="_blank"
+              rel="noopener"
+              class="px-3.5 py-2.5 rounded-xl bg-blue-600/20 border border-blue-500/50 text-blue-200 hover:bg-blue-600/30 text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
+            >
+              <span>🎬 Open Loom Video Studio</span>
+            </a>
             <a
               href="/recon/TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.docx"
               download="TIBERIUS_META_RECON_SOP_AND_PLAYBOOK.docx"

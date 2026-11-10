@@ -11,6 +11,7 @@ const {
   authenticateAccount,
   activateTerritory,
   hydrateAccountFromSession,
+  updateAccountProfile,
   ensureCloudAccountsSynced
 } = require('../../db/store');
 const {
@@ -21,7 +22,7 @@ const {
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Recon-Session');
 
   if (req.method === 'OPTIONS') {
@@ -47,17 +48,56 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  if (req.method === 'POST') {
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
     const body = req.body || {};
-    const action = String(body.action || 'login').toLowerCase();
+    const defaultAction = req.method === 'PUT' || req.method === 'PATCH' ? 'update_profile' : 'login';
+    const action = String(body.action || defaultAction).toLowerCase();
 
     if (action === 'logout') {
       clearSessionCookie(res);
       return res.status(200).json({ ok: true, loggedOut: true });
     }
 
+    if (
+      action === 'update_profile' ||
+      action === 'change_password' ||
+      action === 'update_account'
+    ) {
+      const sessionClaims = extractSessionFromRequest(req);
+      const updateResult = updateAccountProfile({
+        sessionClaims,
+        identifier: body.identifier || body.currentIdentifier,
+        targetAccountId: body.accountId || body.contractorId,
+        token: body.token || body.magicToken,
+        targetRole: body.targetRole,
+        username: body.username,
+        email: body.email,
+        workEmail: body.workEmail !== undefined ? body.workEmail : body.bestEmail,
+        ownerName: body.ownerName,
+        companyName: body.companyName,
+        mobilePhone: body.mobilePhone !== undefined ? body.mobilePhone : body.phone,
+        websiteUrl: body.websiteUrl,
+        accessPin: body.accessPin,
+        primaryTrade: body.primaryTrade,
+        territoryZip: body.territoryZip !== undefined ? body.territoryZip : body.baseZip,
+        tierLevel: body.tierLevel,
+        currentPassword: body.currentPassword,
+        newPassword: body.newPassword !== undefined ? body.newPassword : body.password
+      });
+
+      if (!updateResult.ok) {
+        return res.status(400).json(updateResult);
+      }
+
+      if (updateResult.sessionToken) {
+        setSessionCookie(res, updateResult.sessionToken);
+      }
+      return res.status(200).json(updateResult);
+    }
+
     if (action === 'register') {
       const activation = activateTerritory({
+        username: body.username || '',
         companyName: body.companyName || '',
         ownerName: body.ownerName || '',
         primaryTrade: body.primaryTrade || 'Commercial Concrete',
@@ -86,11 +126,11 @@ module.exports = async function handler(req, res) {
     }
 
     // Default: action === 'login'
-    const identifier = body.identifier || body.email || body.phone || '';
+    const identifier = body.identifier || body.email || body.username || body.phone || '';
     await ensureCloudAccountsSynced({ identifier });
     const result = authenticateAccount({
       identifier,
-      password: body.password || body.pin || ''
+      password: body.password || body.pin || body.secret || ''
     });
 
     if (!result.ok) {

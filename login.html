@@ -114,13 +114,13 @@
         <form id="login-form" class="space-y-4">
           <div>
             <label for="login-identifier" class="block text-xs font-mono-telemetry font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              Work Email or Mobile Phone
+              Work Email, Username, or Mobile Phone
             </label>
             <input
               id="login-identifier"
               type="text"
               required
-              placeholder="e.g. travis@lonestarconcrete.com or (830) 555-0194"
+              placeholder="e.g. travis@lonestarconcrete.com, travis, or (830) 555-0194"
               class="enterprise-input w-full px-3.5 py-2.5 rounded-xl text-sm font-medium"
             />
           </div>
@@ -192,6 +192,163 @@
               🧠 Knowledge Base →
             </a>
           </div>
+        </div>
+
+        <!-- Always-Visible Change Password & Edit Profile Drawer -->
+        <div class="pt-3 border-t border-slate-700/80 space-y-3">
+          <button
+            id="session-toggle-profile-btn"
+            type="button"
+            class="w-full py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-amber-400/50 text-amber-300 font-mono-telemetry font-bold text-xs flex items-center justify-between transition-colors cursor-pointer"
+          >
+            <span>🔑 Change Password / Edit Profile, Email &amp; Username</span>
+            <span id="session-toggle-profile-chevron">▼</span>
+          </button>
+
+          <!-- Self-Service Profile & Password Editor Form -->
+          <form id="self-profile-form" class="hidden p-4 rounded-xl bg-slate-900/95 border border-slate-700 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-blue-300">
+                ACCOUNT PROFILE &amp; PASSWORD SETTINGS
+              </span>
+              <span class="text-[10px] font-mono-telemetry text-slate-400">Contractor &amp; Admin</span>
+            </div>
+
+            <div id="self-profile-feedback" class="hidden p-2.5 rounded-lg text-xs font-mono-telemetry font-semibold"></div>
+
+            <!-- Shown when not yet signed in (or to verify current credentials) -->
+            <div id="self-profile-auth-verify-row" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pb-2.5 border-b border-slate-800">
+              <div>
+                <label for="self-profile-identifier" class="block text-[11px] font-mono-telemetry font-bold uppercase text-amber-300 mb-1">
+                  Current Email or Username
+                </label>
+                <input
+                  id="self-profile-identifier"
+                  type="text"
+                  placeholder="e.g. admin@tiberius.ai or travis"
+                  class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                />
+              </div>
+              <div>
+                <label for="self-profile-current-password" class="block text-[11px] font-mono-telemetry font-bold uppercase text-amber-300 mb-1">
+                  Current Password or PIN
+                </label>
+                <input
+                  id="self-profile-current-password"
+                  type="password"
+                  placeholder="Enter current password"
+                  class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label for="self-profile-username" class="block text-[11px] font-mono-telemetry font-bold uppercase text-slate-300 mb-1">
+                  New / Updated Username
+                </label>
+                <input
+                  id="self-profile-username"
+                  type="text"
+                  placeholder="e.g. travis"
+                  class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                />
+              </div>
+              <div>
+                <label for="self-profile-owner" class="block text-[11px] font-mono-telemetry font-bold uppercase text-slate-300 mb-1">
+                  Full Name / Owner Name
+                </label>
+                <input
+                  id="self-profile-owner"
+                  type="text"
+                  placeholder="e.g. Travis Miller"
+                  class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                />
+              </div>
+              <div class="sm:col-span-2">
+                <label for="self-profile-company" class="block text-[11px] font-mono-telemetry font-bold uppercase text-slate-300 mb-1">
+                  Company / Agency Name
+                </label>
+                <input
+                  id="self-profile-company"
+                  type="text"
+                  placeholder="e.g. Lone Star Commercial Concrete"
+                  class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                />
+              </div>
+              <div>
+                <label for="self-profile-email" class="block text-[11px] font-mono-telemetry font-bold uppercase text-slate-300 mb-1">
+                  New / Updated Work Email
+                </label>
+                <input
+                  id="self-profile-email"
+                  type="email"
+                  placeholder="name@company.com"
+                  class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                />
+              </div>
+              <div>
+                <label for="self-profile-phone" class="block text-[11px] font-mono-telemetry font-bold uppercase text-slate-300 mb-1">
+                  Mobile Phone
+                </label>
+                <input
+                  id="self-profile-phone"
+                  type="text"
+                  placeholder="(830) 555-0194"
+                  class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                />
+              </div>
+              <div id="self-profile-pin-wrap" class="sm:col-span-2">
+                <label for="self-profile-pin" class="block text-[11px] font-mono-telemetry font-bold uppercase text-slate-300 mb-1">
+                  Backup Territory Access PIN
+                </label>
+                <input
+                  id="self-profile-pin"
+                  type="text"
+                  placeholder="5-digit PIN (e.g. 78130)"
+                  class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                />
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 space-y-2.5">
+              <span class="block text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-amber-300">
+                🔐 Set New Password (Leave Blank to Keep Current Password)
+              </span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label for="self-profile-new-password" class="block text-[11px] font-mono-telemetry font-bold uppercase text-slate-300 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    id="self-profile-new-password"
+                    type="password"
+                    placeholder="New password (min 4 chars)"
+                    class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label for="self-profile-confirm-password" class="block text-[11px] font-mono-telemetry font-bold uppercase text-slate-300 mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    id="self-profile-confirm-password"
+                    type="password"
+                    placeholder="Re-enter new password"
+                    class="enterprise-input w-full px-3 py-2 rounded-lg text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              id="self-profile-save-btn"
+              type="submit"
+              class="btn-trust-emerald w-full py-2.5 px-4 rounded-xl font-display font-bold text-xs transition-colors cursor-pointer"
+            >
+              ✓ Save Profile &amp; Password Changes
+            </button>
+          </form>
         </div>
       </div>
 
@@ -339,11 +496,61 @@
         </div>
       </div>
 
+      <!-- Master Admin Own Profile, Email, Username & Password Card -->
+      <div class="bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md p-6 sm:p-7 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-[11px] font-mono-telemetry font-bold uppercase tracking-wider text-amber-400">
+              🔑 MASTER ADMIN ACCOUNT &amp; SECURITY
+            </span>
+            <h3 class="font-display text-lg font-extrabold text-white mt-0.5">
+              Edit Master Admin Profile, Email, Username &amp; Password
+            </h3>
+          </div>
+          <span id="admin-self-save-status" class="text-xs font-mono-telemetry text-emerald-400 font-semibold"></span>
+        </div>
+
+        <form id="admin-self-profile-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Admin Username</label>
+            <input id="admin-self-username" type="text" required placeholder="admin" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Admin Login Email</label>
+            <input id="admin-self-email" type="email" required placeholder="admin@tiberius.ai" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Admin Display / Owner Name</label>
+            <input id="admin-self-owner" type="text" required placeholder="Master Admin" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Agency / Organization Name</label>
+            <input id="admin-self-company" type="text" required placeholder="Tiberius Master Agency Command" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Admin Mobile Phone</label>
+            <input id="admin-self-phone" type="text" placeholder="(830) 555-0100" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-amber-300 uppercase mb-1">New Admin Password (Optional)</label>
+            <input id="admin-self-new-password" type="password" placeholder="Leave blank to keep current password" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
+          </div>
+          <div class="sm:col-span-3 flex flex-wrap items-center justify-between gap-3 pt-1">
+            <span class="text-xs font-mono-telemetry text-slate-400">
+              Changes take effect immediately and refresh your signed 30-day Master Admin session.
+            </span>
+            <button type="submit" class="btn-trust-emerald py-2.5 px-5 rounded-xl font-display font-bold text-xs transition-colors cursor-pointer">
+              ✓ Save Master Admin Profile &amp; Password
+            </button>
+          </div>
+        </form>
+      </div>
+
       <!-- Client Accounts Roster Cards -->
       <div class="bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md p-6 sm:p-7 space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="font-display text-lg font-extrabold text-white">
-            Client Contractor Accounts
+            Client Contractor Accounts (Click "✏️ Edit Profile &amp; Password" on Any Client)
           </h3>
           <span id="admin-action-status" class="text-xs font-mono-telemetry text-emerald-400 font-semibold"></span>
         </div>
@@ -372,6 +579,10 @@
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Owner / Estimator Name</label>
             <input id="new-client-owner" type="text" required placeholder="e.g. Luke Garrison" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Username (Optional Login ID)</label>
+            <input id="new-client-username" type="text" placeholder="e.g. lukegarrison" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
           <div>
             <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Primary Trade</label>
@@ -407,8 +618,8 @@
             <label class="block text-xs font-mono-telemetry font-bold text-slate-300 uppercase mb-1">Initial Account Password / PIN</label>
             <input id="new-client-password" type="text" required value="recon2026" class="enterprise-input w-full px-3 py-2 rounded-xl text-sm" />
           </div>
-          <div class="flex items-end">
-            <button type="submit" class="btn-trust-emerald w-full py-2.5 px-4 rounded-xl font-display font-bold text-xs transition-colors cursor-pointer">
+          <div class="sm:col-span-3 flex justify-end">
+            <button type="submit" class="btn-trust-emerald py-2.5 px-6 rounded-xl font-display font-bold text-xs transition-colors cursor-pointer">
               + Create Client Account &amp; Briefing
             </button>
           </div>

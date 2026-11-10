@@ -31,9 +31,13 @@ const {
   getContractorTwilioA2PState
 } = require('../workers/comms-dispatcher');
 
-const LOCAL_STORE_PATH = path.join(__dirname, '.recon-store.json');
+const LOCAL_STORE_PATH = process.env.RECON_STORE_PATH
+  ? path.resolve(process.env.RECON_STORE_PATH)
+  : path.join(__dirname, '.recon-store.json');
 const TMP_STORE_PATH = path.join(os.tmpdir(), 'tiberius-recon-store.json');
-const LOCAL_SQLITE_PATH = path.join(__dirname, '.recon.sqlite');
+const LOCAL_SQLITE_PATH = process.env.RECON_SQLITE_PATH
+  ? path.resolve(process.env.RECON_SQLITE_PATH)
+  : path.join(__dirname, '.recon.sqlite');
 const TMP_SQLITE_PATH = path.join(os.tmpdir(), 'tiberius-recon.sqlite');
 const ENGINE_SCHEMA_VERSION = '2.6';
 
@@ -194,7 +198,13 @@ function getSqliteDb() {
         // Column already exists
       }
       try {
+        db.exec(`ALTER TABLE seen_permits ADD COLUMN street_key TEXT;`);
+      } catch (_alterSeenErr) {
+        // Column already exists
+      }
+      try {
         db.exec(`CREATE INDEX IF NOT EXISTS idx_briefing_deals_token_date ON briefing_deals(briefing_token, briefing_date);`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_seen_permits_street ON seen_permits(jurisdiction, street_key);`);
       } catch (_idxErr) {
         // Ignore
       }
@@ -213,18 +223,29 @@ function normalizePermitNumber(rawPermitNumber = '') {
     .replace(/^#+/, '')
     .replace(/\s+/g, ' ')
     .toUpperCase();
+  if (!cleaned) return '';
+  // Never treat positional UI card IDs ("DEAL-1", "CARD 01") as municipal permit numbers
+  if (/^(?:DEAL|CARD)[-\s]*\d+$/i.test(cleaned)) {
+    return '';
+  }
   return cleaned;
 }
 
 function normalizePermitAddress(rawAddress = '') {
-  const base = String(rawAddress || '')
-    .replace(/^Permit Address:\s*/i, '')
-    .replace(/^Property Address:\s*/i, '')
-    .split('•')[0]
-    .trim()
-    .toLowerCase();
-  return base
-    .replace(/[.,#]/g, ' ')
+  const cleanedRaw = String(rawAddress || '')
+    .replace(/^(?:📍\s*)?(?:Permit\s+Address|Property\s+Address|Location):\s*/i, '')
+    .trim();
+  const bulletParts = cleanedRaw.split('•').map((p) => p.trim()).filter(Boolean);
+  let chosen = bulletParts[0] || '';
+  const streetTokenRegex =
+    /\d+\s+[a-z0-9]|\b(?:st|street|ave|avenue|dr|drive|rd|road|pkwy|parkway|hwy|highway|blvd|boulevard|ln|lane|ct|court|pl|place|cir|circle|way|loop|ih|fm|lot|pad|plaza|commons|corridor)\b/i;
+  if (bulletParts.length > 1 && !streetTokenRegex.test(chosen) && streetTokenRegex.test(bulletParts[1])) {
+    chosen = bulletParts[1];
+  }
+  return chosen
+    .toLowerCase()
+    .replace(/[.,#()]/g, ' ')
+    .replace(/\bstate\s+(?:highway|hwy)\b/g, 'hwy')
     .replace(/\bstreet\b/g, 'st')
     .replace(/\bavenue\b/g, 'ave')
     .replace(/\bdrive\b/g, 'dr')
@@ -234,8 +255,136 @@ function normalizePermitAddress(rawAddress = '') {
     .replace(/\bboulevard\b/g, 'blvd')
     .replace(/\blane\b/g, 'ln')
     .replace(/\bcourt\b/g, 'ct')
+    .replace(/\bplace\b/g, 'pl')
+    .replace(/\bcircle\b/g, 'cir')
+    .replace(/\bfreeway\b/g, 'fwy')
+    .replace(/\bnorth\b/g, 'n')
+    .replace(/\bsouth\b/g, 's')
+    .replace(/\beast\b/g, 'e')
+    .replace(/\bwest\b/g, 'w')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Extracts a canonical street-only deduplication key (stripping trailing City, State, ZIP, and
+ * parenthetical metro tags) so raw portal locations ("11920 WILSON PARKE AVE") and formatted
+ * subMeta addresses ("11920 Wilson Parke Ave, Austin, TX 78726") match deterministically.
+ */
+function normalizeStreetKey(rawAddress = '') {
+  const cleanedRaw = String(rawAddress || '')
+    .replace(/^(?:📍\s*)?(?:Permit\s+Address|Property\s+Address|Location):\s*/i, '')
+    .trim();
+  if (!cleanedRaw) return '';
+
+  const bulletParts = cleanedRaw.split('•').map((p) => p.trim()).filter(Boolean);
+  let chosen = bulletParts[0] || '';
+  const streetTokenRegex =
+    /\d+\s+[a-z0-9]|\b(?:st|street|ave|avenue|dr|drive|rd|road|pkwy|parkway|hwy|highway|blvd|boulevard|ln|lane|ct|court|pl|place|cir|circle|way|loop|ih|fm|lot|pad|plaza|commons|corridor)\b/i;
+  if (bulletParts.length > 1 && !streetTokenRegex.test(chosen) && streetTokenRegex.test(bulletParts[1])) {
+    chosen = bulletParts[1];
+  }
+
+  // Strip parenthetical city/state/zip e.g. "(New Braunfels, TX 78130)" or "(78130)"
+  let stripped = chosen.replace(/\([^)]*(?:\btx\b|\btexas\b|\b\d{5}\b)[^)]*\)/gi, ' ');
+  // Strip trailing ", City, ST 78130" or ", ST 78130" or trailing 5-digit zip
+  stripped = stripped
+    .replace(/,\s*[a-z\s./-]+,\s*[a-z]{2}(?:\s+\d{5}(?:-\d{4})?)?\s*$/i, '')
+    .replace(/,\s*(?:tx|texas)(?:\s+\d{5}(?:-\d{4})?)?\s*$/i, '')
+    .replace(/\b(?:new\s+braunfels|san\s+antonio|austin|houston|frisco|plano|san\s+marcos|schertz)\s*,?\s*(?:tx|texas)?\s*\d{0,5}\s*$/i, '')
+    .replace(/\b\d{5}(?:-\d{4})?\s*$/, '');
+
+  const norm = normalizePermitAddress(stripped);
+  if (!norm || norm.length < 5) return '';
+  if (!streetTokenRegex.test(norm)) return '';
+  return norm;
+}
+
+function normalizeUrlDomain(rawUrl = '') {
+  const raw = String(rawUrl || '').trim().toLowerCase();
+  if (!raw || raw === 'not found' || raw === 'none' || raw === '#') return '';
+  let host = raw
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .split('/')[0]
+    .split('?')[0]
+    .split('#')[0]
+    .trim();
+  if (!host || !host.includes('.')) return '';
+  // Exclude generic fallback or shared directory domains from cross-entity deduplication
+  if (
+    /^(?:contractor\.com|commercialgc\.com|example\.com|privateestate\.org|facebook\.com|instagram\.com|linkedin\.com|yelp\.com|google\.com|linktr\.ee|nextdoor\.com|thumbtack\.com|angi\.com|bbb\.org)$/i.test(
+      host
+    )
+  ) {
+    return '';
+  }
+  return host;
+}
+
+function normalizePhoneDigits(rawPhone = '') {
+  const digits = String(rawPhone || '').replace(/\D/g, '');
+  const ten = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits;
+  if (ten.length !== 10) return '';
+  // Exclude fictional 555 demo numbers from acting as cross-entity dedupe keys
+  if (/^\d{3}555\d{4}$/.test(ten)) return '';
+  return ten;
+}
+
+function normalizeBusinessName(rawName = '') {
+  let base = String(rawName || '')
+    .replace(/\*+\s*MAIN\s*\*+/gi, ' ')
+    .replace(/\*+/g, ' ')
+    .trim();
+  if (!base) return '';
+
+  if (base.includes('@') && !/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(base)) {
+    const afterAt = base.split('@').pop().trim();
+    if (afterAt) base = afterAt;
+  } else if (/\(([^)]+)\)/.test(base)) {
+    const paren = base.match(/\(([^)]+)\)/);
+    if (paren && paren[1] && !/^\d+$/.test(paren[1].trim())) {
+      base = paren[1].trim();
+    }
+  } else if (base.includes('•')) {
+    base = base.split('•').pop().trim();
+  }
+
+  return base
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(
+      /\b(?:general\s+contractors|contractors|contractor|construction\s+services|construction\s+company|construction|constructors|contracting|commercial\s+services|commercial|builders|company|services|partners|group|holdings|inc|llc|ltd|lp|corp|co)\b/g,
+      ' '
+    )
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeParcelId(rawParcel = '') {
+  const raw = String(rawParcel || '').trim().toUpperCase();
+  if (!raw) return '';
+  const placeMatch = raw.match(/\bPLACE[_-]?ID[:\s#]*([A-Z0-9_-]{8,})/i);
+  if (placeMatch && placeMatch[1]) return `PLACE:${placeMatch[1]}`;
+
+  const tcadMatch = raw.match(/\bTCAD\s*#?\s*([0-9A-Z]{5,})\b/i);
+  if (tcadMatch && tcadMatch[1]) {
+    if (tcadMatch[1] === '510271') return '';
+    return `PARCEL:${tcadMatch[1]}`;
+  }
+
+  const cadMatch = raw.match(/\bCAD-([0-9A-Z]{3,6})-([0-9A-Z]{4,10})\b/i);
+  if (cadMatch && cadMatch[1] && cadMatch[2]) {
+    if (cadMatch[2] === '510271') return '';
+    return `CAD:${cadMatch[1]}-${cadMatch[2]}`;
+  }
+
+  const digitsOnly = raw.replace(/^#/, '').trim();
+  if (/^[0-9]{6,14}$/.test(digitsOnly) && digitsOnly !== '510271') {
+    return `PARCEL:${digitsOnly}`;
+  }
+  return '';
 }
 
 function normalizeJurisdiction(rawJurisdiction = '') {
@@ -244,24 +393,241 @@ function normalizeJurisdiction(rawJurisdiction = '') {
 }
 
 function extractCardPermitNumber(card = {}) {
-  if (card.permitNum) return normalizePermitNumber(card.permitNum);
-  if (card.permit_number) return normalizePermitNumber(card.permit_number);
-  if (card.permitNumber) return normalizePermitNumber(card.permitNumber);
-  const text = `${card.cardNumber || ''} ${card.subMeta || ''} ${card.draftSubject || ''}`;
+  if (!card || typeof card !== 'object') return '';
+  for (const directField of [
+    card.permitNum,
+    card.permit_number,
+    card.permitNumber,
+    card.externalPermitId
+  ]) {
+    const norm = normalizePermitNumber(directField);
+    if (norm) return norm;
+  }
+  const text = `${card.cardNumber || ''} ${card.subMeta || ''} ${card.pillText || ''} ${card.draftSubject || ''}`;
   const match =
-    text.match(/#?((?:BP-\d{4}-\d{4,6}|\d{4}-\d{5,7}\s*BP|[A-Z]{2,5}-\d{4}-\d{3,7}))/i) ||
-    text.match(/LIVE PERMIT\s+#?([A-Z0-9-\s]+?)(?:\)|•|$)/i);
+    text.match(
+      /#?((?:BP-\d{4}-\d{3,7}|\d{4}-\d{4,7}\s*BP|(?:PRJ|SODA|DEED|BLD|COM|RES)-\d{4}-\d{3,7}|[A-Z]{2,5}-\d{4}-\d{3,7}))/i
+    ) || text.match(/LIVE PERMIT\s+#?([A-Z0-9-\s]+?)(?:\)|•|$)/i);
   if (match && match[1]) {
     return normalizePermitNumber(match[1]);
   }
-  return normalizePermitNumber(card.id || '');
+  return '';
 }
 
 function extractCardAddress(card = {}) {
-  if (card.address) return normalizePermitAddress(card.address);
-  if (card.propertyAddress) return normalizePermitAddress(card.propertyAddress);
-  if (card.subMeta) return normalizePermitAddress(card.subMeta);
-  return normalizePermitAddress(card.headline || '');
+  if (!card || typeof card !== 'object') return '';
+  for (const candidate of [
+    card.address,
+    card.propertyAddress,
+    card.permit_location,
+    card.original_address1,
+    card.fullAddress,
+    card.subMeta
+  ]) {
+    if (candidate && String(candidate).trim()) {
+      const norm = normalizePermitAddress(candidate);
+      if (norm) return norm;
+    }
+  }
+  if (card.headline) {
+    const headlineLead = String(card.headline).split(/[—(]/)[0].trim();
+    return normalizePermitAddress(headlineLead);
+  }
+  return '';
+}
+
+function extractCardStreetKey(card = {}) {
+  if (!card || typeof card !== 'object') return '';
+  for (const candidate of [
+    card.address,
+    card.propertyAddress,
+    card.permit_location,
+    card.original_address1,
+    card.fullAddress,
+    card.subMeta
+  ]) {
+    if (candidate && String(candidate).trim()) {
+      const sk = normalizeStreetKey(candidate);
+      if (sk) return sk;
+    }
+  }
+  if (card.headline) {
+    const headlineLead = String(card.headline).split(/[—(]/)[0].trim();
+    return normalizeStreetKey(headlineLead);
+  }
+  return '';
+}
+
+function extractCardParcelId(card = {}) {
+  if (!card || typeof card !== 'object') return '';
+  for (const candidate of [
+    card.place_id,
+    card.placeId,
+    card.parcelId,
+    card.parcel_id,
+    card.parcel_id_full,
+    card.tcad_id,
+    card.cadDetails && card.cadDetails.parcelId,
+    card.cadCallout,
+    card.subMeta
+  ]) {
+    if (candidate) {
+      const norm = normalizeParcelId(candidate);
+      if (norm) return norm;
+    }
+  }
+  return '';
+}
+
+/**
+ * Computes all canonical deduplication fingerprints for a card or raw trigger record:
+ *   - permit number
+ *   - canonical street key
+ *   - CAD parcel / place_id
+ *   - normalized business + street/phone/domain keys (for un-numbered B2B/CAD triggers)
+ */
+function buildCardDedupeFingerprints(card = {}) {
+  const keys = [];
+  const permit = extractCardPermitNumber(card);
+  const street = extractCardStreetKey(card);
+  const parcel = extractCardParcelId(card);
+  const biz = normalizeBusinessName(
+    card.contractor_company_name ||
+      card.applicant_org ||
+      card.companyName ||
+      card.contactShort ||
+      card.contactName ||
+      ''
+  );
+  const phone = normalizePhoneDigits(
+    card.contactPhone || card.contractor_phone || card.applicant_phone || card.phone || ''
+  );
+  const domain = normalizeUrlDomain(card.websiteUrl || card._preScrapedWebsite || '');
+
+  if (permit) keys.push(`permit::${permit}`);
+  if (parcel) keys.push(`parcel::${parcel}`);
+  if (street) keys.push(`street::${street}`);
+  if (!permit && !street && biz && (phone || domain)) {
+    const headlineSlug = String(card.headline || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .slice(0, 40);
+    if (phone) keys.push(`biz_phone::${biz}::${phone}::${headlineSlug}`);
+    if (domain) keys.push(`biz_domain::${biz}::${domain}::${headlineSlug}`);
+  }
+  return keys;
+}
+
+function getApprovalStatusPriority(status = '') {
+  const s = String(status || '').toLowerCase();
+  if (s === 'sent' || s === 'approved') return 3;
+  if (s === 'dismissed') return 2;
+  return 1;
+}
+
+function mergeBriefingCardPair(existing = {}, incoming = {}) {
+  const existingPrio = getApprovalStatusPriority(existing.approvalStatus);
+  const incomingPrio = getApprovalStatusPriority(incoming.approvalStatus);
+  const preferIncomingStatus = incomingPrio > existingPrio;
+
+  const merged = {
+    ...incoming,
+    ...existing,
+    isLockedOverflow: Boolean(existing.isLockedOverflow && incoming.isLockedOverflow),
+    websiteUrl: existing.websiteUrl || incoming.websiteUrl,
+    permitPortalUrl: existing.permitPortalUrl || incoming.permitPortalUrl,
+    cadCallout: existing.cadCallout || incoming.cadCallout,
+    cadDetails: existing.cadDetails || incoming.cadDetails,
+    contactEmail: existing.contactEmail || incoming.contactEmail,
+    contactPhone: existing.contactPhone || incoming.contactPhone
+  };
+
+  if (preferIncomingStatus) {
+    merged.approvalStatus = incoming.approvalStatus;
+    merged.approvedAt = incoming.approvedAt || existing.approvedAt;
+    merged.approvedTimeLabel = incoming.approvedTimeLabel || existing.approvedTimeLabel;
+    merged.dismissedAt = incoming.dismissedAt || existing.dismissedAt;
+    merged.dispatchChannel = incoming.dispatchChannel || existing.dispatchChannel;
+    merged.dispatchReceipt = incoming.dispatchReceipt || existing.dispatchReceipt;
+    if (incoming.draftBody) merged.draftBody = incoming.draftBody;
+  }
+
+  return merged;
+}
+
+/**
+ * Idempotently deduplicates an array of briefing cards across permit numbers, street addresses,
+ * CAD parcel / place_ids, and business+contact keys, upserting/preserving user approval state
+ * and re-normalizing sequential `deal-1..deal-N` IDs so duplicate cards can never exist.
+ */
+function deduplicateBriefingCards(cards = [], options = {}) {
+  if (!Array.isArray(cards) || cards.length === 0) return [];
+  const demoEnabled = isDemoModeEnabled(options);
+  const reindexIds = options.reindexIds !== false;
+
+  const uniqueCards = [];
+  const fingerprintToIndex = new Map();
+
+  for (const rawCard of cards) {
+    if (!rawCard || typeof rawCard !== 'object') continue;
+    if (!demoEnabled && isSyntheticDemoRecord(rawCard)) continue;
+
+    const fingerprints = buildCardDedupeFingerprints(rawCard);
+    let matchedIdx = -1;
+    for (const fp of fingerprints) {
+      if (fingerprintToIndex.has(fp)) {
+        matchedIdx = fingerprintToIndex.get(fp);
+        break;
+      }
+    }
+
+    if (matchedIdx >= 0) {
+      uniqueCards[matchedIdx] = mergeBriefingCardPair(uniqueCards[matchedIdx], rawCard);
+      const mergedFps = buildCardDedupeFingerprints(uniqueCards[matchedIdx]);
+      for (const fp of mergedFps) {
+        fingerprintToIndex.set(fp, matchedIdx);
+      }
+    } else {
+      const nextIdx = uniqueCards.length;
+      uniqueCards.push({ ...rawCard });
+      for (const fp of fingerprints) {
+        fingerprintToIndex.set(fp, nextIdx);
+      }
+    }
+  }
+
+  if (!reindexIds) {
+    return uniqueCards;
+  }
+
+  return uniqueCards.map((card, idx) => {
+    const rank = idx + 1;
+    const paddedRank = rank < 10 ? `0${rank}` : String(rank);
+    const updatedCardNumber = String(card.cardNumber || '').replace(
+      /^CARD\s+0?\d+/i,
+      `CARD ${paddedRank}`
+    );
+    let updatedBadge = card.unlockedBadge;
+    if (typeof updatedBadge === 'string') {
+      if (/^UNLOCKED\s+#\d+/i.test(updatedBadge)) {
+        updatedBadge = `UNLOCKED #${rank}`;
+      } else if (/^LIVE\s+SCRAPED\s+#\d+/i.test(updatedBadge)) {
+        updatedBadge = `LIVE SCRAPED #${rank}`;
+      } else if (/^LIVE\s+PREVIEW\s+#\d+/i.test(updatedBadge)) {
+        updatedBadge = `LIVE PREVIEW #${rank}`;
+      } else if (/^LOCKED\s+#0?\d+/i.test(updatedBadge)) {
+        updatedBadge = `LOCKED #${paddedRank}`;
+      }
+    }
+    return {
+      ...card,
+      id: `deal-${rank}`,
+      cardRank: rank,
+      cardNumber: updatedCardNumber || `CARD ${paddedRank}`,
+      unlockedBadge: updatedBadge || (card.isLockedOverflow ? `LOCKED #${paddedRank}` : `UNLOCKED #${rank}`)
+    };
+  });
 }
 
 function recordSeenPermit({
@@ -273,12 +639,14 @@ function recordSeenPermit({
   status = 'surfaced'
 } = {}) {
   const normJurisdiction = normalizeJurisdiction(jurisdiction);
+  const rawAddrSource =
+    normalizedAddress !== undefined && normalizedAddress !== null
+      ? normalizedAddress
+      : address || '';
+  const normAddr = normalizePermitAddress(rawAddrSource);
+  const streetKey = normalizeStreetKey(rawAddrSource);
   const normPermit = normalizePermitNumber(permitNumber);
   if (!normPermit) return null;
-  const normAddr =
-    normalizedAddress !== undefined && normalizedAddress !== null
-      ? normalizePermitAddress(normalizedAddress)
-      : normalizePermitAddress(address || '');
   const validStatus = ['surfaced', 'approved', 'dismissed'].includes(status) ? status : 'surfaced';
   const briefingDate =
     surfacedBriefingDate !== undefined ? surfacedBriefingDate : getCentralDateString();
@@ -290,17 +658,23 @@ function recordSeenPermit({
         jurisdiction,
         permit_number,
         normalized_address,
+        street_key,
         first_seen_at,
         last_seen_at,
         surfaced_briefing_date,
         status
-      ) VALUES (?, ?, ?, datetime('now'), datetime('now'), ?, ?)
+      ) VALUES (?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?)
       ON CONFLICT(jurisdiction, permit_number) DO UPDATE SET
         last_seen_at = datetime('now'),
         normalized_address = CASE
           WHEN excluded.normalized_address IS NOT NULL AND excluded.normalized_address != ''
             THEN excluded.normalized_address
           ELSE seen_permits.normalized_address
+        END,
+        street_key = CASE
+          WHEN excluded.street_key IS NOT NULL AND excluded.street_key != ''
+            THEN excluded.street_key
+          ELSE seen_permits.street_key
         END,
         surfaced_briefing_date = COALESCE(seen_permits.surfaced_briefing_date, excluded.surfaced_briefing_date),
         status = CASE
@@ -309,7 +683,14 @@ function recordSeenPermit({
           ELSE excluded.status
         END
     `);
-    stmt.run(normJurisdiction, normPermit, normAddr || null, briefingDate || null, validStatus);
+    stmt.run(
+      normJurisdiction,
+      normPermit,
+      normAddr || null,
+      streetKey || null,
+      briefingDate || null,
+      validStatus
+    );
 
     const row = db
       .prepare(
@@ -330,10 +711,12 @@ function isPermitSeen({
 } = {}) {
   const normJurisdiction = normalizeJurisdiction(jurisdiction);
   const normPermit = normalizePermitNumber(permitNumber);
-  const normAddr =
+  const rawAddrSource =
     normalizedAddress !== undefined && normalizedAddress !== null
-      ? normalizePermitAddress(normalizedAddress)
-      : normalizePermitAddress(address || '');
+      ? normalizedAddress
+      : address || '';
+  const normAddr = normalizePermitAddress(rawAddrSource);
+  const streetKey = normalizeStreetKey(rawAddrSource);
 
   const db = getSqliteDb();
   if (!db) return false;
@@ -353,6 +736,13 @@ function isPermitSeen({
       )
       .get(normJurisdiction, normAddr);
   }
+  if (!row && streetKey) {
+    row = db
+      .prepare(
+        `SELECT * FROM seen_permits WHERE LOWER(jurisdiction) = LOWER(?) AND street_key = ? AND street_key != '' LIMIT 1`
+      )
+      .get(normJurisdiction, streetKey);
+  }
 
   if (!row) return false;
 
@@ -370,10 +760,12 @@ function isPermitSeen({
 function touchSeenPermit({ jurisdiction, permitNumber, normalizedAddress, address } = {}) {
   const normJurisdiction = normalizeJurisdiction(jurisdiction);
   const normPermit = normalizePermitNumber(permitNumber);
-  const normAddr =
+  const rawAddrSource =
     normalizedAddress !== undefined && normalizedAddress !== null
-      ? normalizePermitAddress(normalizedAddress)
-      : normalizePermitAddress(address || '');
+      ? normalizedAddress
+      : address || '';
+  const normAddr = normalizePermitAddress(rawAddrSource);
+  const streetKey = normalizeStreetKey(rawAddrSource);
   const db = getSqliteDb();
   if (!db) return;
 
@@ -383,8 +775,8 @@ function touchSeenPermit({ jurisdiction, permitNumber, normalizedAddress, addres
     ).run(normJurisdiction, normPermit);
   } else if (normAddr) {
     db.prepare(
-      `UPDATE seen_permits SET last_seen_at = datetime('now') WHERE LOWER(jurisdiction) = LOWER(?) AND normalized_address = ?`
-    ).run(normJurisdiction, normAddr);
+      `UPDATE seen_permits SET last_seen_at = datetime('now') WHERE LOWER(jurisdiction) = LOWER(?) AND (normalized_address = ? OR (street_key IS NOT NULL AND street_key = ?))`
+    ).run(normJurisdiction, normAddr, streetKey || '');
   }
 }
 
@@ -397,11 +789,14 @@ function updateSeenPermitStatus({
 } = {}) {
   const validStatus = ['surfaced', 'approved', 'dismissed'].includes(status) ? status : 'surfaced';
   const normJurisdiction = normalizeJurisdiction(jurisdiction);
-  const normPermit = normalizePermitNumber(permitNumber);
-  const normAddr =
+  const rawAddrSource =
     normalizedAddress !== undefined && normalizedAddress !== null
-      ? normalizePermitAddress(normalizedAddress)
-      : normalizePermitAddress(address || '');
+      ? normalizedAddress
+      : address || '';
+  const normAddr = normalizePermitAddress(rawAddrSource);
+  const streetKey = normalizeStreetKey(rawAddrSource);
+  const normPermit =
+    normalizePermitNumber(permitNumber) || (streetKey ? `ADDR:${streetKey.toUpperCase()}` : '');
   if (!normPermit) return null;
 
   return recordSeenPermit({
@@ -424,6 +819,8 @@ function filterUnseenPermits(permits = [], options = {}) {
   const unseen = [];
   const batchSeenKeys = new Set();
   const batchSeenAddresses = new Set();
+  const batchSeenStreets = new Set();
+  const batchSeenParcels = new Set();
 
   for (const item of permits) {
     if (!item) continue;
@@ -432,25 +829,29 @@ function filterUnseenPermits(permits = [], options = {}) {
     }
 
     const itemJurisdiction = normalizeJurisdiction(
-      item.jurisdiction || item.zip || options.jurisdiction || defaultJurisdiction
+      item.jurisdiction || item.zip || item.original_zip || options.jurisdiction || defaultJurisdiction
     );
+    const jLower = itemJurisdiction.toLowerCase();
     const permitNumber = extractCardPermitNumber(item);
     const normalizedAddress = extractCardAddress(item);
+    const streetKey = extractCardStreetKey(item);
+    const parcelId = extractCardParcelId(item);
 
-    const permitKey = `${itemJurisdiction.toLowerCase()}::${permitNumber}`;
-    const addrKey = normalizedAddress ? `${itemJurisdiction.toLowerCase()}::${normalizedAddress}` : '';
+    const permitKey = permitNumber ? `${jLower}::${permitNumber}` : '';
+    const addrKey = normalizedAddress ? `${jLower}::${normalizedAddress}` : '';
+    const streetLookupKey = streetKey ? `${jLower}::${streetKey}` : '';
+    const parcelKey = parcelId ? `${jLower}::${parcelId}` : '';
 
-    if (permitNumber && batchSeenKeys.has(permitKey)) {
-      continue;
-    }
-    if (addrKey && batchSeenAddresses.has(addrKey)) {
-      continue;
-    }
+    if (permitKey && batchSeenKeys.has(permitKey)) continue;
+    if (addrKey && batchSeenAddresses.has(addrKey)) continue;
+    if (streetLookupKey && batchSeenStreets.has(streetLookupKey)) continue;
+    if (parcelKey && batchSeenParcels.has(parcelKey)) continue;
 
     const alreadySeen = isPermitSeen({
       jurisdiction: itemJurisdiction,
       permitNumber,
       normalizedAddress,
+      address: streetKey || normalizedAddress,
       allowSameBriefingDate
     });
 
@@ -463,14 +864,16 @@ function filterUnseenPermits(permits = [], options = {}) {
       continue;
     }
 
-    if (permitNumber) batchSeenKeys.add(permitKey);
+    if (permitKey) batchSeenKeys.add(permitKey);
     if (addrKey) batchSeenAddresses.add(addrKey);
+    if (streetLookupKey) batchSeenStreets.add(streetLookupKey);
+    if (parcelKey) batchSeenParcels.add(parcelKey);
 
-    if (markAsSurfaced && !demoEnabled && permitNumber) {
+    if (markAsSurfaced && !demoEnabled && (permitNumber || streetKey)) {
       recordSeenPermit({
         jurisdiction: itemJurisdiction,
-        permitNumber,
-        normalizedAddress,
+        permitNumber: permitNumber || `ADDR:${streetKey.toUpperCase()}`,
+        normalizedAddress: normalizedAddress || streetKey,
         surfacedBriefingDate,
         status: 'surfaced'
       });
@@ -532,6 +935,8 @@ function syncBriefingCardsToSqlite(briefing, dateOverride = null) {
     const token = String(briefing.magicToken || '');
     const briefingDate = String(dateOverride || briefing.briefingDate || getCentralDateString()).slice(0, 10);
     const jurisdiction = normalizeJurisdiction(briefing.territoryZip || '78130');
+    const dedupedCards = deduplicateBriefingCards(briefing.cards, { demo: false });
+
     db.prepare(
       `DELETE FROM briefing_deals WHERE briefing_token = ? AND (briefing_date = ? OR briefing_date IS NULL)`
     ).run(token, briefingDate);
@@ -553,13 +958,14 @@ function syncBriefingCardsToSqlite(briefing, dateOverride = null) {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `);
 
-    for (const card of briefing.cards) {
+    for (const card of dedupedCards) {
       if (isSyntheticDemoRecord(card)) continue;
       const permitNum = extractCardPermitNumber(card);
       const normAddr = extractCardAddress(card);
       const parcelId = (card.cadDetails && card.cadDetails.parcelId) || '';
+      const rowKey = permitNum || extractCardStreetKey(card) || card.id || 'card';
       insertStmt.run(
-        `${token}::${briefingDate}::${card.id || permitNum}`,
+        `${token}::${briefingDate}::${rowKey}`,
         token,
         briefingDate,
         jurisdiction,
@@ -584,8 +990,9 @@ function syncBriefingCardsToSqlite(briefing, dateOverride = null) {
 function archiveBriefingSnapshot(store, briefing, dateOverride = null) {
   if (!store || !briefing || !briefing.magicToken) return;
   if (isDemoModeEnabled()) return;
-  const cards = (Array.isArray(briefing.cards) ? briefing.cards : []).filter(
-    (c) => !isSyntheticDemoRecord(c)
+  const cards = deduplicateBriefingCards(
+    (Array.isArray(briefing.cards) ? briefing.cards : []).filter((c) => !isSyntheticDemoRecord(c)),
+    { demo: false }
   );
   if (cards.length === 0) return;
 
@@ -623,7 +1030,10 @@ function getBriefingHistoryDates(token, storeArg = null) {
 
   // 1. Add active briefing date
   if (briefing && Array.isArray(briefing.cards) && briefing.cards.length > 0) {
-    const cleanCards = briefing.cards.filter((c) => !isSyntheticDemoRecord(c));
+    const cleanCards = deduplicateBriefingCards(
+      briefing.cards.filter((c) => !isSyntheticDemoRecord(c)),
+      { demo: false }
+    );
     dateMap.set(activeDate, {
       date: activeDate,
       isToday: true,
@@ -638,7 +1048,10 @@ function getBriefingHistoryDates(token, storeArg = null) {
     (store && store.briefingHistory && store.briefingHistory[cleanToken]) || {};
   for (const [dKey, snap] of Object.entries(tokenHistory)) {
     if (!snap || !Array.isArray(snap.cards) || snap.cards.length === 0) continue;
-    const cleanCards = snap.cards.filter((c) => !isSyntheticDemoRecord(c));
+    const cleanCards = deduplicateBriefingCards(
+      snap.cards.filter((c) => !isSyntheticDemoRecord(c)),
+      { demo: false }
+    );
     if (cleanCards.length === 0) continue;
     if (!dateMap.has(dKey)) {
       dateMap.set(dKey, {
@@ -696,7 +1109,10 @@ function getArchivedBriefingCardsForDate(token, dateStr, storeArg = null) {
 
   const briefing = store && store.briefings ? store.briefings[cleanToken] : null;
   if (briefing && briefing.briefingDate === cleanDate && Array.isArray(briefing.cards)) {
-    return briefing.cards.filter((c) => !isSyntheticDemoRecord(c));
+    return deduplicateBriefingCards(
+      briefing.cards.filter((c) => !isSyntheticDemoRecord(c)),
+      { demo: false }
+    );
   }
 
   const snap =
@@ -705,7 +1121,10 @@ function getArchivedBriefingCardsForDate(token, dateStr, storeArg = null) {
     store.briefingHistory[cleanToken] &&
     store.briefingHistory[cleanToken][cleanDate];
   if (snap && Array.isArray(snap.cards) && snap.cards.length > 0) {
-    return snap.cards.filter((c) => !isSyntheticDemoRecord(c));
+    return deduplicateBriefingCards(
+      snap.cards.filter((c) => !isSyntheticDemoRecord(c)),
+      { demo: false }
+    );
   }
 
   const db = getSqliteDb();
@@ -731,7 +1150,9 @@ function getArchivedBriefingCardsForDate(token, dateStr, storeArg = null) {
           // Ignore malformed JSON
         }
       }
-      if (parsedCards.length > 0) return parsedCards;
+      if (parsedCards.length > 0) {
+        return deduplicateBriefingCards(parsedCards, { demo: false });
+      }
     } catch (_err) {
       // Ignore
     }
@@ -742,7 +1163,8 @@ function getArchivedBriefingCardsForDate(token, dateStr, storeArg = null) {
 
 /**
  * Retrieves an array of past days' archived briefing snapshots (`{ date, totalCards, approvedCount, dismissedCount, cards }`)
- * for rendering in the bottom Archived section of `briefing.html`.
+ * for rendering in the bottom Archived section of `briefing.html`, deduplicating across today's live queue
+ * and across archived dates so the same permit/property never renders twice on screen.
  */
 function getArchivedBriefingSnapshots(token, storeArg = null) {
   const store = storeArg || memoryStore || loadStore();
@@ -753,10 +1175,34 @@ function getArchivedBriefingSnapshots(token, storeArg = null) {
   const activeDate = (briefing && briefing.briefingDate) || getCentralDateString();
   const pastSnapshots = [];
 
+  // Seed seen fingerprints from today's active queue so archived section never duplicates live cards
+  const seenCrossSnapshotFingerprints = new Set();
+  if (briefing && Array.isArray(briefing.cards)) {
+    for (const activeCard of briefing.cards) {
+      for (const fp of buildCardDedupeFingerprints(activeCard)) {
+        seenCrossSnapshotFingerprints.add(fp);
+      }
+    }
+  }
+
   for (const d of dates) {
     if (!d || !d.date || d.date === activeDate) continue;
-    const cards = getArchivedBriefingCardsForDate(cleanToken, d.date, store);
-    if (Array.isArray(cards) && cards.length > 0) {
+    const rawCards = getArchivedBriefingCardsForDate(cleanToken, d.date, store);
+    if (!Array.isArray(rawCards) || rawCards.length === 0) continue;
+
+    const uniqueArchivedCards = [];
+    for (const card of rawCards) {
+      const fps = buildCardDedupeFingerprints(card);
+      const alreadyShown = fps.some((fp) => seenCrossSnapshotFingerprints.has(fp));
+      if (alreadyShown) continue;
+      for (const fp of fps) {
+        seenCrossSnapshotFingerprints.add(fp);
+      }
+      uniqueArchivedCards.push(card);
+    }
+
+    if (uniqueArchivedCards.length > 0) {
+      const cards = deduplicateBriefingCards(uniqueArchivedCards, { demo: false });
       pastSnapshots.push({
         date: d.date,
         totalCards: cards.length,
@@ -4240,9 +4686,34 @@ function createDefaultScoutAlertLogs(contractor, briefingToken) {
 /* ==========================================================================
    DEFAULT INITIAL STORE SEED
    ========================================================================== */
+function deriveDefaultUsername(email = '', ownerName = '', companyName = '') {
+  const emailLocal = String(email || '')
+    .split('@')[0]
+    .replace(/[^a-zA-Z0-9._-]/g, '')
+    .toLowerCase()
+    .trim();
+  if (emailLocal && emailLocal !== 'dispatch' && emailLocal !== 'client' && emailLocal !== 'you') {
+    return emailLocal;
+  }
+  const ownerSlug = String(ownerName || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+  if (ownerSlug && ownerSlug !== 'shopowner') {
+    return ownerSlug;
+  }
+  const companySlug = String(companyName || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 20)
+    .trim();
+  return companySlug || 'contractor';
+}
+
 function createDefaultStore() {
   const demoContractor = {
     id: '11111111-2222-3333-4444-555555555555',
+    username: 'travis',
     companyName: 'Lone Star Commercial Concrete & Paving',
     ownerName: 'Travis Miller',
     primaryTrade: 'Commercial Concrete',
@@ -4275,6 +4746,7 @@ function createDefaultStore() {
 
   const secondContractor = {
     id: '22222222-3333-4444-5555-666666666666',
+    username: 'dana',
     companyName: 'Centex Industrial Roofing Systems',
     ownerName: 'Dana Vance',
     primaryTrade: 'Roofing / Exteriors',
@@ -4307,6 +4779,7 @@ function createDefaultStore() {
 
   const thirdContractor = {
     id: '33333333-4444-5555-6666-777777777777',
+    username: 'carlos',
     companyName: 'Alamo Mechanical & Commercial HVAC',
     ownerName: 'Carlos Mendez',
     primaryTrade: 'Electrical / HVAC',
@@ -4343,6 +4816,7 @@ function createDefaultStore() {
 
   const alertRoofContractor = {
     id: '44444444-5555-6666-7777-888888888888',
+    username: 'jackwilliams',
     companyName: 'A-lert Roof Systems',
     ownerName: 'Jack Williams',
     primaryTrade: 'Roofing / Exteriors',
@@ -4421,8 +4895,11 @@ function createDefaultStore() {
   return {
     adminAccount: {
       id: 'admin-master-tiberius',
+      username: 'admin',
       email: 'admin@tiberius.ai',
       name: 'Tiberius Master Agency Command',
+      ownerName: 'Master Admin',
+      mobilePhone: '(830) 555-0100',
       role: 'ADMIN',
       passwordHash: hashPassword('TiberiusAdmin2026!', 'salt_master_admin_2026')
     },
@@ -4590,12 +5067,19 @@ function loadStore() {
         const parsed = JSON.parse(fs.readFileSync(candidatePath, 'utf8'));
         if (parsed && parsed.briefings && parsed.briefings['demo-7am-briefing']) {
           // Ensure multi-client accounts and adminAccount are present in upgraded stores
-          parsed.adminAccount = parsed.adminAccount || defaultStore.adminAccount;
+          if (parsed.adminAccount && parsed.adminAccount.email === 'founder@tiberius.ai') {
+            parsed.adminAccount = { ...defaultStore.adminAccount };
+          } else {
+            parsed.adminAccount = {
+              ...defaultStore.adminAccount,
+              ...(parsed.adminAccount || {})
+            };
+          }
           parsed.contractors = {
             ...defaultStore.contractors,
             ...(parsed.contractors || {})
           };
-          // Ensure demo contractors have passwordHash, magicToken & upgraded knowledgeBase
+          // Ensure demo contractors have passwordHash, magicToken, username & upgraded knowledgeBase
           Object.keys(parsed.contractors).forEach((id) => {
             const c = parsed.contractors[id];
             if (!c) return;
@@ -4605,7 +5089,7 @@ function loadStore() {
               !defaultStore.contractors[id] &&
               (/^[A-Za-z]{14,}$/.test(ownerStr) ||
                 /^(Whncjba|Rkwfj|Mcbznppiyl)\b/i.test(String(c.companyName || '')) ||
-                /^(owner@sanantonioroofing\.com|mike@apexcommercialbuilders\.com|luke@brazoselectric\.com|john\.redican@hotmail\.com|t\.k\.w\.illi\.e1\.5@gmail\.com|jacobwhite86@yahoo\.com)$/i.test(
+                /^(owner@sanantonioroofing\.com|profiletest@sanantonioroofing\.com|mike@apexcommercialbuilders\.com|luke@brazoselectric\.com|john\.redican@hotmail\.com|t\.k\.w\.illi\.e1\.5@gmail\.com|jacobwhite86@yahoo\.com)$/i.test(
                   emailStr
                 ));
             if (isSpamOrTestResidue) {
@@ -4619,6 +5103,11 @@ function loadStore() {
               c.passwordHash = defaultStore.contractors[id].passwordHash;
               c.magicToken = defaultStore.contractors[id].magicToken;
               c.accessPin = defaultStore.contractors[id].accessPin;
+            }
+            if (!c.username) {
+              c.username =
+                (defaultStore.contractors[id] && defaultStore.contractors[id].username) ||
+                deriveDefaultUsername(c.workEmail, c.ownerName, c.companyName);
             }
             c.knowledgeBase = upgradeShopDossierSchema(
               c.knowledgeBase || buildDefaultKnowledgeBaseForContractor(c),
@@ -4755,17 +5244,60 @@ function loadStore() {
 
 function saveStore(store) {
   memoryStore = store;
-  if (store && store.briefings && !isDemoModeEnabled()) {
-    Object.values(store.briefings).forEach((brf) => {
-      syncBriefingCardsToSqlite(brf);
-    });
+  if (store && typeof store === 'object') {
+    if (Array.isArray(store.sentOutreachLogs) && store.sentOutreachLogs.length > 200) {
+      store.sentOutreachLogs = store.sentOutreachLogs.slice(0, 200);
+    }
+    if (Array.isArray(store.workerRuns) && store.workerRuns.length > 50) {
+      store.workerRuns = store.workerRuns.slice(0, 50);
+    }
+    if (store.scoutAlertLogs && typeof store.scoutAlertLogs === 'object') {
+      Object.keys(store.scoutAlertLogs).forEach((tKey) => {
+        if (Array.isArray(store.scoutAlertLogs[tKey]) && store.scoutAlertLogs[tKey].length > 50) {
+          store.scoutAlertLogs[tKey] = store.scoutAlertLogs[tKey].slice(0, 50);
+        }
+      });
+    }
+    if (store.briefings && !isDemoModeEnabled()) {
+      Object.values(store.briefings).forEach((brf) => {
+        if (brf && Array.isArray(brf.cards) && brf.cards.length > 0) {
+          brf.cards = deduplicateBriefingCards(brf.cards, { demo: false });
+          brf.totalSpottedCount = brf.cards.length;
+        }
+        syncBriefingCardsToSqlite(brf);
+      });
+    }
   }
+
+  const serialized = JSON.stringify(store, null, 2);
   for (const candidatePath of [LOCAL_STORE_PATH, TMP_STORE_PATH]) {
+    const tmpPath = `${candidatePath}.${process.pid}.${Date.now()}.tmp`;
     try {
-      fs.writeFileSync(candidatePath, JSON.stringify(store, null, 2), 'utf8');
+      fs.writeFileSync(tmpPath, serialized, 'utf8');
+      try {
+        fs.renameSync(tmpPath, candidatePath);
+      } catch (_renameErr) {
+        // Fallback for Windows / OneDrive file-handle contention
+        fs.writeFileSync(candidatePath, serialized, 'utf8');
+        try {
+          fs.unlinkSync(tmpPath);
+        } catch (_unlinkErr) {
+          // Ignore cleanup error
+        }
+      }
       return;
     } catch (_err) {
-      // Ignore read-only filesystem errors on serverless edge; next path or memory handles it
+      try {
+        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+      } catch (_e2) {
+        // Ignore
+      }
+      try {
+        fs.writeFileSync(candidatePath, serialized, 'utf8');
+        return;
+      } catch (_directErr) {
+        // Try next candidate path on read-only serverless edge
+      }
     }
   }
 }
@@ -4858,6 +5390,9 @@ function checkTerritoryAvailability({ zipCode, tradeCategory, tierLevel }) {
 function sanitizeContractor(contractor) {
   if (!contractor) return null;
   const copy = { ...contractor };
+  if (!copy.username) {
+    copy.username = deriveDefaultUsername(copy.workEmail, copy.ownerName, copy.companyName);
+  }
   delete copy.passwordHash;
   return copy;
 }
@@ -4866,6 +5401,9 @@ function buildSessionClaimsForContractor(contractor, briefingToken) {
   return {
     sub: contractor.id,
     role: contractor.role || 'CONTRACTOR',
+    username:
+      contractor.username ||
+      deriveDefaultUsername(contractor.workEmail, contractor.ownerName, contractor.companyName),
     email: contractor.workEmail,
     phone: contractor.mobilePhone,
     companyName: contractor.companyName,
@@ -4889,6 +5427,7 @@ function activateTerritory({
   territoryZip,
   mobilePhone,
   bestEmail,
+  username,
   companyName,
   ownerName,
   websiteUrl,
@@ -4909,11 +5448,19 @@ function activateTerritory({
     (accountPassword && String(accountPassword).trim()) ||
     availability.zipCode ||
     'recon2026';
+  const resolvedCompanyName =
+    companyName || `${availability.city} ${primaryTrade || 'Commercial'} Pros`;
+  const resolvedOwnerName = ownerName || (bestEmail ? bestEmail.split('@')[0] : 'Shop Owner');
+  const resolvedEmail = bestEmail || 'dispatch@contractor.com';
+  const resolvedUsername =
+    (username && String(username).trim().toLowerCase().replace(/\s+/g, '')) ||
+    deriveDefaultUsername(resolvedEmail, resolvedOwnerName, resolvedCompanyName);
 
   const contractor = {
     id: contractorId,
-    companyName: companyName || `${availability.city} ${primaryTrade || 'Commercial'} Pros`,
-    ownerName: ownerName || (bestEmail ? bestEmail.split('@')[0] : 'Shop Owner'),
+    username: resolvedUsername,
+    companyName: resolvedCompanyName,
+    ownerName: resolvedOwnerName,
     primaryTrade: availability.tradeCategory,
     tierLevel: availability.tierLevel,
     includeSmartSiteBundle: Boolean(includeSmartSiteBundle),
@@ -4948,20 +5495,49 @@ function activateTerritory({
   store.contractors[contractorId] = contractor;
 
   if (availability.isAvailable) {
-    store.territoryLocks.push({
-      id: `lock_${Date.now()}`,
-      zipCode: availability.zipCode,
-      tradeCategory: availability.tradeCategory,
-      lockType: availability.tierLevel.includes('Tier 3')
-        ? 'TIER_3_EXCLUSIVE'
-        : availability.tierLevel.includes('Tier 2')
-        ? 'TIER_2_MAX_2'
-        : 'TIER_1_OPEN',
-      maxSlots: availability.maxSlots,
-      contractorId,
-      isActive: true,
-      lockedAt: new Date().toISOString()
+    const cleanEmail = String(contractor.workEmail || '').trim().toLowerCase();
+    const existingSameOwnerLock = (store.territoryLocks || []).find((lock) => {
+      if (
+        !lock.isActive ||
+        lock.zipCode !== availability.zipCode ||
+        String(lock.tradeCategory || '').toLowerCase() !==
+          String(availability.tradeCategory || '').toLowerCase()
+      ) {
+        return false;
+      }
+      const prevCtr = store.contractors && store.contractors[lock.contractorId];
+      return (
+        prevCtr &&
+        cleanEmail &&
+        cleanEmail !== 'dispatch@contractor.com' &&
+        cleanEmail !== 'you@company.com' &&
+        String(prevCtr.workEmail || '').trim().toLowerCase() === cleanEmail
+      );
     });
+
+    const lockType = availability.tierLevel.includes('Tier 3')
+      ? 'TIER_3_EXCLUSIVE'
+      : availability.tierLevel.includes('Tier 2')
+      ? 'TIER_2_MAX_2'
+      : 'TIER_1_OPEN';
+
+    if (existingSameOwnerLock) {
+      existingSameOwnerLock.contractorId = contractorId;
+      existingSameOwnerLock.lockType = lockType;
+      existingSameOwnerLock.maxSlots = availability.maxSlots;
+      existingSameOwnerLock.lockedAt = new Date().toISOString();
+    } else {
+      store.territoryLocks.push({
+        id: `lock_${Date.now()}`,
+        zipCode: availability.zipCode,
+        tradeCategory: availability.tradeCategory,
+        lockType,
+        maxSlots: availability.maxSlots,
+        contractorId,
+        isActive: true,
+        lockedAt: new Date().toISOString()
+      });
+    }
   }
 
   const cards = buildBriefingCardsForContractor(contractor, {
@@ -5138,10 +5714,17 @@ function rotateRealClientBriefing({
     };
   }
 
+  const todayStr = briefingDate || getCentralDateString();
+
   // Archive outgoing day's cards & record in seen_permits before rotating
   if (!isDemoModeEnabled({ demo }) && Array.isArray(briefing.cards) && briefing.cards.length > 0) {
     const prevDate = briefing.briefingDate || getCentralDateString();
-    setYesterdayBriefingPayloadHash(briefing.magicToken, computeBriefingPayloadHash(briefing.cards));
+    if (prevDate !== todayStr || advanceOffset) {
+      setYesterdayBriefingPayloadHash(
+        briefing.magicToken,
+        computeBriefingPayloadHash(briefing.cards)
+      );
+    }
     archiveBriefingSnapshot(store, briefing, prevDate);
     const jurisdiction = contractor.baseZip || briefing.territoryZip || '78130';
     for (const prevCard of briefing.cards) {
@@ -5164,14 +5747,16 @@ function rotateRealClientBriefing({
     contractor.rotationOffset = (Number(contractor.rotationOffset || 0) + 1) % 3;
   }
 
-  const todayStr = briefingDate || getCentralDateString();
-  const cards = buildRealClientBriefingCards(contractor, undefined, {
-    demo,
-    surfacedBriefingDate: todayStr,
-    strictCrossDayDedup: true,
-    enforceSeenPermits: true,
-    markAsSurfaced: true
-  });
+  const cards = deduplicateBriefingCards(
+    buildRealClientBriefingCards(contractor, undefined, {
+      demo,
+      surfacedBriefingDate: todayStr,
+      strictCrossDayDedup: true,
+      enforceSeenPermits: true,
+      markAsSurfaced: true
+    }),
+    { demo }
+  );
   briefing.cards = cards;
   briefing.briefingDate = todayStr;
   briefing.unlockedLimit = cards.length;
@@ -5343,7 +5928,11 @@ function getBriefingByToken(token, options = {}) {
     saveStore(store);
   }
 
-  // Ensure past days history is seeded & today's active snapshot is archived
+  // Ensure past days history is seeded & today's active snapshot is deduplicated + archived
+  if (Array.isArray(briefing.cards) && briefing.cards.length > 0) {
+    briefing.cards = deduplicateBriefingCards(briefing.cards, { demo: false });
+    briefing.totalSpottedCount = briefing.cards.length;
+  }
   ensurePastBriefingHistorySeeded(store, briefing, contractor);
   if (Array.isArray(briefing.cards) && briefing.cards.length > 0) {
     archiveBriefingSnapshot(store, briefing, briefing.briefingDate || todayStr);
@@ -5627,15 +6216,28 @@ function processBriefingAction({
   }
 
   if (action === 'approve-send') {
+    const previousDraft = card.draftBody;
+    const hasDraftUpdate =
+      typeof updatedDraftBody === 'string' &&
+      updatedDraftBody.trim() &&
+      updatedDraftBody.trim() !== String(previousDraft || '').trim();
     if (typeof updatedDraftBody === 'string' && updatedDraftBody.trim()) {
       card.draftBody = updatedDraftBody.trim();
     }
+
+    const effectiveChannel = dispatchChannel || card.dispatchChannel || 'CLOUD_EMAIL';
+    const wasAlreadySent =
+      card.approvalStatus === 'sent' &&
+      !hasDraftUpdate &&
+      card.dispatchChannel === effectiveChannel;
+
     const now = new Date();
     const secs = String(now.getSeconds()).padStart(2, '0');
     card.approvalStatus = 'sent';
-    card.dispatchChannel = dispatchChannel || card.dispatchChannel || 'CLOUD_EMAIL';
-    card.approvedAt = now.toISOString();
-    card.approvedTimeLabel = `07:01:${secs} AM`;
+    card.dispatchChannel = effectiveChannel;
+    card.approvedAt = card.approvedAt && wasAlreadySent ? card.approvedAt : now.toISOString();
+    card.approvedTimeLabel =
+      card.approvedTimeLabel && wasAlreadySent ? card.approvedTimeLabel : `07:01:${secs} AM`;
 
     updateSeenPermitStatus({
       jurisdiction: briefing.territoryZip,
@@ -5644,22 +6246,30 @@ function processBriefingAction({
       status: 'approved'
     });
 
-    const logEntry = {
-      id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      briefingToken: briefing.magicToken,
-      cardId: card.id,
-      cardNumber: card.cardNumber,
-      headline: card.headline,
-      recipientName: card.contactShort,
-      recipientEmail: card.contactEmail,
-      recipientPhone: card.contactPhone,
-      channel: card.dispatchChannel,
-      draftBody: card.draftBody,
-      dispatchedAt: card.approvedAt,
-      timeLabel: card.approvedTimeLabel
-    };
-
-    store.sentOutreachLogs.unshift(logEntry);
+    let logEntry = store.sentOutreachLogs.find(
+      (l) =>
+        l.briefingToken === briefing.magicToken &&
+        l.cardId === card.id &&
+        l.channel === card.dispatchChannel &&
+        wasAlreadySent
+    );
+    if (!logEntry) {
+      logEntry = {
+        id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        briefingToken: briefing.magicToken,
+        cardId: card.id,
+        cardNumber: card.cardNumber,
+        headline: card.headline,
+        recipientName: card.contactShort,
+        recipientEmail: card.contactEmail,
+        recipientPhone: card.contactPhone,
+        channel: card.dispatchChannel,
+        draftBody: card.draftBody,
+        dispatchedAt: card.approvedAt,
+        timeLabel: card.approvedTimeLabel
+      };
+      store.sentOutreachLogs.unshift(logEntry);
+    }
 
     // Ensure a live thread exists or is updated in the Conversation Room
     store.conversationThreads = store.conversationThreads || {};
@@ -5702,20 +6312,35 @@ function processBriefingAction({
       };
       threads.unshift(existingThread);
     }
-    existingThread.messages.push({
-      id: `msg_${Date.now()}`,
-      sender: 'CONTRACTOR',
-      senderName: contractor ? `${contractor.ownerName} (${contractor.companyName})` : 'You',
-      timestamp: `Today • ${card.approvedTimeLabel}`,
-      channel: card.dispatchChannel,
-      body: (card.draftBody || '').replace(/^"|"$/g, '')
-    });
+
+    const cleanMsgBody = (card.draftBody || '').replace(/^"|"$/g, '');
+    const lastThreadMsg =
+      Array.isArray(existingThread.messages) && existingThread.messages.length > 0
+        ? existingThread.messages[existingThread.messages.length - 1]
+        : null;
+    const isDuplicateConsecutiveMsg =
+      wasAlreadySent &&
+      lastThreadMsg &&
+      lastThreadMsg.sender === 'CONTRACTOR' &&
+      lastThreadMsg.body === cleanMsgBody;
+
+    if (!isDuplicateConsecutiveMsg) {
+      existingThread.messages.push({
+        id: `msg_${Date.now()}`,
+        sender: 'CONTRACTOR',
+        senderName: contractor ? `${contractor.ownerName} (${contractor.companyName})` : 'You',
+        timestamp: `Today • ${card.approvedTimeLabel}`,
+        channel: card.dispatchChannel,
+        body: cleanMsgBody
+      });
+    }
     existingThread.lastActivityLabel = `Dispatched ${card.approvedTimeLabel}`;
 
     persistActionState();
 
     return {
       ok: true,
+      alreadySent: wasAlreadySent,
       card,
       logEntry,
       briefing: buildResponseBriefing(),
@@ -5894,8 +6519,8 @@ function updateContractorCommand({
 }
 
 /**
- * Authenticates either a Contractor Account (by email, phone, or magicToken + password/PIN)
- * or the Master Agency Admin (`admin@tiberius.ai` + `TiberiusAdmin2026!`).
+ * Authenticates either a Contractor Account (by email, username, phone, or magicToken + password/PIN)
+ * or the Master Agency Admin (`admin@tiberius.ai` / `admin` + password).
  */
 function authenticateAccount({ identifier, password }) {
   const store = loadStore();
@@ -5903,17 +6528,23 @@ function authenticateAccount({ identifier, password }) {
   const cleanPass = String(password || '').trim();
 
   if (!cleanId || !cleanPass) {
-    return { ok: false, error: 'Please enter both your email/phone and password or access PIN.' };
+    return { ok: false, error: 'Please enter both your email/username/phone and password or access PIN.' };
   }
 
   // 1. Check Master Agency Admin
   const admin = store.adminAccount;
+  const adminEmail = String((admin && admin.email) || 'admin@tiberius.ai').toLowerCase();
+  const adminUsername = String((admin && admin.username) || 'admin').toLowerCase();
   if (
     admin &&
-    (cleanId === admin.email.toLowerCase() || cleanId === 'admin' || cleanId === 'master')
+    (cleanId === adminEmail ||
+      cleanId === adminUsername ||
+      cleanId === 'admin' ||
+      cleanId === 'master')
   ) {
     const validAdmin =
-      verifyPassword(cleanPass, admin.passwordHash) || cleanPass === 'TiberiusAdmin2026!';
+      verifyPassword(cleanPass, admin.passwordHash) ||
+      (!admin.passwordChangedAt && cleanPass === 'TiberiusAdmin2026!');
     if (!validAdmin) {
       return { ok: false, error: 'Invalid Master Agency Admin password.' };
     }
@@ -5921,9 +6552,11 @@ function authenticateAccount({ identifier, password }) {
     const sessionToken = signSessionToken({
       sub: admin.id,
       role: 'ADMIN',
+      username: admin.username || 'admin',
       email: admin.email,
       companyName: admin.name,
-      ownerName: 'Master Admin',
+      ownerName: admin.ownerName || 'Master Admin',
+      phone: admin.mobilePhone || '(830) 555-0100',
       magicToken: 'demo-7am-briefing'
     });
 
@@ -5933,30 +6566,39 @@ function authenticateAccount({ identifier, password }) {
       sessionToken,
       account: {
         id: admin.id,
+        username: admin.username || 'admin',
         companyName: admin.name,
-        ownerName: 'Master Admin',
+        ownerName: admin.ownerName || 'Master Admin',
+        email: admin.email,
         workEmail: admin.email,
+        mobilePhone: admin.mobilePhone || '(830) 555-0100',
         role: 'ADMIN',
         magicToken: 'demo-7am-briefing'
       }
     };
   }
 
-  // 2. Search Contractor Accounts by Email, Phone digits, or Magic Token
+  // 2. Search Contractor Accounts by Email, Username, Phone digits, or Magic Token
   const idDigits = cleanId.replace(/\D/g, '');
   const contractorsList = Object.values(store.contractors || {});
   const matchedContractor = contractorsList.find((c) => {
     const emailMatch = String(c.workEmail || '').trim().toLowerCase() === cleanId;
+    const resolvedUser = String(
+      c.username || deriveDefaultUsername(c.workEmail, c.ownerName, c.companyName)
+    )
+      .trim()
+      .toLowerCase();
+    const usernameMatch = Boolean(resolvedUser && resolvedUser === cleanId);
     const tokenMatch = String(c.magicToken || '').trim().toLowerCase() === cleanId;
     const cDigits = String(c.mobilePhone || '').replace(/\D/g, '');
     const phoneMatch = idDigits.length >= 7 && cDigits.endsWith(idDigits.slice(-7));
-    return emailMatch || tokenMatch || phoneMatch;
+    return emailMatch || usernameMatch || tokenMatch || phoneMatch;
   });
 
   if (!matchedContractor) {
     return {
       ok: false,
-      error: 'No contractor account found matching that email or mobile phone.'
+      error: 'No contractor account found matching that email, username, or mobile phone.'
     };
   }
 
@@ -6019,9 +6661,11 @@ function hydrateAccountFromSession(sessionClaims) {
       role: 'ADMIN',
       account: {
         id: store.adminAccount.id,
+        username: store.adminAccount.username || 'admin',
         companyName: store.adminAccount.name,
-        ownerName: 'Master Admin',
+        ownerName: store.adminAccount.ownerName || 'Master Admin',
         workEmail: store.adminAccount.email,
+        mobilePhone: store.adminAccount.mobilePhone || '(830) 555-0100',
         role: 'ADMIN',
         magicToken: 'demo-7am-briefing'
       }
@@ -6037,13 +6681,18 @@ function hydrateAccountFromSession(sessionClaims) {
       (c) =>
         (sessionClaims.magicToken && c.magicToken === sessionClaims.magicToken) ||
         (sessionClaims.email &&
-          String(c.workEmail || '').toLowerCase() === String(sessionClaims.email).toLowerCase())
+          String(c.workEmail || '').toLowerCase() === String(sessionClaims.email).toLowerCase()) ||
+        (sessionClaims.username &&
+          String(c.username || '').toLowerCase() === String(sessionClaims.username).toLowerCase())
     );
   }
   if (!contractor) {
     const metro = resolveMetroProfile(sessionClaims.baseZip || '78130');
     contractor = {
       id: sessionClaims.sub,
+      username:
+        sessionClaims.username ||
+        deriveDefaultUsername(sessionClaims.email, sessionClaims.ownerName, sessionClaims.companyName),
       companyName: sessionClaims.companyName || `${metro.city} Commercial Pros`,
       ownerName: sessionClaims.ownerName || 'Shop Owner',
       primaryTrade: sessionClaims.primaryTrade || 'Commercial Concrete',
@@ -6108,10 +6757,399 @@ function hydrateAccountFromSession(sessionClaims) {
 }
 
 /**
+ * Updates profile details (username, email, ownerName, companyName, mobilePhone, websiteUrl, accessPin,
+ * trade, territoryZip, tierLevel) and/or changes the account password for either:
+ *   1. The Master Agency Admin (`ADMIN`)
+ *   2. Any Contractor Client Account (`CONTRACTOR`) — via self-service or Admin override
+ */
+function updateAccountProfile({
+  sessionClaims = null,
+  identifier,
+  targetAccountId,
+  token,
+  targetRole,
+  username,
+  email,
+  workEmail,
+  ownerName,
+  companyName,
+  mobilePhone,
+  websiteUrl,
+  accessPin,
+  primaryTrade,
+  territoryZip,
+  tierLevel,
+  currentPassword,
+  newPassword,
+  isAdminOverride = false
+} = {}) {
+  const store = loadStore();
+  const cleanCurrentPass = currentPassword !== undefined && currentPassword !== null ? String(currentPassword).trim() : '';
+  const cleanNewPass = newPassword !== undefined && newPassword !== null ? String(newPassword).trim() : '';
+  const cleanLookupId = identifier ? String(identifier).trim().toLowerCase() : '';
+  const adminEmailLookup = String((store.adminAccount && store.adminAccount.email) || 'admin@tiberius.ai').toLowerCase();
+  const adminUserLookup = String((store.adminAccount && store.adminAccount.username) || 'admin').toLowerCase();
+  const isLookupAdmin =
+    Boolean(cleanLookupId) &&
+    (cleanLookupId === adminEmailLookup ||
+      cleanLookupId === adminUserLookup ||
+      cleanLookupId === 'admin' ||
+      cleanLookupId === 'master');
+
+  const isCallerAdmin = Boolean(isAdminOverride || (sessionClaims && sessionClaims.role === 'ADMIN'));
+  const isUpdatingAdmin =
+    targetRole === 'ADMIN' ||
+    targetAccountId === (store.adminAccount && store.adminAccount.id) ||
+    isLookupAdmin ||
+    (!targetAccountId && !token && !cleanLookupId && sessionClaims && sessionClaims.role === 'ADMIN');
+
+  // 1. MASTER ADMIN PROFILE & PASSWORD UPDATE
+  if (isUpdatingAdmin) {
+    const admin = store.adminAccount;
+    if (!admin) {
+      return { ok: false, error: 'Admin account not initialized.' };
+    }
+
+    const validCurrentAdminPass =
+      cleanCurrentPass &&
+      (verifyPassword(cleanCurrentPass, admin.passwordHash) ||
+        (!admin.passwordChangedAt && cleanCurrentPass === 'TiberiusAdmin2026!'));
+
+    if (!isCallerAdmin && !validCurrentAdminPass) {
+      return {
+        ok: false,
+        error: 'Unauthorized: Master Admin sign-in or valid current password required.'
+      };
+    }
+
+    if (cleanCurrentPass && !isAdminOverride && !validCurrentAdminPass) {
+      return {
+        ok: false,
+        error: 'Current Master Admin password is incorrect.'
+      };
+    }
+
+    if (cleanNewPass && cleanNewPass.length < 4) {
+      return {
+        ok: false,
+        error: 'New password must be at least 4 characters long.'
+      };
+    }
+
+    const nextEmail = email !== undefined ? String(email).trim() : workEmail !== undefined ? String(workEmail).trim() : undefined;
+    if (nextEmail) {
+      const lowerEmail = nextEmail.toLowerCase();
+      const emailConflict = Object.values(store.contractors || {}).some(
+        (c) => String(c.workEmail || '').trim().toLowerCase() === lowerEmail
+      );
+      if (emailConflict) {
+        return { ok: false, error: `Email "${nextEmail}" is already in use by a client account.` };
+      }
+      admin.email = nextEmail;
+    }
+
+    if (username !== undefined && String(username).trim()) {
+      const cleanUser = String(username).trim().toLowerCase().replace(/\s+/g, '');
+      const userConflict = Object.values(store.contractors || {}).some(
+        (c) =>
+          String(c.username || deriveDefaultUsername(c.workEmail, c.ownerName, c.companyName))
+            .trim()
+            .toLowerCase() === cleanUser
+      );
+      if (userConflict) {
+        return { ok: false, error: `Username "${cleanUser}" is already in use by a client account.` };
+      }
+      admin.username = cleanUser;
+    }
+
+    if (companyName !== undefined && String(companyName).trim()) {
+      admin.name = String(companyName).trim();
+    }
+    if (ownerName !== undefined && String(ownerName).trim()) {
+      admin.ownerName = String(ownerName).trim();
+    }
+    if (mobilePhone !== undefined && String(mobilePhone).trim()) {
+      admin.mobilePhone = String(mobilePhone).trim();
+    }
+
+    let passwordChanged = false;
+    if (cleanNewPass) {
+      admin.passwordHash = hashPassword(cleanNewPass);
+      admin.passwordChangedAt = new Date().toISOString();
+      passwordChanged = true;
+    }
+    admin.updatedAt = new Date().toISOString();
+
+    saveStore(store);
+
+    const sessionToken = signSessionToken({
+      sub: admin.id,
+      role: 'ADMIN',
+      username: admin.username || 'admin',
+      email: admin.email,
+      companyName: admin.name,
+      ownerName: admin.ownerName || 'Master Admin',
+      phone: admin.mobilePhone || '(830) 555-0100',
+      magicToken: 'demo-7am-briefing'
+    });
+
+    const accountPayload = {
+      id: admin.id,
+      username: admin.username || 'admin',
+      companyName: admin.name,
+      ownerName: admin.ownerName || 'Master Admin',
+      email: admin.email,
+      workEmail: admin.email,
+      mobilePhone: admin.mobilePhone || '(830) 555-0100',
+      role: 'ADMIN',
+      magicToken: 'demo-7am-briefing'
+    };
+
+    return {
+      ok: true,
+      role: 'ADMIN',
+      passwordChanged,
+      sessionToken,
+      account: accountPayload,
+      overview: getAdminAgencyOverview()
+    };
+  }
+
+  // 2. CONTRACTOR ACCOUNT PROFILE & PASSWORD UPDATE
+  let contractor = null;
+  if (targetAccountId && store.contractors[targetAccountId]) {
+    contractor = store.contractors[targetAccountId];
+  }
+  if (!contractor && token) {
+    const cleanTok = String(token).trim();
+    if (store.briefings[cleanTok] && store.contractors[store.briefings[cleanTok].contractorId]) {
+      contractor = store.contractors[store.briefings[cleanTok].contractorId];
+    } else {
+      contractor = Object.values(store.contractors || {}).find((c) => c.magicToken === cleanTok);
+    }
+  }
+  if (!contractor && cleanLookupId) {
+    const idDigits = cleanLookupId.replace(/\D/g, '');
+    contractor = Object.values(store.contractors || {}).find((c) => {
+      const emailMatch = String(c.workEmail || '').trim().toLowerCase() === cleanLookupId;
+      const resolvedUser = String(
+        c.username || deriveDefaultUsername(c.workEmail, c.ownerName, c.companyName)
+      )
+        .trim()
+        .toLowerCase();
+      const usernameMatch = Boolean(resolvedUser && resolvedUser === cleanLookupId);
+      const tokenMatch = String(c.magicToken || '').trim().toLowerCase() === cleanLookupId;
+      const cDigits = String(c.mobilePhone || '').replace(/\D/g, '');
+      const phoneMatch = idDigits.length >= 7 && cDigits.endsWith(idDigits.slice(-7));
+      return emailMatch || usernameMatch || tokenMatch || phoneMatch;
+    });
+  }
+  if (!contractor && sessionClaims && sessionClaims.sub && store.contractors[sessionClaims.sub]) {
+    contractor = store.contractors[sessionClaims.sub];
+  }
+  if (!contractor && sessionClaims && sessionClaims.magicToken) {
+    const b = store.briefings[sessionClaims.magicToken];
+    if (b && store.contractors[b.contractorId]) {
+      contractor = store.contractors[b.contractorId];
+    }
+  }
+
+  if (!contractor) {
+    return { ok: false, error: 'Contractor account not found.' };
+  }
+
+  const validCurrentContractorPass =
+    cleanCurrentPass &&
+    (verifyPassword(cleanCurrentPass, contractor.passwordHash) ||
+      (contractor.accessPin && cleanCurrentPass === String(contractor.accessPin)));
+
+  const isAuthorizedSelf =
+    (sessionClaims &&
+      (sessionClaims.sub === contractor.id ||
+        sessionClaims.magicToken === contractor.magicToken ||
+        (sessionClaims.email &&
+          String(sessionClaims.email).toLowerCase() ===
+            String(contractor.workEmail || '').toLowerCase()))) ||
+    (token && String(token).trim() === contractor.magicToken) ||
+    validCurrentContractorPass;
+
+  if (!isCallerAdmin && !isAuthorizedSelf) {
+    return {
+      ok: false,
+      error: 'Unauthorized to modify this contractor account.'
+    };
+  }
+
+  if (cleanCurrentPass && !isCallerAdmin && !validCurrentContractorPass) {
+    return {
+      ok: false,
+      error: 'Current password or territory PIN is incorrect.'
+    };
+  }
+
+  if (cleanNewPass && cleanNewPass.length < 4) {
+    return {
+      ok: false,
+      error: 'New password must be at least 4 characters long.'
+    };
+  }
+
+  const nextEmail =
+    workEmail !== undefined
+      ? String(workEmail).trim()
+      : email !== undefined
+      ? String(email).trim()
+      : undefined;
+
+  if (nextEmail) {
+    const lowerEmail = nextEmail.toLowerCase();
+    const adminEmailLower = String((store.adminAccount && store.adminAccount.email) || '').toLowerCase();
+    const emailConflict =
+      lowerEmail === adminEmailLower ||
+      Object.values(store.contractors || {}).some(
+        (c) => c.id !== contractor.id && String(c.workEmail || '').trim().toLowerCase() === lowerEmail
+      );
+    if (emailConflict) {
+      return {
+        ok: false,
+        error: `Email "${nextEmail}" is already registered to another account.`
+      };
+    }
+    contractor.workEmail = nextEmail;
+  }
+
+  if (username !== undefined && String(username).trim()) {
+    const cleanUser = String(username).trim().toLowerCase().replace(/\s+/g, '');
+    const adminUserLower = String((store.adminAccount && store.adminAccount.username) || 'admin').toLowerCase();
+    const userConflict =
+      cleanUser === adminUserLower ||
+      cleanUser === 'admin' ||
+      Object.values(store.contractors || {}).some((c) => {
+        if (c.id === contractor.id) return false;
+        const otherUser = String(
+          c.username || deriveDefaultUsername(c.workEmail, c.ownerName, c.companyName)
+        )
+          .trim()
+          .toLowerCase();
+        return otherUser === cleanUser;
+      });
+    if (userConflict) {
+      return {
+        ok: false,
+        error: `Username "${cleanUser}" is already taken.`
+      };
+    }
+    contractor.username = cleanUser;
+  } else if (!contractor.username) {
+    contractor.username = deriveDefaultUsername(
+      contractor.workEmail,
+      contractor.ownerName,
+      contractor.companyName
+    );
+  }
+
+  let identityChanged = false;
+  if (companyName !== undefined && String(companyName).trim()) {
+    contractor.companyName = String(companyName).trim();
+    identityChanged = true;
+  }
+  if (ownerName !== undefined && String(ownerName).trim()) {
+    contractor.ownerName = String(ownerName).trim();
+    identityChanged = true;
+  }
+  if (mobilePhone !== undefined && String(mobilePhone).trim()) {
+    contractor.mobilePhone = String(mobilePhone).trim();
+    identityChanged = true;
+  }
+  if (websiteUrl !== undefined) {
+    contractor.websiteUrl = String(websiteUrl).trim();
+    if (contractor.knowledgeBase) {
+      contractor.knowledgeBase.websiteUrl = contractor.websiteUrl;
+    }
+  }
+  if (accessPin !== undefined && String(accessPin).trim()) {
+    contractor.accessPin = String(accessPin).trim();
+  }
+
+  let briefing =
+    Object.values(store.briefings || {}).find((b) => b.contractorId === contractor.id) ||
+    (contractor.magicToken && store.briefings[contractor.magicToken]);
+
+  if (primaryTrade !== undefined && String(primaryTrade).trim()) {
+    contractor.primaryTrade = String(primaryTrade).trim();
+    if (briefing) briefing.tradeName = contractor.primaryTrade;
+    identityChanged = true;
+  }
+  if (territoryZip !== undefined && String(territoryZip).trim()) {
+    const metro = resolveMetroProfile(territoryZip);
+    contractor.baseZip = metro.zip;
+    if (briefing) {
+      briefing.territoryZip = metro.zip;
+      briefing.metroCity = `${metro.city}, ${metro.state}`;
+      briefing.countyCad = metro.countyCad;
+      briefing.portalName = metro.portalName;
+    }
+    identityChanged = true;
+  }
+  if (tierLevel !== undefined && String(tierLevel).trim()) {
+    contractor.tierLevel = String(tierLevel).trim();
+    if (briefing) briefing.tierLevel = contractor.tierLevel;
+  }
+
+  let passwordChanged = false;
+  if (cleanNewPass) {
+    contractor.passwordHash = hashPassword(cleanNewPass);
+    contractor.passwordChangedAt = new Date().toISOString();
+    passwordChanged = true;
+  }
+  contractor.updatedAt = new Date().toISOString();
+
+  if (identityChanged) {
+    contractor.knowledgeBase = upgradeShopDossierSchema(
+      {
+        ...(contractor.knowledgeBase || buildDefaultKnowledgeBaseForContractor(contractor)),
+        signatureLine: `${contractor.ownerName} • ${contractor.companyName} • ${contractor.mobilePhone}`
+      },
+      contractor
+    );
+    if (briefing && Array.isArray(briefing.cards) && briefing.cards.length > 0) {
+      briefing.cards = recalibrateExistingBriefingCards(briefing.cards, contractor, {
+        demo: isDemoModeEnabled()
+      });
+    }
+  }
+
+  saveStore(store);
+
+  const magicToken = briefing
+    ? briefing.magicToken
+    : contractor.magicToken || 'demo-7am-briefing';
+  const sessionToken = signSessionToken(
+    buildSessionClaimsForContractor(contractor, magicToken)
+  );
+  const sanitized = sanitizeContractor({
+    ...contractor,
+    magicToken
+  });
+
+  return {
+    ok: true,
+    role: 'CONTRACTOR',
+    passwordChanged,
+    sessionToken,
+    account: sanitized,
+    contractor: sanitized,
+    briefing: briefing || null,
+    overview: isCallerAdmin ? getAdminAgencyOverview() : undefined
+  };
+}
+
+/**
  * Returns the complete Multi-Client Agency Roster & Territory Lock Overview for Master Admins.
  */
 function getAdminAgencyOverview() {
   const store = loadStore();
+  const admin = store.adminAccount || {};
   const contractors = Object.values(store.contractors || {}).map((c) => {
     const briefing =
       Object.values(store.briefings || {}).find((b) => b.contractorId === c.id) ||
@@ -6147,6 +7185,15 @@ function getAdminAgencyOverview() {
 
   return {
     ok: true,
+    adminProfile: {
+      id: admin.id || 'admin-master-tiberius',
+      username: admin.username || 'admin',
+      companyName: admin.name || 'Tiberius Master Agency Command',
+      ownerName: admin.ownerName || 'Master Admin',
+      workEmail: admin.email || 'admin@tiberius.ai',
+      mobilePhone: admin.mobilePhone || '(830) 555-0100',
+      role: 'ADMIN'
+    },
     metrics: {
       totalClients: contractors.length,
       activeTerritoriesLocked: (store.territoryLocks || []).filter((l) => l.isActive).length,
@@ -7178,9 +8225,18 @@ module.exports = {
   formatPermitBlueprintToBriefingCard,
   normalizePermitNumber,
   normalizePermitAddress,
+  normalizeStreetKey,
+  normalizeUrlDomain,
+  normalizePhoneDigits,
+  normalizeBusinessName,
+  normalizeParcelId,
   normalizeJurisdiction,
   extractCardPermitNumber,
   extractCardAddress,
+  extractCardStreetKey,
+  extractCardParcelId,
+  buildCardDedupeFingerprints,
+  deduplicateBriefingCards,
   recordSeenPermit,
   isPermitSeen,
   touchSeenPermit,
@@ -7233,6 +8289,7 @@ module.exports = {
   provisionContractorTwilioSubaccount,
   authenticateAccount,
   hydrateAccountFromSession,
+  updateAccountProfile,
   getAdminAgencyOverview,
   ensureCloudAccountsSynced,
   sanitizeContractor,

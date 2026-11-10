@@ -163,6 +163,26 @@
     }
   }
 
+  const cmdAccountProfileForm = document.getElementById('cmd-account-profile-form');
+  const cmdAccountFeedback = document.getElementById('cmd-account-feedback');
+  const acctUsernameInput = document.getElementById('acct-username-input');
+  const acctOwnerInput = document.getElementById('acct-owner-input');
+  const acctCompanyInput = document.getElementById('acct-company-input');
+  const acctEmailInput = document.getElementById('acct-email-input');
+  const acctPhoneInput = document.getElementById('acct-phone-input');
+  const acctPinInput = document.getElementById('acct-pin-input');
+  const acctNewPasswordInput = document.getElementById('acct-new-password-input');
+
+  function renderAccountProfile(c = {}) {
+    if (acctUsernameInput && c.username) acctUsernameInput.value = c.username;
+    if (acctOwnerInput && c.ownerName) acctOwnerInput.value = c.ownerName;
+    if (acctCompanyInput && c.companyName) acctCompanyInput.value = c.companyName;
+    if (acctEmailInput && c.workEmail) acctEmailInput.value = c.workEmail;
+    if (acctPhoneInput && c.mobilePhone) acctPhoneInput.value = c.mobilePhone;
+    if (acctPinInput && (c.accessPin || c.baseZip)) acctPinInput.value = c.accessPin || c.baseZip;
+    if (acctNewPasswordInput) acctNewPasswordInput.value = '';
+  }
+
   async function loadCommandState() {
     try {
       const resp = await fetch(`/api/recon/briefing?token=${encodeURIComponent(activeToken)}`, {
@@ -172,6 +192,7 @@
       if (data && data.ok) {
         const c = data.contractor || {};
         const b = data.briefing || {};
+        renderAccountProfile(c);
         if (cmdContractorTitle && b.territoryZip) {
           cmdContractorTitle.textContent = `${c.companyName ? c.companyName + ' — ' : ''}${b.tradeName} (${b.territoryZip})`;
         }
@@ -339,6 +360,75 @@
     simulateMonthCreditBtn.addEventListener('click', () => {
       currentEquityCents = Math.min(targetEquityCents, currentEquityCents + 20000);
       renderEquityBar();
+    });
+  }
+
+  if (cmdAccountProfileForm) {
+    cmdAccountProfileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (cmdAccountFeedback) cmdAccountFeedback.classList.add('hidden');
+
+      const payload = {
+        action: 'update_profile',
+        token: activeToken,
+        username: acctUsernameInput ? acctUsernameInput.value.trim() : undefined,
+        ownerName: acctOwnerInput ? acctOwnerInput.value.trim() : undefined,
+        companyName: acctCompanyInput ? acctCompanyInput.value.trim() : undefined,
+        workEmail: acctEmailInput ? acctEmailInput.value.trim() : undefined,
+        mobilePhone: acctPhoneInput ? acctPhoneInput.value.trim() : undefined,
+        accessPin: acctPinInput ? acctPinInput.value.trim() : undefined,
+        newPassword:
+          acctNewPasswordInput && acctNewPasswordInput.value.trim()
+            ? acctNewPasswordInput.value.trim()
+            : undefined
+      };
+
+      try {
+        const resp = await fetch('/api/recon/auth', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          if (cmdAccountFeedback) {
+            cmdAccountFeedback.textContent = `⚠️ ${(data && data.error) || 'Failed to update profile.'}`;
+            cmdAccountFeedback.className =
+              'mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-mono-telemetry font-bold';
+            cmdAccountFeedback.classList.remove('hidden');
+          }
+          return;
+        }
+
+        if (data.sessionToken) {
+          localStorage.setItem('tiberius_recon_session_jwt', data.sessionToken);
+        }
+        if (data.account) {
+          localStorage.setItem('tiberius_recon_account', JSON.stringify(data.account));
+          renderAccountProfile(data.account);
+          if (data.account.knowledgeBase) {
+            renderKnowledgeBase(data.account.knowledgeBase);
+          }
+          if (cmdContractorTitle) {
+            cmdContractorTitle.textContent = `${data.account.companyName} — ${data.account.primaryTrade} (${data.account.baseZip})`;
+          }
+        }
+        if (cmdAccountFeedback) {
+          cmdAccountFeedback.textContent = `✓ SAVED PROFILE (@${data.account.username} • ${data.account.workEmail})${
+            data.passwordChanged ? ' & UPDATED PASSWORD' : ''
+          }`;
+          cmdAccountFeedback.className =
+            'mb-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono-telemetry font-bold';
+          cmdAccountFeedback.classList.remove('hidden');
+        }
+      } catch (err) {
+        if (cmdAccountFeedback) {
+          cmdAccountFeedback.textContent = `⚠️ Error: ${err.message}`;
+          cmdAccountFeedback.className =
+            'mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-mono-telemetry font-bold';
+          cmdAccountFeedback.classList.remove('hidden');
+        }
+      }
     });
   }
 
@@ -541,6 +631,14 @@
                 class="px-3 py-2 rounded-xl bg-blue-500/20 border border-blue-400/40 text-blue-200 hover:bg-blue-500/30 text-xs font-bold inline-flex items-center gap-1"
               >
                 📄 Open Google Doc Dossier
+              </a>
+              <a
+                href="/recon/watch?token=${encodeURIComponent(p.previewToken || 'demo-7am-briefing')}"
+                target="_blank"
+                rel="noopener"
+                class="px-3 py-2 rounded-xl bg-purple-500/20 border border-purple-400/40 text-purple-200 hover:bg-purple-500/30 text-xs font-bold inline-flex items-center gap-1"
+              >
+                🎥 Standalone Loom Video
               </a>
             </div>
             <a

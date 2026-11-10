@@ -14,6 +14,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 1. CONTRACTORS
 CREATE TABLE IF NOT EXISTS contractors (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  username VARCHAR(80) UNIQUE,
   company_name VARCHAR(160) NOT NULL DEFAULT 'Apex Commercial Trades',
   owner_name VARCHAR(120) NOT NULL DEFAULT 'Shop Owner',
   primary_trade VARCHAR(120) NOT NULL,
@@ -27,6 +28,8 @@ CREATE TABLE IF NOT EXISTS contractors (
   min_cad_assessed_value INTEGER NOT NULL DEFAULT 600000,
   mobile_phone VARCHAR(40) NOT NULL,
   work_email VARCHAR(160) NOT NULL,
+  password_hash VARCHAR(255),
+  access_pin VARCHAR(32),
   voice_profile_json JSONB NOT NULL DEFAULT '{
     "tone": "direct-local-pro",
     "landmark_reference": "two miles east on Commerce Dr",
