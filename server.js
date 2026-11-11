@@ -287,6 +287,12 @@ async function handleRequest(req, res) {
       return;
     }
 
+    if (!fs.existsSync(safeFilePath) && pathname.startsWith('/video/')) {
+      res.writeHead(302, { Location: `https://www.tiberius.ai/recon${encodeURI(pathname)}` });
+      res.end();
+      return;
+    }
+
     res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ ok: false, error: 'Not found', path: pathname, rootDir: ROOT_DIR }));
   } catch (err) {
