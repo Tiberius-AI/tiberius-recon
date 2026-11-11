@@ -17,6 +17,7 @@ const {
   ensureCloudAccountsSynced
 } = require('../../db/store');
 const { dispatchApprovedOutreach } = require('../../workers/dispatch/outbound-sender');
+const { recordProspectPreviewRadarEvent } = require('../../workers/meta-recon-orchestrator');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -70,9 +71,22 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  let radarReceipt = null;
+  if (action === 'approve-send' && String(token).startsWith('preview-')) {
+    const radarRes = await recordProspectPreviewRadarEvent({
+      token,
+      eventType: 'PREVIEW_CARD_APPROVED',
+      cardId: body.cardId || '',
+      userAgent: (req.headers && req.headers['user-agent']) || '',
+      isAdminViewer: Boolean(body.viewer === 'admin')
+    });
+    radarReceipt = radarRes ? radarRes.radarSmsReceipt : null;
+  }
+
   return res.status(200).json({
     ...result,
     dispatchReceipt,
+    radarReceipt,
     providerDispatched: Boolean(dispatchReceipt && dispatchReceipt.liveDispatched)
   });
 };

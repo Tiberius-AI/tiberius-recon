@@ -21,7 +21,7 @@ const {
   getBriefingByToken,
   resolveMetroProfile
 } = require('../../db/store');
-const { dispatchContractorHotReplyAlertSms } = require('../../workers/comms-dispatcher');
+const { recordProspectPreviewRadarEvent } = require('../../workers/meta-recon-orchestrator');
 
 const DEFAULT_MASTER_VIDEO_URL = '/recon/video/TIBERIUS%20RECON.mp4';
 const DEFAULT_POSTER_URL = '/recon/images/tiberius-recon-poster.jpg';
@@ -667,18 +667,27 @@ module.exports = async function handler(req, res) {
 
         let founderAlertReceipt = null;
         if (
-          (eventType === 'VIDEO_PLAYED' || eventType === 'WATCHED_50_PCT') &&
+          (eventType === 'VIDEO_OPENED' ||
+            eventType === 'VIDEO_PLAYED' ||
+            eventType === 'WATCHED_50_PCT') &&
           body.token &&
           String(body.token).startsWith('preview-')
         ) {
-          founderAlertReceipt = await dispatchContractorHotReplyAlertSms({
-            contractorPhone: process.env.TIBERIUS_FOUNDER_ALERT_PHONE || '+18305550100',
-            contractorCompany: 'Tiberius AI HQ',
-            prospectName: body.contactName || body.companyName || body.token,
-            permitNumber: `LOOM VIDEO (${eventType})`,
-            replySnippet: `👀 Prospect clicked Play on their standalone Recon Video (${body.token}).`,
-            inboxUrl: `https://www.tiberius.ai/recon/watch?token=${encodeURIComponent(body.token)}`
+          const radarRes = await recordProspectPreviewRadarEvent({
+            token: body.token,
+            companyName: body.companyName,
+            contactName: body.contactName,
+            eventType,
+            watchedSeconds: Number(body.watchedSeconds || 0),
+            userAgent: (req.headers && req.headers['user-agent']) || '',
+            isAdminViewer: Boolean(body.viewer === 'admin'),
+            overridePhone: process.env.ADMIN_ALERT_PHONE || process.env.TIBERIUS_FOUNDER_ALERT_PHONE
           });
+          founderAlertReceipt = (radarRes && radarRes.radarSmsReceipt) || {
+            ok: true,
+            alertType: 'PROSPECT_PREVIEW_RADAR_SMS',
+            throttledByCooldown: true
+          };
         }
 
         res.statusCode = 200;

@@ -1225,7 +1225,39 @@
     });
   }
 
+  function emitProspectPreviewRadarBeacon(eventType = 'PREVIEW_BRIEFING_OPENED', cardId = '') {
+    try {
+      if (!activeToken || !String(activeToken).startsWith('preview-')) return;
+      if (urlParams.get('viewer') === 'admin') return;
+      fetch('/api/recon/meta-outreach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'track_preview_event',
+          token: activeToken,
+          eventType,
+          cardId: cardId || undefined
+        })
+      }).catch(() => {});
+    } catch (_e) {
+      // Non-blocking radar beacon
+    }
+  }
+
+  if (briefingCardsGrid) {
+    briefingCardsGrid.addEventListener(
+      'toggle',
+      (ev) => {
+        if (ev.target && ev.target.tagName === 'DETAILS' && ev.target.open) {
+          emitProspectPreviewRadarBeacon('PREVIEW_CAD_XRAY_CLICKED');
+        }
+      },
+      true
+    );
+  }
+
   loadBriefing();
+  emitProspectPreviewRadarBeacon('PREVIEW_BRIEFING_OPENED');
 
   /* ==========================================================================
      21ST.DEV ("G3") WEBGL1 'SILK' SHADER & PIXEL-GRID FOOTER ENGINE

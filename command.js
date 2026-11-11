@@ -656,10 +656,21 @@
      MODULE 04 • TIBERIUS HQ AUTONOMOUS META-RECON™ ENGINE
      ========================================================================== */
   const metaZipSelect = document.getElementById('meta-zip-select');
+  const metaCustomZipInput = document.getElementById('meta-custom-zip-input');
   const metaTradeSelect = document.getElementById('meta-trade-select');
   const metaPlaybookSelect = document.getElementById('meta-playbook-select');
+  const metaLiveSweepBtn = document.getElementById('meta-live-sweep-btn');
   const metaSweepBtn = document.getElementById('meta-sweep-btn');
   const metaRunDripBtn = document.getElementById('meta-run-drip-btn');
+  const metaToggleIntakeBtn = document.getElementById('meta-toggle-intake-btn');
+  const metaCloseIntakeBtn = document.getElementById('meta-close-intake-btn');
+  const metaIntakeDrawer = document.getElementById('meta-intake-drawer');
+  const metaAddProspectForm = document.getElementById('meta-add-prospect-form');
+  const metaAddSubmitBtn = document.getElementById('meta-add-submit-btn');
+  const metaCsvSampleBtn = document.getElementById('meta-csv-sample-btn');
+  const metaCsvFileInput = document.getElementById('meta-csv-file-input');
+  const metaCsvTextarea = document.getElementById('meta-csv-textarea');
+  const metaCsvImportBtn = document.getElementById('meta-csv-import-btn');
   const metaFeedback = document.getElementById('meta-action-feedback');
   const metaProspectsGrid = document.getElementById('meta-prospects-grid');
   const metaStatProspects = document.getElementById('meta-stat-prospects');
@@ -667,9 +678,24 @@
   const metaStatLeak = document.getElementById('meta-stat-leak');
   const metaStatGate = document.getElementById('meta-stat-gate');
   const metaStatSent = document.getElementById('meta-stat-sent');
+  const metaStatRadar = document.getElementById('meta-stat-radar');
+  const metaRadarStrip = document.getElementById('meta-radar-strip');
+  const metaRadarFeedList = document.getElementById('meta-radar-feed-list');
 
   let activeMetaRecon = null;
   const selectedTouchByProspect = {};
+
+  function resolveSelectedMetaZip() {
+    const customZip = metaCustomZipInput ? metaCustomZipInput.value.replace(/\D/g, '').trim() : '';
+    if (/^\d{5}$/.test(customZip)) return customZip;
+    return metaZipSelect ? metaZipSelect.value : 'ALL';
+  }
+
+  if (metaZipSelect && metaCustomZipInput) {
+    metaZipSelect.addEventListener('change', () => {
+      metaCustomZipInput.value = '';
+    });
+  }
 
   function escapeHtml(str) {
     return String(str || '')
@@ -685,6 +711,48 @@
     metaFeedback.classList.remove('hidden');
   }
 
+  function formatSourceBadgeHtml(p) {
+    const src = String(p.sourceType || 'SANDBOX_DEMO').toUpperCase();
+    const label = p.licenseBadge || src;
+    if (src === 'LIVE_TDLR' || src === 'LIVE_TX_COMPTROLLER' || src === 'LIVE_MUNICIPAL_PERMIT') {
+      return `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[10px] text-emerald-300 font-bold">🏛️ ${escapeHtml(label)}</span>`;
+    }
+    if (src === 'MANUAL_ENTRY' || src === 'CSV_IMPORT') {
+      return `<span class="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/40 font-mono-telemetry text-[10px] text-purple-200 font-bold">✍️ ${escapeHtml(label)}</span>`;
+    }
+    return `<span class="px-2 py-0.5 rounded-full bg-slate-700/80 border border-slate-600 font-mono-telemetry text-[10px] text-slate-300">🧪 ${escapeHtml(label)}</span>`;
+  }
+
+  function renderMetaRadarFeed(metaRecon) {
+    if (!metaRadarStrip || !metaRadarFeedList) return;
+    const feed = Array.isArray(metaRecon.radarFeed) ? metaRecon.radarFeed : [];
+    if (feed.length === 0) {
+      metaRadarStrip.classList.add('hidden');
+      return;
+    }
+    metaRadarStrip.classList.remove('hidden');
+    metaRadarFeedList.innerHTML = feed
+      .slice(0, 4)
+      .map((item) => {
+        const cleanDigits = String(item.phone || '').replace(/\D/g, '');
+        const telHref = cleanDigits.length >= 10 ? `tel:+1${cleanDigits.slice(-10)}` : '';
+        const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'Just now';
+        return `<div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-slate-900/90 border border-emerald-500/30">
+          <div class="text-slate-200 font-mono-telemetry text-[11px]">
+            <span class="text-emerald-400 font-bold">👀 ${escapeHtml(item.eventType)}</span> •
+            <span class="text-white font-bold">${escapeHtml(item.companyName)}</span>
+            (${escapeHtml(item.contactName || 'Prospect')} • ${escapeHtml(item.deviceHint || 'Web')} • ${escapeHtml(timeStr)})
+          </div>
+          ${
+            telHref
+              ? `<a href="${escapeHtml(telHref)}" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px]">📞 Call Now (${escapeHtml(item.phone)})</a>`
+              : ''
+          }
+        </div>`;
+      })
+      .join('');
+  }
+
   function renderMetaRecon(metaRecon) {
     if (!metaRecon) return;
     activeMetaRecon = metaRecon;
@@ -696,6 +764,11 @@
     if (metaStatSent) {
       metaStatSent.textContent = `${m.touchesSentCount || 0} Sent • ${m.demosAutoDeliveredCount || 0} Demos`;
     }
+    if (metaStatRadar) {
+      metaStatRadar.textContent = `${m.previewsOpenedCount || 0} Viewed`;
+    }
+
+    renderMetaRadarFeed(metaRecon);
 
     if (!metaProspectsGrid) return;
     const prospects = Array.isArray(metaRecon.prospects) ? metaRecon.prospects : [];
@@ -712,6 +785,15 @@
         const primaryPermit = (p.baitPermits && p.baitPermits[0]) || {};
         const leaks = Array.isArray(xray.leaks) ? xray.leaks : [];
         const isDemoSent = p.outreachStatus === 'DEMO_SENT_HOT_LEAD';
+        const tel = p.previewTelemetry || {};
+        const totalRadarHits = Number(tel.viewsCount || 0) + Number(tel.interactionsCount || 0);
+        const hasEmail = Boolean(p.email && String(p.email).includes('@'));
+        const hasPhone = Boolean(p.phone && String(p.phone).replace(/\D/g, '').length >= 10);
+
+        const radarPillHtml =
+          totalRadarHits > 0
+            ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/60 font-mono-telemetry text-[11px] text-emerald-200 font-bold">👀 VIEWED ${totalRadarHits}x (${escapeHtml(tel.lastDeviceHint || 'Live')})</span>`
+            : '';
 
         const statusBadge = isDemoSent
           ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/50 font-mono-telemetry text-[11px] text-emerald-300 font-bold">🔥 REPLIED • LIVE PREVIEW AUTO-SENT</span>`
@@ -736,15 +818,22 @@
         <article class="p-5 rounded-2xl bg-slate-800/95 border border-slate-700 flex flex-col justify-between space-y-4">
           <div class="space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-1.5">
                 <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
                   ${escapeHtml(xray.leadScore || 'HOT')} • ${escapeHtml(p.primaryTrade)} (${escapeHtml(p.zipCode)})
                 </span>
-                <span class="font-mono-telemetry text-[11px] text-emerald-400">
-                  ✓ Anti-AI Gate: ${p.copyGate && p.copyGate.passed ? 'PASS (0 Links T1)' : 'CHECK'}
-                </span>
+                ${formatSourceBadgeHtml(p)}
+                ${radarPillHtml}
               </div>
-              ${statusBadge}
+              <div class="flex items-center gap-1.5">
+                ${statusBadge}
+                <button
+                  type="button"
+                  data-meta-delete="${escapeHtml(p.id)}"
+                  title="Remove card"
+                  class="px-2 py-1 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-red-300 text-xs cursor-pointer"
+                >✕</button>
+              </div>
             </div>
 
             <div>
@@ -752,7 +841,10 @@
                 ${escapeHtml(p.companyName)}
               </h3>
               <p class="text-xs text-slate-300 font-mono-telemetry mt-0.5">
-                👤 ${escapeHtml(p.contactName)} (${escapeHtml(p.contactRole)}) • 📞 ${escapeHtml(p.phone)} • ✉️ ${escapeHtml(p.email)}
+                👤 ${escapeHtml(p.contactName)} (${escapeHtml(p.contactRole)}) • 📞 ${escapeHtml(p.phone || 'Add Phone')} • ✉️ ${escapeHtml(p.email || 'No Public Email — Use SIM Text')}
+              </p>
+              <p class="text-[11px] text-slate-400 font-mono-telemetry mt-0.5">
+                🌐 ${escapeHtml(p.websiteUrl || 'Not found')} • ✓ Anti-AI Gate: ${p.copyGate && p.copyGate.passed ? 'PASS (0 Links T1)' : 'CHECK'}
               </p>
             </div>
 
@@ -792,43 +884,48 @@
                 type="button"
                 data-meta-send-email="${escapeHtml(p.id)}"
                 data-touch-num="${touchNum}"
-                class="btn-trust-emerald px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer"
+                ${hasEmail ? '' : 'disabled'}
+                class="${hasEmail ? 'btn-trust-emerald cursor-pointer' : 'bg-slate-700 text-slate-400 cursor-not-allowed'} px-3.5 py-2 rounded-xl text-xs font-bold"
               >
-                ✓ Send Touch ${touchNum} Email
+                ${hasEmail ? `✓ Send Touch ${touchNum} Email` : 'No Email (Use SIM Text)'}
               </button>
-              <a
-                href="${escapeHtml(p.nativeSimUri || '#')}"
-                data-meta-send-sms="${escapeHtml(p.id)}"
-                class="btn-outline-slate px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1"
-              >
-                📲 Native SIM Text
-              </a>
+              ${
+                hasPhone
+                  ? `<a
+                      href="${escapeHtml(p.nativeSimUri || '#')}"
+                      data-meta-send-sms="${escapeHtml(p.id)}"
+                      class="btn-outline-slate px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1"
+                    >
+                      📲 Native SIM Text
+                    </a>`
+                  : ''
+              }
               <button
                 type="button"
                 data-meta-sim-reply="${escapeHtml(p.id)}"
                 class="px-3 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 hover:bg-amber-500/30 text-xs font-bold cursor-pointer"
               >
-                ⚡ Simulate "Yes, send it!" Reply
+                ⚡ Simulate Reply
+              </button>
+              <button
+                type="button"
+                data-meta-test-radar="${escapeHtml(p.id)}"
+                data-preview-token="${escapeHtml(p.previewToken || '')}"
+                class="px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-200 hover:bg-emerald-500/25 text-xs font-bold cursor-pointer"
+              >
+                📡 Test Open Radar
               </button>
               <a
-                href="${escapeHtml(p.googleDocUrl || 'https://drive.google.com/drive/folders/1kvnCDZOBjQXkdbWXDE3mY_sYZJE4ulS-')}"
-                target="_blank"
-                rel="noopener"
-                class="px-3 py-2 rounded-xl bg-blue-500/20 border border-blue-400/40 text-blue-200 hover:bg-blue-500/30 text-xs font-bold inline-flex items-center gap-1"
-              >
-                📄 Open Google Doc Dossier
-              </a>
-              <a
-                href="/recon/watch?token=${encodeURIComponent(p.previewToken || 'demo-7am-briefing')}"
+                href="/recon/watch?token=${encodeURIComponent(p.previewToken || 'demo-7am-briefing')}&amp;viewer=admin"
                 target="_blank"
                 rel="noopener"
                 class="px-3 py-2 rounded-xl bg-purple-500/20 border border-purple-400/40 text-purple-200 hover:bg-purple-500/30 text-xs font-bold inline-flex items-center gap-1"
               >
-                🎥 Standalone Loom Video
+                🎥 Loom Video
               </a>
             </div>
             <a
-              href="/recon/briefing?token=${encodeURIComponent(p.previewToken || 'demo-7am-briefing')}"
+              href="/recon/briefing?token=${encodeURIComponent(p.previewToken || 'demo-7am-briefing')}&amp;viewer=admin"
               target="_blank"
               class="font-mono-telemetry text-xs text-blue-300 hover:text-white underline"
             >
@@ -867,6 +964,53 @@
     }
   }
 
+  if (metaToggleIntakeBtn && metaIntakeDrawer) {
+    metaToggleIntakeBtn.addEventListener('click', () => {
+      metaIntakeDrawer.classList.toggle('hidden');
+    });
+  }
+  if (metaCloseIntakeBtn && metaIntakeDrawer) {
+    metaCloseIntakeBtn.addEventListener('click', () => {
+      metaIntakeDrawer.classList.add('hidden');
+    });
+  }
+
+  if (metaLiveSweepBtn) {
+    metaLiveSweepBtn.addEventListener('click', async () => {
+      const orig = metaLiveSweepBtn.textContent;
+      metaLiveSweepBtn.textContent = '🌐 Crawling TX Open Data & Websites...';
+      metaLiveSweepBtn.disabled = true;
+      try {
+        const resp = await fetch('/api/recon/meta-outreach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'sweep',
+            zipCode: resolveSelectedMetaZip(),
+            primaryTrade: metaTradeSelect ? metaTradeSelect.value : 'ALL',
+            playbook: metaPlaybookSelect ? metaPlaybookSelect.value : 'FULL_BUNDLE_OFFENSE_DEFENSE',
+            liveDiscovery: true,
+            fetchLiveWeb: true,
+            includeSavedCustom: true,
+            limit: 6
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.metaRecon) {
+          renderMetaRecon(data.metaRecon);
+          showMetaFeedback(
+            `🌐 Live Real-Contractor Scout pulled ${data.metaRecon.prospects.length} active TX contractors (TDLR + Comptroller + Live Domain/DOM X-Ray) and provisioned ${data.metaRecon.metrics.livePreviewsProvisioned} live Preview Briefings!`
+          );
+        }
+      } catch (_err) {
+        // Ignore
+      } finally {
+        metaLiveSweepBtn.textContent = orig;
+        metaLiveSweepBtn.disabled = false;
+      }
+    });
+  }
+
   if (metaSweepBtn) {
     metaSweepBtn.addEventListener('click', async () => {
       const orig = metaSweepBtn.textContent;
@@ -878,9 +1022,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'sweep',
-            zipCode: metaZipSelect ? metaZipSelect.value : 'ALL',
+            zipCode: resolveSelectedMetaZip(),
             primaryTrade: metaTradeSelect ? metaTradeSelect.value : 'ALL',
-            playbook: metaPlaybookSelect ? metaPlaybookSelect.value : 'FULL_BUNDLE_OFFENSE_DEFENSE'
+            playbook: metaPlaybookSelect ? metaPlaybookSelect.value : 'FULL_BUNDLE_OFFENSE_DEFENSE',
+            includeSavedCustom: true
           })
         });
         const data = await resp.json();
@@ -895,6 +1040,126 @@
       } finally {
         metaSweepBtn.textContent = orig;
         metaSweepBtn.disabled = false;
+      }
+    });
+  }
+
+  if (metaAddProspectForm) {
+    metaAddProspectForm.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const companyEl = document.getElementById('meta-add-company');
+      const contactEl = document.getElementById('meta-add-contact');
+      const phoneEl = document.getElementById('meta-add-phone');
+      const emailEl = document.getElementById('meta-add-email');
+      const websiteEl = document.getElementById('meta-add-website');
+      const zipEl = document.getElementById('meta-add-zip');
+      const tradeEl = document.getElementById('meta-add-trade');
+
+      const orig = metaAddSubmitBtn ? metaAddSubmitBtn.textContent : '';
+      if (metaAddSubmitBtn) {
+        metaAddSubmitBtn.textContent = '⚡ Crawling Site, Pairing Permits & Building Preview...';
+        metaAddSubmitBtn.disabled = true;
+      }
+      try {
+        const resp = await fetch('/api/recon/meta-outreach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'add_prospect',
+            companyName: companyEl ? companyEl.value.trim() : '',
+            contactName: contactEl ? contactEl.value.trim() : '',
+            phone: phoneEl ? phoneEl.value.trim() : '',
+            email: emailEl ? emailEl.value.trim() : '',
+            websiteUrl: websiteEl ? websiteEl.value.trim() : '',
+            zipCode: zipEl ? zipEl.value.trim() : '78130',
+            primaryTrade: tradeEl ? tradeEl.value : 'Commercial Concrete',
+            playbook: metaPlaybookSelect ? metaPlaybookSelect.value : 'FULL_BUNDLE_OFFENSE_DEFENSE',
+            fetchLiveWeb: true
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.metaRecon) {
+          renderMetaRecon(data.metaRecon);
+          showMetaFeedback(
+            `✓ Added ${data.prospect.companyName} (${data.prospect.zipCode}), paired 3 real permits, and provisioned live Preview Briefing: ${data.prospect.previewBriefingUrl}`
+          );
+          if (companyEl) companyEl.value = '';
+          if (contactEl) contactEl.value = '';
+          if (phoneEl) phoneEl.value = '';
+          if (emailEl) emailEl.value = '';
+          if (websiteEl) websiteEl.value = '';
+        }
+      } catch (_err) {
+        // Ignore
+      } finally {
+        if (metaAddSubmitBtn) {
+          metaAddSubmitBtn.textContent = orig;
+          metaAddSubmitBtn.disabled = false;
+        }
+      }
+    });
+  }
+
+  if (metaCsvSampleBtn && metaCsvTextarea) {
+    metaCsvSampleBtn.addEventListener('click', () => {
+      metaCsvTextarea.value = [
+        'company,contact,email,phone,website,zip,trade',
+        'Pioneer Roofing Solutions LLC,Owner,,512-922-3939,https://www.pioneerroofingsolutions.com,78130,Roofing / Exteriors',
+        'New Braunfels Pool Company,Estimating,info@nbpoolpros.com,830-660-6270,https://nbpoolpros.com,78130,Pools / Fencing / Custom Home'
+      ].join('\n');
+    });
+  }
+
+  if (metaCsvFileInput && metaCsvTextarea) {
+    metaCsvFileInput.addEventListener('change', (ev) => {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        metaCsvTextarea.value = String(reader.result || '');
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  if (metaCsvImportBtn && metaCsvTextarea) {
+    metaCsvImportBtn.addEventListener('click', async () => {
+      const rawCsv = metaCsvTextarea.value.trim();
+      if (!rawCsv) {
+        showMetaFeedback('⚠️ Paste CSV lines or upload a .csv file first.');
+        return;
+      }
+      const orig = metaCsvImportBtn.textContent;
+      metaCsvImportBtn.textContent = '📥 Importing & Building Live Previews...';
+      metaCsvImportBtn.disabled = true;
+      try {
+        const resp = await fetch('/api/recon/meta-outreach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'import_csv',
+            csvText: rawCsv,
+            defaultZipCode: resolveSelectedMetaZip(),
+            defaultTrade: metaTradeSelect ? metaTradeSelect.value : 'Commercial Concrete',
+            playbook: metaPlaybookSelect ? metaPlaybookSelect.value : 'FULL_BUNDLE_OFFENSE_DEFENSE',
+            fetchLiveWeb: true
+          })
+        });
+        const data = await resp.json();
+        if (data && data.ok && data.metaRecon) {
+          renderMetaRecon(data.metaRecon);
+          showMetaFeedback(
+            `📥 Imported ${data.importedCount} real contractor(s) from CSV, ran 3-Leak Website X-Rays, and provisioned ${data.importedCount} live Preview Briefings!`
+          );
+          metaCsvTextarea.value = '';
+        } else if (data && data.error) {
+          showMetaFeedback(`⚠️ CSV Import Error: ${data.error}`);
+        }
+      } catch (_err) {
+        // Ignore
+      } finally {
+        metaCsvImportBtn.textContent = orig;
+        metaCsvImportBtn.disabled = false;
       }
     });
   }
@@ -941,8 +1206,60 @@
         return;
       }
 
+      const delBtn = e.target.closest('[data-meta-delete]');
+      if (delBtn) {
+        const pid = delBtn.getAttribute('data-meta-delete');
+        try {
+          const resp = await fetch('/api/recon/meta-outreach', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_prospect', prospectId: pid })
+          });
+          const data = await resp.json();
+          if (data && data.ok && data.metaRecon) {
+            renderMetaRecon(data.metaRecon);
+            showMetaFeedback('✓ Removed prospect card from Meta-Recon board.');
+          }
+        } catch (_err) {
+          // Ignore
+        }
+        return;
+      }
+
+      const radarBtn = e.target.closest('[data-meta-test-radar]');
+      if (radarBtn) {
+        const pid = radarBtn.getAttribute('data-meta-test-radar');
+        const pTok = radarBtn.getAttribute('data-preview-token');
+        radarBtn.textContent = '📡 Firing Radar...';
+        try {
+          const resp = await fetch('/api/recon/meta-outreach', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'track_preview_event',
+              prospectId: pid,
+              token: pTok,
+              eventType: 'PREVIEW_BRIEFING_OPENED',
+              deviceHint: 'iPhone (Radar Test)',
+              forceAlert: true
+            })
+          });
+          const data = await resp.json();
+          if (data && data.ok && data.metaRecon) {
+            renderMetaRecon(data.metaRecon);
+            showMetaFeedback(
+              `📡 Live Preview Radar triggered for ${data.prospect.companyName}! Founder SMS Alert: "${data.radarSmsReceipt ? data.radarSmsReceipt.smsBody : 'Logged'}"`
+            );
+          }
+        } catch (_err) {
+          // Ignore
+        }
+        return;
+      }
+
       const sendBtn = e.target.closest('[data-meta-send-email]');
       if (sendBtn) {
+        if (sendBtn.disabled) return;
         const pid = sendBtn.getAttribute('data-meta-send-email');
         const tNum = Number(sendBtn.getAttribute('data-touch-num') || 1);
         sendBtn.textContent = 'Sending...';
@@ -963,6 +1280,9 @@
             showMetaFeedback(
               `✓ Dispatched Touch ${tNum} to ${data.prospect.contactName} (${data.prospect.companyName}) via Resend (${data.receipt.replyToAddress}).`
             );
+          } else if (data && data.error) {
+            showMetaFeedback(`⚠️ ${data.error}`);
+            if (activeMetaRecon) renderMetaRecon(activeMetaRecon);
           }
         } catch (_err) {
           // Ignore

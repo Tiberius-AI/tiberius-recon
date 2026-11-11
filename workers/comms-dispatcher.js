@@ -982,6 +982,87 @@ async function dispatchPreTripAdminSms({
   };
 }
 
+/**
+ * Fires an instant "Prospect Is Looking at Their Preview Right Now" Radar SMS
+ * to the Tiberius founder via Master A2P Twilio whenever a prospect opens their
+ * personalized `/recon/briefing?token=preview-...` or `/recon/watch?token=preview-...`,
+ * or interacts with a sample permit card.
+ */
+async function dispatchProspectPreviewRadarSms({
+  prospect = {},
+  eventType = 'PREVIEW_BRIEFING_OPENED',
+  deviceHint = 'Web',
+  previewUrl = '',
+  baseUrl = 'https://www.tiberius.ai',
+  overridePhone,
+  providerConfig = {}
+} = {}) {
+  const cleanBase = String(baseUrl || 'https://www.tiberius.ai').replace(/\/$/, '');
+  const token = String(prospect.previewToken || 'demo-7am-briefing').trim();
+  const company = String(prospect.companyName || 'Local Prospect').trim();
+  const contact = String(prospect.contactName || '').trim();
+  const whoLabel =
+    contact && contact.toLowerCase() !== company.toLowerCase() && !/^shop owner$/i.test(contact)
+      ? `${contact} (${company})`
+      : company;
+  const zip = String(prospect.zipCode || '78130').trim();
+  const rawProspectPhone = String(prospect.phone || '').replace(/\D/g, '');
+  const telUri =
+    rawProspectPhone.length >= 10 ? `tel:${normalizePhoneE164(rawProspectPhone)}` : '';
+
+  const upperEvent = String(eventType || 'PREVIEW_BRIEFING_OPENED').toUpperCase();
+  let actionPhrase = `just opened their ${zip} Preview Briefing`;
+  let emoji = '👀';
+  if (upperEvent === 'PREVIEW_CARD_APPROVED' || upperEvent === 'PREVIEW_CARD_INTERACTED') {
+    actionPhrase = `just tapped Approve & Send on a sample permit in their ${zip} Preview`;
+    emoji = '🔥';
+  } else if (upperEvent === 'PREVIEW_CAD_XRAY_CLICKED') {
+    actionPhrase = `just inspected a CAD Tax Roll X-Ray in their ${zip} Preview`;
+    emoji = '🛰️';
+  } else if (upperEvent === 'VIDEO_PLAYED' || upperEvent === 'VIDEO_OPENED') {
+    actionPhrase = `just clicked Play on their ${zip} Recon Loom Walkthrough`;
+    emoji = '🎬';
+  } else if (upperEvent === 'WATCHED_50_PCT') {
+    actionPhrase = `watched 50%+ of their ${zip} Recon Loom Walkthrough`;
+    emoji = '🔥';
+  }
+
+  const resolvedUrl =
+    previewUrl ||
+    (upperEvent.includes('VIDEO') || upperEvent.includes('WATCH')
+      ? `${cleanBase}/recon/watch?token=${encodeURIComponent(token)}`
+      : `${cleanBase}/recon/briefing?token=${encodeURIComponent(token)}`);
+
+  const deviceTag = deviceHint ? ` on ${deviceHint}` : '';
+  const callPrompt = telUri ? ` Call while they're on the page: ${telUri} •` : '';
+  const bodyText = `${emoji} LIVE RECON RADAR: ${whoLabel} ${actionPhrase}${deviceTag}.${callPrompt} Live View: ${resolvedUrl}`;
+
+  const targetFounderPhone =
+    overridePhone ||
+    process.env.ADMIN_ALERT_PHONE ||
+    process.env.TIBERIUS_FOUNDER_ALERT_PHONE ||
+    '(830) 481-0653';
+
+  const receipt = await sendMasterTwilioSmsToContractor({
+    toPhone: targetFounderPhone,
+    bodyText,
+    providerConfig
+  });
+
+  return {
+    ...receipt,
+    alertType: 'PROSPECT_PREVIEW_RADAR_SMS',
+    eventType: upperEvent,
+    a2pCampaignModel: 'MASTER_TIBERIUS_A2P_10DLC',
+    fromMasterNumber: receipt.fromNumber,
+    smsBody: bodyText,
+    telUri,
+    previewUrl: resolvedUrl,
+    prospectCompany: company,
+    prospectContact: contact
+  };
+}
+
 module.exports = {
   INBOUND_REPLY_DOMAIN,
   DEFAULT_TEST_OWNER_EMAIL,
@@ -998,6 +1079,7 @@ module.exports = {
   sendMasterTwilioSmsToContractor,
   dispatchScoutMorningAlertSms,
   dispatchContractorHotReplyAlertSms,
+  dispatchProspectPreviewRadarSms,
   formatPreTripEmailManifest,
   dispatchPreTripManifestEmail,
   dispatchPreTripAdminSms

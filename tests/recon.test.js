@@ -2044,10 +2044,219 @@ async function runTests() {
       mockSmtpServer.close();
     }
 
+    console.log('[31/31] Testing Live TX Open-Data Real-Contractor Scout, Manual/CSV Prospect Intake & Real-Time Preview-Open SMS Radar...');
+    const {
+      formatTitleCaseCompany,
+      formatPersonOwnerName,
+      resolveTexasCountyAndCity
+    } = require('../workers/scrapers/tiberius-prospect-scout');
+
+    // 1. Unit assertions on TX Open-Data entity & owner formatting
+    assert.strictEqual(
+      formatTitleCaseCompany('PIONEER ROOFING SOLUTIONS LLC'),
+      'Pioneer Roofing Solutions LLC'
+    );
+    assert.strictEqual(
+      formatPersonOwnerName('AQUA OASIS POOL SERVICE LLC', 'AQUA OASIS POOL SERVICE LLC').contactName,
+      'Owner & Estimating',
+      'Corporate entity in owner_name must not be treated as a human first name'
+    );
+    assert.strictEqual(
+      formatPersonOwnerName('DELGADO, MARCUS R', 'GUADALUPE CONCRETE LLC').contactName,
+      'Marcus Delgado',
+      'LAST, FIRST owner_name from TDLR must format cleanly as First Last'
+    );
+    assert.strictEqual(resolveTexasCountyAndCity('78130').county, 'COMAL');
+    assert.strictEqual(resolveTexasCountyAndCity('78666').county, 'HAYS');
+
+    // 2. Live Real-Contractor Scout (liveDiscovery: true) via POST /api/recon/meta-outreach
+    const liveScoutResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'sweep',
+        zipCode: '78130',
+        primaryTrade: 'Electrical / HVAC',
+        playbook: 'FULL_BUNDLE_OFFENSE_DEFENSE',
+        liveDiscovery: true,
+        limit: 2
+      })
+    });
+    const liveScoutData = await liveScoutResp.json();
+    assert.strictEqual(liveScoutData.ok, true);
+    assert.strictEqual(liveScoutData.metaRecon.sourceMode, 'LIVE');
+    assert.ok(liveScoutData.metaRecon.prospects.length >= 1, 'Live scout must return at least 1 contractor');
+    assert.strictEqual(
+      liveScoutData.metaRecon.metrics.antiAiGatePassRate,
+      '100%',
+      'All live-discovered contractor outreach sequences must pass the Anti-AI Copy Gate'
+    );
+
+    // 3. Manual Real Contractor Intake (action: 'add_prospect')
+    const manualAddResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add_prospect',
+        companyName: 'Cibolo Creek Commercial Flatwork LLC',
+        contactName: 'Travis Holloway',
+        phone: '(830) 643-7712',
+        email: 'feedbackdaisy+cibolocreek@gmail.com',
+        websiteUrl: 'https://www.cibolocreekflatwork-test.com',
+        zipCode: '78130',
+        primaryTrade: 'Commercial Concrete',
+        fetchLiveWeb: false
+      })
+    });
+    const manualAddData = await manualAddResp.json();
+    assert.strictEqual(manualAddData.ok, true);
+    assert.strictEqual(manualAddData.prospect.sourceType, 'MANUAL_ENTRY');
+    assert.strictEqual(manualAddData.prospect.baitPermits.length, 3);
+    assert.strictEqual(manualAddData.prospect.copyGate.passed, true);
+    assert.ok(manualAddData.prospect.previewToken.startsWith('preview-'));
+
+    // Verify the manually added contractor's Preview Briefing is live
+    const manualPreviewResp = await fetch(
+      `${baseUrl}/api/recon/briefing?token=${encodeURIComponent(manualAddData.prospect.previewToken)}`
+    );
+    const manualPreviewData = await manualPreviewResp.json();
+    assert.strictEqual(manualPreviewData.ok, true);
+    assert.strictEqual(manualPreviewData.contractor.companyName, 'Cibolo Creek Commercial Flatwork LLC');
+
+    // 4. Bulk CSV Intake (action: 'import_csv')
+    const csvSampleText = [
+      'company,contact,email,phone,website,zip,trade',
+      '"Gruene Commercial Roofing, LLC",Owen Vance,feedbackdaisy+grueneroof@gmail.com,830-629-4410,https://grueneroofing-test.com,78130,Roofing / Exteriors',
+      'San Marcos MEP & Controls,Elena Garza,feedbackdaisy+smmep@gmail.com,512-392-8810,,78666,Electrical / HVAC'
+    ].join('\n');
+    const csvImportResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'import_csv',
+        csvText: csvSampleText,
+        fetchLiveWeb: false
+      })
+    });
+    const csvImportData = await csvImportResp.json();
+    assert.strictEqual(csvImportData.ok, true);
+    assert.strictEqual(csvImportData.importedCount, 2, 'CSV importer must enrich and import both contractor rows');
+    assert.strictEqual(csvImportData.importedProspects[0].sourceType, 'CSV_IMPORT');
+    assert.strictEqual(csvImportData.importedProspects[1].zipCode, '78666');
+
+    // 5. Real-Time Preview-Open & Card-Interaction SMS Radar (#3)
+    const radarTarget = manualAddData.prospect;
+
+    // 5a. Admin viewer bypass must NOT increment views or fire SMS
+    const adminBypassResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'track_preview_event',
+        token: radarTarget.previewToken,
+        eventType: 'PREVIEW_BRIEFING_OPENED',
+        isAdminViewer: true
+      })
+    });
+    const adminBypassData = await adminBypassResp.json();
+    assert.strictEqual(adminBypassData.ok, true);
+    assert.strictEqual(adminBypassData.ignoredAdminViewer, true);
+
+    // 5b. Real prospect opening their Preview Briefing on iPhone fires Founder Radar SMS with tel: link
+    const radarOpenResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15'
+      },
+      body: JSON.stringify({
+        action: 'track_preview_event',
+        token: radarTarget.previewToken,
+        eventType: 'PREVIEW_BRIEFING_OPENED'
+      })
+    });
+    const radarOpenData = await radarOpenResp.json();
+    assert.strictEqual(radarOpenData.ok, true);
+    assert.strictEqual(radarOpenData.prospect.previewTelemetry.viewsCount, 1);
+    assert.strictEqual(radarOpenData.prospect.previewTelemetry.lastDeviceHint, 'iPhone');
+    assert.ok(radarOpenData.radarSmsReceipt && radarOpenData.radarSmsReceipt.ok);
+    assert.strictEqual(radarOpenData.radarSmsReceipt.alertType, 'PROSPECT_PREVIEW_RADAR_SMS');
+    assert.ok(
+      radarOpenData.radarSmsReceipt.smsBody.includes('tel:+18306437712') &&
+        radarOpenData.radarSmsReceipt.smsBody.includes('Cibolo Creek Commercial Flatwork LLC'),
+      `Expected Radar SMS to contain prospect name & 1-tap tel: link, got: ${radarOpenData.radarSmsReceipt.smsBody}`
+    );
+
+    // 5c. Duplicate refresh within 15-minute cooldown increments viewsCount without spamming a duplicate SMS
+    const radarCooldownResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'track_preview_event',
+        token: radarTarget.previewToken,
+        eventType: 'PREVIEW_BRIEFING_OPENED',
+        deviceHint: 'iPhone'
+      })
+    });
+    const radarCooldownData = await radarCooldownResp.json();
+    assert.strictEqual(radarCooldownData.ok, true);
+    assert.strictEqual(radarCooldownData.prospect.previewTelemetry.viewsCount, 2);
+    assert.strictEqual(
+      radarCooldownData.radarSmsReceipt,
+      null,
+      'Duplicate open within 15-minute cooldown must not send duplicate SMS'
+    );
+
+    // 5d. Prospect tapping [Approve & Send] inside their preview-* briefing fires immediate INTERACT Radar SMS
+    const previewCardId = manualPreviewData.briefing.cards[0].id;
+    const previewApproveResp = await fetch(`${baseUrl}/api/recon/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: radarTarget.previewToken,
+        action: 'approve-send',
+        cardId: previewCardId,
+        dispatchChannel: 'NATIVE_SMS'
+      })
+    });
+    const previewApproveData = await previewApproveResp.json();
+    assert.strictEqual(previewApproveData.ok, true);
+    assert.ok(
+      previewApproveData.radarReceipt &&
+        previewApproveData.radarReceipt.ok &&
+        previewApproveData.radarReceipt.eventType === 'PREVIEW_CARD_APPROVED',
+      'Prospect tapping Approve & Send on a preview card must trigger high-intent Radar SMS'
+    );
+
+    // 5e. Delete test prospect & verify Module 04 HTML controls exist
+    const delProspectResp = await fetch(`${baseUrl}/api/recon/meta-outreach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete_prospect',
+        prospectId: radarTarget.id
+      })
+    });
+    const delProspectData = await delProspectResp.json();
+    assert.strictEqual(delProspectData.ok, true);
+    assert.strictEqual(delProspectData.removed, true);
+
+    const updatedCommandHtml = await (await fetch(`${baseUrl}/command`)).text();
+    assert.ok(
+      updatedCommandHtml.includes('id="meta-live-sweep-btn"') &&
+        updatedCommandHtml.includes('id="meta-intake-drawer"') &&
+        updatedCommandHtml.includes('id="meta-add-prospect-form"') &&
+        updatedCommandHtml.includes('id="meta-csv-textarea"') &&
+        updatedCommandHtml.includes('id="meta-stat-radar"'),
+      'command.html must render Live Contractor Scout button, Manual/CSV Intake Drawer, and Preview Radar telemetry'
+    );
+
     // Reset state for idempotent test runs
     clearSeenPermits();
     setPreTripHoldDispatch(false, 'Test suite cleanup');
     const finalStore = loadStore();
+    finalStore.metaReconCustomProspects = [];
+    if (finalStore.metaRecon) delete finalStore.metaRecon;
     if (finalStore.watchVideos) finalStore.watchVideos = {};
     if (finalStore.watchTelemetry) finalStore.watchTelemetry = [];
     if (finalStore.briefings) {
@@ -2080,7 +2289,7 @@ async function runTests() {
     });
     clearSeenPermits();
 
-    console.log('\n✅ ALL 30 TIBERIUS RECON™ & META-RECON™ AUTONOMOUS LEAD-GEN END-TO-END TESTS PASSED.');
+    console.log('\n✅ ALL 31 TIBERIUS RECON™ & META-RECON™ AUTONOMOUS LEAD-GEN END-TO-END TESTS PASSED.');
   } finally {
     server.close();
   }

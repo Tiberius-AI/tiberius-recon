@@ -118,6 +118,7 @@
         token: w.token || state.selectedToken,
         companyName: (w.prospect && w.prospect.companyName) || '',
         contactName: (w.prospect && w.prospect.contactName) || '',
+        viewer: urlParams.get('viewer') === 'admin' || urlParams.get('studio') === '1' ? 'admin' : undefined,
         eventType,
         ...extra
       })

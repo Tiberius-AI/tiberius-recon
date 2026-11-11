@@ -14,6 +14,7 @@ const {
   isDemoModeEnabled
 } = require('../../db/store');
 const { extractSessionFromRequest } = require('../../db/auth');
+const { recordProspectPreviewRadarEvent } = require('../../workers/meta-recon-orchestrator');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -59,9 +60,27 @@ module.exports = async function handler(req, res) {
     if (!data) {
       return res.status(404).json({ ok: false, error: 'Morning briefing not found' });
     }
+
+    let radarReceipt = null;
+    if (
+      String(token).startsWith('preview-') &&
+      req.query &&
+      (req.query.trackOpen === '1' || req.query.trackOpen === 'true') &&
+      req.query.viewer !== 'admin'
+    ) {
+      const radarRes = await recordProspectPreviewRadarEvent({
+        token,
+        eventType: 'PREVIEW_BRIEFING_OPENED',
+        userAgent: (req.headers && req.headers['user-agent']) || '',
+        isAdminViewer: Boolean(hydrated && hydrated.account && hydrated.account.role === 'ADMIN')
+      });
+      radarReceipt = radarRes ? radarRes.radarSmsReceipt || radarRes.event : null;
+    }
+
     return res.status(200).json({
       ok: true,
       authenticatedAccount: hydrated ? hydrated.account : null,
+      radarReceipt,
       ...data
     });
   }

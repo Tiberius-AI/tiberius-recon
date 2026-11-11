@@ -37,12 +37,16 @@ Use the 3 dropdowns in the control bar to aim the scout:
    - **Playbook A • Trojan Horse Live Permit Bait:** Pure permit-first hook for established commercial subcontractors.
    - **Playbook B • 3-Leak Website CRO Teardown:** Pure website-leak + missed-call revenue math hook for local residential/light-commercial shops.
 
-### Step 3: Click `🛰️ Sweep Prospects & Build Previews`
-When you click this button, the autonomous agent performs four jobs in under 3 seconds:
-1. **Gathers Active Local Contractors:** Finds high-review local shops in that ZIP and verifies that `territory_locks` still has open capacity (`1 of 2` or `2 of 2` slots open).
-2. **Matches 3 Real Unseen Permits ("Trojan Horse Bait"):** Pulls 3 real $150K–$1.1M+ commercial permits in their ZIP and trade, including the GC Project Manager's direct phone and email.
-3. **Runs the 3-Leak Website X-Ray:** Inspects their homepage and `/contact` form to count form fields, check for 24/7 AI/SMS rescue, check for `LocalBusiness` JSON-LD schema, and calculate their **Monthly Leaked Revenue** (e.g., `$14,250/mo`).
-4. **Auto-Provisions a Personalized Live Preview Briefing:** Creates a real, working 9-card Recon Briefing calibrated to their company name and trade at `/recon/briefing?token=preview-<company-slug>-<zip>`.
+### Step 3: Pull Real Live Contractors or Import Your Own CSV
+You now have **three ways** to load real local contractor leads into Module 04:
+1. **Click `🌐 Pull Real Live Contractors` (Zero-API State Open Data + Web Crawl):**
+   - Queries active licensed & registered Texas businesses in real time from **Texas TDLR (`data.texas.gov/resource/7358-krk7.json`)**, **Texas Comptroller Active Franchise Taxpayers (`9cir-efmm`)**, and **Austin Build+Connect Open Permits (`3syk-w9eu`)** for any 5-digit Texas ZIP code.
+   - Automatically probes each company's live website & DNS MX records, scrapes public emails & phones, inspects their live homepage DOM for the **3-Leak Website X-Ray**, pairs **3 real commercial permits** in their ZIP, and provisions a working **Preview Briefing** (`/recon/briefing?token=preview-...`) + **Loom Watch Link** (`/recon/watch?token=preview-...`).
+2. **Click `➕ Add Prospect / Import CSV`:**
+   - **Single Real Contractor Form:** Enter a company name + ZIP + trade (leave email or website blank to have Recon auto-crawl their live domain).
+   - **Bulk CSV / Google Maps Paste:** Paste CSV/TSV rows or upload a `.csv` export from Google Maps / Outscraper / spreadsheets to enrich up to 25 contractors at once.
+3. **Click `🛰️ Sweep Saved / Sandbox`:**
+   - Refreshes your saved custom contractors alongside the safe sandbox directory (`feedbackdaisy+*@gmail.com`) for dry-run testing.
 
 ### Step 4: Review Drafts & Dispatch Outbound (3 Ways to Send)
 On each prospect card, you can click **`Touch 1`**, **`Touch 2`**, **`Touch 3`**, or **`Touch 4`** to preview the entire 14-day sequence:
@@ -85,16 +89,15 @@ When a prospect replies to your email (e.g., *"Yeah, send over the permit packet
 ### 1. Auto-Generated Smart Site Live Previews (`?preview-site=<slug>`)
 Right now, Meta-Recon auto-provisions a working **Recon Briefing Sandbox** (`?token=preview-...`) for every prospect. Next, we can have the 2:00 AM sweep automatically inject the prospect's real company name, phone number, city, trade, and top Google reviews into our **Tiberius Smart Site Foundation** template—so when they reply *"Yes"*, they receive **both** their live 7:00 AM Permit Queue **and** a live, clickable preview of their new website.
 
-### 2. Real-Time "Prospect Is Looking at Their Preview Right Now" SMS Radar
-Add a lightweight telemetry beacon inside `briefing.js` whenever a token starting with `preview-` is opened. The exact second a prospect clicks their preview link (or clicks `[ ✓ Approve & Send ]` on a sample card), your phone gets a Master Twilio text:
-> *"👀 LIVE PREVIEW OPENED: Marcus Delgado (Guadalupe Valley Concrete) just opened his 78130 Preview Briefing on iPhone. Tap here to call him while he's on the page: tel:+18306254810"*
+### 2. ✅ LIVE — Real-Time "Prospect Is Looking at Their Preview Right Now" SMS Radar
+Active inside `briefing.js`, `/api/recon/approve`, `/api/recon/watch`, and `/api/recon/meta-outreach` (`action: 'track_preview_event'`). Whenever a prospect opens their `preview-...` Briefing, clicks Play on their Loom Walkthrough, or taps `[ ✓ Approve & Send ]` on a sample card (with `&viewer=admin` bypassed and a 15-minute anti-spam cooldown per category), your phone receives an instant Master Twilio text with a 1-tap `tel:` call link, and the Live Radar Strip in Module 04 lights up.
 
 ### 3. Autonomous 45-Second Video Teardown Generator (Playwright + Voiceover)
 Combine our `autonomous-site-reviewer` Playwright recorder with our existing voiceover pipeline (`voiceovers/`):
 - At 3:00 AM, a headless browser records a 45-second split-screen MP4 showing the prospect's current mobile site next to their pre-built Tiberius Smart Site + 7:00 AM Permit Queue, paired with an AI voiceover citing their exact company name and permit address.
 
-### 4. Automated TDLR State License & Municipal Registered-Contractor Feed
-Connect `workers/scrapers/tiberius-prospect-scout.js` directly to the **Texas Department of Licensing and Regulation (TDLR)** Socrata open-data dataset (`data.texas.gov`) and municipal contractor registration tables so the scout automatically ingests every active Electrical, HVAC, Roofing, and Commercial contractor across any Texas ZIP code on demand with zero manual curation.
+### 4. ✅ LIVE — Automated TDLR, TX Comptroller & Municipal Contractor Feed + CSV Intake
+`workers/scrapers/tiberius-prospect-scout.js` is now connected directly to **Texas TDLR (`7358-krk7`)**, **Texas Comptroller Active Franchise Taxpayers (`9cir-efmm`)**, **Austin Open Permits (`3syk-w9eu`)**, and a live DNS MX + homepage/contact crawler—plus Module 04 includes single-contractor and bulk `.csv` intake (`action: 'add_prospect'` & `action: 'import_csv'`).
 
 ### 5. Multi-Inbox Sending Pool & Warmup Router
 Add round-robin sender rotation in `dispatchViaResendEmail` across 3–5 secondary outreach domains (e.g., `billy@send.tiberius.ai`, `scout@try-tiberius.ai`, `permits@tiberius-recon.com`), capped at 35 cold Touch-1 emails per inbox per day. This lets you scale autonomous daily prospecting across Austin, San Antonio, Dallas, and Houston while keeping domain reputation pristine.

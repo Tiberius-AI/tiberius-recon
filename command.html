@@ -827,6 +827,13 @@
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              id="meta-toggle-intake-btn"
+              type="button"
+              class="px-3.5 py-2.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-200 hover:bg-amber-500/30 text-xs sm:text-sm font-bold cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span>➕ Add Prospect / Import CSV</span>
+            </button>
             <a
               href="/recon/watch?studio=1"
               target="_blank"
@@ -853,7 +860,7 @@
         </div>
 
         <!-- Telemetry & Controls Bar -->
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
             <div class="font-mono-telemetry text-[10px] text-slate-400 uppercase">Prospects Gathered</div>
             <div id="meta-stat-prospects" class="font-display font-extrabold text-xl text-white mt-0.5">6</div>
@@ -870,24 +877,40 @@
             <div class="font-mono-telemetry text-[10px] text-slate-400 uppercase">Anti-AI Copy Gate</div>
             <div id="meta-stat-gate" class="font-display font-extrabold text-xl text-emerald-400 mt-0.5">100% PASS</div>
           </div>
-          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700 col-span-2 sm:col-span-1">
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700">
             <div class="font-mono-telemetry text-[10px] text-slate-400 uppercase">Touches / Auto-Demos</div>
             <div id="meta-stat-sent" class="font-display font-extrabold text-xl text-blue-300 mt-0.5">0 Sent • 0 Demos</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-emerald-500/40">
+            <div class="font-mono-telemetry text-[10px] text-emerald-300 uppercase">👀 Preview Open Radar</div>
+            <div id="meta-stat-radar" class="font-display font-extrabold text-xl text-emerald-400 mt-0.5">0 Viewed</div>
           </div>
         </div>
 
         <!-- Filter & Sweep Trigger Controls -->
-        <div class="p-4 sm:p-5 rounded-xl bg-slate-800/90 border border-slate-700 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+        <div class="p-4 sm:p-5 rounded-xl bg-slate-800/90 border border-slate-700 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
           <div>
             <label for="meta-zip-select" class="block text-xs font-bold uppercase tracking-wider text-slate-200 mb-1.5">
-              Target Territory ZIP
+              Corridor Preset or Custom ZIP
             </label>
-            <select id="meta-zip-select" class="enterprise-select text-xs sm:text-sm">
-              <option value="ALL">All Corridor ZIPs (78130, 78701, 78258)</option>
-              <option value="78130">78130 • New Braunfels / Comal CAD</option>
-              <option value="78701">78701 • Austin Metro / TCAD</option>
-              <option value="78258">78258 • San Antonio North / BCAD</option>
-            </select>
+            <div class="flex gap-2">
+              <select id="meta-zip-select" class="enterprise-select text-xs sm:text-sm flex-1">
+                <option value="ALL">All Corridors</option>
+                <option value="78130">78130 • New Braunfels</option>
+                <option value="78701">78701 • Austin Metro</option>
+                <option value="78258">78258 • San Antonio N</option>
+                <option value="78666">78666 • San Marcos</option>
+                <option value="78681">78681 • Round Rock</option>
+                <option value="75024">75024 • Plano / Frisco</option>
+              </select>
+              <input
+                id="meta-custom-zip-input"
+                type="text"
+                maxlength="5"
+                placeholder="Any TX ZIP"
+                class="enterprise-input text-xs sm:text-sm w-28 font-mono-telemetry"
+              />
+            </div>
           </div>
           <div>
             <label for="meta-trade-select" class="block text-xs font-bold uppercase tracking-wider text-slate-200 mb-1.5">
@@ -914,13 +937,131 @@
           </div>
           <div>
             <button
-              id="meta-sweep-btn"
+              id="meta-live-sweep-btn"
               type="button"
-              class="btn-executive-navy w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold cursor-pointer inline-flex items-center justify-center gap-2"
+              class="btn-trust-emerald w-full py-3 px-3.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer inline-flex items-center justify-center gap-1.5"
             >
-              <span>🛰️ Sweep Prospects &amp; Build Previews</span>
+              <span>🌐 Pull Real Live Contractors</span>
             </button>
           </div>
+          <div>
+            <button
+              id="meta-sweep-btn"
+              type="button"
+              class="btn-executive-navy w-full py-3 px-3.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer inline-flex items-center justify-center gap-1.5"
+            >
+              <span>🛰️ Sweep Saved / Sandbox</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Collapsible Manual Prospect & Bulk CSV Intake Drawer -->
+        <div id="meta-intake-drawer" class="hidden p-5 rounded-2xl bg-slate-950/90 border border-amber-500/40 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
+            <div>
+              <h3 class="font-display font-extrabold text-base sm:text-lg text-white">
+                ➕ Real Contractor Intake &amp; Bulk CSV Importer
+              </h3>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Drop in any real local contractor (or paste a Google Maps / Outscraper / spreadsheet CSV). Recon automatically crawls their live website if blank, pairs 3 real permits in their ZIP, builds their playable 7:00 AM Preview Briefing, and drafts all 4 touches.
+              </p>
+            </div>
+            <button id="meta-close-intake-btn" type="button" class="text-xs text-slate-400 hover:text-white font-mono-telemetry cursor-pointer px-2 py-1">
+              ✕ Close Drawer
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <!-- Left: Single Real Contractor Form -->
+            <form id="meta-add-prospect-form" class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+              <div class="font-mono-telemetry text-xs text-amber-300 uppercase font-bold">
+                Option 1 • Add Single Real Contractor
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-300 mb-1">Company Name *</label>
+                  <input id="meta-add-company" type="text" required placeholder="e.g. Pioneer Roofing Solutions LLC" class="enterprise-input text-xs" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-300 mb-1">Owner / Contact Name</label>
+                  <input id="meta-add-contact" type="text" placeholder="e.g. Travis Miller (optional)" class="enterprise-input text-xs" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-300 mb-1">Direct Phone (for 1-Tap SIM Text)</label>
+                  <input id="meta-add-phone" type="text" placeholder="(830) 555-0142" class="enterprise-input text-xs" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-300 mb-1">Email (auto-crawls site if blank)</label>
+                  <input id="meta-add-email" type="email" placeholder="owner@company.com" class="enterprise-input text-xs" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-300 mb-1">Website URL (auto-discovers if blank)</label>
+                  <input id="meta-add-website" type="text" placeholder="https://..." class="enterprise-input text-xs" />
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">ZIP Code</label>
+                    <input id="meta-add-zip" type="text" maxlength="5" value="78130" class="enterprise-input text-xs font-mono-telemetry" />
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Trade</label>
+                    <select id="meta-add-trade" class="enterprise-select text-xs">
+                      <option value="Commercial Concrete">Concrete</option>
+                      <option value="Roofing / Exteriors">Roofing</option>
+                      <option value="Electrical / HVAC">Elec / HVAC</option>
+                      <option value="Pools / Fencing / Custom Home">Pools / Fence</option>
+                      <option value="B2B / Commercial Services">B2B Services</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <button id="meta-add-submit-btn" type="submit" class="btn-trust-emerald w-full py-2.5 px-4 rounded-xl text-xs font-bold cursor-pointer">
+                ⚡ Enrich Contractor &amp; Auto-Build Live Preview
+              </button>
+            </form>
+
+            <!-- Right: Bulk CSV / Google Maps Paste -->
+            <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+              <div class="space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="font-mono-telemetry text-xs text-blue-300 uppercase font-bold">
+                    Option 2 • Paste CSV or Upload .CSV File
+                  </span>
+                  <div class="flex items-center gap-2">
+                    <button id="meta-csv-sample-btn" type="button" class="text-[11px] font-mono-telemetry text-amber-300 hover:underline cursor-pointer">
+                      Paste Sample Format
+                    </button>
+                    <label class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] font-mono-telemetry text-slate-200 hover:bg-slate-700 cursor-pointer">
+                      📂 Upload .CSV
+                      <input id="meta-csv-file-input" type="file" accept=".csv,.tsv,.txt" class="hidden" />
+                    </label>
+                  </div>
+                </div>
+                <textarea
+                  id="meta-csv-textarea"
+                  rows="5"
+                  placeholder="company,contact,email,phone,website,zip,trade&#10;Pioneer Roofing Solutions LLC,Owner,,512-922-3939,https://www.pioneerroofingsolutions.com,78130,Roofing / Exteriors"
+                  class="enterprise-input text-xs font-mono-telemetry leading-relaxed"
+                ></textarea>
+              </div>
+              <button id="meta-csv-import-btn" type="button" class="btn-executive-navy w-full py-2.5 px-4 rounded-xl text-xs font-bold cursor-pointer">
+                📥 Import CSV &amp; Auto-Provision All Previews
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Preview-Open Radar Feed Strip -->
+        <div id="meta-radar-strip" class="hidden p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-mono-telemetry text-xs text-emerald-300 font-bold uppercase">
+              📡 Live Prospect Preview Radar (Instant SMS Alert Armed)
+            </span>
+            <span class="font-mono-telemetry text-[11px] text-slate-400">
+              Fires Master Twilio SMS on Preview Open, Video Play &amp; Card Approval
+            </span>
+          </div>
+          <div id="meta-radar-feed-list" class="space-y-1.5 text-xs"></div>
         </div>
 
         <div id="meta-action-feedback" class="hidden p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300"></div>
