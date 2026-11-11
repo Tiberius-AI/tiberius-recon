@@ -490,8 +490,8 @@
         .join('');
     }
 
-    if (state.preTripState) {
-      renderPreTripWatchdogState(state.preTripState);
+    if (roomState && roomState.preTripState) {
+      renderPreTripWatchdogState(roomState.preTripState);
     }
   }
 

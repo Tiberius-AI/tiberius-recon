@@ -2,7 +2,7 @@
   "outputDirectory": ".",
   "functions": {
     "*.js": {
-      "includeFiles": "{*.html,*.css,*.js,images/**,video/**,voiceovers/**}"
+      "includeFiles": "{*.html,*.css,*.js,images/**,voiceovers/**}"
     },
     "api/**/*.js": {
       "includeFiles": "{*.html,*.css,*.js,voiceovers/**}"

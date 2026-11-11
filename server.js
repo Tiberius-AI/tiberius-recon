@@ -103,7 +103,7 @@ const NFT_BUNDLED_FILES = {
   '/images/logo4.png': path.join(__dirname, 'images', 'logo4.png'),
   '/images/tiberius-ai.png': path.join(__dirname, 'images', 'tiberius-ai.png'),
   '/images/tiberius-recon-poster.jpg': path.join(__dirname, 'images', 'tiberius-recon-poster.jpg'),
-  '/video/TIBERIUS RECON.mp4': path.join(__dirname, 'video', 'TIBERIUS RECON.mp4'),
+  '/images/tiberius-recon-sales-poster.jpg': path.join(__dirname, 'images', 'tiberius-recon-sales-poster.jpg'),
   '/voiceovers/recon-sample-expr-voice-2-m.wav': path.join(__dirname, 'voiceovers', 'recon-sample-expr-voice-2-m.wav'),
   '/voiceovers/recon-sample-expr-voice-3-m.wav': path.join(__dirname, 'voiceovers', 'recon-sample-expr-voice-3-m.wav'),
   '/voiceovers/recon-sample-expr-voice-4-m.wav': path.join(__dirname, 'voiceovers', 'recon-sample-expr-voice-4-m.wav'),
