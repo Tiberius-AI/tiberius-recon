@@ -28,6 +28,21 @@ const {
 } = require('../../workers/meta-recon-orchestrator');
 const { runSiteLeakXRay } = require('../../workers/enrichment/site-leak-xray');
 
+function resolveRequestBaseUrl(req) {
+  const headers = (req && req.headers) || {};
+  const rawHost = String(headers['x-forwarded-host'] || headers.host || '').split(',')[0].trim();
+  if (!rawHost) return 'https://tiberius-recon.vercel.app';
+  if (/tiberius-recon-[a-z0-9]+-tiberius-projects/i.test(rawHost)) {
+    return 'https://tiberius-recon.vercel.app';
+  }
+  const proto = String(
+    headers['x-forwarded-proto'] || (/^(localhost|127\.0\.0\.1)/i.test(rawHost) ? 'http' : 'https')
+  )
+    .split(',')[0]
+    .trim();
+  return `${proto}://${rawHost}`;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -37,6 +52,8 @@ module.exports = async function handler(req, res) {
     res.statusCode = 200;
     return res.end();
   }
+
+  const reqBaseUrl = resolveRequestBaseUrl(req);
 
   try {
     if (req.method === 'GET') {
@@ -49,14 +66,15 @@ module.exports = async function handler(req, res) {
           limit: q.limit ? Number(q.limit) : 6,
           fetchLiveWeb: q.live === 'true',
           liveDiscovery: q.live === 'true' || q.liveDiscovery === 'true',
-          sourceMode: q.sourceMode || ''
+          sourceMode: q.sourceMode || '',
+          baseUrl: q.baseUrl || reqBaseUrl
         });
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         return res.end(JSON.stringify(swept));
       }
 
-      const metaRecon = await getMetaReconState();
+      const metaRecon = await getMetaReconState({ baseUrl: reqBaseUrl });
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify({ ok: true, metaRecon }));
@@ -81,7 +99,7 @@ module.exports = async function handler(req, res) {
         liveDiscovery: Boolean(body.liveDiscovery),
         sourceMode: body.sourceMode || '',
         includeSavedCustom: Boolean(body.includeSavedCustom),
-        baseUrl: body.baseUrl,
+        baseUrl: body.baseUrl || reqBaseUrl,
         autopilotDripEnabled:
           body.autopilotDripEnabled !== undefined ? Boolean(body.autopilotDripEnabled) : true,
         autopilotReplyEnabled:
@@ -109,7 +127,7 @@ module.exports = async function handler(req, res) {
         landmarkReference: body.landmarkReference,
         playbook: body.playbook,
         fetchLiveWeb: body.fetchLiveWeb !== undefined ? Boolean(body.fetchLiveWeb) : true,
-        baseUrl: body.baseUrl
+        baseUrl: body.baseUrl || reqBaseUrl
       });
       res.statusCode = result.statusCode || (result.ok ? 200 : 400);
       res.setHeader('Content-Type', 'application/json');
@@ -124,7 +142,7 @@ module.exports = async function handler(req, res) {
         defaultTrade: body.defaultTrade || body.primaryTrade || 'Commercial Concrete',
         playbook: body.playbook,
         fetchLiveWeb: body.fetchLiveWeb !== undefined ? Boolean(body.fetchLiveWeb) : true,
-        baseUrl: body.baseUrl
+        baseUrl: body.baseUrl || reqBaseUrl
       });
       res.statusCode = result.statusCode || (result.ok ? 200 : 400);
       res.setHeader('Content-Type', 'application/json');
@@ -154,7 +172,7 @@ module.exports = async function handler(req, res) {
         deviceHint: body.deviceHint,
         isAdminViewer: Boolean(body.isAdminViewer),
         forceAlert: Boolean(body.forceAlert),
-        baseUrl: body.baseUrl,
+        baseUrl: body.baseUrl || reqBaseUrl,
         overridePhone: body.overridePhone,
         providerConfig: body.providerConfig
       });
