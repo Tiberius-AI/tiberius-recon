@@ -83,297 +83,277 @@
      ========================================================================== */
   const TRADE_DEMO_DATA = {
     concrete: {
-      tradeLabel: 'COMMERCIAL CONCRETE & PAVING',
-      featuredTypeBadge:
-        'COMMERCIAL TENANT IMPROVEMENT & STRUCTURAL FLATWORK • TRADE RELEVANCE: COMMERCIAL CONCRETE',
+      tradeLabel: 'COMMERCIAL BUILDS',
+      featuredTypeBadge: 'NEW COMMERCIAL BUILDING PERMIT • FILED YESTERDAY',
       featuredWhy:
-        'Commercial TI permits are typically filed 30–60 days before specialty sub-bids close—creating an early window to introduce your concrete crew before site mobilization.',
+        'This permit was just filed. You reach the builder weeks before other local contractors hear about it.',
       featuredDraft:
-        '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our ACI-certified concrete crew just wrapped a 22,000 sq ft commercial tilt-wall & dock apron project two miles east off FM 306 and passed city inspection ahead of schedule. We have a crew opening in our bid calendar next month and would love to drop off numbers on the foundation, dock apron, and flatwork scope. Mind if I send over our commercial spec sheet and COI this afternoon? — Travis Miller • Lone Star Commercial Concrete"',
+        '"Hey Grant — I saw the new $385,000 building permit filed for 2850 FM 306 in New Braunfels. Our local crew just finished a commercial build two miles away off IH-35. We have an opening next month and would love to give you a fast quote. Can I send our license and job photos today? — Travis Miller"',
       cards: {
         1: {
-          pill: 'PERMIT #BP-2026-08941 • $240,000 TI BUILDOUT',
-          headline: '18,500 Sq Ft Commercial Buildout & Dock Apron',
-          submeta:
-            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
-          why: 'Why it matters: $1,850,000 assessed industrial parcel (2.4 acres). Subcontractor numbers are typically collected 30–60 days after TI permit filing.',
-          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          pill: 'PERMIT #BP-2026-08941 • $240,000 JOB',
+          headline: '$240,000 Commercial Building Upgrade',
+          submeta: 'Address: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          why: 'Why it matters: $1,850,000 commercial building. Builders pick local crews right after this permit is filed.',
+          contact: 'Marcus Vance • Project Manager @ Apex Builders',
           draft:
-            '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our crew just wrapped a 22,000 sq ft commercial tilt-wall & dock apron project two miles east off FM 306 and passed city inspection ahead of schedule. We have a crew opening next month and would love to drop off numbers on the foundation, dock apron & flatwork scope. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"',
-          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
-          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+            '"Hey Marcus — I saw the $240,000 building permit filed for 1420 Industrial Pkwy in New Braunfels. Our local crew just finished a commercial job two miles away off FM 306. We have an opening next month and would love to give you a quote. Can I send our license and bid numbers today?"',
+          replySender: 'MARCUS VANCE (APEX BUILDERS) — SAMPLE REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, New Braunfels, TX 78130',
           replyBody:
-            '"Hey Travis — timing is spot on. Our previous sub backed out on the concrete & dock apron schedule at 1420 Industrial Pkwy, Suite B. Do you guys carry $2M commercial GL + bonding, and can you walk the site with my superintendent this Thursday at 9:00 AM to review the plan set?"',
+            '"Hey Travis — great timing. Our last crew backed out on 1420 Industrial Pkwy. Are you insured, and can you walk the job with me Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hey Marcus — yes, we carry $2M/$5M commercial GL and bonding, and our ACI-certified crew is ready for the schedule at 1420 Industrial Pkwy, Suite B. Locking us in for Thursday at 9:00 AM on-site with our COI, W-9, and unit-price sheet. — Travis Miller • Lone Star Commercial Concrete'
+            'Hey Marcus — yes, we are fully insured and ready for 1420 Industrial Pkwy. See you on site Thursday at 9:00 AM with our proof of insurance and pricing. — Travis Miller'
         },
         2: {
-          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
-          headline: 'Oakridge Commons & 3 Adjacent Retail Pads',
-          submeta:
-            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
-          why: 'Why it matters: $14,200,000 commercial acquisition (142,000 sq ft). New regional property management teams frequently review exterior trade vendors within 30 days of closing.',
-          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          pill: 'NEW PROPERTY OWNER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons & Three Retail Buildings',
+          submeta: 'Address: 2410 Gruene Rd, New Braunfels, TX 78130',
+          why: 'Why it matters: $14,200,000 property sale. New property managers hire fresh local contractors in the first 30 days.',
+          contact: 'Dana Sterling • Property Director @ Crestview Management',
           draft:
-            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads at 2410 Gruene Rd & Loop 337 in New Braunfels. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage ($2M GL) and specialize in weekend phased work on ADA concrete flatwork, bollard installations, and dumpster pad replacements so zero tenants lose parking access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"',
-          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+            '"Hi Dana — congrats on buying Oakridge Commons at 2410 Gruene Rd in New Braunfels. New owners usually line up reliable local contractors during the first month. Our insured local crew works weekends so your tenants never lose parking. Can I stop by Thursday to leave a quick quote?"',
+          replySender: 'DANA STERLING (CRESTVIEW MANAGEMENT) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-218635 • 2410 Gruene Rd, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Travis, thanks for reaching out. We are onboarding two new preferred concrete & flatwork vendors for Oakridge Commons this quarter. Can you reply with your COI, W-9, and warranty summary so I can add your shop to Thursday\'s 9:00 AM property walk?"',
+            '"Hi Travis — thanks for reaching out. We are adding two reliable local contractors for Oakridge Commons this month. Can you walk the property with me Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Dana — happy to send our vendor packet right over. We carry $2M/$5M commercial GL and specialize in zero-disruption ADA flatwork and dumpster pad replacements. Locking in Thursday at 9:00 AM at 2410 Gruene Rd with our COI and W-9 in hand. — Travis Miller • Lone Star Commercial Concrete'
+            'Hi Dana — Thursday at 9:00 AM at 2410 Gruene Rd works great. I will bring our proof of insurance and local references. — Travis Miller'
         },
         3: {
-          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
-          headline: '1140 Whispering Pines Ln — Custom Estate Addition & Motor Court',
-          submeta:
-            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
-          why: 'Why it matters: $940,000 assessed estate property (4,120 sq ft on 1.4 acres). Included in Full Territory Dominion for high-ticket residential trades.',
-          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          pill: 'HOME REMODEL PERMIT • OWNER MATCHED',
+          headline: '1140 Whispering Pines Ln — Large Home Remodel',
+          submeta: 'Address: 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          why: 'Why it matters: $940,000 home on 1.4 acres. Reach the homeowner directly instead of buying shared leads.',
+          contact: 'Robert & Elena Harrison • Homeowners',
           draft:
-            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft property at 1140 Whispering Pines Ln in Havenwood. Our custom residential team specializes in engineered post-tension foundation additions and architectural stamped motor courts across New Braunfels with a 100% clean-site guarantee. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a quick 10-minute site walk or estimate drop-off this week?"',
-          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+            '"Hi Robert — I saw the city permit approved this week for your home remodel at 1140 Whispering Pines Ln. Our local crew has done dozens of projects in New Braunfels and keeps every yard spotless. Would you be open to a quick 10-minute quote walk this week?"',
+          replySender: 'ROBERT HARRISON (HOMEOWNER) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Travis — we have been looking for a concrete contractor who can handle both the engineered foundation addition and the stamped motor court. Are you available Thursday morning around 9:00 AM to look at the structural drawings on site?"',
+            '"Hi Travis — we still need a reliable local contractor for the outside work. Can you stop by 1140 Whispering Pines Ln Thursday morning around 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. I will bring portfolio photos of our recent Havenwood motor courts and review your structural foundation plans on site. — Travis Miller • Lone Star Commercial Concrete'
+            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. I will bring photos from recent jobs in your neighborhood. — Travis Miller'
         }
       }
     },
     roofing: {
-      tradeLabel: 'COMMERCIAL & METAL ROOFING',
-      featuredTypeBadge:
-        'COMMERCIAL TENANT IMPROVEMENT & ROOF ENVELOPE • TRADE RELEVANCE: COMMERCIAL ROOFING',
+      tradeLabel: 'ROOFING JOBS',
+      featuredTypeBadge: 'NEW COMMERCIAL ROOF PERMIT • FILED YESTERDAY',
       featuredWhy:
-        'Commercial TI and shell permits often require TPO membrane, curb flashing, or standing-seam metal work—giving commercial roofers an early bid window.',
+        'This roof permit was just filed. Reach the builder or owner before five other shops call.',
       featuredDraft:
-        '"Hey Marcus — saw the $240,000 commercial buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our RCAT-licensed commercial roofing crew just wrapped a 24,000 sq ft TPO & sheet-metal coping package two miles east off FM 306 and passed inspection ahead of schedule. We have capacity opening next month and would love to drop off numbers on the 60-mil TPO membrane, tapered insulation, and RTU curb flashing scope. Mind if I send over our commercial spec sheet and 20-year NDL warranty details this afternoon? — Jack Williams • A-lert Roof Systems"',
+        '"Hey Marcus — I saw the $240,000 commercial roof permit filed for 1420 Industrial Pkwy in New Braunfels. Our licensed local roof crew just finished a commercial job two miles away off FM 306. We have an opening next month and would love to drop off a fast quote. Can I send our license and warranty info today? — Jack Williams"',
       cards: {
         1: {
-          pill: 'PERMIT #BP-2026-08941 • $240,000 COMMERCIAL ROOF & TI',
-          headline: '18,500 Sq Ft Commercial Buildout & TPO Roof System',
-          submeta:
-            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
-          why: 'Why it matters: $1,850,000 assessed commercial parcel. Mechanical curb flashing and roof membrane packages are locked in 30–60 days after filing.',
-          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          pill: 'PERMIT #BP-2026-08941 • $240,000 ROOF JOB',
+          headline: '$240,000 Commercial Roof Replacement',
+          submeta: 'Address: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          why: 'Why it matters: $1,850,000 commercial building. Builders lock in their roof crew right after filing.',
+          contact: 'Marcus Vance • Project Manager @ Apex Builders',
           draft:
-            '"Hey Marcus — saw the $240,000 commercial buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our RCAT-licensed commercial roofing crew just wrapped a 24,000 sq ft TPO & sheet-metal coping package two miles east off FM 306 and passed inspection ahead of schedule. We have a crew opening next month and would love to drop off numbers on the 60-mil TPO membrane, tapered insulation & curb flashing scope. Mind if I send over our spec sheet and COI this afternoon?"',
-          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
-          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+            '"Hey Marcus — I saw the $240,000 commercial roof permit filed for 1420 Industrial Pkwy in New Braunfels. Our local roof crew just finished a warehouse job two miles away off FM 306. We have an opening next month and would love to give you a quote. Can I send our license and pricing today?"',
+          replySender: 'MARCUS VANCE (APEX BUILDERS) — SAMPLE REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, New Braunfels, TX 78130',
           replyBody:
-            '"Hey Jack — good timing. We need a licensed commercial roofer for the TPO membrane and new RTU curb flashings at 1420 Industrial Pkwy, Suite B. Can you walk the roof with our superintendent Thursday at 9:00 AM?"',
+            '"Hey Jack — good timing. We still need a licensed local roof crew for 1420 Industrial Pkwy. Can you walk the building with us Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hey Marcus — Thursday at 9:00 AM at 1420 Industrial Pkwy, Suite B works great. Our estimator will bring our RCAT license, $5M commercial GL COI, and 20-year NDL warranty specs. — Jack Williams • A-lert Roof Systems'
+            'Hey Marcus — Thursday at 9:00 AM at 1420 Industrial Pkwy works great. I will bring our proof of insurance and 20-year warranty sheet. — Jack Williams'
         },
         2: {
-          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
-          headline: 'Oakridge Commons & 3 Adjacent Retail Pads — CapEx Roof Scope',
-          submeta:
-            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
-          why: 'Why it matters: $14,200,000 property acquisition. New asset managers frequently schedule roof inspections, elastomeric coatings, and CapEx reroofs right after closing.',
-          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          pill: 'NEW PROPERTY OWNER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons — Commercial Roof Inspection',
+          submeta: 'Address: 2410 Gruene Rd, New Braunfels, TX 78130',
+          why: 'Why it matters: $14,200,000 property sale. New owners check roof age and leaks right after closing.',
+          contact: 'Dana Sterling • Property Director @ Crestview Management',
           draft:
-            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex at 2410 Gruene Rd & Loop 337 in New Braunfels. During the first 30 days of a transition, new ownership usually audits roof warranties and CapEx restoration budgets. We are RCAT-licensed and specialize in commercial roof restoration, elastomeric coatings, and 20-year NDL leak warranty transfers with zero tenant disruption. Can I swing by Thursday to provide a complimentary drone core & CapEx condition report?"',
-          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+            '"Hi Dana — congrats on buying Oakridge Commons at 2410 Gruene Rd in New Braunfels. New owners usually want a clear roof photo report during the first 30 days. Our insured local crew inspects multi-building properties with zero tenant bother. Can I stop by Thursday to give you a free photo check?"',
+          replySender: 'DANA STERLING (CRESTVIEW MANAGEMENT) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-218635 • 2410 Gruene Rd, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Jack — we actually need a baseline roof condition report on Buildings B and C at Oakridge Commons for our Q4 CapEx budget. Can you meet our facilities lead on site Thursday at 9:00 AM?"',
+            '"Hi Jack — we do need a baseline roof photo report on Buildings B and C at Oakridge Commons. Can you meet our manager on site Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Dana — locked in for Thursday at 9:00 AM at 2410 Gruene Rd. We will inspect Buildings B and C and deliver a photo-documented CapEx roof report and COI. — Jack Williams • A-lert Roof Systems'
+            'Hi Dana — locked in for Thursday at 9:00 AM at 2410 Gruene Rd. We will inspect Buildings B and C and bring a clean photo report. — Jack Williams'
         },
         3: {
-          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
-          headline: '1140 Whispering Pines Ln — Custom Estate Addition & Standing-Seam Metal Roof',
-          submeta:
-            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
-          why: 'Why it matters: $940,000 estate addition permit requiring architectural 24-gauge standing-seam metal roofing to match the main residence.',
-          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          pill: 'HOME REMODEL PERMIT • OWNER MATCHED',
+          headline: '1140 Whispering Pines Ln — Full Roof & Addition',
+          submeta: 'Address: 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          why: 'Why it matters: $940,000 home remodel permit. Reach the homeowner directly with zero $150 shared lead fees.',
+          contact: 'Robert & Elena Harrison • Homeowners',
           draft:
-            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at 1140 Whispering Pines Ln in Havenwood. Our architectural metal team specializes in 24-gauge standing-seam metal roofing and custom copper flashing across New Braunfels with a weathertightness guarantee. Would you be open to a quick 10-minute site walk or color-sample drop-off this week?"',
-          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+            '"Hi Robert — I saw the city permit approved this week for your home remodel at 1140 Whispering Pines Ln. Our local crew matches new roof additions to your main house with a leak-free guarantee. Would you be open to a quick 10-minute quote walk this week?"',
+          replySender: 'ROBERT HARRISON (HOMEOWNER) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Jack — yes, we want to make sure the new standing-seam metal roof on the addition matches our main roof profile. Can you bring Kynar color samples by 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
+            '"Hi Jack — yes, we want the new roof section to match the rest of our home. Can you bring color samples by 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Robert — see you Thursday at 9:00 AM at 1140 Whispering Pines Ln with our 24-gauge standing-seam panel profiles and Kynar color chart. — Jack Williams • A-lert Roof Systems'
+            'Hi Robert — see you Thursday at 9:00 AM with color samples and a written quote. — Jack Williams'
         }
       }
     },
     hvac: {
-      tradeLabel: 'ELECTRICAL / HVAC (MEP)',
-      featuredTypeBadge:
-        'COMMERCIAL TENANT IMPROVEMENT & 800A MEP UPGRADE • TRADE RELEVANCE: ELECTRICAL & HVAC',
+      tradeLabel: 'HOME & COMMERCIAL REMODELS',
+      featuredTypeBadge: 'NEW REMODEL PERMIT • FILED YESTERDAY',
       featuredWhy:
-        'Commercial TI permits with mechanical and electrical upgrades give TDLR/TACLA licensed MEP contractors an early window to bid RTUs, switchgear, and high-bay lighting.',
+        'This remodel permit was just filed. Reach the builder or owner weeks before competitors hear about it.',
       featuredDraft:
-        '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our TDLR/TACLA-licensed MEP crew just wrapped a 22,000 sq ft commercial tenant finish-out two miles east off FM 306 and passed city inspection ahead of schedule. We have a crew opening next month and would love to drop off numbers on the 800A 3-phase switchgear, high-bay LED package, and 25-ton RTU mechanical scope. Mind if I send over our MEP spec sheet and COI this afternoon? — Carlos Mendez • Alamo Mechanical & Electrical"',
+        '"Hey Marcus — I saw the $240,000 commercial remodel permit filed for 1420 Industrial Pkwy in New Braunfels. Our licensed local crew just finished a similar job two miles away off FM 306. We have an opening next month and would love to give you a fast quote. Can I send our license and pricing today? — Carlos Mendez"',
       cards: {
         1: {
-          pill: 'PERMIT #BP-2026-08941 • $240,000 MEP & TI BUILDOUT',
-          headline: '18,500 Sq Ft Commercial TI Buildout & 800A MEP Upgrade',
-          submeta:
-            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
-          why: 'Why it matters: $1,850,000 assessed industrial facility requiring 3-phase power distribution, LED lighting, and packaged rooftop HVAC units.',
-          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          pill: 'PERMIT #BP-2026-08941 • $240,000 REMODEL',
+          headline: '$240,000 Commercial Building Remodel',
+          submeta: 'Address: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          why: 'Why it matters: $1,850,000 commercial building needing licensed local remodel crews next month.',
+          contact: 'Marcus Vance • Project Manager @ Apex Builders',
           draft:
-            '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our licensed MEP crew just wrapped a 22,000 sq ft commercial tenant finish-out two miles east off FM 306 and passed city inspection ahead of schedule. We would love to drop off numbers on the 800A 3-phase switchgear, LED high-bay package & 25-ton RTU mechanical scope. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"',
-          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
-          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+            '"Hey Marcus — I saw the $240,000 remodel permit filed for 1420 Industrial Pkwy in New Braunfels. Our licensed crew just finished a commercial build two miles away off FM 306. Can I send over our license and quote sheet today?"',
+          replySender: 'MARCUS VANCE (APEX BUILDERS) — SAMPLE REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, New Braunfels, TX 78130',
           replyBody:
-            '"Hey Carlos — we are still collecting MEP numbers for the 25-ton RTU curbed units and 800A panel upgrade at 1420 Industrial Pkwy, Suite B. Can your lead estimator walk the building Thursday at 9:00 AM?"',
+            '"Hey Carlos — we are still taking quotes for 1420 Industrial Pkwy. Can you walk the building with me Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hey Marcus — locking us in for Thursday at 9:00 AM at 1420 Industrial Pkwy, Suite B. I will bring our TDLR/TACLA licenses, $2M GL COI, and RTU lead-time sheet. — Carlos Mendez • Alamo Mechanical & Electrical'
+            'Hey Marcus — locking us in for Thursday at 9:00 AM at 1420 Industrial Pkwy with our license and insurance. — Carlos Mendez'
         },
         2: {
-          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
-          headline: 'Oakridge Commons & 3 Adjacent Retail Pads — HVAC PM & LED Retrofit',
-          submeta:
-            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
-          why: 'Why it matters: $14,200,000 multi-pad commercial acquisition seeking quarterly HVAC preventative maintenance and parking lot LED retrofits.',
-          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          pill: 'NEW PROPERTY OWNER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons — Full Property Upgrade',
+          submeta: 'Address: 2410 Gruene Rd, New Braunfels, TX 78130',
+          why: 'Why it matters: $14,200,000 property sale looking for fast, reliable local service crews.',
+          contact: 'Dana Sterling • Property Director @ Crestview Management',
           draft:
-            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex at 2410 Gruene Rd & Loop 337 in New Braunfels. Usually during the first 30 days of a transition, inherited mechanical and electrical vendors get re-evaluated. We carry full commercial coverage and specialize in common-area LED parking lot retrofits, breaker panel upgrades, and quarterly HVAC PM with a 4-hour emergency SLA. Can I swing by Thursday to leave you a clean CapEx & PM proposal?"',
-          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+            '"Hi Dana — congrats on buying Oakridge Commons at 2410 Gruene Rd in New Braunfels. New property owners usually line up dependable local crews right away. Can I stop by Thursday to leave our service rates?"',
+          replySender: 'DANA STERLING (CRESTVIEW MANAGEMENT) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-218635 • 2410 Gruene Rd, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Carlos — we are looking for a responsive local MEP vendor for quarterly RTU maintenance and exterior parking lot lighting at Oakridge Commons. Can you walk the property Thursday at 9:00 AM?"',
+            '"Hi Carlos — we need a fast local shop for ongoing repairs at Oakridge Commons. Can you walk the property Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Dana — Thursday at 9:00 AM at 2410 Gruene Rd works great. I will bring our quarterly commercial HVAC PM checklist, COI, and W-9. — Carlos Mendez • Alamo Mechanical & Electrical'
+            'Hi Dana — Thursday at 9:00 AM at 2410 Gruene Rd works great. Bringing our insurance and rate sheet. — Carlos Mendez'
         },
         3: {
-          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
-          headline: '1140 Whispering Pines Ln — Estate Addition, 48kW Generator & VRF HVAC',
-          submeta:
-            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
-          why: 'Why it matters: $940,000 estate addition permit ideal for service panel expansion, multi-zone VRF HVAC, and whole-home standby generator installation.',
-          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          pill: 'HOME REMODEL PERMIT • OWNER MATCHED',
+          headline: '1140 Whispering Pines Ln — Major Home Remodel',
+          submeta: 'Address: 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          why: 'Why it matters: $940,000 home remodel permit. Reach the owner directly before anyone else.',
+          contact: 'Robert & Elena Harrison • Homeowners',
           draft:
-            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at 1140 Whispering Pines Ln in Havenwood. Our residential MEP team specializes in service panel expansions, 48kW standby generator transfer switches, and multi-zone VRF HVAC across New Braunfels. Would you be open to a quick 10-minute site walk or load-calculation review this week?"',
-          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+            '"Hi Robert — I saw the city permit approved this week for your remodel at 1140 Whispering Pines Ln. Our licensed local team works clean and stays on schedule. Would you be open to a quick 10-minute quote walk this week?"',
+          replySender: 'ROBERT HARRISON (HOMEOWNER) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Carlos — we definitely want to add a whole-home standby generator and dedicated zoned HVAC while the addition electrical is open. Can you meet us at 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
+            '"Hi Carlos — yes, we are still getting quotes for the new addition. Can you meet us at 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Robert — locked in for Thursday at 9:00 AM at 1140 Whispering Pines Ln to review the panel load calculation and generator pad placement. — Carlos Mendez • Alamo Mechanical & Electrical'
+            'Hi Robert — locked in for Thursday at 9:00 AM at 1140 Whispering Pines Ln. — Carlos Mendez'
         }
       }
     },
     pools: {
-      tradeLabel: 'CUSTOM OUTDOOR, POOLS & FENCING',
-      featuredTypeBadge:
-        'COMMERCIAL SITE ENCLOSURE & PERIMETER SECURITY • TRADE RELEVANCE: FENCING, GATES & HARDSCAPE',
+      tradeLabel: 'HOME REMODELS',
+      featuredTypeBadge: 'NEW HOME REMODEL PERMIT • OWNER MATCHED',
       featuredWhy:
-        'Commercial buildouts and industrial yard permits frequently require perimeter security fencing, cantilever slide gates, bollards, and outdoor amenity hardscaping.',
+        'High-dollar home remodel permits let you reach homeowners directly without $150 shared lead fees.',
       featuredDraft:
-        '"Hey Marcus — saw the $240,000 commercial buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our AWS-certified site & perimeter crew just wrapped a multi-pad commercial security fencing and automated cantilever gate package two miles east off FM 306 ahead of schedule. We have a crew opening next month and would love to drop off numbers on the perimeter fencing, automated security gates, and masonry dumpster enclosure scope. Mind if I send over our commercial spec sheet and COI this afternoon? — Luke Mercer • Hill Country Outdoor & Perimeter"',
+        '"Hi Robert — I saw the city permit approved this week for your home remodel at 1140 Whispering Pines Ln. Our local crew has built dozens of projects in New Braunfels and keeps every yard clean. Would you be open to a quick 10-minute quote walk this week? — Luke Mercer"',
       cards: {
         1: {
-          pill: 'PERMIT #BP-2026-08941 • $240,000 PERIMETER & SITE SCOPE',
-          headline: '18,500 Sq Ft Commercial Buildout — Security Fencing & Gate Package',
-          submeta:
-            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
-          why: 'Why it matters: $1,850,000 industrial parcel (2.4 acres) requiring laydown yard security fencing, UL-325 gate operators, and steel bollards.',
-          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          pill: 'PERMIT #BP-2026-08941 • $240,000 EXTERIOR JOB',
+          headline: '$240,000 Commercial Exterior Upgrade',
+          submeta: 'Address: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          why: 'Why it matters: $1,850,000 commercial parcel needing outside site work before opening.',
+          contact: 'Marcus Vance • Project Manager @ Apex Builders',
           draft:
-            '"Hey Marcus — saw the $240,000 commercial buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our crew just wrapped a multi-pad commercial hardscape and controlled-access perimeter package two miles east off FM 306 ahead of schedule. We would love to drop off numbers on the commercial architectural perimeter fencing, automated security gates & hardscape plaza. Mind if I send over our spec sheet and bid calendar this afternoon?"',
-          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
-          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+            '"Hey Marcus — I saw the $240,000 permit filed for 1420 Industrial Pkwy in New Braunfels. Our local crew just wrapped a commercial job two miles away off FM 306. Can I send over our license and quote numbers today?"',
+          replySender: 'MARCUS VANCE (APEX BUILDERS) — SAMPLE REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, New Braunfels, TX 78130',
           replyBody:
-            '"Hey Luke — yes, we need pricing on 640 linear feet of 8-ft security fencing and two motorized cantilever gates at 1420 Industrial Pkwy, Suite B. Can you walk the perimeter Thursday at 9:00 AM?"',
+            '"Hey Luke — yes, we still need pricing on the outside work at 1420 Industrial Pkwy. Can you walk the site Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hey Marcus — Thursday at 9:00 AM at 1420 Industrial Pkwy, Suite B works great. I will bring our UL-325 gate operator specs, COI, and linear-foot pricing sheet. — Luke Mercer • Hill Country Outdoor & Perimeter'
+            'Hey Marcus — Thursday at 9:00 AM at 1420 Industrial Pkwy works great. Bringing our insurance and pricing sheet. — Luke Mercer'
         },
         2: {
-          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
-          headline: 'Oakridge Commons & 3 Adjacent Retail Pads — Amenity & Perimeter Upgrade',
-          submeta:
-            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
-          why: 'Why it matters: $14,200,000 multi-family & retail acquisition upgrading pool amenity decks, shade structures, and wrought-iron access gates.',
-          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          pill: 'NEW PROPERTY OWNER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons — Courtyard & Exterior Upgrade',
+          submeta: 'Address: 2410 Gruene Rd, New Braunfels, TX 78130',
+          why: 'Why it matters: $14,200,000 property sale upgrading outdoor common areas this quarter.',
+          contact: 'Dana Sterling • Property Director @ Crestview Management',
           draft:
-            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex at 2410 Gruene Rd & Loop 337 in New Braunfels. Usually during the first 30 days of a transition, exterior amenity and perimeter security vendors get re-evaluated. We carry full commercial coverage and specialize in commercial amenity modernization and wrought-iron perimeter security enclosures. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"',
-          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+            '"Hi Dana — congrats on buying Oakridge Commons at 2410 Gruene Rd in New Braunfels. New owners often refresh outdoor tenant areas during the first 30 days. Can I stop by Thursday to leave a quick quote?"',
+          replySender: 'DANA STERLING (CRESTVIEW MANAGEMENT) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-218635 • 2410 Gruene Rd, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Luke — we are planning to replace the perimeter access gates and resurface the pool courtyard deck at Oakridge Commons this quarter. Can you meet on site Thursday at 9:00 AM?"',
+            '"Hi Luke — we are planning to upgrade the main courtyard at Oakridge Commons soon. Can you meet on site Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Dana — locked in for Thursday at 9:00 AM at 2410 Gruene Rd to measure the perimeter gate openings and courtyard deck. Bringing our COI and W-9. — Luke Mercer • Hill Country Outdoor & Perimeter'
+            'Hi Dana — locked in for Thursday at 9:00 AM at 2410 Gruene Rd to measure and bring a quote. — Luke Mercer'
         },
         3: {
-          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
-          headline: '1140 Whispering Pines Ln — Estate Addition, Negative-Edge Pool & Cabana',
-          submeta:
-            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
-          why: 'Why it matters: $940,000 estate addition on 1.4 acres in Havenwood—prime fit for custom gunite pool, outdoor kitchen pavilion, and privacy masonry.',
-          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          pill: 'HOME REMODEL PERMIT • OWNER MATCHED',
+          headline: '1140 Whispering Pines Ln — Backyard & Home Remodel',
+          submeta: 'Address: 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          why: 'Why it matters: $940,000 home on 1.4 acres in New Braunfels. Zero shared lead competition.',
+          contact: 'Robert & Elena Harrison • Homeowners',
           draft:
-            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at 1140 Whispering Pines Ln in Havenwood. Our custom outdoor team specializes in negative-edge gunite pools, outdoor kitchen pavilions, and estate privacy masonry across New Braunfels. Because we coordinate directly with your addition grading and framing schedule, we keep your backyard build seamless. Would you be open to a quick 10-minute site walk this week?"',
-          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+            '"Hi Robert — I saw the city permit approved this week for your home remodel at 1140 Whispering Pines Ln. Our local crew coordinates cleanly with your build schedule so nothing gets delayed. Would you be open to a quick 10-minute site walk this week?"',
+          replySender: 'ROBERT HARRISON (HOMEOWNER) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Luke — we are hoping to start our outdoor kitchen cabana and pool excavation right after the addition slab is poured. Can you walk the backyard at 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
+            '"Hi Luke — we want to start the backyard work right after the addition wraps up. Can you walk the yard Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. I will bring 3D design examples from our recent Havenwood estate builds. — Luke Mercer • Hill Country Outdoor & Perimeter'
+            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. Bringing photos of recent neighborhood jobs. — Luke Mercer'
         }
       }
     },
     b2b: {
-      tradeLabel: 'B2B FACILITY & PROPERTY SERVICES',
-      featuredTypeBadge:
-        'COMMERCIAL BUILDOUT & POST-CONSTRUCTION TURNOVER • TRADE RELEVANCE: B2B COMMERCIAL SERVICES',
+      tradeLabel: 'PROPERTY SALES',
+      featuredTypeBadge: 'COMMERCIAL PROPERTY SALE • NEW OWNER RECORD',
       featuredWhy:
-        'Commercial buildouts and property management transitions create immediate demand for post-construction final clean, exterior restoration, lot striping, and recurring facility contracts.',
+        'When a commercial building sells, the new manager hires fresh local contractors within 30 days.',
       featuredDraft:
-        '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our OSHA-certified commercial turnover crew just wrapped a 22,000 sq ft commercial post-construction detailing & lot striping package two miles east off FM 306 ahead of CO inspection. We have capacity next month and would love to drop off numbers on the post-construction final clean, glass detailing, and exterior pressure restoration scope. Mind if I send over our commercial rate sheet and COI this afternoon? — Granteson Cole • Lone Star Facility Services"',
+        '"Hi Dana — congrats on buying Oakridge Commons at 2410 Gruene Rd in New Braunfels. New property managers usually review local service contractors right after closing. Our insured crew handles ongoing building upkeep with fast response times. Can I drop off our rate sheet Thursday? — Cole Mercer"',
       cards: {
         1: {
-          pill: 'PERMIT #BP-2026-08941 • $240,000 TURNOVER & FACILITY SCOPE',
-          headline: '18,500 Sq Ft Commercial Buildout & Post-Construction Turnkey',
-          submeta:
-            'Location: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130 • City of New Braunfels EnerGov #BP-2026-08941',
-          why: 'Why it matters: Every commercial TI buildout requires a bonded post-construction final clean, floor prep, and exterior detailing before Certificate of Occupancy.',
-          contact: 'Marcus Vance • Sr. PM @ Apex Commercial Builders',
+          pill: 'PERMIT #BP-2026-08941 • $240,000 COMMERCIAL JOB',
+          headline: '$240,000 Commercial Building Finish-Out',
+          submeta: 'Address: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+          why: 'Why it matters: Every commercial build needs reliable local crews before final city sign-off.',
+          contact: 'Marcus Vance • Project Manager @ Apex Builders',
           draft:
-            '"Hey Marcus — saw the $240,000 commercial TI buildout permit (#BP-2026-08941) filed for 1420 Industrial Pkwy, Suite B in New Braunfels. Our crew just wrapped a 22,000 sq ft commercial turnover package two miles east off FM 306 ahead of schedule. We would love to drop off numbers on the post-construction final spec detailing, exterior pressure restoration & ongoing facility contract. Mind if I send over our commercial spec sheet and COI this afternoon?"',
-          replySender: 'MARCUS VANCE (APEX COMMERCIAL BUILDERS) — SIMULATED REPLY',
-          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130',
+            '"Hey Marcus — I saw the $240,000 building permit filed for 1420 Industrial Pkwy in New Braunfels. Our insured crew just wrapped a large commercial job two miles away off FM 306. Can I send over our commercial rate sheet today?"',
+          replySender: 'MARCUS VANCE (APEX BUILDERS) — SAMPLE REPLY',
+          replyMeta: 'Permit #BP-2026-08941 • 1420 Industrial Pkwy, New Braunfels, TX 78130',
           replyBody:
-            '"Hey Granteson — we always need reliable post-construction final clean and parking lot striping subs before CO walk-throughs. Can you walk 1420 Industrial Pkwy, Suite B this Thursday at 9:00 AM?"',
+            '"Hey Cole — we always need dependable local crews before final walkthroughs. Can you walk 1420 Industrial Pkwy this Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hey Marcus — locking us in for Thursday at 9:00 AM at 1420 Industrial Pkwy, Suite B with our per-square-foot turnover rate sheet, COI, and W-9. — Granteson Cole • Lone Star Facility Services'
+            'Hey Marcus — locking us in for Thursday at 9:00 AM at 1420 Industrial Pkwy with our rate sheet and insurance. — Cole Mercer'
         },
         2: {
-          pill: 'COMMERCIAL DEED TRANSFER • 140-UNIT COMPLEX',
-          headline: 'Oakridge Commons & 3 Adjacent Retail Pads — Annual Facility Contract',
-          submeta:
-            'Location: 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130 • Parcel #CAD-78130-218635',
-          why: 'Why it matters: $14,200,000 property transition. Ideal fit for B2B Deal Scout ($297/mo) targeting recurring exterior maintenance and porter contracts.',
-          contact: 'Dana Sterling • Regional Facilities Dir. @ Crestview Mgmt',
+          pill: 'NEW PROPERTY OWNER • 140-UNIT COMPLEX',
+          headline: 'Oakridge Commons — Annual Property Upkeep',
+          submeta: 'Address: 2410 Gruene Rd, New Braunfels, TX 78130',
+          why: 'Why it matters: $14,200,000 property sale. One annual contract covers $199/mo Recon for years.',
+          contact: 'Dana Sterling • Property Director @ Crestview Management',
           draft:
-            '"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex at 2410 Gruene Rd & Loop 337 in New Braunfels. Usually during the first 30 days of a transition, inherited facility maintenance vendors get re-evaluated. We carry full commercial coverage and specialize in annual exterior facility maintenance, common-area porter services, and day-1 vendor transitions. Can I swing by Thursday to leave you a clean service proposal?"',
-          replySender: 'DANA STERLING (CRESTVIEW COMMERCIAL MGMT) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-218635 • 2410 Gruene Rd & Loop 337, New Braunfels, TX 78130',
+            '"Hi Dana — congrats on buying the 140-unit Oakridge Commons property at 2410 Gruene Rd in New Braunfels. New managers usually review outside service contractors during the first month. Can I swing by Thursday to leave a simple monthly service quote?"',
+          replySender: 'DANA STERLING (CRESTVIEW MANAGEMENT) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-218635 • 2410 Gruene Rd, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Granteson — we are actively rebidding the exterior pressure washing, lot sweeping, and weekly common-area porter contract for Oakridge Commons. Can you walk the property with me Thursday at 9:00 AM?"',
+            '"Hi Cole — we are taking fresh bids for outside building upkeep at Oakridge Commons. Can you walk the property with me Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Dana — Thursday at 9:00 AM at 2410 Gruene Rd works great. I will bring our commercial SLA checklist, COI, W-9, and monthly contract pricing. — Granteson Cole • Lone Star Facility Services'
+            'Hi Dana — Thursday at 9:00 AM at 2410 Gruene Rd works great. Bringing our insurance and monthly pricing. — Cole Mercer'
         },
         3: {
-          pill: 'CUSTOM ADDITION PERMIT + COUNTY PARCEL MATCH',
-          headline: '1140 Whispering Pines Ln — Custom Estate Turn-Key Detailing & Maintenance',
-          submeta:
-            'Location: 1140 Whispering Pines Ln (Havenwood), New Braunfels, TX 78130 • Comal CAD #CAD-78130-90418A',
-          why: 'Why it matters: $940,000 estate addition requiring post-construction fine detailing, window restoration, and exterior stone sealing.',
-          contact: 'Dr. Robert & Elena Harrison • Sample Property Owners',
+          pill: 'HOME REMODEL PERMIT • OWNER MATCHED',
+          headline: '1140 Whispering Pines Ln — Large Home Project',
+          submeta: 'Address: 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+          why: 'Why it matters: $940,000 home remodel needing exterior cleanup and ongoing care.',
+          contact: 'Robert & Elena Harrison • Homeowners',
           draft:
-            '"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at 1140 Whispering Pines Ln in Havenwood. Our team specializes in custom estate post-construction commissioning, exterior limestone sealing, and preventative maintenance schedules across New Braunfels. Would you be open to a quick 10-minute site walk or estimate drop-off this week?"',
-          replySender: 'DR. ROBERT HARRISON (PROPERTY OWNER) — SIMULATED REPLY',
-          replyMeta: 'Parcel #CAD-78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
+            '"Hi Robert — I saw the city permit approved this week for your home remodel at 1140 Whispering Pines Ln. Our local team handles exterior detailing and ongoing property care across New Braunfels. Would you be open to a quick 10-minute quote walk this week?"',
+          replySender: 'ROBERT HARRISON (HOMEOWNER) — SAMPLE REPLY',
+          replyMeta: 'Parcel #78130-90418A • 1140 Whispering Pines Ln, New Braunfels, TX 78130',
           replyBody:
-            '"Hi Granteson — we will definitely need a thorough post-construction clean and exterior stone wash once the addition wraps up. Can you stop by 1140 Whispering Pines Ln Thursday at 9:00 AM?"',
+            '"Hi Cole — we will definitely need a full outside cleanup once the remodel wraps up. Can you stop by Thursday at 9:00 AM?"',
           suggestedFollowUp:
-            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. I will bring our estate detailing checklist and references. — Granteson Cole • Lone Star Facility Services'
+            'Hi Robert — Thursday at 9:00 AM at 1140 Whispering Pines Ln works great. — Cole Mercer'
         }
       }
     }
@@ -636,12 +616,51 @@
 
   /* ==========================================================================
      3. LIVE TERRITORY ZIP CODE AVAILABILITY CHECKER (/api/recon/availability)
+        + DYNAMIC STRIPE ?client_reference_id= WIRING
      ========================================================================== */
   const zipCheckerForm = document.getElementById('zip-checker-form');
   const zipCheckerTrade = document.getElementById('zip-checker-trade');
   const zipCheckerInput = document.getElementById('zip-checker-input');
   const zipCheckerResult = document.getElementById('zip-checker-result');
   const zipCheckerStatusText = document.getElementById('zip-checker-status-text');
+
+  function syncStripeClientReferenceIds(zip, trade) {
+    const safeZip = (String(zip || '78130').match(/\b\d{5}\b/) || ['78130'])[0];
+    const safeTradeSlug = String(trade || 'Commercial_Concrete')
+      .replace(/[^A-Za-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 40) || 'Commercial_Concrete';
+    const refId = `${safeZip}_${safeTradeSlug}`;
+
+    document.querySelectorAll('a[data-stripe-base]').forEach((link) => {
+      const base = link.getAttribute('data-stripe-base');
+      if (base) {
+        link.href = `${base}?client_reference_id=${encodeURIComponent(refId)}`;
+      }
+    });
+
+    const t1Label = document.getElementById('tier-1-checkout-label');
+    const t2Label = document.getElementById('tier-2-checkout-label');
+    const t3Label = document.getElementById('tier-3-checkout-label');
+    if (t1Label) t1Label.textContent = `Start 7-Day Trial in ${safeZip} →`;
+    if (t2Label) t2Label.textContent = `Lock Zip ${safeZip} — Start 7-Day Trial →`;
+    if (t3Label) t3Label.textContent = `Lock Zip ${safeZip} — Start 7-Day Trial →`;
+  }
+
+  if (zipCheckerTrade) {
+    zipCheckerTrade.addEventListener('change', () => {
+      const rawZip = zipCheckerInput ? zipCheckerInput.value.trim() : '78130';
+      syncStripeClientReferenceIds(rawZip, zipCheckerTrade.value);
+    });
+  }
+  if (zipCheckerInput) {
+    zipCheckerInput.addEventListener('input', () => {
+      const tradeVal = zipCheckerTrade ? zipCheckerTrade.value : 'Commercial Concrete';
+      if (/\b\d{5}\b/.test(zipCheckerInput.value)) {
+        syncStripeClientReferenceIds(zipCheckerInput.value, tradeVal);
+      }
+    });
+  }
 
   if (zipCheckerForm) {
     zipCheckerForm.addEventListener('submit', async (e) => {
@@ -650,8 +669,10 @@
       const trade = zipCheckerTrade ? zipCheckerTrade.value : 'Commercial Concrete';
       const cleanZip = (rawZip.match(/\b\d{5}\b/) || ['78130'])[0];
 
+      syncStripeClientReferenceIds(cleanZip, trade);
+
       if (zipCheckerStatusText) {
-        zipCheckerStatusText.textContent = `Checking live territory capacity for ${trade} in ${cleanZip}...`;
+        zipCheckerStatusText.textContent = `Checking open slots in ${cleanZip}...`;
       }
 
       try {
@@ -666,12 +687,12 @@
             zipCheckerResult.className =
               'mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs';
             zipCheckerStatusText.className = 'font-mono-telemetry text-emerald-300 font-bold';
-            zipCheckerStatusText.textContent = `✓ ZIP ${data.zipCode} (${data.city}) OPEN FOR ${trade.toUpperCase()} — ${data.statusBadge}`;
+            zipCheckerStatusText.textContent = `✓ ZIP ${data.zipCode} (${data.city}) IS OPEN — Start your 7-day free trial below`;
           } else {
             zipCheckerResult.className =
               'mt-3 p-3 rounded-xl bg-amber-950/50 border border-amber-500/50 flex flex-wrap items-center justify-between gap-2 text-xs';
             zipCheckerStatusText.className = 'font-mono-telemetry text-amber-300 font-bold';
-            zipCheckerStatusText.textContent = `🔒 ${data.statusBadge} — ${data.statusReason}`;
+            zipCheckerStatusText.textContent = `🔒 ZIP ${data.zipCode} SOLD OUT — Nearby open zip codes: 78130, 78132, 78258`;
           }
           return;
         }
@@ -684,12 +705,13 @@
           zipCheckerResult.className =
             'mt-3 p-3 rounded-xl bg-amber-950/50 border border-amber-500/50 flex flex-wrap items-center justify-between gap-2 text-xs';
           zipCheckerStatusText.className = 'font-mono-telemetry text-amber-300 font-bold';
-          zipCheckerStatusText.textContent = `🔒 LOCKED • TIER 3 EXCLUSIVE CLAIMED IN 79999 — Adjacent open territories: 78130, 78132, 78258.`;
+          zipCheckerStatusText.textContent =
+            '🔒 ZIP 79999 SOLD OUT — Nearby open zip codes: 78130, 78132, 78258';
         } else {
           zipCheckerResult.className =
             'mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs';
           zipCheckerStatusText.className = 'font-mono-telemetry text-emerald-300 font-bold';
-          zipCheckerStatusText.textContent = `✓ ZIP ${cleanZip} OPEN FOR ${trade.toUpperCase()} — Commercial & Sub Permit Radar & Full Territory Dominion Available`;
+          zipCheckerStatusText.textContent = `✓ ZIP ${cleanZip} IS OPEN — Lock your 7-day free trial below`;
         }
       }
     });

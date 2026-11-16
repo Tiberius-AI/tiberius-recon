@@ -276,12 +276,12 @@ function resolveWatchPayload({
     });
 
   const title = isPersonalized
-    ? `${resolvedCompany} — 7:00 AM Permit Recon Walkthrough (${resolvedZip} • ${resolvedCity})`
-    : 'Tiberius Recon™ — 90-Second Autonomous Permit & CAD Tax Roll Walkthrough';
+    ? `${resolvedCompany} — 7:00 AM Local Permit Walkthrough (${resolvedZip} • ${resolvedCity})`
+    : 'See Local Building Permits Before Competitors Know They Exist';
 
   const subtitle = isPersonalized
-    ? `Prepared for ${resolvedContact ? `${resolvedContact} @ ` : ''}${resolvedCompany} • 3 Verified ${resolvedTrade} Opportunities in ${resolvedZip}`
-    : 'Standalone System Walkthrough • Watch how Recon sweeps overnight building permits & county tax rolls before 7:00 AM.';
+    ? `Prepared for ${resolvedContact ? `${resolvedContact} @ ` : ''}${resolvedCompany} • 3 New Local Permits in ${resolvedZip}`
+    : 'Watch how Recon pulls high-dollar county permits overnight so you reach owners first at 7:00 AM.';
 
   const statsKey = videoId || effectiveToken || 'default-master-walkthrough';
   const matchingEvents = store.watchTelemetry.filter((e) => e.targetKey === statsKey);
@@ -325,19 +325,19 @@ function resolveWatchPayload({
       {
         rank: 1,
         permitNumber: `PERMIT #${leadPermitNumber.replace(/^#/, '')}`,
-        headline: `${leadPermitValuation} Commercial Buildout & Site Scope`,
+        headline: `${leadPermitValuation} Commercial Building Upgrade`,
         address: `${leadPermitAddress}, ${resolvedCity}, TX ${resolvedZip}`,
-        pillText: `${leadPermitValuation} VALUATION • ${resolvedZip}`,
-        contactName: 'Marcus Vance • Apex Commercial Builders',
+        pillText: `${leadPermitValuation} JOB VALUE • ${resolvedZip}`,
+        contactName: 'Marcus Vance • Apex Builders',
         contactPhone: '(512) 555-0148',
         contactEmail: 'mvance@apexcommercialbuilders.com'
       },
       {
         rank: 2,
         permitNumber: 'PERMIT #2026-10412 BP',
-        headline: '$680,000 Commercial Shell & CapEx Package',
+        headline: '$680,000 New Commercial Building',
         address: `2840 ${metro.industrialCorridor}, ${resolvedCity}, TX ${resolvedZip}`,
-        pillText: '$680,000 VALUATION • CAD MATCHED',
+        pillText: '$680,000 JOB VALUE • OWNER MATCHED',
         contactName: 'Ryan Ogle • SpawGlass Contractors',
         contactPhone: '(512) 719-5251',
         contactEmail: 'austin.estimating@spawglass.com'
@@ -345,9 +345,9 @@ function resolveWatchPayload({
       {
         rank: 3,
         permitNumber: 'PERMIT #2026-10889 BP',
-        headline: '$410,000 Multi-Tenant Commercial Retrofit',
+        headline: '$410,000 Multi-Unit Commercial Remodel',
         address: `1916 State Hwy 46 W, ${resolvedCity}, TX ${resolvedZip}`,
-        pillText: '$410,000 VALUATION • PLANS FILED',
+        pillText: '$410,000 JOB VALUE • JUST FILED',
         contactName: 'Taylor Thaggard • 1916 HWY 46 LLC',
         contactPhone: '(214) 923-7363',
         contactEmail: 'estimating@commercialcorridor.com'

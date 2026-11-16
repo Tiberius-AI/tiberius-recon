@@ -120,6 +120,18 @@ body {
 }
 
 /* Typography Utilities */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+main p,
+main li,
+main blockquote {
+  text-wrap: pretty;
+}
+
 .font-display {
   font-family: var(--font-display);
   letter-spacing: -0.038em;

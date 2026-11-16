@@ -171,10 +171,10 @@
 
     if (watchModePill) {
       watchModePill.textContent = isAiStitch
-        ? '3% AI INTRO + 97% MASTER STITCH'
+        ? 'CUSTOM 5S INTRO + 90S VIDEO'
         : isPersonalized
-        ? `PERSONALIZED FOR ${String(p.companyName || '').toUpperCase()}`
-        : 'STANDALONE VIDEO WALKTHROUGH';
+        ? `PREPARED FOR ${String(p.companyName || '').toUpperCase()}`
+        : '90-SECOND VIDEO WALKTHROUGH';
     }
     if (watchViewsPill && telemetry.viewsCount) {
       watchViewsPill.textContent = `👁️ ${telemetry.viewsCount} views`;
@@ -182,15 +182,15 @@
 
     if (watchBadgeMode) {
       watchBadgeMode.textContent = isAiStitch
-        ? '🎙️ 3% AI PERSONALIZED INTRO + 97% SYSTEM WALKTHROUGH'
+        ? '🎙️ 5S CUSTOM INTRO + 90S WALKTHROUGH'
         : isPersonalized
         ? `🎯 PREPARED FOR ${String(p.companyName || '').toUpperCase()}`
-        : '90-SECOND SYSTEM WALKTHROUGH';
+        : '90-SECOND WALKTHROUGH';
     }
     if (watchBadgeTerritory) {
       watchBadgeTerritory.textContent = isPersonalized
-        ? `TERRITORY: ${p.territoryZip} (${p.city}) • ${String(p.tradeName || '').toUpperCase()}`
-        : 'OVERNIGHT PERMIT & CAD TAX ROLL ENGINE';
+        ? `ZIP ${p.territoryZip} (${p.city})`
+        : 'REAL COUNTY BUILDING PERMITS';
     }
 
     if (watchMainTitle) watchMainTitle.textContent = data.title;
@@ -213,33 +213,33 @@
     // Play Overlay Labels
     if (loomPlayCtaLabel) {
       loomPlayCtaLabel.textContent = isPersonalized
-        ? `▶ Watch ${p.companyName}'s 90-Second Recon Walkthrough`
-        : '▶ Click to Watch 90-Second Walkthrough (1:30)';
+        ? `▶ Watch ${p.companyName}'s 90-Second Walkthrough`
+        : '▶ Tap to Watch 90-Second Walkthrough (1:30)';
     }
     if (loomPlaySubLabel) {
       loomPlaySubLabel.textContent = isAiStitch
-        ? 'Includes 5s Personalized Intro + Full 7:00 AM System Walkthrough'
+        ? 'Includes 5s Custom Greeting + 90s Walkthrough'
         : isPersonalized
-        ? `Calibrated for ${p.territoryZip} (${p.city}) • ${p.tradeName}`
-        : 'Zero scrolling required • Instant playback';
+        ? `Local Permits in ${p.territoryZip} (${p.city})`
+        : 'No shared leads • $199/mo or $47/mo bundle';
     }
 
     if (watchIntroStatusLabel) {
       watchIntroStatusLabel.textContent = isAiStitch
-        ? 'Mode: 3% AI Intro (0:00–0:05) + 97% Master Video'
+        ? '5s Custom Intro + 90s Video'
         : isPersonalized
-        ? `Mode: Pre-Made Video + ${p.companyName} Wrapper`
-        : 'Mode: Pre-Made Master Video (No Personalization)';
+        ? `Prepared for ${p.companyName}`
+        : '90-Second Overview';
     }
 
     // Configure 5-Second Intro Board Content
     if (introBoardEyebrow) {
-      introBoardEyebrow.textContent = `07:00 AM PERMIT QUEUE • ${p.territoryZip} (${p.city}) • ${p.tradeName}`;
+      introBoardEyebrow.textContent = `7:00 AM PERMIT LIST • ${p.territoryZip} (${p.city})`;
     }
     if (introBoardHeadline) {
       introBoardHeadline.textContent = isPersonalized
-        ? `Prepared for ${p.companyName}: 3 Active ${p.tradeName} Permits Pulled Overnight`
-        : '3 Verified Commercial Permits Pulled Overnight in Your Territory';
+        ? `Prepared for ${p.companyName}: 3 New Local Permits Pulled Overnight`
+        : '3 Local Building Permits Pulled Overnight in Your County';
     }
     if (introBoardScriptCaption) {
       introBoardScriptCaption.textContent = `"${player.introScript || ''}"`;
@@ -274,7 +274,7 @@
     if (loomBubbleStatus) {
       loomBubbleStatus.textContent = isPersonalized
         ? `FOR ${String(p.contactFirstName || 'YOU').toUpperCase()}`
-        : 'BILLY • AI';
+        : 'BILLY';
     }
 
     // Reactions
@@ -291,13 +291,13 @@
     }
     if (watchSidebarHeading) {
       watchSidebarHeading.textContent = isPersonalized
-        ? `Open ${p.companyName}'s Live 7:00 AM Briefing`
-        : 'Test-Drive Your Live 7:00 AM Permit Briefing Queue';
+        ? `Open ${p.companyName}'s Live 7:00 AM List`
+        : 'One Extra Job Pays for $199/Mo Recon for Years';
     }
     if (watchSidebarDesc) {
       watchSidebarDesc.textContent = isPersonalized
-        ? `We loaded 3 unlocked ${p.tradeName} permits in ${p.territoryZip} (${p.city}) into a live sandbox for ${p.companyName}.${p.siteLeakSummary ? ` Plus: ${p.siteLeakSummary}.` : ''}`
-        : 'Open the live interactive briefing to inspect the 3 unlocked permits, expand the County Appraisal District tax roll X-Ray, and test the 1-tap Approve & Send workflow.';
+        ? `We loaded 3 local building permits in ${p.territoryZip} (${p.city}) for ${p.companyName}. Tap below to review them now.`
+        : 'Skip $150 shared Angi leads. Open the live 7:00 AM list now—or bundle Recon with a Smart Site for $47/mo.';
     }
     if (watchPrimaryCtaBtn && cta.primaryUrl) {
       watchPrimaryCtaBtn.href = cta.primaryUrl;

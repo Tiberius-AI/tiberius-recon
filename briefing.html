@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>07:00 AM Morning Recon Briefing | Tiberius Recon™</title>
-  <meta name="description" content="Your 7:00 AM Tiberius Recon™ Morning Briefing. Review verified overnight building permits, CAD tax roll matches, and 1-tap Approve & Send intros." />
+  <title>7:00 AM Permit List | Tiberius Recon™</title>
+  <meta name="description" content="Open your 7:00 AM Tiberius Recon™ list. See real local building permits and reach property owners first. $199/mo or $47/mo Smart Site bundle." />
 
-  <!-- Google Fonts & Fontshare General Sans (21st.dev G3 Typography) -->
+  <!-- Google Fonts & Fontshare General Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
 
-  <!-- Tailwind CSS via CDN configured for 21st.dev G3 Dark Glass -->
+  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -47,7 +47,7 @@
 <body class="g-root g3-root bg-subtle-grid text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
 
   <!-- ========================================================================
-       21ST.DEV 7-LAYER PROGRESSIVE BACKDROP-BLUR STICKY NAVBAR
+       STICKY NAVBAR
        ======================================================================== -->
   <header id="command-navbar" class="enterprise-navbar">
     <div class="g3-glass-bar" aria-hidden="true">
@@ -65,16 +65,16 @@
         <img
           src="/recon/images/logo4.png?v=white"
           onerror="this.onerror=null;this.src='images/logo4.png?v=white';"
-          alt="Tiberius AI — The Bad Boys of AI."
+          alt="Tiberius AI"
           class="brand-logo-img"
         />
       </a>
 
       <nav aria-label="Briefing Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-700">
-        <a id="nav-back-login-link" href="/recon/login" class="hover:text-blue-700 transition-colors">← Back to Account Portal</a>
+        <a id="nav-back-login-link" href="/recon/login" class="hover:text-blue-700 transition-colors">← Account Sign-In</a>
         <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
           <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
-          <span id="nav-territory-pill">07:00 AM BRIEFING QUEUE • LIVE</span>
+          <span id="nav-territory-pill">7:00 AM PERMIT LIST • LIVE</span>
         </span>
       </nav>
 
@@ -84,14 +84,14 @@
           href="/recon/inbox"
           class="btn-trust-emerald px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
         >
-          <span>💬 Conversation Room (2 Hot Replies)</span>
+          <span>💬 Replies Room (2 New)</span>
         </a>
         <a
           id="nav-command-link"
           href="/recon/command"
           class="btn-outline-slate px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
         >
-          <span>🧠 Shop Knowledge Base &amp; Command</span>
+          <span>⚙️ Shop Settings</span>
         </a>
         <a
           id="nav-switch-account-link"
@@ -108,7 +108,7 @@
     <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
 
       <!-- ====================================================================
-           OVERNIGHT TELEMETRY & 7:00 AM BRIEFING HEADER CARD (G3 SHADER STAGE)
+           7:00 AM BRIEFING HEADER CARD
            ==================================================================== -->
       <section class="enterprise-card g3-hero-stage bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7 mb-7">
         <div class="g3-hero-bg" aria-hidden="true" style="opacity: 0.22;">
@@ -120,31 +120,31 @@
             <div class="flex flex-wrap items-center gap-2 mb-2.5">
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
                 <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-                <span>07:00:00 AM MORNING RECON BRIEFING</span>
+                <span>7:00 AM LOCAL PERMIT LIST</span>
               </span>
               <span id="briefing-demo-badge" class="px-3 py-1 rounded-full bg-amber-50 border border-amber-300 font-mono-telemetry text-xs text-amber-900 font-bold">
-                EXAMPLE RECON BRIEFING • ILLUSTRATIVE DEMO
+                SAMPLE PREVIEW • 3 DEMO CARDS
               </span>
               <span id="briefing-tier-badge" class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
-                TIER 2 • COMMERCIAL PERMIT RADAR
+                LOCAL PERMIT RADAR • $199/MO
               </span>
               <span id="briefing-exclusivity-badge" class="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 font-mono-telemetry text-xs text-amber-800">
-                ✓ ZIP CAPACITY VERIFIED
+                ✓ ZIP SLOT OPEN
               </span>
             </div>
 
             <h1 id="briefing-main-title" class="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-[#0F172A] tracking-tight">
-              Good Morning — Your 3 Verified Recon Cards Are Ready.
+              Morning — See Your 3 Local Building Permits Before Competitors Do.
             </h1>
             <p id="briefing-subtitle" class="text-sm sm:text-base text-[#334155] mt-1.5">
-              Swept at 2:04 AM from municipal permit portals &amp; cross-checked at 4:30 AM against County Appraisal District (CAD) tax rolls. Nothing sends without your tap.
+              Pulled overnight from local permit offices and county property records. Reach owners first—nothing sends without your tap.
             </p>
           </div>
 
-          <!-- Right Status Counter & Reset / Command Buttons -->
+          <!-- Right Status Counter & Action Buttons -->
           <div class="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-2.5 shrink-0">
             <div id="briefing-approved-counter" class="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs sm:text-sm text-emerald-800 font-bold text-center">
-              Deals Approved This Morning: 0/3
+              Jobs Approved Today: 0/3
             </div>
             <div class="flex flex-wrap items-center gap-2 justify-end">
               <button
@@ -152,77 +152,77 @@
                 type="button"
                 class="btn-trust-emerald px-3.5 py-1.5 rounded-lg text-xs font-mono-telemetry cursor-pointer"
               >
-                🛰️ Pull Real Live Permits (Zero-API Agent)
+                🛰️ Pull Fresh Live Permits
               </button>
               <button
                 id="briefing-run-night-sweep-btn"
                 type="button"
                 class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-mono-telemetry cursor-pointer"
               >
-                ⚡ Re-Run 2:00 AM Sweep
+                ⚡ Refresh Night Check
               </button>
               <button
                 id="briefing-export-csv-btn"
                 type="button"
                 class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-mono-telemetry cursor-pointer"
               >
-                ⬇️ Export CSV
+                ⬇️ Download CSV
               </button>
               <button
                 id="briefing-reset-all-btn"
                 type="button"
                 class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-mono-telemetry cursor-pointer"
               >
-                Reset Queue ↺
+                Reset List ↺
               </button>
               <a
                 id="mobile-command-link"
                 href="command.html"
                 class="md:hidden btn-executive-navy px-3 py-1.5 rounded-lg text-xs font-mono-telemetry"
               >
-                ⚙️ Command
+                ⚙️ Settings
               </a>
             </div>
           </div>
         </div>
 
-        <!-- Live Territory & Trade Calibrator Strip -->
+        <!-- Zip & Job Focus Filter Strip -->
         <div class="pt-5 grid grid-cols-1 md:grid-cols-12 gap-3.5 items-end">
           <div class="md:col-span-4">
             <label for="calibrator-trade-select" class="block text-[11px] font-mono-telemetry text-slate-600 mb-1">
-              ACTIVE SHOP TRADE (LIVE CALIBRATION):
+              YOUR JOB FOCUS:
             </label>
             <select id="calibrator-trade-select" class="enterprise-select text-sm py-2">
-              <option value="Commercial Concrete">Commercial Concrete &amp; Paving</option>
-              <option value="Roofing / Exteriors">Roofing / Storm Restoration &amp; Exteriors</option>
-              <option value="Electrical / HVAC">Electrical, Mechanical &amp; HVAC (MEP)</option>
-              <option value="Pools / Fencing / Custom Home">Custom Pools, Fencing &amp; Outdoor</option>
-              <option value="B2B / Commercial Services">B2B / Commercial Property Services</option>
+              <option value="Commercial Concrete">Commercial Builds</option>
+              <option value="Roofing / Exteriors">Roofing</option>
+              <option value="Electrical / HVAC">Remodeling</option>
+              <option value="Pools / Fencing / Custom Home">Outdoor Projects</option>
+              <option value="B2B / Commercial Services">Property Maintenance</option>
             </select>
           </div>
 
           <div class="md:col-span-3">
             <label for="calibrator-zip-input" class="block text-[11px] font-mono-telemetry text-slate-600 mb-1">
-              TARGET ZIP / METRO (CAD X-RAY):
+              YOUR 5-DIGIT ZIP CODE:
             </label>
             <input
               id="calibrator-zip-input"
               type="text"
               value="78130"
-              placeholder="e.g. 78130, 78257, 78746, 75024"
+              placeholder="e.g. 78130, 78257, 78746"
               class="enterprise-input text-sm py-2"
             />
           </div>
 
           <div class="md:col-span-3">
             <label for="calibrator-landmark-input" class="block text-[11px] font-mono-telemetry text-slate-600 mb-1">
-              NEARBY JOB LANDMARK (SENTENCE #2):
+              NEARBY PAST JOB STREET (OPTIONAL):
             </label>
             <input
               id="calibrator-landmark-input"
               type="text"
               value=""
-              placeholder="e.g. two miles east on Commerce Dr (leave blank to rotate 3 proof angles)"
+              placeholder="e.g. two miles east on Commerce Dr"
               class="enterprise-input text-sm py-2"
             />
           </div>
@@ -233,34 +233,34 @@
               type="button"
               class="btn-executive-navy w-full py-2.5 px-3 rounded-xl text-xs font-bold cursor-pointer"
             >
-              Recalibrate Cards →
+              Update List →
             </button>
           </div>
         </div>
 
-        <!-- Past Days' Briefings & Daily History Switcher -->
+        <!-- Past Days' Briefings Switcher -->
         <div id="briefing-history-bar" class="mt-4 pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <!-- Populated dynamically by briefing.js -->
         </div>
 
-        <!-- Overnight Telemetry Banner (Revealed on 2:00 AM Sweep Trigger) -->
+        <!-- Night Check Status Banner -->
         <div id="night-sweep-telemetry-banner" class="hidden mt-4 p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-[#1E40AF]">
-          <span id="night-sweep-telemetry-text">✓ 02:00 AM SWEEP COMPLETE: 476 PORTAL ROWS SCANNED • 100% ZERO-HALLUCINATION VERIFIED</span>
-          <span class="text-emerald-700 font-bold">ALL 4 CONNECTORS ONLINE ✓</span>
+          <span id="night-sweep-telemetry-text">✓ NIGHT CHECK COMPLETE: LOCAL PERMITS &amp; OWNER RECORDS MATCHED</span>
+          <span class="text-emerald-700 font-bold">LIVE RECORDS VERIFIED ✓</span>
         </div>
       </section>
 
       <!-- ====================================================================
            UNLOCKED MORNING RECON CARDS GRID
            ==================================================================== -->
-      <section aria-label="Unlocked Morning Recon Cards" class="mb-10">
+      <section aria-label="Unlocked Morning Permit Cards" class="mb-10">
         <div id="briefing-cards-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           <!-- Populated dynamically by briefing.js -->
         </div>
       </section>
 
       <!-- ====================================================================
-           LOCKED TERRITORY OVERFLOW VAULT (TRIAL CONVERSION ENGINE)
+           LOCKED TERRITORY VAULT (TRIAL CONVERSION ENGINE)
            ==================================================================== -->
       <section id="briefing-locked-vault" class="hidden locked-vault-panel rounded-2xl p-6 sm:p-7 shadow-md mb-10">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
@@ -268,10 +268,10 @@
             <span class="text-2xl flex-shrink-0" aria-hidden="true">🔒</span>
             <div>
               <h2 id="locked-vault-heading" class="font-display font-extrabold text-base sm:text-lg text-amber-300">
-                6 Additional Recon Opportunities in Your Territory Queue (Illustrative Demo Preview — 3 Sample Cards Shown)
+                6 More High-Dollar Local Jobs Waiting in Your Zip Code
               </h2>
               <p class="text-xs sm:text-sm text-slate-200 mt-1">
-                This illustrative demo preview displays 3 sample cards. When you start your 7-Day Free Trial, your full daily territory queue is unlocked immediately ($0.00 charged today • cancel anytime before Day 8):
+                Stop paying $150 for shared Angi leads. Unlock all 9 daily jobs free for 7 days ($0 today, then $199/mo or $47/mo Smart Site bundle, zero contracts).
               </p>
             </div>
           </div>
@@ -283,7 +283,7 @@
               href="https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k?client_reference_id=78130_Commercial_Concrete"
               class="btn-outline-slate px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
             >
-              <span id="briefing-tier-1-checkout-label">Start B2B Trial in 78130 →</span>
+              <span id="briefing-tier-1-checkout-label">Start $199/Mo Trial in 78130 →</span>
             </a>
             <a
               id="briefing-tier-2-checkout-link"
@@ -291,7 +291,7 @@
               href="https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l?client_reference_id=78130_Commercial_Concrete"
               class="btn-trust-emerald px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
             >
-              <span id="briefing-tier-2-checkout-label">Lock Zip 78130 — Start 7-Day Trial →</span>
+              <span id="briefing-tier-2-checkout-label">Lock Zip 78130 — 7-Day Free Trial →</span>
             </a>
             <a
               id="briefing-tier-3-checkout-link"
@@ -299,14 +299,14 @@
               href="https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m?client_reference_id=78130_Commercial_Concrete"
               class="btn-executive-navy px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
             >
-              <span id="briefing-tier-3-checkout-label">Lock Zip 78130 — Start 7-Day Trial →</span>
+              <span id="briefing-tier-3-checkout-label">Exclusive Lock 78130 — Free Trial →</span>
             </a>
             <button
               id="unlock-full-queue-btn"
               type="button"
               class="btn-outline-slate px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <span>🔓 Preview Unblurred Queue</span>
+              <span>🔓 Preview All 9 Cards</span>
             </button>
           </div>
         </div>
@@ -317,44 +317,44 @@
       </section>
 
       <!-- ====================================================================
-           DISPATCHED OUTREACH AUDIT LOG
+           SENT MESSAGES LOG
            ==================================================================== -->
       <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7 mb-10">
         <div class="flex items-center justify-between gap-2 mb-4">
           <div>
-            <span class="font-mono-telemetry text-xs text-[#1E40AF]">HUMAN-IN-THE-LOOP AUDIT LOG</span>
+            <span class="font-mono-telemetry text-xs text-[#1E40AF]">YOUR APPROVED MESSAGES</span>
             <h2 class="font-display font-extrabold text-xl text-[#0F172A]">
-              Approved &amp; Dispatched Deals This Morning
+              Jobs Contacted Today
             </h2>
           </div>
           <span class="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
-            ✓ ZERO AUTO-SPAM GUARDRAIL ACTIVE
+            ✓ NOTHING SENDS WITHOUT YOUR TAP
           </span>
         </div>
 
         <div id="briefing-sent-logs-container" class="space-y-3 text-sm text-slate-600">
           <p class="text-xs font-mono-telemetry text-slate-500">
-            No cards dispatched yet this morning. Tap [ ✓ Approve &amp; Send ] on any card above to log and dispatch your 4-sentence intro.
+            Nothing sent yet today. Tap Send on any permit card above to reach the property owner first.
           </p>
         </div>
       </section>
 
       <!-- ====================================================================
-           ARCHIVED PAST DAYS' RECON CARDS VAULT (PERSISTENT MULTI-DAY LEDGER)
+           PAST DAYS' SAVED PERMIT CARDS
            ==================================================================== -->
-      <section id="briefing-archived-section" aria-label="Archived Past Days' Recon Cards" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7">
+      <section id="briefing-archived-section" aria-label="Saved Permit Cards From Past Days" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-200">
           <div>
-            <span class="font-mono-telemetry text-xs text-[#1E40AF]">📅 ARCHIVED PAST DAYS' BRIEFINGS • DEDUPLICATED LEDGER</span>
+            <span class="font-mono-telemetry text-xs text-[#1E40AF]">📅 SAVED PAST LISTS • NO REPEAT CARDS</span>
             <h2 class="font-display font-extrabold text-xl text-[#0F172A]">
-              Archived Recon Cards from Previous Days
+              Permit Cards Saved From Past Days
             </h2>
             <p class="text-xs sm:text-sm text-[#475569] mt-0.5">
-              Every morning's surfaced permits are permanently archived by date and recorded in <code class="font-mono text-xs">seen_permits</code> so they never repeat in future daily queues.
+              We save every morning permit list by date so old permits never repeat in tomorrow's list.
             </p>
           </div>
           <span id="briefing-archived-count-badge" class="px-3 py-1 rounded-full bg-slate-100 border border-slate-300 font-mono-telemetry text-xs text-slate-800 font-bold self-start sm:self-center">
-            📜 Past Days Archived
+            📜 Past Days Saved
           </span>
         </div>
 
@@ -368,10 +368,10 @@
 
   <footer class="section-bg-white border-t border-slate-200 py-8 px-4 sm:px-6 lg:px-8 mt-12">
     <div class="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B] font-mono-telemetry">
-      <span>TIBERIUS RECON™ • 07:00 AM MORNING BRIEFING ENGINE v2.6</span>
+      <span>TIBERIUS RECON™ • 7:00 AM PERMIT RADAR v2.6 • $199/MO OR $47/MO BUNDLE</span>
       <div class="flex items-center gap-5">
-        <a id="footer-back-login-link" href="/recon/login" class="text-blue-700 hover:underline">← Back to Account &amp; Sign-In Portal</a>
-        <a id="footer-command-link" href="/recon/command" class="text-emerald-700 hover:underline">Open Territory Command Portal →</a>
+        <a id="footer-back-login-link" href="/recon/login" class="text-blue-700 hover:underline">← Account Sign-In</a>
+        <a id="footer-command-link" href="/recon/command" class="text-emerald-700 hover:underline">Open Shop Settings →</a>
       </div>
     </div>
     <div class="g3-footer-pixel-wrap" aria-hidden="true">

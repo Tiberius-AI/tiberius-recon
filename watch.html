@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tiberius Recon™ Video Walkthrough | Standalone Watch Page</title>
-  <meta name="description" content="Watch the 90-second Tiberius Recon™ walkthrough. See how overnight municipal building permits and County Appraisal District tax rolls become your 7:00 AM morning briefing." />
+  <title>Tiberius Recon™ 90-Second Video | See Local Permits First</title>
+  <meta name="description" content="Watch the 90-second Tiberius Recon™ walkthrough. See local building permits before competitors know they exist. $199/mo or $47/mo Smart Site bundle." />
 
   <!-- Open Graph / Social Meta -->
   <meta property="og:type" content="video.other" />
-  <meta property="og:title" content="Tiberius Recon™ — 90-Second System Walkthrough" />
-  <meta property="og:description" content="Watch how Tiberius Recon searches local permits and property records overnight to prepare your 7:00 AM morning briefing." />
+  <meta property="og:title" content="Tiberius Recon™ — See Local Building Permits First (90s Video)" />
+  <meta property="og:description" content="Stop buying $150 shared Angi leads. See real county permits and reach property owners first at 7:00 AM." />
   <meta property="og:image" content="https://www.tiberius.ai/recon/images/tiberius-recon-poster.jpg" />
 
-  <!-- Google Fonts & Fontshare General Sans (21st.dev G3 Typography) -->
+  <!-- Google Fonts & Fontshare General Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400,500,600,700&amp;family=JetBrains+Mono:wght@500,600,700&amp;family=Outfit:wght@700,800&amp;family=Plus+Jakarta+Sans:wght@600,700,800&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Outfit:wght@700,800&amp;family=Plus+Jakarta+Sans:wght@600,700,800&amp;display=swap" rel="stylesheet" />
 
-  <!-- Tailwind CSS via CDN configured for 21st.dev G3 Dark Glass -->
+  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -49,7 +49,6 @@
 
   <link rel="stylesheet" href="/recon/styles.css?v=3.2" onerror="this.onerror=null;this.href='styles.css?v=3.2';" />
   <style>
-    /* Standalone Loom-Style Watch Theater Enhancements */
     .loom-theater-shell {
       background: radial-gradient(120% 120% at 50% 0%, rgba(37, 99, 235, 0.16) 0%, rgba(9, 9, 13, 0.98) 65%);
       border: 1px solid rgba(79, 111, 255, 0.32);
@@ -112,7 +111,7 @@
 <body class="g-root g3-root bg-[#07070A] text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
 
   <!-- ========================================================================
-       COMPACT LOOM-STYLE STANDALONE HEADER BAR (ZERO SALES PAGE DISTRACTION)
+       COMPACT STANDALONE VIDEO HEADER
        ======================================================================== -->
   <header id="watch-navbar" class="enterprise-navbar border-b border-slate-800/80">
     <div class="g3-glass-bar" aria-hidden="true">
@@ -126,20 +125,19 @@
       <div class="g3-dim"></div>
     </div>
     <div class="max-w-[1360px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 md:h-20 flex items-center justify-between gap-3">
-      <!-- Left: Brand Logo + Loom Video Badge -->
       <div class="flex items-center gap-3 min-w-0">
         <a href="/recon" class="brand-logo focus:outline-none shrink-0" aria-label="Tiberius Recon Home">
           <img
             src="/recon/images/logo4.png?v=white"
             onerror="this.onerror=null;this.src='images/logo4.png?v=white';"
-            alt="Tiberius AI — The Bad Boys of AI."
+            alt="Tiberius AI"
             class="h-9 sm:h-11 w-auto object-contain"
           />
         </a>
         <div class="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-800">
           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span id="watch-mode-pill">STANDALONE VIDEO WALKTHROUGH</span>
+            <span id="watch-mode-pill">90-SECOND VIDEO WALKTHROUGH</span>
           </span>
           <span id="watch-views-pill" class="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 font-mono-telemetry text-[11px] text-slate-300">
             👁️ 14 views
@@ -147,7 +145,6 @@
         </div>
       </div>
 
-      <!-- Right: Copy Watch Link, Personalize Studio Toggle & Live Briefing CTA -->
       <div class="flex items-center gap-2 shrink-0">
         <button
           id="watch-copy-link-btn"
@@ -161,43 +158,40 @@
           type="button"
           class="px-3 py-2 rounded-xl bg-blue-600/20 border border-blue-500/50 text-blue-200 hover:bg-blue-600/30 text-xs font-display font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
         >
-          <span>🎬 Personalize / Build Link</span>
+          <span>🎬 Build Custom Link</span>
         </button>
         <a
           id="nav-open-briefing-btn"
           href="/recon/briefing?token=demo-7am-briefing"
           class="hidden md:inline-flex btn-trust-emerald px-4 py-2 rounded-xl text-xs sm:text-sm font-bold items-center gap-1.5"
         >
-          <span>Open Live 7:00 AM Briefing →</span>
+          <span>Open 7:00 AM Permit List →</span>
         </a>
       </div>
     </div>
   </header>
 
-  <!-- ========================================================================
-       MAIN LOOM THEATER WORKSPACE (NO SCROLLING NEEDED — VIDEO RIGHT AT TOP)
-       ======================================================================== -->
   <main class="flex-1 py-5 sm:py-8">
     <div class="max-w-[1360px] mx-auto px-3 sm:px-6 lg:px-8 space-y-6">
 
       <!-- ====================================================================
-           COLLAPSIBLE "TIBERIUS LOOM STUDIO" (BUILD PRE-MADE OR 3%+97% AI LINKS)
+           COLLAPSIBLE CUSTOM LINK BUILDER DRAWER
            ==================================================================== -->
       <section
         id="loom-studio-drawer"
         class="hidden rounded-2xl bg-slate-900/95 border border-blue-500/40 p-5 sm:p-6 shadow-2xl space-y-5"
-        aria-label="Tiberius Loom Video Personalizer and Link Studio"
+        aria-label="Custom Video Link Builder"
       >
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b border-slate-800">
           <div>
             <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-[11px] text-blue-300 font-bold mb-1.5">
-              <span>🎬 TIBERIUS LOOM™ LINK BUILDER &amp; 3% + 97% AI STITCH STUDIO</span>
+              <span>🎬 CUSTOM PROSPECT VIDEO LINK BUILDER</span>
             </div>
             <h2 class="font-display font-extrabold text-lg sm:text-2xl text-white">
-              Build a Standalone Pre-Made Video or Personalized 3% + 97% Prospect Video in 10 Seconds
+              Create a Shareable Video Link With 3 Local Permits in 10 Seconds
             </h2>
             <p class="text-xs sm:text-sm text-slate-300 mt-0.5">
-              Choose <strong>Mode 1</strong> for a clean non-personalized walkthrough link, <strong>Mode 2</strong> to wrap the pre-made video in a contractor's name &amp; live permits ($0 cost), or <strong>Mode 3</strong> to stitch a 5-second ElevenLabs/Avatar intro onto the 97% master video.
+              Pick standard playback, add a shop name and three local permits, or attach a 5-second voice intro.
             </p>
           </div>
           <button
@@ -205,15 +199,14 @@
             type="button"
             class="self-start lg:self-center px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-mono-telemetry text-xs cursor-pointer"
           >
-            ✕ Close Studio
+            ✕ Close Builder
           </button>
         </div>
 
-        <!-- 3 Mode Tabs + Quick Prospect Picker -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
           <div class="lg:col-span-7">
             <label class="block font-mono-telemetry text-[11px] text-slate-300 uppercase mb-1.5">
-              1. SELECT VIDEO MODE:
+              1. PICK VIDEO MODE:
             </label>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" role="tablist">
               <button
@@ -221,172 +214,163 @@
                 data-studio-mode="PREMADE_STANDARD"
                 class="studio-mode-btn px-3 py-2.5 rounded-xl border border-slate-700 bg-slate-950 text-left cursor-pointer transition-all"
               >
-                <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">MODE 1 • $0 / INSTANT</div>
-                <div class="font-display font-bold text-xs text-white mt-0.5">Full Pre-Made Video</div>
-                <div class="text-[11px] text-slate-400">Zero personalization</div>
+                <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">MODE 1 • INSTANT</div>
+                <div class="font-display font-bold text-xs text-white mt-0.5">Standard 90s Video</div>
+                <div class="text-[11px] text-slate-400">General overview</div>
               </button>
               <button
                 type="button"
                 data-studio-mode="PERSONALIZED_WRAPPER"
                 class="studio-mode-btn active px-3 py-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-left cursor-pointer transition-all"
               >
-                <div class="font-mono-telemetry text-[10px] text-blue-300 font-bold">MODE 2 • $0 / 0s RENDER</div>
-                <div class="font-display font-bold text-xs text-white mt-0.5">Personalized Wrapper</div>
-                <div class="text-[11px] text-slate-300">Shop Name + 3 Live Permits</div>
+                <div class="font-mono-telemetry text-[10px] text-blue-300 font-bold">MODE 2 • CUSTOM PAGE</div>
+                <div class="font-display font-bold text-xs text-white mt-0.5">Shop Name + 3 Permits</div>
+                <div class="text-[11px] text-slate-300">Instant custom link</div>
               </button>
               <button
                 type="button"
                 data-studio-mode="AI_STITCH_3_97"
                 class="studio-mode-btn px-3 py-2.5 rounded-xl border border-slate-700 bg-slate-950 text-left cursor-pointer transition-all"
               >
-                <div class="font-mono-telemetry text-[10px] text-amber-300 font-bold">MODE 3 • 3% + 97% AI</div>
-                <div class="font-display font-bold text-xs text-white mt-0.5">5s AI Intro + 97% Master</div>
-                <div class="text-[11px] text-slate-400">ElevenLabs / HeyGen / D-ID</div>
+                <div class="font-mono-telemetry text-[10px] text-amber-300 font-bold">MODE 3 • VOICE INTRO</div>
+                <div class="font-display font-bold text-xs text-white mt-0.5">5s Intro + 90s Video</div>
+                <div class="text-[11px] text-slate-400">Custom voice greeting</div>
               </button>
             </div>
           </div>
 
           <div class="lg:col-span-5">
             <label for="studio-prospect-select" class="block font-mono-telemetry text-[11px] text-amber-300 uppercase mb-1.5">
-              2. AUTO-FILL FROM GATHERED META-RECON PROSPECTS (OPTIONAL):
+              2. LOAD SAMPLE LOCAL SHOP (OPTIONAL):
             </label>
             <select id="studio-prospect-select" class="enterprise-select text-xs sm:text-sm py-2.5">
-              <option value="">— Custom / Or Select a Gathered Prospect —</option>
-              <option value="preview-guadalupe-valley-concrete-paving-78130" data-company="Guadalupe Valley Concrete & Paving LLC" data-contact="Marcus Delgado" data-zip="78130" data-trade="Commercial Concrete">
-                Guadalupe Valley Concrete (Marcus Delgado • 78130)
+              <option value="">— Custom / Or Pick a Sample Shop —</option>
+              <option value="preview-guadalupe-valley-concrete-paving-78130" data-company="Guadalupe Valley Builders LLC" data-contact="Marcus Delgado" data-zip="78130" data-trade="Commercial Concrete">
+                Guadalupe Valley Builders (Marcus Delgado • 78130)
               </option>
-              <option value="preview-hill-country-standing-seam-exteriors-78130" data-company="Hill Country Standing Seam & Exteriors" data-contact="Garrett Boone" data-zip="78130" data-trade="Roofing / Exteriors">
-                Hill Country Standing Seam (Garrett Boone • 78130)
+              <option value="preview-hill-country-standing-seam-exteriors-78130" data-company="Hill Country Roofing Co" data-contact="Garrett Boone" data-zip="78130" data-trade="Roofing / Exteriors">
+                Hill Country Roofing (Garrett Boone • 78130)
               </option>
-              <option value="preview-comal-commercial-mechanical-electric-78130" data-company="Comal Commercial Mechanical & Electric" data-contact="Grant Mercer" data-zip="78130" data-trade="Electrical / HVAC">
-                Comal Commercial MEP (Grant Mercer • 78130)
+              <option value="preview-comal-commercial-mechanical-electric-78130" data-company="Comal Remodel Group" data-contact="Grant Mercer" data-zip="78130" data-trade="Electrical / HVAC">
+                Comal Remodel Group (Grant Mercer • 78130)
               </option>
-              <option value="preview-balcones-commercial-flatwork-tilt-wall-78701" data-company="Balcones Commercial Flatwork & Tilt-Wall" data-contact="Cole Henderson" data-zip="78701" data-trade="Commercial Concrete">
-                Balcones Commercial Flatwork (Cole Henderson • 78701)
-              </option>
-              <option value="preview-creekside-custom-pools-perimeter-iron-78130" data-company="Creekside Custom Pools & Perimeter Iron" data-contact="Tanner Vance" data-zip="78130" data-trade="Pools / Fencing / Custom Home">
-                Creekside Custom Pools (Tanner Vance • 78130)
-              </option>
-              <option value="preview-alamo-corridor-commercial-turnover-lot-striping-78258" data-company="Alamo Corridor Commercial Turnover & Lot Striping" data-contact="Devon Morales" data-zip="78258" data-trade="B2B / Commercial Services">
-                Alamo Corridor Commercial (Devon Morales • 78258)
+              <option value="preview-creekside-custom-pools-perimeter-iron-78130" data-company="Creekside Outdoor Projects" data-contact="Tanner Vance" data-zip="78130" data-trade="Pools / Fencing / Custom Home">
+                Creekside Outdoor Projects (Tanner Vance • 78130)
               </option>
             </select>
           </div>
         </div>
 
-        <!-- Prospect Details Inputs -->
         <div id="studio-personalization-fields" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           <div>
             <label for="studio-company-input" class="block font-mono-telemetry text-[11px] text-slate-300 mb-1">
-              PROSPECT COMPANY NAME:
+              COMPANY NAME:
             </label>
             <input
               id="studio-company-input"
               type="text"
-              placeholder="e.g. Guadalupe Valley Concrete"
+              placeholder="e.g. Hill Country Roofing"
               class="enterprise-input text-xs sm:text-sm py-2"
             />
           </div>
           <div>
             <label for="studio-contact-input" class="block font-mono-telemetry text-[11px] text-slate-300 mb-1">
-              DECISION-MAKER NAME:
+              OWNER NAME:
             </label>
             <input
               id="studio-contact-input"
               type="text"
-              placeholder="e.g. Marcus Delgado"
+              placeholder="e.g. Garrett Boone"
               class="enterprise-input text-xs sm:text-sm py-2"
             />
           </div>
           <div>
             <label for="studio-zip-input" class="block font-mono-telemetry text-[11px] text-slate-300 mb-1">
-              TARGET TERRITORY ZIP:
+              5-DIGIT ZIP CODE:
             </label>
             <input
               id="studio-zip-input"
               type="text"
               value="78130"
-              placeholder="e.g. 78130, 78701, 78258"
+              placeholder="e.g. 78130"
               class="enterprise-input text-xs sm:text-sm py-2"
             />
           </div>
           <div>
             <label for="studio-trade-select" class="block font-mono-telemetry text-[11px] text-slate-300 mb-1">
-              PRIMARY TRADE:
+              JOB FOCUS:
             </label>
             <select id="studio-trade-select" class="enterprise-select text-xs sm:text-sm py-2">
-              <option value="Commercial Concrete">Commercial Concrete &amp; Paving</option>
-              <option value="Roofing / Exteriors">Roofing / Standing Seam &amp; Exteriors</option>
-              <option value="Electrical / HVAC">Electrical, Mechanical &amp; HVAC (MEP)</option>
-              <option value="Pools / Fencing / Custom Home">Custom Pools, Fencing &amp; Outdoor</option>
-              <option value="B2B / Commercial Services">B2B / Commercial Property Services</option>
+              <option value="Commercial Concrete">Commercial Builds</option>
+              <option value="Roofing / Exteriors">Roofing</option>
+              <option value="Electrical / HVAC">Remodeling</option>
+              <option value="Pools / Fencing / Custom Home">Outdoor Projects</option>
+              <option value="B2B / Commercial Services">Property Maintenance</option>
             </select>
           </div>
         </div>
 
-        <!-- Mode 3: 3% AI Intro + 97% Master Stitch Controls -->
         <div id="studio-ai-stitch-box" class="hidden p-4 rounded-xl bg-slate-950/90 border border-amber-500/40 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="font-mono-telemetry text-xs text-amber-300 font-bold">
-              🎙️ 3% PERSONALIZED INTRO (0:00–0:05) → SEAMLESS HANDOFF TO 97% MASTER VIDEO (0:05–1:30)
+              🎙️ 5-SECOND CUSTOM GREETING (0:00–0:05) → MAIN WALKTHROUGH (0:05–1:30)
             </span>
             <button
               id="studio-generate-ai-btn"
               type="button"
               class="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-400/50 text-amber-200 hover:bg-amber-500/30 font-mono-telemetry text-xs font-bold cursor-pointer"
             >
-              ⚡ Auto-Write 5s Script &amp; Attach Voiceover
+              ⚡ Write 5s Greeting
             </button>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
             <div class="lg:col-span-6">
               <label for="studio-intro-script" class="block font-mono-telemetry text-[11px] text-slate-300 mb-1">
-                5-SECOND PERSONALIZED HOOK SCRIPT (ELEVENLABS / AVATAR):
+                5-SECOND GREETING SCRIPT:
               </label>
               <textarea
                 id="studio-intro-script"
                 rows="2"
                 class="enterprise-input text-xs sm:text-sm"
-                placeholder="Hey Marcus — I pulled three commercial concrete permits in 78130 for Guadalupe Valley Concrete this morning. Watch how your board works right here:"
+                placeholder="Hey Garrett — I pulled three new permits in 78130 for your shop this morning. Watch how your list works right here:"
               ></textarea>
             </div>
             <div class="lg:col-span-3">
               <label for="studio-voice-select" class="block font-mono-telemetry text-[11px] text-slate-300 mb-1">
-                BUILT-IN / ELEVENLABS VOICEOVER:
+                VOICE SAMPLE:
               </label>
               <select id="studio-voice-select" class="enterprise-select text-xs py-2">
-                <option value="/recon/voiceovers/recon-sample-expr-voice-2-m.wav">Billy (Founder Voice • Warm)</option>
-                <option value="/recon/voiceovers/recon-sample-expr-voice-3-m.wav">Texan Estimator (Fast &amp; Direct)</option>
-                <option value="/recon/voiceovers/recon-sample-expr-voice-4-m.wav">Senior Territory Scout (Calm)</option>
-                <option value="/recon/voiceovers/recon-sample-expr-voice-5-m.wav">Field Ops Director (Jobsite)</option>
+                <option value="/recon/voiceovers/recon-sample-expr-voice-2-m.wav">Billy (Founder • Warm)</option>
+                <option value="/recon/voiceovers/recon-sample-expr-voice-3-m.wav">Texas Rep (Direct)</option>
+                <option value="/recon/voiceovers/recon-sample-expr-voice-4-m.wav">Field Scout (Calm)</option>
+                <option value="/recon/voiceovers/recon-sample-expr-voice-5-m.wav">Ops Lead (Crisp)</option>
               </select>
               <input
                 id="studio-custom-audio-input"
                 type="text"
-                placeholder="Or paste custom ElevenLabs .mp3 URL"
+                placeholder="Or paste custom .mp3 URL"
                 class="enterprise-input text-xs py-1.5 mt-1.5"
               />
             </div>
             <div class="lg:col-span-3">
               <label for="studio-custom-video-input" class="block font-mono-telemetry text-[11px] text-slate-300 mb-1">
-                HEYGEN / D-ID 5s AVATAR MP4 (OPTIONAL):
+                5s INTRO MP4 (OPTIONAL):
               </label>
               <input
                 id="studio-custom-video-input"
                 type="text"
-                placeholder="Paste 5s HeyGen/D-ID .mp4 URL (or leave blank for Bubble)"
+                placeholder="Paste 5s .mp4 URL (optional)"
                 class="enterprise-input text-xs py-2"
               />
               <label class="inline-flex items-center gap-2 text-xs text-slate-300 mt-2 cursor-pointer">
                 <input id="studio-bubble-checkbox" type="checkbox" checked class="rounded border-slate-600" />
-                <span>Show Loom Circular Speaker Bubble</span>
+                <span>Show Speaker Bubble</span>
               </label>
             </div>
           </div>
         </div>
 
-        <!-- Studio Action Bar & Generated Share Link -->
         <div class="pt-2 border-t border-slate-800 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           <div class="flex flex-wrap items-center gap-2.5">
             <button
@@ -394,14 +378,14 @@
               type="button"
               class="btn-trust-emerald px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer"
             >
-              ✓ Apply to Player &amp; Generate Standalone Link
+              ✓ Apply &amp; Create Share Link
             </button>
             <button
               id="studio-reset-standard-btn"
               type="button"
               class="btn-outline-slate px-3.5 py-2.5 rounded-xl text-xs font-mono-telemetry cursor-pointer"
             >
-              ↺ Switch to Pure Pre-Made Video (No Personalization)
+              ↺ Reset to Standard Video
             </button>
           </div>
 
@@ -425,53 +409,46 @@
       </section>
 
       <!-- ====================================================================
-           LOOM 2-COLUMN THEATER STAGE:
-           Left (8 cols): Standalone Video Player + Circular Bubble + Chapters + Reactions
-           Right (4 cols): Prospect Context, 1-Click Live Briefing CTA & 3 Pulled Permits
+           2-COLUMN VIDEO STAGE + ACTION SIDEBAR
            ==================================================================== -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-        <!-- LEFT 8 COLS: STANDALONE LOOM VIDEO PLAYER STAGE -->
+        <!-- LEFT 8 COLS -->
         <div class="lg:col-span-8 space-y-4">
 
-          <!-- Video Title & Prospect Context Bar Above Player -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
             <div>
               <div class="flex flex-wrap items-center gap-2 mb-1">
                 <span id="watch-badge-mode" class="px-2.5 py-0.5 rounded-md bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-[11px] text-blue-300 font-bold">
-                  90-SECOND SYSTEM WALKTHROUGH
+                  90-SECOND WALKTHROUGH
                 </span>
                 <span id="watch-badge-territory" class="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 font-mono-telemetry text-[11px] text-emerald-300 font-bold">
-                  OVERNIGHT PERMIT &amp; CAD TAX ROLL ENGINE
+                  REAL COUNTY BUILDING PERMITS
                 </span>
               </div>
               <h1 id="watch-main-title" class="font-display font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-tight leading-snug">
-                Tiberius Recon™ — 90-Second Autonomous Permit &amp; CAD Tax Roll Walkthrough
+                See Local Building Permits Before Competitors Know They Exist
               </h1>
               <p id="watch-main-subtitle" class="text-xs sm:text-sm text-slate-300 mt-0.5">
-                Standalone System Walkthrough • Watch how Recon sweeps overnight building permits &amp; county tax rolls before 7:00 AM.
+                Watch how Recon pulls high-dollar county permits overnight so you reach owners first at 7:00 AM.
               </p>
             </div>
           </div>
 
-          <!-- Loom Theater Card Container -->
           <div class="loom-theater-shell rounded-2xl sm:rounded-3xl p-2.5 sm:p-4">
 
-            <!-- Video Viewport (16:9) -->
             <div id="loom-player-stage" class="loom-video-viewport group">
 
-              <!-- Top Personalized Loom Pill Inside Video Frame (Visible When Personalized) -->
               <div
                 id="loom-personalized-banner"
                 class="hidden absolute top-3 left-3 right-3 sm:right-auto z-30 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-emerald-400/50 backdrop-blur-md shadow-lg"
               >
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                 <span id="loom-personalized-banner-text" class="font-mono-telemetry text-[11px] text-emerald-300 font-bold truncate">
-                  PREPARED FOR GUADALUPE VALLEY CONCRETE • 78130
+                  PREPARED FOR YOUR SHOP • 78130
                 </span>
               </div>
 
-              <!-- 97% MASTER PRESENTATION VIDEO (Preloaded for Instant Zero-Flash Handoff) -->
               <video
                 id="loom-main-video"
                 poster="images/tiberius-recon-poster.jpg"
@@ -485,7 +462,6 @@
                 Your browser does not support HTML5 video.
               </video>
 
-              <!-- OPTIONAL FULL-FRAME 3% AI INTRO VIDEO BUFFER (Hidden unless custom HeyGen/D-ID MP4 is active) -->
               <video
                 id="loom-intro-video"
                 preload="auto"
@@ -493,36 +469,34 @@
                 class="hidden absolute inset-0 z-20 w-full h-full object-cover bg-[#050508]"
               ></video>
 
-              <!-- 3% PERSONALIZED AUDIO BUFFER (ElevenLabs / Voiceover Hook) -->
               <audio id="loom-intro-audio" preload="auto" class="hidden"></audio>
 
-              <!-- 5-SECOND "3% PERSONALIZED HOOK" LIVE PERMIT BOARD STAGE (Shown during 0:00-0:05 AI Intro Stitch) -->
               <div
                 id="loom-intro-board-overlay"
                 class="hidden absolute inset-0 z-25 bg-gradient-to-br from-slate-950 via-[#0B1224] to-slate-950 p-5 sm:p-8 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
                   <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-xs text-amber-300 font-bold">
-                    <span>🎙️ PERSONALIZED BRIEFING INTRO • <span id="intro-board-countdown">5s</span></span>
+                    <span>🎙️ PERSONALIZED INTRO • <span id="intro-board-countdown">5s</span></span>
                   </div>
                   <button
                     id="skip-intro-btn"
                     type="button"
                     class="px-3 py-1 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-xs font-mono-telemetry text-slate-200 cursor-pointer"
                   >
-                    Skip to Walkthrough →
+                    Skip Intro →
                   </button>
                 </div>
 
-                <div class="my-auto max-w-2xl space-y-3 sm: pl-32">
+                <div class="my-auto max-w-2xl space-y-3 sm:pl-32">
                   <div id="intro-board-eyebrow" class="font-mono-telemetry text-xs text-emerald-400 font-bold uppercase tracking-wider">
-                    LIVE 07:00 AM PERMIT QUEUE • PREPARED FOR YOUR SHOP
+                    7:00 AM PERMIT LIST • PREPARED FOR YOUR SHOP
                   </div>
                   <h2 id="intro-board-headline" class="font-display font-extrabold text-xl sm:text-3xl text-white leading-tight">
-                    3 Verified Commercial Permits Pulled Overnight in 78130
+                    3 Local Building Permits Pulled Overnight in 78130
                   </h2>
                   <p id="intro-board-script-caption" class="text-xs sm:text-sm text-slate-200 bg-slate-900/90 border border-slate-700/80 rounded-xl p-3.5 italic leading-relaxed">
-                    "Hey Marcus — I pulled three commercial concrete permits in 78130 for Guadalupe Valley Concrete this morning..."
+                    "Hey Marcus — I pulled three new commercial permits in 78130 for your shop this morning."
                   </p>
                 </div>
 
@@ -531,11 +505,10 @@
                 </div>
               </div>
 
-              <!-- LOOM CIRCULAR SPEAKER / AVATAR BUBBLE (Bottom-Left Corner) -->
               <div
                 id="loom-avatar-bubble"
                 class="loom-circular-bubble flex items-center justify-center select-none"
-                title="Tiberius Recon™ Host Bubble"
+                title="Tiberius Recon Host"
               >
                 <img
                   id="loom-bubble-img"
@@ -546,12 +519,11 @@
                 />
                 <div class="absolute bottom-1 inset-x-0 text-center">
                   <span id="loom-bubble-status" class="px-1.5 py-0.5 rounded bg-slate-950/85 border border-emerald-400/50 font-mono-telemetry text-[9px] text-emerald-300 font-bold">
-                    BILLY • AI
+                    BILLY
                   </span>
                 </div>
               </div>
 
-              <!-- BIG LOOM PLAY OVERLAY WITH POSTER & DURATION BADGE -->
               <div
                 id="loom-big-play-overlay"
                 class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#050508]/45 hover:bg-[#050508]/30 transition-all duration-200 cursor-pointer p-4 text-center"
@@ -560,7 +532,7 @@
                   id="loom-poster-img"
                   src="/recon/images/tiberius-recon-poster.jpg"
                   onerror="this.onerror=null;this.src='images/tiberius-recon-poster.jpg';"
-                  alt="Tiberius Recon Video Walkthrough Poster"
+                  alt="Tiberius Recon Video Poster"
                   class="absolute inset-0 w-full h-full object-cover opacity-80"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-[#050508] via-[#050508]/40 to-transparent"></div>
@@ -575,22 +547,21 @@
                     id="loom-play-cta-label"
                     class="px-4 py-1.5 rounded-full bg-slate-950/90 border border-white/20 font-display font-bold text-xs sm:text-sm text-white shadow-lg"
                   >
-                    ▶ Click to Watch 90-Second Walkthrough (1:30)
+                    ▶ Tap to Watch 90-Second Walkthrough (1:30)
                   </span>
                   <span
                     id="loom-play-sub-label"
                     class="font-mono-telemetry text-[11px] text-emerald-300 mt-2 bg-slate-950/80 px-3 py-0.5 rounded-full border border-emerald-500/30"
                   >
-                    Zero scrolling required • Instant playback
+                    No shared leads • $199/mo or $47/mo bundle
                   </span>
                 </div>
               </div>
 
             </div>
 
-            <!-- LOOM CONTROL BAR BELOW VIDEO: SPEED PILLS + EMOJI REACTIONS + BUBBLE TOGGLE -->
+            <!-- SPEED + REACTIONS -->
             <div class="mt-3 pt-3 border-t border-slate-800/90 flex flex-wrap items-center justify-between gap-3 px-1">
-              <!-- Speed Controls -->
               <div class="flex items-center gap-1.5" role="group" aria-label="Playback Speed">
                 <span class="font-mono-telemetry text-[11px] text-slate-400 mr-1">SPEED:</span>
                 <button type="button" data-loom-speed="1" class="loom-speed-pill active px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 font-mono-telemetry text-xs text-slate-200 cursor-pointer">1x</button>
@@ -599,7 +570,6 @@
                 <button type="button" data-loom-speed="2" class="loom-speed-pill px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 font-mono-telemetry text-xs text-slate-200 cursor-pointer">2x</button>
               </div>
 
-              <!-- Loom Emoji Reactions -->
               <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Video Reactions">
                 <button type="button" data-loom-reaction="fire" class="px-2.5 py-1 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs cursor-pointer transition-transform active:scale-125">
                   🔥 <span id="react-count-fire" class="font-mono-telemetry text-[11px] text-slate-200">4</span>
@@ -625,14 +595,14 @@
 
           </div>
 
-          <!-- INTERACTIVE LOOM CHAPTERS & TRANSCRIPT STRIP -->
+          <!-- CHAPTERS -->
           <div class="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-5 space-y-3">
             <div class="flex items-center justify-between gap-2">
               <span class="font-mono-telemetry text-xs text-blue-300 font-bold uppercase">
-                📑 INTERACTIVE VIDEO CHAPTERS (CLICK ANY TIMESTAMP TO JUMP)
+                📑 JUMP TO ANY PART OF THE WALKTHROUGH
               </span>
               <span id="watch-intro-status-label" class="font-mono-telemetry text-[11px] text-slate-400">
-                Mode: Pre-Made Master Video
+                90-Second Overview
               </span>
             </div>
 
@@ -642,10 +612,10 @@
                 data-chapter-time="0"
                 class="loom-chapter-btn active p-3 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-blue-500/50 text-left cursor-pointer transition-all"
               >
-                <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">0:00 • CHAPTER 01</div>
-                <div class="font-display font-bold text-xs text-white mt-0.5">02:00 AM Permit Sweep</div>
+                <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">0:00 • STEP 01</div>
+                <div class="font-display font-bold text-xs text-white mt-0.5">2:00 AM Permit Check</div>
                 <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">
-                  Scanning municipal building portals for commercial &amp; residential permits.
+                  Finds new local building permits in your county overnight.
                 </p>
               </button>
 
@@ -654,10 +624,10 @@
                 data-chapter-time="24"
                 class="loom-chapter-btn p-3 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-blue-500/50 text-left cursor-pointer transition-all"
               >
-                <div class="font-mono-telemetry text-[11px] text-blue-400 font-bold">0:24 • CHAPTER 02</div>
-                <div class="font-display font-bold text-xs text-white mt-0.5">04:30 AM CAD Tax Roll Match</div>
+                <div class="font-mono-telemetry text-[11px] text-blue-400 font-bold">0:24 • STEP 02</div>
+                <div class="font-display font-bold text-xs text-white mt-0.5">4:30 AM Owner Match</div>
                 <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">
-                  Cross-referencing deeded owners, assessed values, and GC project managers.
+                  Matches street addresses to real property owners and builders.
                 </p>
               </button>
 
@@ -666,10 +636,10 @@
                 data-chapter-time="50"
                 class="loom-chapter-btn p-3 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-blue-500/50 text-left cursor-pointer transition-all"
               >
-                <div class="font-mono-telemetry text-[11px] text-amber-300 font-bold">0:50 • CHAPTER 03</div>
-                <div class="font-display font-bold text-xs text-white mt-0.5">05:30 AM Shop-Voice Drafts</div>
+                <div class="font-mono-telemetry text-[11px] text-amber-300 font-bold">0:50 • STEP 03</div>
+                <div class="font-display font-bold text-xs text-white mt-0.5">5:30 AM Ready Intros</div>
                 <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">
-                  Drafting 4-sentence intros calibrated to your bonding, proof jobs &amp; voice.
+                  Writes short, plain-English messages using your local past jobs.
                 </p>
               </button>
 
@@ -678,10 +648,10 @@
                 data-chapter-time="72"
                 class="loom-chapter-btn p-3 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-blue-500/50 text-left cursor-pointer transition-all"
               >
-                <div class="font-mono-telemetry text-[11px] text-purple-300 font-bold">1:12 • CHAPTER 04</div>
-                <div class="font-display font-bold text-xs text-white mt-0.5">07:00 AM Approve &amp; Send</div>
+                <div class="font-mono-telemetry text-[11px] text-purple-300 font-bold">1:12 • STEP 04</div>
+                <div class="font-display font-bold text-xs text-white mt-0.5">7:00 AM 1-Tap Send</div>
                 <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">
-                  1-tap human-in-the-loop dispatch via Email or Native SIM text.
+                  Reach owners first from your own email or phone.
                 </p>
               </button>
             </div>
@@ -689,10 +659,9 @@
 
         </div>
 
-        <!-- RIGHT 4 COLS: LOOM ACTION SIDEBAR & MENTIONED PERMITS -->
+        <!-- RIGHT 4 COLS -->
         <aside class="lg:col-span-4 space-y-4">
 
-          <!-- Primary Conversion & Next-Step Card -->
           <div class="enterprise-card g3-conic-card rounded-2xl border border-blue-500/40 p-5 space-y-4 shadow-xl">
             <div class="flex items-center gap-3 pb-3.5 border-b border-slate-800">
               <img
@@ -703,23 +672,23 @@
               />
               <div class="min-w-0">
                 <div id="watch-sender-name" class="font-display font-bold text-sm text-white truncate">
-                  Billy • Tiberius AI
+                  Billy • Tiberius Recon
                 </div>
                 <div class="font-mono-telemetry text-[11px] text-emerald-400 truncate">
-                  ✓ Verified Territory Scout Briefing
+                  ✓ Local County Permit Radar
                 </div>
               </div>
             </div>
 
             <div class="space-y-2">
               <div class="font-mono-telemetry text-[10px] text-amber-300 font-bold uppercase">
-                NEXT STEP AFTER WATCHING
+                SIMPLE NO-BS MATH
               </div>
               <h2 id="watch-sidebar-heading" class="font-display font-extrabold text-lg text-white leading-snug">
-                Test-Drive Your Live 7:00 AM Permit Briefing Queue
+                One Extra Job Pays for $199/Mo Recon for Years
               </h2>
               <p id="watch-sidebar-desc" class="text-xs text-slate-300 leading-relaxed">
-                Open the live interactive briefing to inspect the 3 unlocked permits, expand the County Appraisal District tax roll X-Ray, and test the 1-tap Approve &amp; Send workflow.
+                Skip $150 shared Angi leads. Open the live 7:00 AM list now—or bundle Recon with a Smart Site for $47/mo.
               </p>
             </div>
 
@@ -729,7 +698,7 @@
                 href="/recon/briefing?token=demo-7am-briefing"
                 class="btn-trust-emerald w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-2 shadow-lg"
               >
-                <span id="watch-primary-cta-text">Open Interactive 7:00 AM Briefing →</span>
+                <span id="watch-primary-cta-text">Open Live 7:00 AM Permit List →</span>
               </a>
 
               <a
@@ -739,7 +708,7 @@
                 rel="noopener"
                 class="hidden w-full py-2.5 px-4 rounded-xl bg-blue-500/20 border border-blue-400/40 text-blue-200 hover:bg-blue-500/30 text-xs font-bold text-center items-center justify-center gap-1.5"
               >
-                <span>📄 Open Custom Google Doc Dossier →</span>
+                <span>📄 Open Custom Permit Packet →</span>
               </a>
 
               <a
@@ -747,29 +716,28 @@
                 href="/recon#pricing"
                 class="btn-outline-slate w-full py-2.5 px-4 rounded-xl text-xs font-bold text-center inline-flex items-center justify-center gap-1.5"
               >
-                <span>Start 7-Day Free Trial ($0.00 Charged Today) →</span>
+                <span>Start 7-Day Free Trial ($0 Today) →</span>
               </a>
             </div>
 
             <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono-telemetry text-slate-400">
-              <span>✓ No new website required</span>
-              <a href="/recon" class="text-blue-400 hover:underline">Full Overview Page →</a>
+              <span>✓ Zero long contracts</span>
+              <a href="/recon" class="text-blue-400 hover:underline">Full Pricing Page →</a>
             </div>
           </div>
 
-          <!-- 3 Pulled Permits Mentioned in This Video -->
           <div class="rounded-2xl bg-slate-900/95 border border-slate-800 p-5 space-y-3.5">
             <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
               <div>
                 <span class="font-mono-telemetry text-[10px] text-emerald-400 font-bold uppercase block">
-                  PULLED OVERNIGHT IN THIS TERRITORY
+                  PULLED OVERNIGHT IN THIS COUNTY
                 </span>
                 <h3 id="watch-permits-heading" class="font-display font-bold text-sm text-white">
                   3 Sample Permits in 78130 (New Braunfels)
                 </h3>
               </div>
               <span class="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-400/30 font-mono-telemetry text-[10px] text-emerald-300 font-bold">
-                CAD VERIFIED
+                VERIFIED
               </span>
             </div>
 
@@ -787,15 +755,15 @@
 
   <footer class="border-t border-slate-800/80 py-6 px-4 sm:px-6 lg:px-8 mt-10 bg-[#050508]">
     <div class="max-w-[1360px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 font-mono-telemetry">
-      <span>TIBERIUS RECON™ • STANDALONE VIDEO SHARE &amp; 3% + 97% AI STITCH PLAYER</span>
+      <span>TIBERIUS RECON™ • 90-SECOND WALKTHROUGH • $199/MO OR $47/MO SMART SITE BUNDLE</span>
       <div class="flex flex-wrap items-center gap-4">
         <a href="/recon" class="hover:text-white transition-colors">← Full Sales Page</a>
-        <a href="/recon/briefing?token=demo-7am-briefing" class="text-emerald-400 hover:underline">Live 7:00 AM Briefing →</a>
-        <a href="/recon/command" class="text-blue-400 hover:underline">Territory Command →</a>
+        <a href="/recon/briefing?token=demo-7am-briefing" class="text-emerald-400 hover:underline">Live 7:00 AM List →</a>
+        <a href="/recon/command" class="text-blue-400 hover:underline">Shop Settings →</a>
       </div>
     </div>
   </footer>
 
-  <script src="/recon/watch.js?v=3.2" onerror="this.onerror=null;this.src='watch.js?v=3.2';"></script>
+  <script src="/recon/watch.js?v=3.3" onerror="this.onerror=null;this.src='watch.js?v=3.3';"></script>
 </body>
 </html>
