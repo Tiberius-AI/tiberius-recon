@@ -1,5 +1,5 @@
 /**
- * TIBERIUS RECON™ — LIVE 7:00 AM MOBILE BRIEFING APPLICATION (briefing.js)
+ * TIBERIUS RECON™ - LIVE 7:00 AM MOBILE BRIEFING APPLICATION (briefing.js)
  * Features:
  * 1. Loads live contractor briefing by ?token=... from GET /api/recon/briefing (with offline client fallback)
  * 2. Renders 3 Unlocked Recon Cards (or all 9 when unlocked) with CAD Tax Roll X-Ray Drawer
@@ -239,9 +239,9 @@
     const bt1Label = document.getElementById('briefing-tier-1-checkout-label');
     const bt2Label = document.getElementById('briefing-tier-2-checkout-label');
     const bt3Label = document.getElementById('briefing-tier-3-checkout-label');
-    if (bt1Label) bt1Label.textContent = `Start $199/Mo Trial in ${cleanZipForStripe} →`;
-    if (bt2Label) bt2Label.textContent = `Lock Zip ${cleanZipForStripe} — 7-Day Free Trial →`;
-    if (bt3Label) bt3Label.textContent = `Exclusive Lock ${cleanZipForStripe} — Free Trial →`;
+    if (bt1Label) bt1Label.textContent = `Owner Radar ($199/Mo) • ${cleanZipForStripe} →`;
+    if (bt2Label) bt2Label.textContent = `Permit Radar ($399/Mo) • Lock ${cleanZipForStripe} →`;
+    if (bt3Label) bt3Label.textContent = `Exclusive Lock ($599/Mo) • ${cleanZipForStripe} →`;
 
     if (navTerritoryPill) {
       navTerritoryPill.textContent = isNewBraunfelsCorridor
@@ -249,7 +249,14 @@
         : `${b.territoryZip} (${b.metroCity || 'Local Area'}) • LIVE`;
     }
     if (briefingTierBadge) {
-      briefingTierBadge.textContent = 'LOCAL PERMIT RADAR • $199/MO';
+      const tierRaw = String(b.tierLevel || c.tierLevel || '');
+      if (/tier\s*1|scout|owner/i.test(tierRaw)) {
+        briefingTierBadge.textContent = 'COMMERCIAL OWNER RADAR • $199/MO';
+      } else if (/tier\s*3|exclusive|dominion/i.test(tierRaw)) {
+        briefingTierBadge.textContent = 'HOME + COMMERCIAL LOCK • $599/MO';
+      } else {
+        briefingTierBadge.textContent = 'LOCAL PERMIT RADAR • $399/MO';
+      }
     }
     if (briefingExclusivityBadge && state.availability) {
       briefingExclusivityBadge.textContent = state.availability.isAvailable
@@ -278,7 +285,7 @@
     }
     if (briefingSubtitle) {
       briefingSubtitle.textContent =
-        'Pulled overnight from local permit offices and county property records. Reach owners first—nothing sends without your tap.';
+        'Pulled overnight from local permit offices and county property records. Reach owners first - nothing sends without your tap.';
     }
     if (briefingApprovedCounter) {
       briefingApprovedCounter.textContent = state.isHistoricalView
@@ -346,8 +353,8 @@
       .map((item) => {
         const isSelected = item.date === viewingDate ? 'selected' : '';
         const label = item.isToday
-          ? `Today (${item.date}) — ${item.totalCards} Cards (${item.approvedCount} Approved)`
-          : `Archive: ${item.date} — ${item.totalCards} Cards (${item.approvedCount} Approved)`;
+          ? `Today (${item.date}) - ${item.totalCards} Cards (${item.approvedCount} Approved)`
+          : `Archive: ${item.date} - ${item.totalCards} Cards (${item.approvedCount} Approved)`;
         return `<option value="${escapeHtml(item.date)}" ${isSelected}>${escapeHtml(label)}</option>`;
       })
       .join('');
@@ -355,7 +362,7 @@
     const historicalBanner = state.isHistoricalView
       ? `
         <div class="w-full mt-2 p-3 rounded-xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-amber-900">
-          <span>📜 VIEWING ARCHIVED BRIEFING FROM <strong>${escapeHtml(viewingDate)}</strong> — You can review past permits or still approve &amp; dispatch any unsent cards from this day.</span>
+          <span>📜 VIEWING ARCHIVED BRIEFING FROM <strong>${escapeHtml(viewingDate)}</strong> - You can review past permits or still approve &amp; dispatch any unsent cards from this day.</span>
           <button
             type="button"
             data-history-date="${escapeHtml(activeDate)}"

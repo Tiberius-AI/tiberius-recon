@@ -1,5 +1,5 @@
 /**
- * TIBERIUS RECON™ — 3-PANE REPLY & FOLLOW-UP CONVERSATION ROOM (inbox.js)
+ * TIBERIUS RECON™ - 3-PANE REPLY & FOLLOW-UP CONVERSATION ROOM (inbox.js)
  *
  * Powers:
  * 1. Pane 1: Deal Thread Queue & Stage Filter Pills (All, 🔥 Replies, ⏳ Follow-Up, 📅 Booked)
@@ -415,7 +415,7 @@
     if (contractorTitleEl) {
       contractorTitleEl.textContent = `${c.companyName || 'Contractor'} (${
         b.territoryZip || c.baseZip || '78130'
-      }) — Conversation & Follow-Up Room`;
+      }) - Conversation & Follow-Up Room`;
     }
     if (kbBadgeEl && state.knowledgeBase) {
       kbBadgeEl.textContent = `🧠 SHOP DOSSIER ACTIVE: ${(
@@ -525,8 +525,8 @@
     }
     if (pretripCircuitPillEl) {
       pretripCircuitPillEl.textContent = holdDispatch
-        ? '🔴 LOCKED — 6:45 AM DISPATCH HELD'
-        : '🟢 OPEN — ARMED FOR 6:45 AM';
+        ? '🔴 LOCKED - 6:45 AM DISPATCH HELD'
+        : '🟢 OPEN - ARMED FOR 6:45 AM';
       pretripCircuitPillEl.className = holdDispatch
         ? 'font-mono-telemetry text-[10px] text-red-400 font-bold'
         : 'font-mono-telemetry text-[10px] text-emerald-400 font-bold';
@@ -711,7 +711,7 @@
       const body =
         (replyTextarea && replyTextarea.value.trim()) ||
         activeThread.nativeSimDraft ||
-        'Hey — just sent you an email regarding your permit filing. Open to a quick site walk Thursday at 9am?';
+        'Hey - just sent you an email regarding your permit filing. Open to a quick site walk Thursday at 9am?';
 
       try {
         const testCfg = getTestOverridesAndConfig();
@@ -895,11 +895,11 @@
         {};
       const messageBody =
         (replyTextarea && replyTextarea.value.trim()) ||
-        `Hi — this is a live Tiberius Recon™ test email for ${
+        `Hi - this is a live Tiberius Recon™ test email for ${
           activeThread.headline || 'your commercial permit'
         } (${
           activeThread.propertyAddress || '78130'
-        }). Reply directly to this email to test the Conversation Room inbound webhook! — ${
+        }). Reply directly to this email to test the Conversation Room inbound webhook! - ${
           roomState?.knowledgeBase?.signatureLine || 'Tiberius Recon'
         }`;
 

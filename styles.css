@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TIBERIUS RECON™ — 21ST.DEV ("G3") DARK GLASS, OKLCH & WEBGL DESIGN SYSTEM
+   TIBERIUS RECON™ - 21ST.DEV ("G3") DARK GLASS, OKLCH & WEBGL DESIGN SYSTEM
    ==========================================================================
    Architecture & Visual System engineered from https://21st.dev/ (G3):
    - Surface Hierarchy:
@@ -288,7 +288,7 @@ main blockquote {
   max-width: 100% !important;
 }
 
-/* Pure White Logo Treatment (logo4.png — 100% Crisp White with "THE BAD BOYS OF AI." under it)
+/* Pure White Logo Treatment (logo4.png - 100% Crisp White with "THE BAD BOYS OF AI." under it)
    Mobile (<768px): 85% width (15% reduced from 100% full-bleed) centered across the mobile header */
 .brand-logo-img,
 .enterprise-navbar .brand-logo-img,
@@ -1132,4 +1132,20 @@ footer .brand-logo {
     filter: none !important;
     transform: none !important;
   }
+}
+
+/* M7 Mobile Touch Targets */
+.featured-trade-btn,
+.trade-pill-btn,
+#briefing-live-zero-api-btn,
+#briefing-run-night-sweep-btn,
+#briefing-export-csv-btn,
+#briefing-reset-all-btn,
+#mobile-command-link,
+#nav-inbox-link,
+#nav-command-link,
+#nav-switch-account-link,
+#unlock-full-queue-btn,
+#calibrator-apply-btn {
+  min-height: 44px;
 }

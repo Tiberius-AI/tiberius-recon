@@ -1,5 +1,5 @@
 /**
- * TIBERIUS RECON™ — POST-PAY NEW CLIENT ONBOARDING & CREDENTIAL ISSUANCE (onboarding.js)
+ * TIBERIUS RECON™ - POST-PAY NEW CLIENT ONBOARDING & CREDENTIAL ISSUANCE (onboarding.js)
  *
  * Powers /recon/onboarding (and /onboarding):
  *   1. Live Zip Code & Trade Slot Availability Check (/api/recon/availability)
@@ -500,7 +500,7 @@
       }
 
       lastIssuedCredentialsCopyText = [
-        `TIBERIUS RECON™ — CLIENT LOGIN CREDENTIALS`,
+        `TIBERIUS RECON™ - CLIENT LOGIN CREDENTIALS`,
         `Company: ${companyName}`,
         `Territory: ${territoryZip} (${primaryTrade})`,
         `Client Sign-In URL: ${creds.loginUrl}`,
@@ -522,7 +522,7 @@
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span>✓ Credentials Issued — Update or Resend Anytime →</span>';
+        submitBtn.innerHTML = '<span>✓ Credentials Issued - Update or Resend Anytime →</span>';
       }
     }
   }

@@ -1,5 +1,5 @@
 /**
- * TIBERIUS RECON™ — MULTI-CLIENT AUTH & MASTER AGENCY COMMAND CONTROLLER (login.js)
+ * TIBERIUS RECON™ - MULTI-CLIENT AUTH & MASTER AGENCY COMMAND CONTROLLER (login.js)
  */
 
 (function () {
@@ -333,7 +333,7 @@
               Sent Today: ${client.approvedCount}
             </span>
             <span class="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-700 text-blue-300">
-              Smart Site Equity: $${equityDollars.toLocaleString()}
+              Territory Pipeline: $${equityDollars.toLocaleString()}
             </span>
           </div>
         </div>

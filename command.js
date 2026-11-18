@@ -1,9 +1,9 @@
 /**
- * TIBERIUS RECON™ — CONTRACTOR TERRITORY COMMAND & EQUITY PORTAL (command.js)
+ * TIBERIUS RECON™ - CONTRACTOR TERRITORY COMMAND & EQUITY PORTAL (command.js)
  * Powers:
  * 1. Real-time Zip Code Exclusivity & Tier Slot Checker (GET /api/recon/availability)
  * 2. Shop Voice & Minimum Permit Valuation Calibrator (POST /api/recon/briefing)
- * 3. $200/mo Rent-to-Own Smart Site Code Equity Simulator
+ * 3. $200/mo Permit Valuation & Territory ROI Calculator
  * 4. Instant 14-Second CAD Parcel & Deeded Owner X-Ray Tester
  */
 
@@ -236,7 +236,7 @@
     if (clientSmtpPassInput) {
       clientSmtpPassInput.value = '';
       clientSmtpPassInput.placeholder = cfg.hasSmtpPassword
-        ? '•••••••••••• (Encrypted — leave blank to keep)'
+        ? '•••••••••••• (Encrypted - leave blank to keep)'
         : 'xxxx xxxx xxxx xxxx';
     }
     if (clientEmailStatusPill) {
@@ -275,7 +275,7 @@
         const b = data.briefing || {};
         renderAccountProfile(c);
         if (cmdContractorTitle && b.territoryZip) {
-          cmdContractorTitle.textContent = `${c.companyName ? c.companyName + ' — ' : ''}${b.tradeName} (${b.territoryZip})`;
+          cmdContractorTitle.textContent = `${c.companyName ? c.companyName + ' - ' : ''}${b.tradeName} (${b.territoryZip})`;
         }
         if (cmdTradeSelect && b.tradeName) cmdTradeSelect.value = b.tradeName;
         if (cmdTierSelect && b.tierLevel) cmdTierSelect.value = b.tierLevel;
@@ -491,7 +491,7 @@
             renderKnowledgeBase(data.account.knowledgeBase);
           }
           if (cmdContractorTitle) {
-            cmdContractorTitle.textContent = `${data.account.companyName} — ${data.account.primaryTrade} (${data.account.baseZip})`;
+            cmdContractorTitle.textContent = `${data.account.companyName} - ${data.account.primaryTrade} (${data.account.baseZip})`;
           }
         }
         if (cmdAccountFeedback) {
@@ -841,7 +841,7 @@
                 ${escapeHtml(p.companyName)}
               </h3>
               <p class="text-xs text-slate-300 font-mono-telemetry mt-0.5">
-                👤 ${escapeHtml(p.contactName)} (${escapeHtml(p.contactRole)}) • 📞 ${escapeHtml(p.phone || 'Add Phone')} • ✉️ ${escapeHtml(p.email || 'No Public Email — Use SIM Text')}
+                👤 ${escapeHtml(p.contactName)} (${escapeHtml(p.contactRole)}) • 📞 ${escapeHtml(p.phone || 'Add Phone')} • ✉️ ${escapeHtml(p.email || 'No Public Email - Use SIM Text')}
               </p>
               <p class="text-[11px] text-slate-400 font-mono-telemetry mt-0.5">
                 🌐 ${escapeHtml(p.websiteUrl || 'Not found')} • ✓ Anti-AI Gate: ${p.copyGate && p.copyGate.passed ? 'PASS (0 Links T1)' : 'CHECK'}

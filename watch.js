@@ -1,5 +1,5 @@
 /**
- * TIBERIUS RECON™ — STANDALONE LOOM-STYLE VIDEO PLAYER & 3% + 97% AI STITCH ENGINE
+ * TIBERIUS RECON™ - STANDALONE LOOM-STYLE VIDEO PLAYER & 3% + 97% AI STITCH ENGINE
  * (watch.js)
  *
  * Powers `/recon/watch` (`watch.html`):
@@ -20,7 +20,7 @@
 
   const urlParams = new URLSearchParams(window.location.search);
 
-  // DOM Elements — Header & Stage
+  // DOM Elements - Header & Stage
   const watchModePill = document.getElementById('watch-mode-pill');
   const watchViewsPill = document.getElementById('watch-views-pill');
   const watchCopyLinkBtn = document.getElementById('watch-copy-link-btn');
@@ -32,7 +32,7 @@
   const watchMainTitle = document.getElementById('watch-main-title');
   const watchMainSubtitle = document.getElementById('watch-main-subtitle');
 
-  // DOM Elements — Video & Dual-Buffer Stitch
+  // DOM Elements - Video & Dual-Buffer Stitch
   const loomPersonalizedBanner = document.getElementById('loom-personalized-banner');
   const loomPersonalizedBannerText = document.getElementById('loom-personalized-banner-text');
   const loomMainVideo = document.getElementById('loom-main-video');
@@ -55,7 +55,7 @@
   const watchIntroStatusLabel = document.getElementById('watch-intro-status-label');
   const loomChaptersGrid = document.getElementById('loom-chapters-grid');
 
-  // DOM Elements — Right Sidebar
+  // DOM Elements - Right Sidebar
   const watchSenderName = document.getElementById('watch-sender-name');
   const watchSidebarHeading = document.getElementById('watch-sidebar-heading');
   const watchSidebarDesc = document.getElementById('watch-sidebar-desc');
@@ -65,7 +65,7 @@
   const watchPermitsHeading = document.getElementById('watch-permits-heading');
   const watchSidebarPermits = document.getElementById('watch-sidebar-permits');
 
-  // DOM Elements — Loom Studio Drawer
+  // DOM Elements - Loom Studio Drawer
   const loomStudioDrawer = document.getElementById('loom-studio-drawer');
   const studioCloseBtn = document.getElementById('studio-close-btn');
   const studioProspectSelect = document.getElementById('studio-prospect-select');
@@ -221,7 +221,7 @@
         ? 'Includes 5s Custom Greeting + 90s Walkthrough'
         : isPersonalized
         ? `Local Permits in ${p.territoryZip} (${p.city})`
-        : 'No shared leads • $199/mo or $47/mo bundle';
+        : 'No shared leads • Plans from $199/mo (7-day trial)';
     }
 
     if (watchIntroStatusLabel) {
@@ -292,12 +292,12 @@
     if (watchSidebarHeading) {
       watchSidebarHeading.textContent = isPersonalized
         ? `Open ${p.companyName}'s Live 7:00 AM List`
-        : 'One Extra Job Pays for $199/Mo Recon for Years';
+        : 'One Extra Job Pays for Recon for Years';
     }
     if (watchSidebarDesc) {
       watchSidebarDesc.textContent = isPersonalized
         ? `We loaded 3 local building permits in ${p.territoryZip} (${p.city}) for ${p.companyName}. Tap below to review them now.`
-        : 'Skip $150 shared Angi leads. Open the live 7:00 AM list now—or bundle Recon with a Smart Site for $47/mo.';
+        : 'Skip $150 shared Angi leads. Open the live 7:00 AM list now, or start free for 7 days (from $199/mo).';
     }
     if (watchPrimaryCtaBtn && cta.primaryUrl) {
       watchPrimaryCtaBtn.href = cta.primaryUrl;
@@ -787,9 +787,9 @@
       ok: true,
       mode: 'PREMADE_STANDARD',
       isPersonalized: false,
-      title: 'Tiberius Recon™ — 90-Second Autonomous Permit & CAD Tax Roll Walkthrough',
+      title: 'Tiberius Recon™ - 90-Second Local Permit Walkthrough',
       subtitle:
-        'Standalone System Walkthrough • Watch how Recon sweeps overnight building permits & county tax rolls before 7:00 AM.',
+        'Watch how Recon pulls overnight building permits and county owner records before 7:00 AM.',
       prospect: {
         companyName: 'Your Contracting Business',
         territoryZip: '78130',
