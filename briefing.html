@@ -41,7 +41,7 @@
     };
   </script>
 
-  <link rel="stylesheet" href="/recon/styles.css?v=2.6" onerror="this.onerror=null;this.href='styles.css?v=2.6';" />
+  <link rel="stylesheet" href="/recon/styles.css?v=3.4" onerror="this.onerror=null;this.href='styles.css?v=3.4';" />
 </head>
 
 <body class="g-root g3-root bg-subtle-grid text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
@@ -72,8 +72,7 @@
 
       <nav aria-label="Briefing Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-700">
         <a id="nav-back-login-link" href="/recon/login" class="hover:text-blue-700 transition-colors">← Account Sign-In</a>
-        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
+        <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
           <span id="nav-territory-pill">7:00 AM PERMIT LIST • LIVE</span>
         </span>
       </nav>
@@ -110,25 +109,26 @@
       <!-- ====================================================================
            7:00 AM BRIEFING HEADER CARD
            ==================================================================== -->
-      <section class="enterprise-card g3-hero-stage bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7 mb-7">
+      <section class="enterprise-card g3-hero-stage bg-white border border-slate-200 rounded-lg shadow-sm p-5 sm:p-7 mb-7">
         <div class="g3-hero-bg" aria-hidden="true" style="opacity: 0.22;">
           <canvas class="g3-hero-bg-canvas" data-g3-shader="silk"></canvas>
           <div class="g3-hero-vignette"></div>
         </div>
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-slate-200">
           <div>
-            <div class="flex flex-wrap items-center gap-2 mb-2.5">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
-                <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-                <span>7:00 AM LOCAL PERMIT LIST</span>
+            <div class="mb-2">
+              <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-800">
+                01 // 7:00 AM LOCAL PERMIT LIST
               </span>
-              <span id="briefing-demo-badge" class="px-3 py-1 rounded-full bg-amber-50 border border-amber-300 font-mono-telemetry text-xs text-amber-900 font-bold">
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mb-2.5">
+              <span id="briefing-demo-badge" class="px-2.5 py-1 rounded bg-amber-50 border border-amber-300 font-mono-telemetry text-xs text-amber-900 font-bold">
                 SAMPLE PREVIEW • 3 DEMO CARDS
               </span>
-              <span id="briefing-tier-badge" class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
+              <span id="briefing-tier-badge" class="px-2.5 py-1 rounded bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
                 LOCAL PERMIT RADAR • $399/MO
               </span>
-              <span id="briefing-exclusivity-badge" class="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 font-mono-telemetry text-xs text-amber-800">
+              <span id="briefing-exclusivity-badge" class="px-2.5 py-1 rounded bg-amber-50 border border-amber-200 font-mono-telemetry text-xs text-amber-800">
                 ✓ ZIP SLOT OPEN
               </span>
             </div>
@@ -143,7 +143,7 @@
 
           <!-- Right Status Counter & Action Buttons -->
           <div class="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-2.5 shrink-0">
-            <div id="briefing-approved-counter" class="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs sm:text-sm text-emerald-800 font-bold text-center">
+            <div id="briefing-approved-counter" class="px-4 py-2 rounded-md bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs sm:text-sm text-emerald-800 font-bold text-center">
               Jobs Approved Today: 0/3
             </div>
             <div class="flex flex-wrap items-center gap-2 justify-end">
@@ -231,7 +231,7 @@
             <button
               id="calibrator-apply-btn"
               type="button"
-              class="min-h-[44px] btn-executive-navy w-full py-2.5 px-3 rounded-xl text-xs font-bold cursor-pointer"
+              class="min-h-[44px] btn-executive-navy w-full py-2.5 px-3 rounded-lg text-xs font-bold cursor-pointer"
             >
               Update List →
             </button>
@@ -244,7 +244,7 @@
         </div>
 
         <!-- Night Check Status Banner -->
-        <div id="night-sweep-telemetry-banner" class="hidden mt-4 p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-[#1E40AF]">
+        <div id="night-sweep-telemetry-banner" class="hidden mt-4 p-3.5 rounded-lg bg-blue-50 border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-[#1E40AF]">
           <span id="night-sweep-telemetry-text">✓ NIGHT CHECK COMPLETE: LOCAL PERMITS &amp; OWNER RECORDS MATCHED</span>
           <span class="text-emerald-700 font-bold">LIVE RECORDS VERIFIED ✓</span>
         </div>
@@ -262,7 +262,7 @@
       <!-- ====================================================================
            LOCKED TERRITORY VAULT (TRIAL CONVERSION ENGINE)
            ==================================================================== -->
-      <section id="briefing-locked-vault" class="hidden locked-vault-panel rounded-2xl p-6 sm:p-7 shadow-md mb-10">
+      <section id="briefing-locked-vault" class="hidden locked-vault-panel rounded-lg p-6 sm:p-7 shadow-md mb-10">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
           <div class="flex items-start gap-3.5">
             <span class="text-2xl flex-shrink-0" aria-hidden="true">🔒</span>
@@ -281,7 +281,7 @@
               id="briefing-tier-1-checkout-link"
               data-stripe-base="https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k"
               href="https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k?client_reference_id=78130_Commercial_Concrete"
-              class="min-h-[44px] btn-outline-slate px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
+              class="min-h-[44px] btn-outline-slate px-3.5 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
             >
               <span id="briefing-tier-1-checkout-label">Owner Radar ($199/Mo) • 78130 →</span>
             </a>
@@ -289,7 +289,7 @@
               id="briefing-tier-2-checkout-link"
               data-stripe-base="https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l"
               href="https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l?client_reference_id=78130_Commercial_Concrete"
-              class="min-h-[44px] btn-trust-emerald px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
+              class="min-h-[44px] btn-trust-emerald px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
             >
               <span id="briefing-tier-2-checkout-label">Permit Radar ($399/Mo) • Lock 78130 →</span>
             </a>
@@ -297,14 +297,14 @@
               id="briefing-tier-3-checkout-link"
               data-stripe-base="https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m"
               href="https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m?client_reference_id=78130_Commercial_Concrete"
-              class="min-h-[44px] btn-executive-navy px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
+              class="min-h-[44px] btn-executive-navy px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5"
             >
               <span id="briefing-tier-3-checkout-label">Exclusive Lock ($599/Mo) • 78130 →</span>
             </a>
             <button
               id="unlock-full-queue-btn"
               type="button"
-              class="min-h-[44px] btn-outline-slate px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5 cursor-pointer"
+              class="min-h-[44px] btn-outline-slate px-3.5 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap inline-flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>🔓 Preview All 9 Cards</span>
             </button>
@@ -319,15 +319,19 @@
       <!-- ====================================================================
            SENT MESSAGES LOG
            ==================================================================== -->
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7 mb-10">
-        <div class="flex items-center justify-between gap-2 mb-4">
+      <section class="bg-white border border-slate-200 rounded-lg shadow-sm p-5 sm:p-7 mb-10">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div>
-            <span class="font-mono-telemetry text-xs text-[#1E40AF]">YOUR APPROVED MESSAGES</span>
+            <div class="mb-1">
+              <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-[#1E40AF]">
+                02 // YOUR APPROVED MESSAGES
+              </span>
+            </div>
             <h2 class="font-display font-extrabold text-xl text-[#0F172A]">
               Jobs Contacted Today
             </h2>
           </div>
-          <span class="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
+          <span class="px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
             ✓ NOTHING SENDS WITHOUT YOUR TAP
           </span>
         </div>
@@ -342,10 +346,14 @@
       <!-- ====================================================================
            PAST DAYS' SAVED PERMIT CARDS
            ==================================================================== -->
-      <section id="briefing-archived-section" aria-label="Saved Permit Cards From Past Days" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-7">
+      <section id="briefing-archived-section" aria-label="Saved Permit Cards From Past Days" class="bg-white border border-slate-200 rounded-lg shadow-sm p-5 sm:p-7">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-200">
           <div>
-            <span class="font-mono-telemetry text-xs text-[#1E40AF]">📅 SAVED PAST LISTS • NO REPEAT CARDS</span>
+            <div class="mb-1">
+              <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-[#1E40AF]">
+                03 // SAVED PAST LISTS • NO REPEAT CARDS
+              </span>
+            </div>
             <h2 class="font-display font-extrabold text-xl text-[#0F172A]">
               Permit Cards Saved From Past Days
             </h2>
@@ -353,7 +361,7 @@
               We save every morning permit list by date so old permits never repeat in tomorrow's list.
             </p>
           </div>
-          <span id="briefing-archived-count-badge" class="px-3 py-1 rounded-full bg-slate-100 border border-slate-300 font-mono-telemetry text-xs text-slate-800 font-bold self-start sm:self-center">
+          <span id="briefing-archived-count-badge" class="px-2.5 py-1 rounded bg-slate-100 border border-slate-300 font-mono-telemetry text-xs text-slate-800 font-bold self-start sm:self-center">
             📜 Past Days Saved
           </span>
         </div>
@@ -368,7 +376,7 @@
 
   <footer class="section-bg-white border-t border-slate-200 py-8 px-4 sm:px-6 lg:px-8 mt-12">
     <div class="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B] font-mono-telemetry">
-      <span>TIBERIUS RECON™ • 7:00 AM PERMIT RADAR v2.6 • PLANS FROM $199/MO (7-DAY FREE TRIAL)</span>
+      <span>TIBERIUS RECON™ • 7:00 AM PERMIT RADAR v3.4 • PLANS FROM $199/MO (7-DAY FREE TRIAL)</span>
       <div class="flex items-center gap-5">
         <a id="footer-back-login-link" href="/recon/login" class="text-blue-700 hover:underline">← Account Sign-In</a>
         <a id="footer-command-link" href="/recon/command" class="text-emerald-700 hover:underline">Open Shop Settings →</a>
@@ -379,6 +387,6 @@
     </div>
   </footer>
 
-  <script src="/recon/briefing.js?v=2.6" onerror="this.onerror=null;this.src='briefing.js?v=2.6';"></script>
+  <script src="/recon/briefing.js?v=3.4" onerror="this.onerror=null;this.src='briefing.js?v=3.4';"></script>
 </body>
 </html>

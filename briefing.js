@@ -161,8 +161,12 @@
     return false;
   }
 
+  function stripEmDashes(str) {
+    return String(str || '').replace(/\s*\u2014\s*/g, ' - ');
+  }
+
   function escapeHtml(str) {
-    return String(str || '')
+    return stripEmDashes(str)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -171,13 +175,13 @@
 
   function buildCleanSmsHref(phone, draftBody) {
     const cleanPhone = String(phone || '').replace(/[^\d+]/g, '');
-    const cleanBody = String(draftBody || '').replace(/^"|"$/g, '');
+    const cleanBody = stripEmDashes(draftBody).replace(/^"|"$/g, '');
     return `sms:${cleanPhone}?body=${encodeURIComponent(cleanBody)}`;
   }
 
   function buildCleanMailtoHref(email, subject, draftBody) {
-    const cleanBody = String(draftBody || '').replace(/^"|"$/g, '');
-    return `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent(subject || 'Project Bid Inquiry')}&body=${encodeURIComponent(cleanBody)}`;
+    const cleanBody = stripEmDashes(draftBody).replace(/^"|"$/g, '');
+    return `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent(stripEmDashes(subject || 'Project Bid Inquiry'))}&body=${encodeURIComponent(cleanBody)}`;
   }
 
   function sanitizeContactNameDisplay(rawContactName) {
@@ -361,7 +365,7 @@
 
     const historicalBanner = state.isHistoricalView
       ? `
-        <div class="w-full mt-2 p-3 rounded-xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-amber-900">
+        <div class="w-full mt-2 p-3 rounded-lg bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-telemetry text-amber-900">
           <span>📜 VIEWING ARCHIVED BRIEFING FROM <strong>${escapeHtml(viewingDate)}</strong> - You can review past permits or still approve &amp; dispatch any unsent cards from this day.</span>
           <button
             type="button"
@@ -415,13 +419,13 @@
 
     if (!Array.isArray(unlockedCards) || unlockedCards.length === 0) {
       briefingCardsGrid.innerHTML = `
-        <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-8 text-center">
+        <div class="col-span-full bg-white border border-slate-200 rounded-lg p-8 text-center">
           <div class="font-mono-telemetry text-xs text-slate-500 font-bold mb-2">🛰️ PULLING NEW LOCAL BUILDING PERMITS...</div>
           <p class="text-sm text-slate-600 mb-4">Checking local permit offices now for fresh high-dollar jobs in your zip code.</p>
           <button
             type="button"
             id="empty-queue-scrape-now-btn"
-            class="btn-trust-emerald px-4 py-2 rounded-xl text-xs font-mono-telemetry font-bold cursor-pointer"
+            class="btn-trust-emerald px-4 py-2 rounded-lg text-xs font-mono-telemetry font-bold cursor-pointer"
           >
             🛰️ Pull Fresh Live Permits Now
           </button>
@@ -447,10 +451,10 @@
 
         if (isSent) {
           return `
-            <article class="bg-emerald-50/80 border-2 border-emerald-600 rounded-2xl shadow-md p-5 sm:p-6 flex flex-col justify-between transition-all" data-card-id="${card.id}">
+            <article class="bg-emerald-50/80 border-2 border-emerald-600 rounded-lg shadow-md p-5 sm:p-6 flex flex-col justify-between transition-all" data-card-id="${card.id}">
               <div>
                 <div class="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-emerald-200">
-                  <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold">
+                  <span class="px-2.5 py-1 rounded bg-emerald-600 text-white font-mono-telemetry text-xs font-bold">
                     ✓ Dispatched (${escapeHtml(card.dispatchChannel || '1-TAP SEND')})
                   </span>
                   <span class="font-mono-telemetry text-[11px] text-emerald-800">${escapeHtml(card.approvedTimeLabel || `07:01:${14 + idx * 11} AM`)}</span>
@@ -464,7 +468,7 @@
                   Dispatched to <strong class="text-[#0F172A]">${escapeHtml(card.contactEmail)}</strong> • <strong class="text-[#0F172A]">${escapeHtml(card.contactPhone)}</strong>.
                 </p>
 
-                <div class="p-3.5 rounded-xl bg-white border border-emerald-200 mb-4">
+                <div class="p-3.5 rounded-lg bg-white border border-emerald-200 mb-4">
                   <div class="font-mono-telemetry text-[10px] text-emerald-800 font-bold mb-1">DISPATCHED 4-SENTENCE INTRO:</div>
                   <p class="text-xs text-slate-700 italic leading-relaxed">${escapeHtml(card.draftBody)}</p>
                 </div>
@@ -472,10 +476,10 @@
 
               <div class="pt-3 border-t border-emerald-200 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                  <a href="${smsHref}" class="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100">
+                  <a href="${smsHref}" class="px-2.5 py-1 rounded-md bg-white border border-emerald-300 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100">
                     📱 Open SMS
                   </a>
-                  <a href="${mailtoHref}" class="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100">
+                  <a href="${mailtoHref}" class="px-2.5 py-1 rounded-md bg-white border border-emerald-300 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100">
                     ✉️ Open Email
                   </a>
                 </div>
@@ -493,14 +497,14 @@
         }
 
         return `
-          <article class="bg-white border border-slate-200 rounded-2xl shadow-md p-5 sm:p-6 flex flex-col justify-between" data-card-id="${card.id}">
+          <article class="enterprise-card bg-white border border-slate-200 rounded-lg shadow-md p-5 sm:p-6 flex flex-col justify-between" data-card-id="${card.id}">
             <div>
               <div class="flex items-center justify-between gap-2 mb-3">
                 <span class="font-mono-telemetry text-[11px] text-[#1E40AF] font-bold">${escapeHtml(card.cardNumber)}</span>
-                <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800">${escapeHtml(card.unlockedBadge)}</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800">${escapeHtml(card.unlockedBadge)}</span>
               </div>
 
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono-telemetry text-[11px] font-bold mb-3 ${card.pillClass || 'bg-[#FEF3C7] border-amber-300 text-[#D97706]'}">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border font-mono-telemetry text-[11px] font-bold mb-3 ${card.pillClass || 'bg-[#FEF3C7] border-amber-300 text-[#D97706]'}">
                 <span>${escapeHtml(card.pillIcon || '⚡')}</span>
                 <span>${escapeHtml(card.pillText)}</span>
               </div>
@@ -511,12 +515,12 @@
 
               ${
                 card.cadCallout
-                  ? `<p class="text-xs text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 mb-3">${escapeHtml(card.cadCallout)}</p>`
+                  ? `<p class="text-xs text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 rounded px-2.5 py-1.5 mb-3">${escapeHtml(card.cadCallout)}</p>`
                   : `<p class="text-xs text-[#64748B] font-medium mb-3">${escapeHtml(card.subMeta)}</p>`
               }
 
               <!-- Decision-Maker Contact Box -->
-              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-4">
+              <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200 mb-4">
                 <div class="font-mono-telemetry text-[10px] text-[#1E40AF] mb-0.5">${escapeHtml(card.contactHeader)}</div>
                 <div class="text-xs sm:text-sm font-bold text-[#0F172A]">${escapeHtml(sanitizeContactNameDisplay(card.contactName))}</div>
                 <div class="text-[11px] text-[#64748B] mt-0.5">${escapeHtml(card.contactMeta)}</div>
@@ -568,7 +572,7 @@
                       data-action="approve-send"
                       data-channel="CLIENT_EMAIL"
                       data-card-id="${card.id}"
-                      class="btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
+                      class="btn-trust-emerald w-full py-3 px-4 rounded-lg text-xs sm:text-sm font-bold text-center cursor-pointer"
                     >
                       ⚡ Approve &amp; 1-Tap Send (My Shop Email)
                     </button>
@@ -577,7 +581,7 @@
                       data-action="approve-send"
                       data-channel="NATIVE_SMS"
                       data-card-id="${card.id}"
-                      class="btn-outline-slate w-full py-2.5 px-3 rounded-xl text-xs font-bold text-center cursor-pointer"
+                      class="btn-outline-slate w-full py-2.5 px-3 rounded-lg text-xs font-bold text-center cursor-pointer"
                     >
                       📱 Approve &amp; Text from My Phone
                     </button>
@@ -589,7 +593,7 @@
                         data-action="approve-send"
                         data-channel="CLIENT_EMAIL"
                         data-card-id="${card.id}"
-                        class="btn-trust-emerald py-2.5 px-3 rounded-xl text-xs font-bold text-center cursor-pointer"
+                        class="btn-trust-emerald py-2.5 px-3 rounded-lg text-xs font-bold text-center cursor-pointer"
                       >
                         ✉️ Send from My Email
                       </button>
@@ -598,7 +602,7 @@
                         data-action="approve-send"
                         data-channel="NATIVE_SMS"
                         data-card-id="${card.id}"
-                        class="btn-outline-slate py-2.5 px-3 rounded-xl text-xs font-bold text-center cursor-pointer"
+                        class="btn-outline-slate py-2.5 px-3 rounded-lg text-xs font-bold text-center cursor-pointer"
                       >
                         📱 Text from My Phone
                       </button>
@@ -658,7 +662,7 @@
     lockedOverflowGrid.innerHTML = lockedCards
       .map(
         (card) => `
-        <div class="bg-white/95 border border-amber-200 rounded-xl px-3.5 py-3 flex items-center justify-between gap-2 text-xs">
+        <div class="bg-white/95 border border-amber-200 rounded-md px-3.5 py-3 flex items-center justify-between gap-2 text-xs">
           <span class="font-mono-telemetry font-bold text-amber-900 whitespace-nowrap">[${escapeHtml(card.unlockedBadge)}]</span>
           <span class="text-slate-900 font-semibold truncate">${escapeHtml(card.headline)}</span>
           <span class="redacted-preview-text font-mono text-slate-500 whitespace-nowrap">${escapeHtml(card.redactedPreview || 'Verified Owner')}</span>
@@ -706,15 +710,15 @@
               card.draftBody
             );
             const statusPill = isSent
-              ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono-telemetry text-[10px] font-bold">✓ SENT (${escapeHtml(
+              ? `<span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono-telemetry text-[10px] font-bold">✓ SENT (${escapeHtml(
                   card.approvedTimeLabel || '07:04 AM'
                 )})</span>`
-              : `<span class="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 font-mono-telemetry text-[10px] text-slate-700">ARCHIVED (${escapeHtml(
+              : `<span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-300 font-mono-telemetry text-[10px] text-slate-700">ARCHIVED (${escapeHtml(
                   snap.date
                 )})</span>`;
 
             return `
-              <article class="rounded-xl border ${
+              <article class="rounded-lg border ${
                 isSent ? 'border-emerald-300 bg-emerald-50/40' : 'border-slate-200 bg-slate-50/70'
               } p-4 flex flex-col justify-between gap-3">
                 <div>
@@ -761,7 +765,7 @@
           .join('');
 
         return `
-          <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+          <div class="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
             <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-200">
               <div class="flex items-center gap-2">
                 <span class="px-2.5 py-1 rounded-lg bg-[#0F172A] text-white font-mono-telemetry text-xs font-bold">
@@ -818,7 +822,7 @@
     sentLogsContainer.innerHTML = sentCards
       .map(
         (c) => `
-        <div class="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div class="p-3.5 rounded-lg bg-emerald-50/60 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div class="font-mono-telemetry text-[11px] text-emerald-800 font-bold">
               ✓ ${escapeHtml(c.cardNumber)} • DISPATCHED AT ${escapeHtml(c.approvedTimeLabel || '07:01 AM')} VIA ${escapeHtml(c.dispatchChannel || 'CLOUD_EMAIL')}

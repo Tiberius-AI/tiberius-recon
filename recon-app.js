@@ -368,9 +368,9 @@
       const pill = document.getElementById(`workflow-step-pill-${i}`);
       if (!pill) continue;
       if (i <= stepNum) {
-        pill.className = 'p-3 rounded-xl bg-blue-600/20 border border-blue-500 text-white transition-all';
+        pill.className = 'p-3 rounded-md bg-blue-600/20 border border-blue-500 text-white transition-all';
       } else {
-        pill.className = 'p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 transition-all';
+        pill.className = 'p-3 rounded-md bg-slate-900 border border-slate-800 text-slate-300 transition-all';
       }
     }
   }
@@ -393,9 +393,8 @@
 
     document.querySelectorAll('.featured-trade-btn').forEach((btn) => {
       const isSelected = btn.getAttribute('data-featured-trade') === tradeKey;
-      btn.className = isSelected
-        ? 'featured-trade-btn active px-3.5 py-2 rounded-xl border border-blue-500 bg-blue-600/20 text-white font-display font-bold text-xs cursor-pointer transition-all'
-        : 'featured-trade-btn px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs cursor-pointer transition-all';
+      btn.classList.toggle('active', isSelected);
+      btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
     });
   }
 
@@ -437,6 +436,7 @@
     document.querySelectorAll('.trade-pill-btn').forEach((btn) => {
       const isSelected = btn.getAttribute('data-trade') === currentTradeKey;
       btn.classList.toggle('active', isSelected);
+      btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
     });
 
     [1, 2, 3].forEach((idx) => {
@@ -609,7 +609,7 @@
       if (demoConvStatusPill) {
         demoConvStatusPill.textContent = '📅 SITE WALK BOOKED - THU 9:00 AM (DEMO)';
         demoConvStatusPill.className =
-          'px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold';
+          'px-2.5 py-1 rounded bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold';
       }
     });
   }
@@ -685,12 +685,12 @@
         if (data && data.ok && zipCheckerStatusText && zipCheckerResult) {
           if (data.isAvailable) {
             zipCheckerResult.className =
-              'mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs';
+              'mt-3 p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs';
             zipCheckerStatusText.className = 'font-mono-telemetry text-emerald-300 font-bold';
             zipCheckerStatusText.textContent = `✓ ZIP ${data.zipCode} (${data.city}) IS OPEN - Start your 7-day free trial below`;
           } else {
             zipCheckerResult.className =
-              'mt-3 p-3 rounded-xl bg-amber-950/50 border border-amber-500/50 flex flex-wrap items-center justify-between gap-2 text-xs';
+              'mt-3 p-3 rounded-lg bg-amber-950/50 border border-amber-500/50 flex flex-wrap items-center justify-between gap-2 text-xs';
             zipCheckerStatusText.className = 'font-mono-telemetry text-amber-300 font-bold';
             zipCheckerStatusText.textContent = `🔒 ZIP ${data.zipCode} SOLD OUT - Nearby open zip codes: 78130, 78132, 78258`;
           }
@@ -703,13 +703,13 @@
       if (zipCheckerStatusText && zipCheckerResult) {
         if (cleanZip === '79999') {
           zipCheckerResult.className =
-            'mt-3 p-3 rounded-xl bg-amber-950/50 border border-amber-500/50 flex flex-wrap items-center justify-between gap-2 text-xs';
+            'mt-3 p-3 rounded-lg bg-amber-950/50 border border-amber-500/50 flex flex-wrap items-center justify-between gap-2 text-xs';
           zipCheckerStatusText.className = 'font-mono-telemetry text-amber-300 font-bold';
           zipCheckerStatusText.textContent =
             '🔒 ZIP 79999 SOLD OUT - Nearby open zip codes: 78130, 78132, 78258';
         } else {
           zipCheckerResult.className =
-            'mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs';
+            'mt-3 p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs';
           zipCheckerStatusText.className = 'font-mono-telemetry text-emerald-300 font-bold';
           zipCheckerStatusText.textContent = `✓ ZIP ${cleanZip} IS OPEN - Lock your 7-day free trial below`;
         }

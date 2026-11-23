@@ -69,7 +69,7 @@
   </script>
 
   <!-- Design System Stylesheet -->
-  <link rel="stylesheet" href="/recon/styles.css?v=3.1" onerror="this.onerror=null;this.href='styles.css?v=3.1';" />
+  <link rel="stylesheet" href="/recon/styles.css?v=3.4" onerror="this.onerror=null;this.href='styles.css?v=3.4';" />
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -114,9 +114,8 @@
   <div id="personalized-brief-top-banner" class="hidden bg-gradient-to-r from-blue-950/95 via-slate-900 to-emerald-950/90 border-b border-emerald-400/30 px-4 py-3.5 relative z-50">
     <div class="max-w-[1280px] mx-auto flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
       <div class="space-y-0.5">
-        <div class="inline-flex items-center gap-2 font-mono-telemetry text-[11px] text-emerald-300 font-bold uppercase tracking-wider">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>YOUR LOCAL PERMIT PREVIEW</span>
+        <div class="font-mono-telemetry text-[11px] text-emerald-300 font-bold uppercase tracking-widest">
+          <span>00 // YOUR LOCAL PERMIT PREVIEW</span>
         </div>
         <p class="font-display font-extrabold text-sm sm:text-base text-white">
           You Saw Real Permits Pulled in Your County. Get Fresh Jobs Every Morning.
@@ -129,13 +128,13 @@
         <a
           id="brief-banner-reopen-link"
           href="/recon/briefing?token=demo-7am-briefing"
-          class="hidden btn-outline-slate px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap"
+          class="hidden btn-outline-slate px-3.5 py-2 rounded-lg text-xs font-bold whitespace-nowrap"
         >
           Re-Open My Brief →
         </a>
         <a
           href="#pricing"
-          class="btn-trust-emerald px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center gap-1.5"
+          class="btn-trust-emerald px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center gap-1.5"
         >
           <span>Start 7-Day Free Trial</span>
           <span aria-hidden="true">→</span>
@@ -204,11 +203,10 @@
 
       <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="max-w-4xl mx-auto text-center">
-          <!-- Eyebrow Badge -->
-          <div class="inline-flex flex-wrap items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-blue-500/40 mb-6 shadow-sm">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span class="font-mono-telemetry text-xs text-slate-200">
-              REAL COUNTY BUILDING PERMITS • ZERO SHARED LEADS • NO CONTRACTS
+          <!-- Editorial Section Kicker -->
+          <div class="mb-5">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-blue-300">
+              01 // COUNTY BUILDING PERMIT RADAR • ZERO SHARED LEADS • NO CONTRACTS
             </span>
           </div>
 
@@ -226,14 +224,14 @@
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3.5 mb-7">
             <a
               href="#pricing"
-              class="btn-trust-emerald px-8 py-4 rounded-xl text-base sm:text-lg font-bold text-center inline-flex items-center justify-center gap-2 shadow-lg"
+              class="btn-trust-emerald px-8 py-4 rounded-lg text-base sm:text-lg font-bold text-center inline-flex items-center justify-center gap-2 shadow-lg"
             >
               <span>Start 7-Day Free Trial ($0 Today)</span>
               <span aria-hidden="true">→</span>
             </a>
             <a
               href="#featured-recon-card"
-              class="btn-outline-slate px-7 py-4 rounded-xl text-base sm:text-lg font-bold text-center inline-flex items-center justify-center gap-2"
+              class="btn-outline-slate px-7 py-4 rounded-lg text-base sm:text-lg font-bold text-center inline-flex items-center justify-center gap-2"
             >
               <span>See a Real Permit Card</span>
               <span aria-hidden="true">↓</span>
@@ -257,7 +255,7 @@
           </div>
 
           <!-- Plain Trial Terms -->
-          <div class="max-w-2xl mx-auto p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 leading-relaxed mb-6">
+          <div class="max-w-2xl mx-auto p-3.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs text-slate-300 leading-relaxed mb-6">
             <strong class="text-white">7-Day Free Trial:</strong> Pay $0 today via Stripe. Test your county permit list for 7 full days. Cancel before Day 8 with one click and pay nothing.
           </div>
 
@@ -283,8 +281,10 @@
 
         <!-- Section Header -->
         <div class="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 font-mono-telemetry text-xs text-amber-800 mb-3">
-            <span>7:00 AM SAMPLE CARD • DEMO EXAMPLE</span>
+          <div class="mb-3">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-amber-300">
+              02 // 7:00 AM SAMPLE CARD • DEMO EXAMPLE
+            </span>
           </div>
           <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mb-3">
             What Hits Your Phone at 7:00 AM Over Coffee
@@ -295,47 +295,57 @@
         </div>
 
         <!-- Job Type Switcher -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mb-7" role="tablist" aria-label="Sample Permit Type Selector">
-          <span class="font-mono-telemetry text-xs text-slate-400 mr-1">SEE SAMPLE FOR:</span>
-          <button
-            type="button"
-            data-featured-trade="concrete"
-            class="featured-trade-btn active min-h-[44px] inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-white font-display font-bold text-xs cursor-pointer transition-all"
-          >
-            🏢 Commercial Build
-          </button>
-          <button
-            type="button"
-            data-featured-trade="roofing"
-            class="featured-trade-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs cursor-pointer transition-all"
-          >
-            🏠 Roof Job
-          </button>
-          <button
-            type="button"
-            data-featured-trade="pools"
-            class="featured-trade-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs cursor-pointer transition-all"
-          >
-            🏡 Home Remodel
-          </button>
-          <button
-            type="button"
-            data-featured-trade="b2b"
-            class="featured-trade-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs cursor-pointer transition-all"
-          >
-            🔑 Property Sale
-          </button>
+        <div class="flex flex-wrap items-center justify-center gap-3 mb-7">
+          <span class="font-mono-telemetry text-xs text-slate-400">SEE SAMPLE FOR:</span>
+          <div class="trade-switcher-rail" role="tablist" aria-label="Sample Permit Type Selector">
+            <button
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-featured-trade="concrete"
+              class="featured-trade-btn active min-h-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-md border font-display font-bold text-xs cursor-pointer transition-all"
+            >
+              🏢 Commercial Build
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-featured-trade="roofing"
+              class="featured-trade-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-md border font-display font-bold text-xs cursor-pointer transition-all"
+            >
+              🏠 Roof Job
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-featured-trade="pools"
+              class="featured-trade-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-md border font-display font-bold text-xs cursor-pointer transition-all"
+            >
+              🏡 Home Remodel
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-featured-trade="b2b"
+              class="featured-trade-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-md border font-display font-bold text-xs cursor-pointer transition-all"
+            >
+              🔑 Property Sale
+            </button>
+          </div>
         </div>
 
         <!-- Centerpiece Recon Card Container -->
-        <article class="enterprise-card g3-conic-card rounded-2xl border border-blue-500/40 shadow-2xl overflow-hidden max-w-5xl mx-auto">
+        <article class="enterprise-card g3-conic-card rounded-lg border border-blue-500/40 shadow-2xl overflow-hidden max-w-5xl mx-auto">
           <!-- Top Status Bar -->
           <div class="bg-slate-950/90 border-b border-slate-800 px-5 sm:px-7 py-3.5 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2.5">
-              <span class="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+              <span class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
                 SAMPLE PERMIT CARD
               </span>
-              <span id="featured-card-permit-pill" class="px-2.5 py-1 rounded-md bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-[11px] text-blue-300 font-bold">
+              <span id="featured-card-permit-pill" class="px-2.5 py-1 rounded bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-[11px] text-blue-300 font-bold">
                 PERMIT #BP-2026-09114 • $385,000 JOB VALUE
               </span>
             </div>
@@ -362,7 +372,7 @@
 
               <!-- 2 Info Boxes -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                <div class="p-3.5 rounded-lg bg-slate-900/90 border border-slate-800 space-y-1">
                   <div class="font-mono-telemetry text-[10px] text-slate-400 uppercase">Public Permit Source</div>
                   <div id="featured-card-record" class="font-bold text-white text-sm">
                     Permit #BP-2026-09114 ($385,000)
@@ -372,7 +382,7 @@
                   </div>
                 </div>
 
-                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                <div class="p-3.5 rounded-lg bg-slate-900/90 border border-slate-800 space-y-1">
                   <div class="font-mono-telemetry text-[10px] text-amber-300 uppercase">Why You Win First</div>
                   <div id="featured-card-why" class="font-semibold text-white text-xs leading-relaxed">
                     This permit was just filed. You reach the builder weeks before other local contractors hear about it.
@@ -381,7 +391,7 @@
               </div>
 
               <!-- Contact Info -->
-              <div class="p-4 rounded-xl bg-slate-900/95 border border-slate-800 space-y-2">
+              <div class="p-4 rounded-lg bg-slate-900/95 border border-slate-800 space-y-2">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <span class="font-mono-telemetry text-[10px] text-emerald-400 font-bold uppercase">
                     BUILDER &amp; OWNER CONTACT (SAMPLE)
@@ -404,7 +414,7 @@
             </div>
 
             <!-- Right 5 Cols: Ready Message -->
-            <div class="lg:col-span-5 bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="lg:col-span-5 bg-slate-950/90 border border-slate-800 rounded-lg p-5 space-y-4">
               <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
                 <div>
                   <span class="font-mono-telemetry text-[10px] text-emerald-400 font-bold uppercase block">
@@ -414,7 +424,7 @@
                     Plain English • Nothing Sends Until You Tap
                   </span>
                 </div>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono-telemetry text-[10px]">
+                <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono-telemetry text-[10px]">
                   Editable
                 </span>
               </div>
@@ -427,7 +437,7 @@
                 <a
                   href="#interactive-demo"
                   id="featured-card-demo-cta"
-                  class="btn-trust-emerald w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-2 shadow-md"
+                  class="btn-trust-emerald w-full py-3.5 px-4 rounded-lg text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-2 shadow-md"
                 >
                   <span>Test 1-Tap Send in Live Demo</span>
                   <span aria-hidden="true">↓</span>
@@ -455,16 +465,17 @@
         <div id="hero-video-scroll-stage" class="video-scroll-reveal is-in-view max-w-5xl mx-auto">
 
           <div class="text-center mb-6 sm:mb-8">
-            <div class="inline-flex items-center gap-2 text-xs sm:text-sm font-mono-telemetry text-[#1E40AF] tracking-widest uppercase mb-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10B981] animate-pulse"></span>
-              <span>90-SECOND SCREEN WALKTHROUGH</span>
+            <div class="mb-2.5">
+              <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-[#1E40AF]">
+                03 // 90-SECOND SCREEN WALKTHROUGH
+              </span>
             </div>
             <h2 class="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-[#0F172A] tracking-tight">
               Watch How It Works in 90 Seconds
             </h2>
           </div>
 
-          <div class="video-showcase-shell bg-slate-50 p-3 sm:p-4 lg:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl">
+          <div class="video-showcase-shell bg-slate-50 p-3 sm:p-4 lg:p-5 rounded-lg border border-slate-200 shadow-2xl">
             <div
               id="hero-video-player-card"
               class="hero-video-frame group"
@@ -536,9 +547,11 @@
       <div class="max-w-[1140px] mx-auto px-4 sm:px-6 lg:px-8">
 
         <div class="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
-          <span class="font-mono-telemetry text-xs text-blue-400 uppercase tracking-wider font-bold">
-            SHARED LEADS VS. REAL COUNTY PERMITS
-          </span>
+          <div class="mb-2.5">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-blue-400">
+              04 // SHARED LEADS VS. REAL COUNTY PERMITS
+            </span>
+          </div>
           <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mt-2 mb-3">
             Stop Buying $150 Shared Leads Five Other Guys Are Already Calling.
           </h2>
@@ -551,7 +564,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
 
           <!-- Column 1: Shared Leads & Manual Hunting -->
-          <div class="rounded-2xl bg-slate-900/75 border border-slate-800 p-6 sm:p-8 flex flex-col justify-between">
+          <div class="rounded-lg bg-slate-900/75 border border-slate-800 p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-800">
                 <h3 class="font-display font-extrabold text-xl sm:text-2xl text-slate-200">
@@ -592,7 +605,7 @@
           </div>
 
           <!-- Column 2: With Tiberius Recon -->
-          <div class="rounded-2xl g3-conic-card border border-blue-500/40 p-6 sm:p-8 flex flex-col justify-between shadow-xl">
+          <div class="rounded-lg g3-conic-card border border-blue-500/40 p-6 sm:p-8 flex flex-col justify-between shadow-xl">
             <div>
               <div class="flex items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-800">
                 <h3 class="font-display font-extrabold text-xl sm:text-2xl text-white">
@@ -648,9 +661,11 @@
       <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
 
         <div class="max-w-3xl mx-auto text-center mb-10 sm:mb-14">
-          <span class="font-mono-telemetry text-xs text-blue-400 uppercase tracking-wider font-bold">
-            BUILT FOR YOUR WORK TRUCK
-          </span>
+          <div class="mb-2.5">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-blue-400">
+              05 // BUILT FOR YOUR WORK TRUCK
+            </span>
+          </div>
           <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mt-2 mb-3">
             Three Simple Steps From Permit to Signed Job
           </h2>
@@ -663,10 +678,10 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-10">
 
           <!-- Step 1 -->
-          <div class="enterprise-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+          <div class="enterprise-card rounded-lg p-6 sm:p-7 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 font-mono-telemetry font-bold text-sm text-blue-300 flex items-center justify-center">
+                <span class="w-10 h-10 rounded-md bg-blue-600/20 border border-blue-500/40 font-mono-telemetry font-bold text-sm text-blue-300 flex items-center justify-center">
                   01
                 </span>
                 <span class="font-mono-telemetry text-xs text-slate-400">2:00 AM NIGHT CHECK</span>
@@ -684,10 +699,10 @@
           </div>
 
           <!-- Step 2 -->
-          <div class="enterprise-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+          <div class="enterprise-card rounded-lg p-6 sm:p-7 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/40 font-mono-telemetry font-bold text-sm text-emerald-300 flex items-center justify-center">
+                <span class="w-10 h-10 rounded-md bg-emerald-600/20 border border-emerald-500/40 font-mono-telemetry font-bold text-sm text-emerald-300 flex items-center justify-center">
                   02
                 </span>
                 <span class="font-mono-telemetry text-xs text-slate-400">7:00 AM COFFEE LIST</span>
@@ -705,10 +720,10 @@
           </div>
 
           <!-- Step 3 -->
-          <div class="enterprise-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+          <div class="enterprise-card rounded-lg p-6 sm:p-7 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between gap-2 mb-4">
-                <span class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 font-mono-telemetry font-bold text-sm text-amber-300 flex items-center justify-center">
+                <span class="w-10 h-10 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry font-bold text-sm text-amber-300 flex items-center justify-center">
                   03
                 </span>
                 <span class="font-mono-telemetry text-xs text-slate-400">YOU STAY IN CONTROL</span>
@@ -728,7 +743,7 @@
         </div>
 
         <!-- Collapsible Plain-English Details Drawer -->
-        <details class="max-w-4xl mx-auto rounded-2xl bg-slate-900/90 border border-slate-800 overflow-hidden group">
+        <details class="max-w-4xl mx-auto rounded-lg bg-slate-900/90 border border-slate-800 overflow-hidden group">
           <summary class="px-6 py-4 cursor-pointer flex items-center justify-between gap-4 select-none hover:bg-slate-800/60 transition-colors">
             <div class="flex items-center gap-3">
               <span class="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 font-mono-telemetry text-[11px] text-blue-300 font-bold">
@@ -741,25 +756,25 @@
             <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
           </summary>
           <div class="px-6 pb-6 pt-2 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-300 leading-relaxed">
-            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+            <div class="p-4 rounded-lg bg-slate-950/80 border border-slate-800/90 space-y-1.5">
               <div class="font-mono-telemetry text-[11px] text-blue-400 font-bold">1. CITY &amp; COUNTY BUILDING PERMITS</div>
               <p>
                 We check local city permit offices overnight for new commercial builds, roof jobs, and big home remodels.
               </p>
             </div>
-            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+            <div class="p-4 rounded-lg bg-slate-950/80 border border-slate-800/90 space-y-1.5">
               <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">2. COUNTY PROPERTY OWNER RECORDS</div>
               <p>
                 We match each street address against county property tax records to find the real building owner and property value.
               </p>
             </div>
-            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+            <div class="p-4 rounded-lg bg-slate-950/80 border border-slate-800/90 space-y-1.5">
               <div class="font-mono-telemetry text-[11px] text-amber-300 font-bold">3. WRITTEN LIKE A REAL CONTRACTOR</div>
               <p>
                 We use your company name, license, and local jobs so every message sounds like you, never robotic spam.
               </p>
             </div>
-            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+            <div class="p-4 rounded-lg bg-slate-950/80 border border-slate-800/90 space-y-1.5">
               <div class="font-mono-telemetry text-[11px] text-purple-300 font-bold">4. SENDS FROM YOUR REAL PHONE OR EMAIL</div>
               <p>
                 Send messages straight from your own email or phone text app so owners reply directly to you.
@@ -779,8 +794,10 @@
 
         <!-- Section Header -->
         <div class="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 font-mono-telemetry text-xs text-amber-800 mb-3">
-            <span>TRY IT ON YOUR PHONE • INTERACTIVE DEMO</span>
+          <div class="mb-3">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-amber-300">
+              06 // INTERACTIVE DEMO • TRY IT ON YOUR PHONE
+            </span>
           </div>
           <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mb-3">
             Tap Through a Sample 7:00 AM Permit List
@@ -792,66 +809,74 @@
 
         <!-- 6-Step Guided Sequence Strip -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-8 text-xs">
-          <div id="workflow-step-pill-1" class="p-3 rounded-xl bg-blue-600/20 border border-blue-500 text-white">
+          <div id="workflow-step-pill-1" class="p-3 rounded-md bg-blue-600/20 border border-blue-500 text-white">
             <div class="font-mono-telemetry text-[10px] text-blue-300 font-bold">STEP 01</div>
             <div class="font-display font-bold mt-0.5">1. Open 7 AM List</div>
           </div>
-          <div id="workflow-step-pill-2" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+          <div id="workflow-step-pill-2" class="p-3 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
             <div class="font-mono-telemetry text-[10px] text-slate-400 font-bold">STEP 02</div>
             <div class="font-display font-bold mt-0.5">2. Pick a Job</div>
           </div>
-          <div id="workflow-step-pill-3" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+          <div id="workflow-step-pill-3" class="p-3 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
             <div class="font-mono-telemetry text-[10px] text-slate-400 font-bold">STEP 03</div>
             <div class="font-display font-bold mt-0.5">3. Check Owner</div>
           </div>
-          <div id="workflow-step-pill-4" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+          <div id="workflow-step-pill-4" class="p-3 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
             <div class="font-mono-telemetry text-[10px] text-slate-400 font-bold">STEP 04</div>
             <div class="font-display font-bold mt-0.5">4. Read Intro</div>
           </div>
-          <div id="workflow-step-pill-5" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+          <div id="workflow-step-pill-5" class="p-3 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
             <div class="font-mono-telemetry text-[10px] text-slate-400 font-bold">STEP 05</div>
             <div class="font-display font-bold mt-0.5">5. Tap Approve</div>
           </div>
-          <div id="workflow-step-pill-6" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+          <div id="workflow-step-pill-6" class="p-3 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
             <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">STEP 06</div>
             <div class="font-display font-bold mt-0.5">6. Book Walk</div>
           </div>
         </div>
 
         <!-- Job Type Tabs & Counter Bar -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 mb-7 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 sm:p-5 mb-7 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2 mb-2">
               <span class="font-mono-telemetry text-[11px] text-amber-300 font-bold">
                 PICK A JOB FOCUS TO PREVIEW SAMPLE CARDS:
               </span>
             </div>
-            <div class="flex flex-wrap gap-2" role="tablist" aria-label="Sample Job Focus">
+            <div class="trade-switcher-rail" role="tablist" aria-label="Sample Job Focus">
               <button
                 type="button"
+                role="tab"
+                aria-selected="true"
                 data-trade="concrete"
-                class="trade-pill-btn active min-h-[44px] inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+                class="trade-pill-btn active min-h-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-md border text-xs font-display font-bold cursor-pointer transition-all"
               >
                 🏢 Commercial Builds
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected="false"
                 data-trade="roofing"
-                class="trade-pill-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+                class="trade-pill-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-md border text-xs font-display font-bold cursor-pointer transition-all"
               >
                 🏠 Roofing Jobs
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected="false"
                 data-trade="pools"
-                class="trade-pill-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+                class="trade-pill-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-md border text-xs font-display font-bold cursor-pointer transition-all"
               >
                 🏡 Home Remodels
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected="false"
                 data-trade="b2b"
-                class="trade-pill-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl border text-xs font-display font-bold cursor-pointer transition-all"
+                class="trade-pill-btn min-h-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-md border text-xs font-display font-bold cursor-pointer transition-all"
               >
                 🔑 Property Sales
               </button>
@@ -859,13 +884,13 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-3 shrink-0">
-            <div id="demo-approved-counter" class="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+            <div id="demo-approved-counter" class="px-3.5 py-2 rounded-md bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
               Sample Cards Approved: 0/3
             </div>
             <button
               id="reset-demo-btn"
               type="button"
-              class="btn-outline-slate px-3 py-2 rounded-xl text-xs font-mono-telemetry cursor-pointer"
+              class="btn-outline-slate px-3 py-2 rounded-md text-xs font-mono-telemetry cursor-pointer"
             >
               ↺ Reset Demo
             </button>
@@ -876,7 +901,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch mb-8">
 
           <!-- SAMPLE CARD 1 -->
-          <article id="recon-card-1" class="enterprise-card rounded-2xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
+          <article id="recon-card-1" class="enterprise-card rounded-lg p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
             <div>
               <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800">
                 <span class="font-mono-telemetry text-[11px] font-bold text-slate-300">
@@ -887,7 +912,7 @@
                 </span>
               </div>
 
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-300 font-mono-telemetry text-[11px] font-semibold text-[#D97706] mb-2.5">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50 border border-amber-300 font-mono-telemetry text-[11px] font-semibold text-[#D97706] mb-2.5">
                 <span>⚡</span>
                 <span id="card-1-pill">PERMIT #BP-2026-08941 • $240,000 JOB</span>
               </div>
@@ -900,7 +925,7 @@
                 Address: 1420 Industrial Pkwy, Suite B, New Braunfels, TX 78130
               </p>
 
-              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
                 <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-blue-400 font-bold">
                   <span>COUNTY PROPERTY RECORD</span>
                   <span>PARCEL #78130-204719</span>
@@ -910,7 +935,7 @@
                 </div>
               </div>
 
-              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
                 <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">
                   DECISION-MAKER CONTACT (SAMPLE):
                 </div>
@@ -950,7 +975,7 @@
                 <button
                   type="button"
                   data-approve-card="1"
-                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
+                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-lg text-xs sm:text-sm font-bold text-center cursor-pointer"
                 >
                   ✓ Approve &amp; See Owner Reply
                 </button>
@@ -960,7 +985,7 @@
                 </div>
               </div>
 
-              <div id="card-1-dispatched" class="hidden dispatched-stamp rounded-xl p-3 text-center space-y-1">
+              <div id="card-1-dispatched" class="hidden dispatched-stamp rounded-md p-3 text-center space-y-1">
                 <div class="font-mono-telemetry text-xs font-bold">
                   ✓ APPROVED • SEE REPLY BELOW
                 </div>
@@ -972,7 +997,7 @@
           </article>
 
           <!-- SAMPLE CARD 2 -->
-          <article id="recon-card-2" class="enterprise-card rounded-2xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
+          <article id="recon-card-2" class="enterprise-card rounded-lg p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
             <div>
               <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800">
                 <span class="font-mono-telemetry text-[11px] font-bold text-slate-300">
@@ -983,7 +1008,7 @@
                 </span>
               </div>
 
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-300 font-mono-telemetry text-[11px] font-semibold text-[#D97706] mb-2.5">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50 border border-amber-300 font-mono-telemetry text-[11px] font-semibold text-[#D97706] mb-2.5">
                 <span>🏢</span>
                 <span id="card-2-pill">NEW PROPERTY OWNER • 140-UNIT COMPLEX</span>
               </div>
@@ -996,7 +1021,7 @@
                 Address: 2410 Gruene Rd, New Braunfels, TX 78130
               </p>
 
-              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
                 <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-blue-400 font-bold">
                   <span>COUNTY DEED RECORD</span>
                   <span>PARCEL #78130-218635</span>
@@ -1006,7 +1031,7 @@
                 </div>
               </div>
 
-              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
                 <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">
                   DECISION-MAKER CONTACT (SAMPLE):
                 </div>
@@ -1046,7 +1071,7 @@
                 <button
                   type="button"
                   data-approve-card="2"
-                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
+                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-lg text-xs sm:text-sm font-bold text-center cursor-pointer"
                 >
                   ✓ Approve &amp; See Owner Reply
                 </button>
@@ -1056,7 +1081,7 @@
                 </div>
               </div>
 
-              <div id="card-2-dispatched" class="hidden dispatched-stamp rounded-xl p-3 text-center space-y-1">
+              <div id="card-2-dispatched" class="hidden dispatched-stamp rounded-md p-3 text-center space-y-1">
                 <div class="font-mono-telemetry text-xs font-bold">
                   ✓ APPROVED • SEE REPLY BELOW
                 </div>
@@ -1068,7 +1093,7 @@
           </article>
 
           <!-- SAMPLE CARD 3 -->
-          <article id="recon-card-3" class="enterprise-card rounded-2xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
+          <article id="recon-card-3" class="enterprise-card rounded-lg p-5 sm:p-6 flex flex-col justify-between transition-all duration-300">
             <div>
               <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800">
                 <span class="font-mono-telemetry text-[11px] font-bold text-slate-300">
@@ -1079,7 +1104,7 @@
                 </span>
               </div>
 
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 font-mono-telemetry text-[11px] font-semibold text-[#1E40AF] mb-2.5">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-50 border border-blue-200 font-mono-telemetry text-[11px] font-semibold text-[#1E40AF] mb-2.5">
                 <span>🏡</span>
                 <span id="card-3-pill">HOME REMODEL PERMIT • OWNER MATCHED</span>
               </div>
@@ -1092,7 +1117,7 @@
                 Address: 1140 Whispering Pines Ln, New Braunfels, TX 78130
               </p>
 
-              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 mb-3 text-xs space-y-1.5">
                 <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-blue-400 font-bold">
                   <span>COUNTY PROPERTY RECORD</span>
                   <span>PARCEL #78130-90418A</span>
@@ -1102,7 +1127,7 @@
                 </div>
               </div>
 
-              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 mb-3.5 text-xs space-y-1">
                 <div class="font-mono-telemetry text-[10px] text-emerald-400 font-bold">
                   PROPERTY OWNER RECORD (SAMPLE):
                 </div>
@@ -1142,7 +1167,7 @@
                 <button
                   type="button"
                   data-approve-card="3"
-                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-center cursor-pointer"
+                  class="approve-send-btn btn-trust-emerald w-full py-3 px-4 rounded-lg text-xs sm:text-sm font-bold text-center cursor-pointer"
                 >
                   ✓ Approve &amp; See Owner Reply
                 </button>
@@ -1152,7 +1177,7 @@
                 </div>
               </div>
 
-              <div id="card-3-dispatched" class="hidden dispatched-stamp rounded-xl p-3 text-center space-y-1">
+              <div id="card-3-dispatched" class="hidden dispatched-stamp rounded-md p-3 text-center space-y-1">
                 <div class="font-mono-telemetry text-xs font-bold">
                   ✓ APPROVED • SEE REPLY BELOW
                 </div>
@@ -1168,14 +1193,14 @@
         <!-- ================================================================
              STEP 6 OF DEMO: REPLIES ROOM PREVIEW
              ================================================================ -->
-        <div id="demo-conversation-room-stage" class="enterprise-card g3-conic-card rounded-2xl border border-emerald-500/40 p-6 sm:p-8 shadow-2xl">
+        <div id="demo-conversation-room-stage" class="enterprise-card g3-conic-card rounded-lg border border-emerald-500/40 p-6 sm:p-8 shadow-2xl">
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 mb-6 border-b border-slate-800">
             <div>
-              <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold">
-                  STEP 6 OF 6 • REPLIES ROOM DEMO
+              <div class="flex flex-wrap items-center gap-3 mb-2">
+                <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-300">
+                  STEP 06 // REPLIES ROOM DEMO
                 </span>
-                <span id="demo-conv-status-pill" class="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                <span id="demo-conv-status-pill" class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
                   🔥 NEW OWNER REPLY RECEIVED
                 </span>
               </div>
@@ -1190,7 +1215,7 @@
             <div class="flex flex-wrap items-center gap-2.5 shrink-0">
               <a
                 href="/recon/inbox?token=demo-7am-briefing"
-                class="btn-outline-slate px-4 py-2.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
+                class="btn-outline-slate px-4 py-2.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5"
               >
                 <span>Open Full Demo Room →</span>
               </a>
@@ -1200,7 +1225,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
 
             <!-- Left 7 Cols: Live Thread Simulation -->
-            <div class="lg:col-span-7 bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="lg:col-span-7 bg-slate-950/90 border border-slate-800 rounded-lg p-5 space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
                 <div>
                   <div id="demo-conv-thread-title" class="font-display font-bold text-base text-white">
@@ -1216,7 +1241,7 @@
               </div>
 
               <div id="demo-conv-messages" class="space-y-3 max-h-[340px] overflow-y-auto pr-1">
-                <div class="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-xs space-y-1">
+                <div class="p-3.5 rounded-lg bg-blue-950/40 border border-blue-500/30 text-xs space-y-1">
                   <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-blue-300">
                     <span>YOU (SENT FROM 7:00 AM LIST)</span>
                     <span>07:02 AM</span>
@@ -1226,7 +1251,7 @@
                   </p>
                 </div>
 
-                <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-xs space-y-1">
+                <div class="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-xs space-y-1">
                   <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-emerald-300 font-bold">
                     <span id="demo-conv-inbound-sender">MARCUS VANCE (APEX BUILDERS) • SAMPLE REPLY</span>
                     <span>08:19 AM</span>
@@ -1236,7 +1261,7 @@
                   </p>
                 </div>
 
-                <div id="demo-conv-followup-bubble" class="hidden p-3.5 rounded-xl bg-blue-950/60 border border-emerald-400/50 text-xs space-y-1">
+                <div id="demo-conv-followup-bubble" class="hidden p-3.5 rounded-lg bg-blue-950/60 border border-emerald-400/50 text-xs space-y-1">
                   <div class="flex items-center justify-between font-mono-telemetry text-[10px] text-emerald-300 font-bold">
                     <span>YOU (WALKTHROUGH BOOKED)</span>
                     <span>Just Now (Demo)</span>
@@ -1268,7 +1293,7 @@
                   <button
                     type="button"
                     id="demo-conv-send-reply-btn"
-                    class="btn-trust-emerald px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer"
+                    class="btn-trust-emerald px-5 py-2.5 rounded-lg text-xs font-bold cursor-pointer"
                   >
                     ✓ Send Reply &amp; Book Walk (Demo)
                   </button>
@@ -1281,7 +1306,7 @@
 
             <!-- Right 5 Cols: Permit Context -->
             <div class="lg:col-span-5 space-y-3">
-              <div class="p-5 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-4">
+              <div class="p-5 rounded-lg bg-slate-950/90 border border-slate-800 space-y-4">
                 <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800">
                   <span class="font-mono-telemetry text-[11px] text-blue-400 font-bold">
                     🏛️ PERMIT DETAILS STAY ATTACHED
@@ -1294,15 +1319,15 @@
                   Every reply stays pinned to the exact permit card so you always know which job is calling:
                 </p>
                 <div class="space-y-2.5 text-xs">
-                  <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
+                  <div class="p-3 rounded-md bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
                     <span class="font-mono-telemetry text-[11px] text-slate-400">PERMIT NUMBER</span>
                     <span class="font-mono-telemetry text-[11px] text-white font-bold">#BP-2026-08941 • $240,000</span>
                   </div>
-                  <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
+                  <div class="p-3 rounded-md bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
                     <span class="font-mono-telemetry text-[11px] text-slate-400">JOB ADDRESS</span>
                     <span class="font-mono-telemetry text-[11px] text-emerald-300 font-bold">1420 Industrial Pkwy, Suite B</span>
                   </div>
-                  <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
+                  <div class="p-3 rounded-md bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2">
                     <span class="font-mono-telemetry text-[11px] text-slate-400">SHARED WITH RIVALS?</span>
                     <span class="font-mono-telemetry text-[11px] text-blue-300 font-bold">Protected Zip Capacity</span>
                   </div>
@@ -1338,11 +1363,13 @@
       <div class="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
         <!-- Simple No-BS 1-Job Math Banner -->
-        <div class="enterprise-card g3-conic-card rounded-2xl border border-emerald-500/40 p-6 sm:p-8 shadow-xl">
+        <div class="enterprise-card g3-conic-card rounded-lg border border-emerald-500/40 p-6 sm:p-8 shadow-xl">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             <div class="lg:col-span-8 space-y-2">
-              <div class="font-mono-telemetry text-xs text-emerald-400 font-bold uppercase">
-                SIMPLE, NO-BS CONTRACTOR MATH
+              <div>
+                <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-400">
+                  07 // SIMPLE, NO-BS CONTRACTOR MATH
+                </span>
               </div>
               <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-white">
                 Catching Just ONE Extra Job Pays for Recon for Years.
@@ -1352,11 +1379,11 @@
               </p>
             </div>
             <div class="lg:col-span-4 grid grid-cols-2 gap-3 text-center">
-              <div class="p-4 rounded-xl bg-slate-950/90 border border-slate-800">
+              <div class="p-4 rounded-lg bg-slate-950/90 border border-slate-800">
                 <div class="font-display font-extrabold text-2xl sm:text-3xl text-emerald-400">60 Mos</div>
                 <div class="text-[11px] text-slate-300 mt-1">Paid by 1 $12K Job at $199/mo</div>
               </div>
-              <div class="p-4 rounded-xl bg-slate-950/90 border border-emerald-500/40">
+              <div class="p-4 rounded-lg bg-slate-950/90 border border-emerald-500/40">
                 <div class="font-display font-extrabold text-2xl sm:text-3xl text-amber-300">$0 Today</div>
                 <div class="text-[11px] text-slate-300 mt-1">7-Day Free Trial • No Contracts</div>
               </div>
@@ -1365,10 +1392,10 @@
         </div>
 
         <!-- Default Prompt for Sample Brief Visitors -->
-        <div id="personalized-brief-CollapsedPrompt" class="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+        <div id="personalized-brief-CollapsedPrompt" class="rounded-lg bg-slate-900/90 border border-slate-800 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
           <div class="space-y-1.5 max-w-2xl">
-            <div class="font-mono-telemetry text-xs text-blue-400 font-bold uppercase">
-              GOT A FREE PERMIT PACKET FROM US?
+            <div class="font-mono-telemetry text-xs text-blue-400 font-bold uppercase tracking-widest">
+              FREE PERMIT PACKET // COUNTY PREVIEW
             </div>
             <h3 class="font-display font-extrabold text-xl sm:text-2xl text-white">
               Did We Send a Free Local Permit Brief to Your Shop?
@@ -1381,13 +1408,13 @@
             <button
               type="button"
               id="btn-reveal-personalized-brief-message"
-              class="btn-outline-slate px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer"
+              class="btn-outline-slate px-4 py-2.5 rounded-lg text-xs font-bold cursor-pointer"
             >
               I Got a Sample Brief →
             </button>
             <a
               href="#pricing"
-              class="btn-trust-emerald px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
+              class="btn-trust-emerald px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold"
             >
               Start 7-Day Free Trial →
             </a>
@@ -1395,10 +1422,12 @@
         </div>
 
         <!-- Expanded Card for Personalized Brief Recipients -->
-        <div id="personalized-brief-ExpandedCard" class="hidden enterprise-card g3-conic-card rounded-2xl border border-emerald-500/40 p-7 sm:p-10 shadow-2xl">
+        <div id="personalized-brief-ExpandedCard" class="hidden enterprise-card g3-conic-card rounded-lg border border-emerald-500/40 p-7 sm:p-10 shadow-2xl">
           <div class="max-w-3xl mx-auto text-center space-y-4">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
-              <span>✓ YOUR COUNTY PERMIT LIST</span>
+            <div>
+              <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-300">
+                07B // YOUR COUNTY PERMIT LIST
+              </span>
             </div>
             <h3 class="font-display font-extrabold text-2xl sm:text-4xl text-white tracking-tight leading-tight">
               You Saw What We Pulled in Your Zip Code. Get Fresh Jobs Every Morning.
@@ -1409,7 +1438,7 @@
             <div class="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3.5">
               <a
                 href="#pricing"
-                class="btn-trust-emerald px-8 py-4 rounded-xl text-sm sm:text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg"
+                class="btn-trust-emerald px-8 py-4 rounded-lg text-sm sm:text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg"
               >
                 <span>Start 7-Day Free Trial</span>
                 <span aria-hidden="true">→</span>
@@ -1417,7 +1446,7 @@
               <a
                 id="brief-section-reopen-btn"
                 href="/recon/briefing?token=demo-7am-briefing"
-                class="btn-outline-slate px-6 py-4 rounded-xl text-sm font-bold inline-flex items-center justify-center gap-2"
+                class="btn-outline-slate px-6 py-4 rounded-lg text-sm font-bold inline-flex items-center justify-center gap-2"
               >
                 <span>Open Sample 7 AM List</span>
               </a>
@@ -1436,8 +1465,10 @@
 
         <!-- Section Heading -->
         <div class="max-w-3xl mx-auto text-center mb-10">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800 font-bold mb-3">
-            <span>7-DAY FREE TRIAL • $0 TODAY • ZERO LONG CONTRACTS</span>
+          <div class="mb-3">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-800">
+              08 // ZIP CODE PRICING • 7-DAY FREE TRIAL ($0 TODAY)
+            </span>
           </div>
           <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-[#0F172A] tracking-tight mb-4">
             Choose Your Zip Plan (Starting at $199/Mo)
@@ -1448,7 +1479,7 @@
         </div>
 
         <!-- Live Territory Zip Code Availability Checker -->
-        <div class="max-w-4xl mx-auto mb-12 rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-lg">
+        <div class="max-w-4xl mx-auto mb-12 rounded-lg bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-lg">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <span class="font-mono-telemetry text-xs text-blue-400 font-bold uppercase">
               📍 CHECK IF YOUR ZIP CODE IS STILL OPEN
@@ -1483,14 +1514,14 @@
             <div class="sm:col-span-3">
               <button
                 type="submit"
-                class="btn-executive-navy w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold cursor-pointer"
+                class="btn-executive-navy w-full py-3 px-4 rounded-lg text-xs sm:text-sm font-bold cursor-pointer"
               >
                 Check Zip Slot →
               </button>
             </div>
           </form>
 
-          <div id="zip-checker-result" class="mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div id="zip-checker-result" class="mt-3 p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-xs">
             <span id="zip-checker-status-text" class="font-mono-telemetry text-emerald-300 font-bold">
               ✓ ZIP 78130 (New Braunfels, TX) IS OPEN • Lock your 7-day free trial below.
             </span>
@@ -1504,10 +1535,10 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-7 items-stretch">
 
           <!-- TRACK 1: COMMERCIAL OWNERS -->
-          <article class="enterprise-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between border border-slate-800">
+          <article class="enterprise-card rounded-lg p-6 sm:p-8 flex flex-col justify-between border border-slate-800">
             <div>
               <div class="flex items-center justify-between gap-2 mb-3">
-                <span class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 font-mono-telemetry text-[11px] text-slate-300 font-bold">
+                <span class="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 font-mono-telemetry text-[11px] text-slate-300 font-bold">
                   TRACK 1 • PROPERTY OWNERS
                 </span>
                 <span class="font-mono-telemetry text-xs text-emerald-400 font-bold">
@@ -1562,7 +1593,7 @@
                 id="tier-1-checkout-link"
                 data-stripe-base="https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k"
                 href="https://buy.stripe.com/5kQfZi4yf0mD8eWgHP2sM0k?client_reference_id=78130_Commercial_Concrete"
-                class="btn-outline-slate w-full py-4 px-5 rounded-xl text-sm font-bold text-center inline-flex items-center justify-center gap-2"
+                class="btn-outline-slate w-full py-4 px-5 rounded-lg text-sm font-bold text-center inline-flex items-center justify-center gap-2"
               >
                 <span id="tier-1-checkout-label">Start $199/Mo Trial in 78130 →</span>
               </a>
@@ -1573,13 +1604,13 @@
           </article>
 
           <!-- TRACK 2: LOCAL PERMIT RADAR (FEATURED) -->
-          <article class="enterprise-card tier-2-featured-border g3-conic-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative shadow-2xl">
+          <article class="enterprise-card tier-2-featured-border g3-conic-card rounded-lg p-6 sm:p-8 flex flex-col justify-between relative shadow-2xl">
             <div>
               <div class="flex items-center justify-between gap-2 mb-3">
-                <span class="px-2.5 py-1 rounded-md bg-blue-600 text-white font-mono-telemetry text-[11px] font-bold">
+                <span class="px-2.5 py-1 rounded bg-blue-600 text-white font-mono-telemetry text-[11px] font-bold">
                   ★ MOST POPULAR FOR CONTRACTORS
                 </span>
-                <span class="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                <span class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
                   MAX 2 / ZIP
                 </span>
               </div>
@@ -1631,7 +1662,7 @@
                 id="tier-2-checkout-link"
                 data-stripe-base="https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l"
                 href="https://buy.stripe.com/5kQ5kEfcTedteDk4Z72sM0l?client_reference_id=78130_Commercial_Concrete"
-                class="btn-trust-emerald w-full py-4 px-5 rounded-xl text-sm sm:text-base font-bold text-center inline-flex items-center justify-center gap-2 shadow-lg"
+                class="btn-trust-emerald w-full py-4 px-5 rounded-lg text-sm sm:text-base font-bold text-center inline-flex items-center justify-center gap-2 shadow-lg"
               >
                 <span id="tier-2-checkout-label">Lock Zip 78130 ($399/Mo Trial) →</span>
               </a>
@@ -1642,10 +1673,10 @@
           </article>
 
           <!-- TRACK 3: HOMEOWNER + COMMERCIAL COUNTY RADAR -->
-          <article class="enterprise-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between border border-slate-800">
+          <article class="enterprise-card rounded-lg p-6 sm:p-8 flex flex-col justify-between border border-slate-800">
             <div>
               <div class="flex items-center justify-between gap-2 mb-3">
-                <span class="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                <span class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
                   TRACK 3 • HOME + COMMERCIAL
                 </span>
                 <span class="font-mono-telemetry text-xs text-emerald-400 font-bold">
@@ -1700,7 +1731,7 @@
                 id="tier-3-checkout-link"
                 data-stripe-base="https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m"
                 href="https://buy.stripe.com/fZu9AU6Gn1qH0Mucrz2sM0m?client_reference_id=78130_Commercial_Concrete"
-                class="btn-executive-navy w-full py-4 px-5 rounded-xl text-sm font-bold text-center inline-flex items-center justify-center gap-2"
+                class="btn-executive-navy w-full py-4 px-5 rounded-lg text-sm font-bold text-center inline-flex items-center justify-center gap-2"
               >
                 <span id="tier-3-checkout-label">Lock Exclusive Zip 78130 ($599/Mo) →</span>
               </a>
@@ -1721,9 +1752,11 @@
       <div class="max-w-[1024px] mx-auto px-4 sm:px-6 lg:px-8">
 
         <div class="text-center mb-10 sm:mb-12">
-          <span class="font-mono-telemetry text-xs text-blue-400 uppercase tracking-wider font-bold">
-            STRAIGHT ANSWERS • ZERO AGENCY FLUFF
-          </span>
+          <div class="mb-2.5">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-blue-400">
+              09 // STRAIGHT ANSWERS • ZERO AGENCY FLUFF
+            </span>
+          </div>
           <h2 class="font-display font-extrabold text-2xl sm:text-4xl text-[#0F172A] tracking-tight mt-2">
             Frequently Asked Questions
           </h2>
@@ -1732,7 +1765,7 @@
         <div class="space-y-4">
 
           <!-- FAQ 1 -->
-          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group" open>
+          <details class="rounded-lg bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group" open>
             <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
               <span>1. How is this better than buying Angi or Thumbtack leads?</span>
               <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
@@ -1743,7 +1776,7 @@
           </details>
 
           <!-- FAQ 2 -->
-          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+          <details class="rounded-lg bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
             <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
               <span>2. Am I locked into a long-term contract?</span>
               <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
@@ -1754,7 +1787,7 @@
           </details>
 
           <!-- FAQ 3 -->
-          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+          <details class="rounded-lg bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
             <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
               <span>3. How much does Recon cost after the 7-day free trial?</span>
               <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
@@ -1765,7 +1798,7 @@
           </details>
 
           <!-- FAQ 4 -->
-          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+          <details class="rounded-lg bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
             <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
               <span>4. Does Recon message property owners without my permission?</span>
               <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
@@ -1776,7 +1809,7 @@
           </details>
 
           <!-- FAQ 5 -->
-          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+          <details class="rounded-lg bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
             <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
               <span>5. Does every public permit list a direct cell phone number?</span>
               <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
@@ -1787,7 +1820,7 @@
           </details>
 
           <!-- FAQ 6 (CRM & Supplier Compatibility Strictly Inside FAQ) -->
-          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+          <details class="rounded-lg bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
             <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
               <span>6. Does this work with JobNimbus, AccuLynx, Roofr, or ABC Supply workflows?</span>
               <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
@@ -1798,7 +1831,7 @@
           </details>
 
           <!-- FAQ 7 -->
-          <details class="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
+          <details class="rounded-lg bg-slate-900/90 border border-slate-800 p-5 sm:p-6 group">
             <summary class="font-display font-bold text-base sm:text-lg text-white cursor-pointer flex items-center justify-between gap-4 select-none">
               <span>7. Are the permit cards shown on this page sample records?</span>
               <span class="font-mono-telemetry text-xs text-slate-400 group-open:rotate-180 transition-transform">▾</span>
@@ -1847,9 +1880,11 @@
       </div>
 
       <div class="max-w-[1024px] mx-auto relative z-10">
-        <div class="enterprise-card g3-conic-card rounded-3xl border border-blue-500/40 p-8 sm:p-12 text-center shadow-2xl space-y-6">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
-            <span>7-DAY FREE TRIAL • $0 DUE TODAY</span>
+        <div class="enterprise-card g3-conic-card rounded-lg border border-blue-500/40 p-8 sm:p-12 text-center shadow-2xl space-y-6">
+          <div>
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-300">
+              10 // 7-DAY FREE TRIAL • $0 DUE TODAY
+            </span>
           </div>
 
           <h2 class="font-display font-extrabold text-2xl sm:text-4xl lg:text-[42px] text-white tracking-tight leading-tight max-w-3xl mx-auto">
@@ -1863,14 +1898,14 @@
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 pt-2">
             <a
               href="#pricing"
-              class="btn-trust-emerald px-8 py-4 rounded-xl text-base sm:text-lg font-bold inline-flex items-center justify-center gap-2 shadow-lg"
+              class="btn-trust-emerald px-8 py-4 rounded-lg text-base sm:text-lg font-bold inline-flex items-center justify-center gap-2 shadow-lg"
             >
               <span>Start 7-Day Free Trial</span>
               <span aria-hidden="true">→</span>
             </a>
             <a
               href="#interactive-demo"
-              class="btn-outline-slate px-7 py-4 rounded-xl text-base sm:text-lg font-bold inline-flex items-center justify-center gap-2"
+              class="btn-outline-slate px-7 py-4 rounded-lg text-base sm:text-lg font-bold inline-flex items-center justify-center gap-2"
             >
               <span>Try the 7 AM Demo</span>
             </a>
@@ -1929,6 +1964,6 @@
   </footer>
 
   <!-- Application Logic -->
-  <script src="/recon/app.js?v=3.3" onerror="this.onerror=null;this.src='app.js?v=3.3';"></script>
+  <script src="/recon/app.js?v=3.4" onerror="this.onerror=null;this.src='app.js?v=3.4';"></script>
 </body>
 </html>

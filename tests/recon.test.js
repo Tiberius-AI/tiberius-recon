@@ -1452,8 +1452,8 @@ async function runTests() {
     assert.ok(
       briefingPageHtml.includes('id="briefing-archived-section"') &&
         briefingPageHtml.includes('id="briefing-history-bar"') &&
-        briefingPageHtml.includes('v2.6'),
-      'briefing.html must render #briefing-archived-section, #briefing-history-bar, and v2.6'
+        briefingPageHtml.includes('v3.4'),
+      'briefing.html must render #briefing-archived-section, #briefing-history-bar, and v3.4'
     );
 
     console.log('[27/27] Testing Tiberius Meta-Recon™ Autonomous Lead-Gen, 3-Leak Website X-Ray, Trojan Horse Permit Bait, Anti-AI Copy Gate, Drip Runner & Autonomous Reply Fulfilment...');
