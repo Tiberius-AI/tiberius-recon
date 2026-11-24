@@ -37,6 +37,10 @@ const {
   recordSeenPermit,
   resolveMetroProfile,
   getCentralDateString,
+  shiftDateString,
+  computeBriefingTotalValuationDollars,
+  ensurePastBriefingHistorySeeded,
+  getArchivedBriefingCardsForDate,
   buildBriefingCardsForContractor,
   buildRealClientBriefingCards,
   getBriefingByToken,
@@ -561,7 +565,7 @@ async function runPreTripInspection(options = {}) {
                 enforceSeenPermits: true,
                 markAsSurfaced: true
               })
-            : buildBriefingCardsForContractor(contractor, undefined, {
+            : buildBriefingCardsForContractor(contractor, {
                 demo: false,
                 surfacedBriefingDate: activeBriefingDate,
                 enforceSeenPermits: true,
@@ -677,14 +681,16 @@ async function runPreTripInspection(options = {}) {
   }
 
   // =========================================================================
-  // CHECK 2: Day-Over-Day & Intra-Queue Duplicate Check
+  // CHECK 2: Trailing 7-Day & Intra-Queue Duplicate Check (Permits, Streets & Total Valuations)
   // =========================================================================
   const storeForCheck2 = loadStore();
   const briefingForCheck2 =
     storeForCheck2.briefings[targetToken] || storeForCheck2.briefings['demo-7am-briefing'];
   const duplicatePermitsFound = [];
   const priorDayDupKeySet = new Set();
+  const trailing7ExcludedPermits = new Set();
   let payloadHashMatchedYesterday = false;
+  let matchedTotalValuationPriorDate = null;
 
   const loadSeenLedgerMaps = (jurisdictionZip) => {
     const seenPermitDates = new Map();
@@ -740,15 +746,86 @@ async function runPreTripInspection(options = {}) {
     return { seenPermitDates, seenStreetDates };
   };
 
+  const buildTrailing7DayMaps = (tokenKey, todayStr, storeObj, contractorObj, briefingObj) => {
+    ensurePastBriefingHistorySeeded(storeObj, briefingObj, contractorObj);
+    const trailingDates = [1, 2, 3, 4, 5, 6, 7].map((d) => shiftDateString(todayStr, -d));
+    const trailingPermitDates = new Map();
+    const trailingStreetDates = new Map();
+    const trailingValuationDates = new Map();
+    const trailingHashes = new Map();
+
+    for (const dStr of trailingDates) {
+      const snap = getArchivedBriefingCardsForDate(tokenKey, dStr, storeObj);
+      const snapCards = Array.isArray(snap)
+        ? snap
+        : snap && Array.isArray(snap.cards)
+        ? snap.cards
+        : [];
+      if (snapCards.length === 0) continue;
+
+      const dayTotalVal = computeBriefingTotalValuationDollars(snapCards);
+      if (dayTotalVal > 0 && !trailingValuationDates.has(dayTotalVal)) {
+        trailingValuationDates.set(dayTotalVal, dStr);
+      }
+      const dayHash = computeBriefingPayloadHash(snapCards);
+      if (dayHash && !trailingHashes.has(dayHash)) {
+        trailingHashes.set(dayHash, dStr);
+      }
+
+      for (const c of snapCards) {
+        const { permitKey, streetKey } = buildInspectorCardKeys(c);
+        if (permitKey) {
+          trailing7ExcludedPermits.add(permitKey);
+          if (!trailingPermitDates.has(permitKey)) {
+            trailingPermitDates.set(permitKey, dStr);
+          }
+        }
+        if (streetKey && !trailingStreetDates.has(streetKey)) {
+          trailingStreetDates.set(streetKey, dStr);
+        }
+      }
+    }
+
+    return {
+      trailingDates,
+      trailingPermitDates,
+      trailingStreetDates,
+      trailingValuationDates,
+      trailingHashes
+    };
+  };
+
   if (briefingForCheck2 && Array.isArray(briefingForCheck2.cards) && !demoModeActive) {
     const contractor = storeForCheck2.contractors[briefingForCheck2.contractorId] || {};
     const jurisdiction = contractor.baseZip || briefingForCheck2.territoryZip || '78130';
     const todayStr = briefingForCheck2.briefingDate || getCentralDateString();
 
+    const {
+      trailingPermitDates,
+      trailingStreetDates,
+      trailingValuationDates,
+      trailingHashes
+    } = buildTrailing7DayMaps(
+      briefingForCheck2.magicToken,
+      todayStr,
+      storeForCheck2,
+      contractor,
+      briefingForCheck2
+    );
+    saveStore(storeForCheck2);
+
     const todayHash = computeBriefingPayloadHash(briefingForCheck2.cards);
     const yesterdayHash = getYesterdayBriefingPayloadHash(briefingForCheck2.magicToken);
-    if (yesterdayHash && todayHash && todayHash === yesterdayHash) {
+    if (
+      (yesterdayHash && todayHash && todayHash === yesterdayHash) ||
+      (todayHash && trailingHashes.has(todayHash))
+    ) {
       payloadHashMatchedYesterday = true;
+    }
+
+    const todayTotalVal = computeBriefingTotalValuationDollars(briefingForCheck2.cards);
+    if (todayTotalVal > 0 && trailingValuationDates.has(todayTotalVal)) {
+      matchedTotalValuationPriorDate = trailingValuationDates.get(todayTotalVal);
     }
 
     const { seenPermitDates, seenStreetDates } = loadSeenLedgerMaps(jurisdiction);
@@ -759,10 +836,14 @@ async function runPreTripInspection(options = {}) {
       const label = permitKey || streetKey || addressKey || card.id || 'unlabeled-card';
 
       const priorPermitDate =
+        (permitKey && trailingPermitDates.get(permitKey)) ||
         (permitKey && seenPermitDates.get(permitKey)) ||
         (streetKey && seenPermitDates.get(`ADDR:${streetKey.toUpperCase()}`)) ||
         null;
-      const priorStreetDate = !permitKey && streetKey ? seenStreetDates.get(streetKey) : null;
+      const priorStreetDate =
+        (streetKey && trailingStreetDates.get(streetKey)) ||
+        (streetKey && seenStreetDates.get(streetKey)) ||
+        null;
       const priorDate =
         priorPermitDate && priorPermitDate !== todayStr
           ? priorPermitDate
@@ -774,7 +855,7 @@ async function runPreTripInspection(options = {}) {
         duplicatePermitsFound.push({
           permitNumber: label,
           isPriorDay: true,
-          reason: `Already surfaced on prior date (${priorDate})`
+          reason: `Already surfaced within trailing 7 days / seen ledger (${priorDate})`
         });
         for (const k of allKeys) priorDayDupKeySet.add(k);
       } else if (allKeys.some((k) => seenKeysInCurrentQueue.has(k))) {
@@ -791,9 +872,12 @@ async function runPreTripInspection(options = {}) {
     }
   }
 
+  const fullQueueRefreshRequired =
+    payloadHashMatchedYesterday || Boolean(matchedTotalValuationPriorDate);
+
   if (
     duplicatePermitsFound.length > 0 ||
-    payloadHashMatchedYesterday ||
+    fullQueueRefreshRequired ||
     options.simulateUnhealableCheck2
   ) {
     // Tier 1 Auto-Heal: Remove prior-day & intra-queue duplicate card(s) and trigger injectLiveZeroApiCardsIntoBriefing() once
@@ -803,8 +887,8 @@ async function runPreTripInspection(options = {}) {
     const originalCardCount = targetB && Array.isArray(targetB.cards) ? targetB.cards.length : 9;
 
     if (targetB && Array.isArray(targetB.cards)) {
-      if (payloadHashMatchedYesterday) {
-        // Clear identical yesterday queue so all cards are refreshed with unseen permits
+      if (fullQueueRefreshRequired) {
+        // Clear identical prior-day queue / colliding total valuation sum so all cards refresh
         targetB.cards = [];
       } else {
         const withoutPriorDay = targetB.cards.filter((card) => {
@@ -819,7 +903,9 @@ async function runPreTripInspection(options = {}) {
 
     const liveInjectResult = await injectLiveZeroApiCardsIntoBriefing({
       token: targetB ? targetB.magicToken : targetToken,
-      preserveExistingValidCards: !payloadHashMatchedYesterday,
+      preserveExistingValidCards: !fullQueueRefreshRequired,
+      excludePermitNumbers: [...trailing7ExcludedPermits],
+      slotOffset: fullQueueRefreshRequired ? 11 : 0,
       targetCount: Math.max(originalCardCount, 9)
     });
 
@@ -837,13 +923,26 @@ async function runPreTripInspection(options = {}) {
       const postContractor = postStore2.contractors[postB2.contractorId] || {};
       const postJurisdiction = postContractor.baseZip || postB2.territoryZip || '78130';
       const postTodayStr = postB2.briefingDate || getCentralDateString();
+      const {
+        trailingPermitDates: postTrailingPermits,
+        trailingStreetDates: postTrailingStreets,
+        trailingValuationDates: postTrailingVals
+      } = buildTrailing7DayMaps(
+        postB2.magicToken,
+        postTodayStr,
+        postStore2,
+        postContractor,
+        postB2
+      );
       const { seenPermitDates: postSeenPermits } = loadSeenLedgerMaps(postJurisdiction);
       const postQueueKeys = new Set();
 
       for (const c of postB2.cards) {
         const { permitKey, streetKey, allKeys } = buildInspectorCardKeys(c);
         const pDate =
+          (permitKey && postTrailingPermits.get(permitKey)) ||
           (permitKey && postSeenPermits.get(permitKey)) ||
+          (streetKey && postTrailingStreets.get(streetKey)) ||
           (streetKey && postSeenPermits.get(`ADDR:${streetKey.toUpperCase()}`)) ||
           null;
         if ((pDate && pDate !== postTodayStr) || allKeys.some((k) => postQueueKeys.has(k))) {
@@ -851,17 +950,25 @@ async function runPreTripInspection(options = {}) {
         }
         for (const k of allKeys) postQueueKeys.add(k);
       }
+
+      const postTotalVal = computeBriefingTotalValuationDollars(postB2.cards);
+      if (postTotalVal > 0 && postTrailingVals.has(postTotalVal)) {
+        remainingDupCount += 1;
+      }
     }
 
     heals.push({
       check: 'Check 2: Day-Over-Day Duplicate Queue Check',
       action: `Removed ${
-        payloadHashMatchedYesterday
-          ? 'full duplicate yesterday payload'
+        fullQueueRefreshRequired
+          ? matchedTotalValuationPriorDate
+            ? `colliding total valuation queue (matched ${matchedTotalValuationPriorDate})`
+            : 'full duplicate prior-day payload'
           : `${duplicatePermitsFound.length} duplicate permit/property card(s)`
       } and triggered injectLiveZeroApiCardsIntoBriefing() to pull fresh unseen permits.`,
       removedPermits: duplicatePermitsFound.map((d) => d.permitNumber),
       payloadHashMatchedYesterday,
+      matchedTotalValuationPriorDate,
       replenishedCount: liveInjectResult && liveInjectResult.cards ? liveInjectResult.cards.length : 0
     });
 
@@ -871,14 +978,14 @@ async function runPreTripInspection(options = {}) {
         reason:
           options.simulateUnhealableCheck2
             ? String(options.simulateUnhealableCheck2)
-            : `${remainingDupCount} duplicate permit/property card(s) persisted after Tier 1 Auto-Heal.`,
+            : `${remainingDupCount} duplicate permit/street/valuation item(s) persisted after Tier 1 Auto-Heal.`,
         suspectFiles: ['db/store.js', 'workers/live-zero-api-agent.js', 'workers/orchestrator.js']
       });
       checks.push({
         id: 'day_over_day_duplicate_check',
         name: 'Check 2 — Day-Over-Day Duplicate Queue Check',
         status: 'RED_TAGGED',
-        summary: `Duplicate permits persisted after Tier 1 Auto-Heal (${remainingDupCount} remaining).`
+        summary: `Duplicate permits/streets/valuations persisted after Tier 1 Auto-Heal (${remainingDupCount} remaining).`
       });
     } else {
       checks.push({
@@ -886,8 +993,8 @@ async function runPreTripInspection(options = {}) {
         name: 'Check 2 — Day-Over-Day Duplicate Queue Check',
         status: 'AUTO_HEALED',
         summary: `Removed ${
-          payloadHashMatchedYesterday
-            ? 'duplicate yesterday queue'
+          fullQueueRefreshRequired
+            ? 'colliding prior-day queue'
             : `${duplicatePermitsFound.length} duplicate permit/property card(s)`
         } & replenished unseen permits via injectLiveZeroApiCardsIntoBriefing().`
       });
@@ -897,7 +1004,8 @@ async function runPreTripInspection(options = {}) {
       id: 'day_over_day_duplicate_check',
       name: 'Check 2 — Day-Over-Day Duplicate Queue Check',
       status: 'PASS',
-      summary: '100% of queued permits are unseen on prior days, unique by permit/street/parcel, and distinct from yesterday’s payload hash.'
+      summary:
+        'Verified across trailing 7 days: 0 repeated permit IDs, 0 repeated street addresses, and 0 identical daily total dollar valuations.'
     });
   }
 

@@ -68,7 +68,9 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const briefingBundle = getBriefingByToken(token);
+  const briefingBundle = getBriefingByToken(token, {
+    date: params.date ? String(params.date).trim() : undefined
+  });
   const summary = await runNightlyReconPipeline({
     zipCode:
       params.zipCode ||
@@ -80,6 +82,7 @@ module.exports = async function handler(req, res) {
       params.trade ||
       (briefingBundle && briefingBundle.briefing && briefingBundle.briefing.tradeName) ||
       'Commercial Concrete',
+    date: params.date ? String(params.date).trim() : undefined,
     dryRun: true
   });
 

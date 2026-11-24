@@ -13,7 +13,8 @@ const {
 const { setSessionCookie } = require('../../db/auth');
 const {
   dispatchViaResendEmail,
-  sendMasterTwilioSmsToContractor
+  sendMasterTwilioSmsToContractor,
+  dispatchAdminLeadAndSaleNotification
 } = require('../../workers/comms-dispatcher');
 
 module.exports = async function handler(req, res) {
@@ -193,6 +194,37 @@ module.exports = async function handler(req, res) {
     });
   }
 
+  const isSaleOnboarding = Boolean(
+    body.isPaidOnboarding || body.unlockAllCards || body.stripeTrialCheckout
+  );
+  let adminNotificationReceipt = null;
+  try {
+    const kb = activation.contractor.knowledgeBase || {};
+    adminNotificationReceipt = await dispatchAdminLeadAndSaleNotification({
+      eventCategory: isSaleOnboarding ? 'SALE' : 'TRIAL',
+      lead: {
+        id: activation.contractor.id || `recon_${Date.now()}`,
+        source: isSaleOnboarding ? 'recon-paid-onboarding' : 'recon-trial-activation',
+        name: activation.contractor.ownerName || '',
+        businessName: activation.contractor.companyName || '',
+        phone: activation.contractor.mobilePhone || '',
+        email: activation.contractor.workEmail || '',
+        cleanEmail: activation.contractor.workEmail || '',
+        industry: activation.contractor.primaryTrade || '',
+        ownershipPreference: `${activation.contractor.tierLevel || 'Tier 2'}`,
+        websiteOrGbp: activation.contractor.websiteUrl || kb.websiteUrl || '',
+        serviceArea: `${activation.briefing.territoryZip} (${activation.briefing.metroCity})`,
+        yearsInBusiness: kb.yearsInBusiness || '',
+        topServices: Array.isArray(kb.coreServices)
+          ? kb.coreServices.join(', ')
+          : kb.coreServices || '',
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (_adminErr) {
+    adminNotificationReceipt = null;
+  }
+
   let webhookForwarded = false;
   if (process.env.LEAD_WEBHOOK_URL) {
     try {
@@ -237,6 +269,7 @@ module.exports = async function handler(req, res) {
     },
     welcomeEmailReceipt,
     welcomeSmsReceipt,
+    adminNotificationReceipt,
     webhookForwarded,
     smsPreview: `☕ Tiberius Recon Armed for ${activation.briefing.territoryZip} (${activation.briefing.metroCity}): Your Tiberius Scout will sweep ${activation.briefing.portalName} & ${activation.briefing.countyCad} at 2:00 AM. Preview your live 7:00 AM Briefing now: ${activation.briefing.briefingUrl}`
   });

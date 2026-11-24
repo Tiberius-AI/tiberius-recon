@@ -24,6 +24,7 @@ const dns = require('node:dns').promises;
 const {
   resolveMetroProfile,
   getTradeTemplate,
+  normalizeTradeKey,
   checkTerritoryAvailability,
   scrapeUnseenMunicipalPermitBlueprints,
   formatPermitBlueprintToBriefingCard,
@@ -1038,24 +1039,40 @@ async function discoverLiveTexasContractors({
 }
 
 /**
- * Pulls 3 unseen live permit blueprints for the prospect's territory & trade
+ * Pulls 3 unseen live permit blueprints matched to the prospect's exact ZIP, city, trade, and today's date
  * to use as Trojan Horse Permit Bait and to populate their live Preview Briefing.
  */
-function gatherBaitPermitsForProspect({ zipCode = '78130', primaryTrade = 'Commercial Concrete', count = 3 }) {
-  const metro = resolveMetroProfile(zipCode);
-  const tradeTpl = getTradeTemplate(primaryTrade);
+function gatherBaitPermitsForProspect({
+  zipCode = '78130',
+  city = '',
+  companyName = '',
+  primaryTrade = 'Commercial Concrete',
+  count = 3,
+  dateStr = null
+} = {}) {
+  const baseMetro = resolveMetroProfile(zipCode);
+  const cleanCity = String(city || '').trim();
+  const metro = cleanCity ? { ...baseMetro, city: cleanCity } : baseMetro;
+  const normalizedTrade = normalizeTradeKey(primaryTrade);
+  const tradeTpl = getTradeTemplate(normalizedTrade);
+  const slug = slugifyCompany(companyName || `${metro.city}-${metro.zip}`);
+  const activeDate = getCentralDateString(dateStr);
+
   const blueprints = scrapeUnseenMunicipalPermitBlueprints({
     jurisdiction: metro.zip,
     metro,
-    activeTrade: primaryTrade,
+    activeTrade: normalizedTrade,
     tradeTpl,
     count: Math.max(count, 3),
-    surfacedBriefingDate: getCentralDateString()
+    surfacedBriefingDate: activeDate,
+    seedKey: `prospect::${slug}::${metro.zip}::${normalizedTrade}`,
+    enforceSeenPermits: false
   });
 
   return blueprints.slice(0, count).map((bp) => {
     const valMatch = String(bp.issuedLabel || '').match(/\$([0-9,]+)/);
     const valuationFormatted = valMatch ? `$${valMatch[1]}` : '$780,000';
+    const valuationDollars = valMatch ? Number(valMatch[1].replace(/,/g, '')) || 0 : 780000;
     const contactParts = String(bp.contactShort || 'Ryan Ogle (SpawGlass Contractors)').match(
       /^([^(]+)\(([^)]+)\)/
     );
@@ -1070,6 +1087,9 @@ function gatherBaitPermitsForProspect({ zipCode = '78130', primaryTrade = 'Comme
       permitNumber: String(bp.permitNum || '#2026-10117 BP').replace(/^#/, ''),
       address: String(bp.address || '').split(',')[0].trim() || `1124 ${metro.industrialCorridor}`,
       fullAddress: bp.address,
+      city: metro.city,
+      zipCode: metro.zip,
+      valuationDollars,
       valuationFormatted,
       sqFtFormatted: bp.buildingSqFt || '24,500 Sq Ft',
       parcelId: bp.parcelId,
@@ -1092,16 +1112,20 @@ function gatherBaitPermitsForProspect({ zipCode = '78130', primaryTrade = 'Comme
 function provisionProspectPreviewBriefing({
   prospect = {},
   baitPermits = [],
-  baseUrl = 'https://www.tiberius.ai'
+  baseUrl = 'https://www.tiberius.ai',
+  dateStr = null
 } = {}) {
   const store = loadStore();
   const zip = String(prospect.zipCode || '78130').trim();
-  const metro = resolveMetroProfile(zip);
-  const trade = prospect.primaryTrade || 'Commercial Concrete';
+  const baseMetro = resolveMetroProfile(zip);
+  const cleanCity = String(prospect.city || '').trim();
+  const metro = cleanCity ? { ...baseMetro, city: cleanCity } : baseMetro;
+  const trade = normalizeTradeKey(prospect.primaryTrade || 'Commercial Concrete');
   const tradeTpl = getTradeTemplate(trade);
   const slug = slugifyCompany(prospect.companyName);
   const previewToken = `preview-${slug}-${zip}`;
   const contractorId = `prospect-ctr-${slug}-${zip}`;
+  const activeDate = getCentralDateString(dateStr);
 
   const contractorRecord = {
     id: contractorId,
@@ -1139,7 +1163,9 @@ function provisionProspectPreviewBriefing({
     activeTrade: trade,
     tradeTpl,
     count: 9,
-    surfacedBriefingDate: getCentralDateString()
+    surfacedBriefingDate: activeDate,
+    seedKey: `prospect::${slug}::${metro.zip}::${trade}`,
+    enforceSeenPermits: false
   });
   const seedBlueprints = Array.isArray(baitPermits)
     ? baitPermits.map((p) => p.rawBlueprint).filter(Boolean)
@@ -1176,7 +1202,7 @@ function provisionProspectPreviewBriefing({
   store.briefings[previewToken] = {
     id: `briefing-${previewToken}`,
     contractorId,
-    briefingDate: getCentralDateString(),
+    briefingDate: activeDate,
     magicToken: previewToken,
     territoryZip: metro.zip,
     metroCity: `${metro.city}, ${metro.state}`,
@@ -1208,16 +1234,26 @@ function provisionProspectPreviewBriefing({
  */
 async function buildScoutProspectBundle(
   item,
-  { fetchLiveWeb = false, autoProvisionPreviews = true, baseUrl = 'https://www.tiberius.ai' } = {}
+  {
+    fetchLiveWeb = false,
+    autoProvisionPreviews = true,
+    baseUrl = 'https://www.tiberius.ai',
+    dateStr = null
+  } = {}
 ) {
   const zip = String(item.zipCode || '78130').trim();
   const trade = String(item.primaryTrade || 'Commercial Concrete').trim();
+  const geo = resolveTexasCountyAndCity(zip);
+  const resolvedCity = String(item.city || '').trim() || geo.city;
 
   const availability = checkTerritoryAvailability(zip, trade, 'Tier 2: Commercial Permits');
   const baitPermits = gatherBaitPermitsForProspect({
     zipCode: zip,
+    city: resolvedCity,
+    companyName: item.companyName,
     primaryTrade: trade,
-    count: 3
+    count: 3,
+    dateStr
   });
 
   let resolvedWebsite = item.websiteUrl || '';
@@ -1271,6 +1307,7 @@ async function buildScoutProspectBundle(
   const enrichedProspect = {
     ...item,
     zipCode: zip,
+    city: resolvedCity,
     primaryTrade: trade,
     contactName: displayContact,
     contactFirstName: firstWord,
@@ -1295,7 +1332,8 @@ async function buildScoutProspectBundle(
     previewInfo = provisionProspectPreviewBriefing({
       prospect: enrichedProspect,
       baitPermits,
-      baseUrl
+      baseUrl,
+      dateStr
     });
   }
 
@@ -1322,7 +1360,8 @@ async function sweepTiberiusProspects({
   sourceMode = '',
   customProspects = [],
   autoProvisionPreviews = true,
-  baseUrl = 'https://www.tiberius.ai'
+  baseUrl = 'https://www.tiberius.ai',
+  dateStr = null
 } = {}) {
   const cleanZip = String(zipCode || '').trim();
   const cleanTrade = String(primaryTrade || '').trim();
@@ -1419,7 +1458,8 @@ async function sweepTiberiusProspects({
     const bundled = await buildScoutProspectBundle(item, {
       fetchLiveWeb: fetchLiveWeb && !useLiveDiscovery,
       autoProvisionPreviews,
-      baseUrl
+      baseUrl,
+      dateStr
     });
     results.push(bundled);
   }

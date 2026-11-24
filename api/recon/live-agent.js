@@ -49,6 +49,7 @@ module.exports = async function handler(req, res) {
         (hydrated && hydrated.account && hydrated.account.primaryTrade) ||
         '',
       territoryZip: resolvedTerritoryZip,
+      date: params.date ? String(params.date).trim() : undefined,
       landmarkReference: params.landmarkReference !== undefined ? params.landmarkReference : undefined
     });
     return res.status(200).json(result);

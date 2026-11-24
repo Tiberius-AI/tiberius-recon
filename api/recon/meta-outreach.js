@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const q = req.query || {};
-      if (q.sweep === 'true' || q.zip || q.trade || q.playbook || q.live === 'true') {
+      if (q.sweep === 'true' || q.zip || q.trade || q.playbook || q.live === 'true' || q.date) {
         const swept = await runMetaReconAgentSweep({
           zipCode: q.zip || q.zipCode || 'ALL',
           primaryTrade: q.trade || q.primaryTrade || 'ALL',
@@ -67,14 +67,18 @@ module.exports = async function handler(req, res) {
           fetchLiveWeb: q.live === 'true',
           liveDiscovery: q.live === 'true' || q.liveDiscovery === 'true',
           sourceMode: q.sourceMode || '',
-          baseUrl: q.baseUrl || reqBaseUrl
+          baseUrl: q.baseUrl || reqBaseUrl,
+          date: q.date ? String(q.date).trim() : null
         });
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         return res.end(JSON.stringify(swept));
       }
 
-      const metaRecon = await getMetaReconState({ baseUrl: reqBaseUrl });
+      const metaRecon = await getMetaReconState({
+        baseUrl: reqBaseUrl,
+        date: q.date ? String(q.date).trim() : null
+      });
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify({ ok: true, metaRecon }));
@@ -100,6 +104,7 @@ module.exports = async function handler(req, res) {
         sourceMode: body.sourceMode || '',
         includeSavedCustom: Boolean(body.includeSavedCustom),
         baseUrl: body.baseUrl || reqBaseUrl,
+        date: body.date ? String(body.date).trim() : null,
         autopilotDripEnabled:
           body.autopilotDripEnabled !== undefined ? Boolean(body.autopilotDripEnabled) : true,
         autopilotReplyEnabled:

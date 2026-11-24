@@ -46,6 +46,8 @@ module.exports = async function handler(req, res) {
       'demo-7am-briefing';
 
     const requestedDate = req.query && req.query.date ? String(req.query.date).trim() : undefined;
+    const referenceDate =
+      req.query && req.query.referenceDate ? String(req.query.referenceDate).trim() : undefined;
     const autoScrape = !(
       req.query &&
       (req.query.autoScrape === 'false' || req.query.autoScrape === '0')
@@ -54,6 +56,7 @@ module.exports = async function handler(req, res) {
     const data = getBriefingByToken(token, {
       demo: demoRequested,
       date: requestedDate,
+      referenceDate,
       autoScrape,
       forceRegenerate: false
     });

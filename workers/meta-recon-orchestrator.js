@@ -298,9 +298,11 @@ async function runMetaReconAgentSweep({
   includeSavedCustom = false,
   baseUrl = 'https://www.tiberius.ai',
   autopilotDripEnabled = true,
-  autopilotReplyEnabled = true
+  autopilotReplyEnabled = true,
+  date = null
 } = {}) {
   const startedAt = Date.now();
+  const activeDate = getCentralDateString(date);
   const existingStore = loadStore();
   const customProspects = includeSavedCustom
     ? Array.isArray(existingStore.metaReconCustomProspects)
@@ -317,7 +319,8 @@ async function runMetaReconAgentSweep({
     sourceMode,
     customProspects,
     autoProvisionPreviews: true,
-    baseUrl
+    baseUrl,
+    dateStr: activeDate
   });
 
   const existingById = new Map(
@@ -343,7 +346,7 @@ async function runMetaReconAgentSweep({
 
   const metaReconState = {
     lastSweepAt: new Date().toISOString(),
-    sweepDate: getCentralDateString(),
+    sweepDate: activeDate,
     elapsedMs: Math.max(45, Date.now() - startedAt),
     activeFilterZip: zipCode || 'ALL',
     activeFilterTrade: primaryTrade || 'ALL',
@@ -359,7 +362,7 @@ async function runMetaReconAgentSweep({
         id: `log-${Date.now()}`,
         timestamp: new Date().toISOString(),
         event: liveDiscovery ? 'META_RECON_LIVE_SWEEP_COMPLETED' : 'META_RECON_SWEEP_COMPLETED',
-        summary: `Gathered ${enrichedProspects.length} ${liveDiscovery ? 'real Texas open-data' : 'corridor'} prospects (${playbook}), provisioned ${enrichedProspects.length} live preview briefings, and verified Anti-AI Copy Gate.`
+        summary: `Gathered ${enrichedProspects.length} ${liveDiscovery ? 'real Texas open-data' : 'corridor'} prospects (${playbook}) for ${activeDate}, provisioned ${enrichedProspects.length} live preview briefings, and verified Anti-AI Copy Gate.`
       }
     ]
   };
@@ -377,12 +380,21 @@ async function runMetaReconAgentSweep({
 }
 
 /**
- * Retrieves the current `store.metaRecon` state, running an initial sweep if none exists yet.
+ * Retrieves the current `store.metaRecon` state, running an initial or daily-rotated sweep when stale.
  */
 async function getMetaReconState(options = {}) {
   const store = loadStore();
-  if (!store.metaRecon || !Array.isArray(store.metaRecon.prospects) || store.metaRecon.prospects.length === 0) {
-    const res = await runMetaReconAgentSweep(options);
+  const targetDate = getCentralDateString(options.date);
+  if (
+    !store.metaRecon ||
+    !Array.isArray(store.metaRecon.prospects) ||
+    store.metaRecon.prospects.length === 0 ||
+    store.metaRecon.sweepDate !== targetDate
+  ) {
+    const res = await runMetaReconAgentSweep({
+      ...options,
+      date: targetDate
+    });
     return res.metaRecon;
   }
   recomputeMetaMetrics(store.metaRecon);

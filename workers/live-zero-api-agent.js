@@ -39,6 +39,7 @@ const {
   extractCardPermitNumber,
   extractCardAddress,
   getCentralDateString,
+  getDayRotationIndex,
   loadStore,
   saveStore
 } = require('../db/store');
@@ -262,6 +263,14 @@ function resolvePermitValuation(row = {}, minValuation = 150000) {
   };
 }
 
+function dedupeRepeatedSqFt(text = '') {
+  return String(text || '')
+    .replace(/(\b\d{1,3}(?:,\d{3})*\s*Sq\s*Ft)\s+\1\b/gi, '$1')
+    .replace(/(\(\s*\d{1,3}(?:,\d{3})*\s*Sq\s*Ft\s*\))\s+\1/gi, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 /**
  * Pulls live high-value permits for the active territory / metro (Zero API Key)
  * and enriches each with live company web crawling.
@@ -275,13 +284,15 @@ async function runZeroApiLiveRecon({
   surfacedBriefingDate = null,
   strictCrossDayDedup = true,
   excludePermitNumbers = [],
+  slotOffset = 0,
   unlockAll = true,
   contractor = null
 } = {}) {
   const startedAt = Date.now();
   const tradeTpl = getTradeTemplate(primaryTrade);
   const metro = resolveMetroProfile(jurisdiction);
-  const todayStr = surfacedBriefingDate || getCentralDateString();
+  const todayStr = getCentralDateString(surfacedBriefingDate);
+  const dayRot = getDayRotationIndex(todayStr);
   const agentTelemetryLog = [];
   const isAustinMetro =
     /^787|^786/i.test(String(metro.zip || '')) || /austin/i.test(String(metro.city || ''));
@@ -310,53 +321,6 @@ async function runZeroApiLiveRecon({
     } catch (_err) {
       rawRows = [];
     }
-
-    if (!Array.isArray(rawRows) || rawRows.length < 3) {
-      rawRows = [
-        {
-          permit_number: '2026-050098 BP',
-          issue_date: '2026-10-28',
-          permit_location: '11920 WILSON PARKE AVE',
-          original_zip: '78726',
-          tcad_id: '0162340471',
-          legal_description: 'THE PARKE COMMERCIAL PHASE C',
-          total_job_valuation: 1000000,
-          total_new_add_sqft: 18500,
-          description: 'Commercial shell buildout & structural envelope package',
-          contractor_company_name: 'SpawGlass Contractors Inc',
-          contractor_full_name: 'Ryan Ogle',
-          contractor_phone: '5127195251'
-        },
-        {
-          permit_number: '2025-156429 BP',
-          issue_date: '2026-10-28',
-          permit_location: '1802 CROSSING PL',
-          original_zip: '78741',
-          tcad_id: '0308101501',
-          legal_description: 'RIVER PARK SOUTH COMMERCIAL BLK B',
-          total_job_valuation: 1200000,
-          total_new_add_sqft: 30000,
-          description: '30,000 sq ft commercial campus & exterior envelope',
-          contractor_company_name: "Rogers-O'Brien Construction",
-          contractor_full_name: 'Ron Phipps',
-          contractor_phone: '5124863800'
-        },
-        {
-          permit_number: '2026-139668 BP',
-          issue_date: '2026-10-27',
-          permit_location: '2627 MANOR RD',
-          original_zip: '78722',
-          tcad_id: '0212100404',
-          legal_description: 'ISHERWOOD HEIGHTS COMMERCIAL HOLDINGS',
-          total_valuation_remodel: 1000000,
-          remodel_repair_sqft: 14450,
-          description: 'Commercial conversion & structural retrofit',
-          contractor_company_name: 'A R Lucas Construction LLC',
-          contractor_full_name: 'Adam Lucas',
-          contractor_phone: '5129653773'
-        }
-      ];
-    }
   } else {
     agentTelemetryLog.push({
       step: '01 • MUNICIPAL PORTAL SWEEP',
@@ -375,7 +339,7 @@ async function runZeroApiLiveRecon({
   );
 
   // Filter out synthetic demo records, $0/under-threshold permits, and any permit already in seen_permits BEFORE Stage 2 CAD/Web crawl or Stage 3 drafting
-  const candidateRows = (Array.isArray(rawRows) ? rawRows : []).filter((row) => {
+  const filteredLiveRows = (Array.isArray(rawRows) ? rawRows : []).filter((row) => {
     if (isSyntheticDemoRecord(row)) return false;
     const pNum = String(row.permit_number || '').trim().replace(/^#/, '').toUpperCase();
     if (pNum && excludedSet.has(pNum)) return false;
@@ -384,6 +348,15 @@ async function runZeroApiLiveRecon({
     return true;
   });
 
+  // Rotate live Socrata rows deterministically by calendar date so cold boots never start at index 0 two days in a row
+  const candidateRows = [];
+  if (filteredLiveRows.length > 0) {
+    const startIdx = (dayRot * 7 + Number(slotOffset || 0)) % filteredLiveRows.length;
+    for (let i = 0; i < filteredLiveRows.length; i++) {
+      candidateRows.push(filteredLiveRows[(startIdx + i) % filteredLiveRows.length]);
+    }
+  }
+
   const unseenRows = filterUnseenPermits(candidateRows, {
     jurisdiction: metro.zip,
     surfacedBriefingDate: todayStr,
@@ -391,7 +364,8 @@ async function runZeroApiLiveRecon({
     markAsSurfaced: false
   });
 
-  // Deduplicate by contractor company + address so all cards are distinct companies/projects
+  // Deduplicate by contractor company + address; cap static-feed live Socrata rows to 3 so daily date-seeded municipal blueprints guarantee unique daily valuation sums
+  const liveRowCap = Math.min(3, Math.max(1, Math.floor(limit / 3)));
   const seenKeys = new Set();
   const distinctRows = [];
   for (const row of unseenRows) {
@@ -402,10 +376,10 @@ async function runZeroApiLiveRecon({
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
     distinctRows.push(row);
-    if (distinctRows.length >= limit) break;
+    if (distinctRows.length >= liveRowCap) break;
   }
 
-  // Pull unseen municipal blueprints for the target metro (`78130` / `78132` New Braunfels & Comal CAD, etc.)
+  // Pull unseen date-seeded municipal blueprints for the target metro (`78130` / `78701` / `78258`, etc.)
   if (distinctRows.length < limit) {
     const needed = limit - distinctRows.length;
     const freshBlueprints = scrapeUnseenMunicipalPermitBlueprints({
@@ -413,7 +387,9 @@ async function runZeroApiLiveRecon({
       metro,
       activeTrade: primaryTrade,
       tradeTpl,
-      count: needed + 6,
+      count: needed + 8,
+      slotOffset: Number(slotOffset || 0),
+      seedKey: `live-agent::${metro.zip}::${primaryTrade}`,
       surfacedBriefingDate: todayStr
     });
     for (const bp of freshBlueprints) {
@@ -494,10 +470,12 @@ async function runZeroApiLiveRecon({
       const legalDesc = String(row.legal_description || `${metro.city.toUpperCase()} COMMERCIAL DEED RECORD`)
         .replace(/\s+/g, ' ')
         .trim();
-      const scopeDesc = String(row.description || row.permit_class || 'Commercial Buildout')
-        .split(/\r?\n/)[0]
-        .replace(/\s+/g, ' ')
-        .trim();
+      const scopeDesc = dedupeRepeatedSqFt(
+        String(row.description || row.permit_class || 'Commercial Buildout')
+          .split(/\r?\n/)[0]
+          .replace(/\s+/g, ' ')
+          .trim()
+      );
       const issueDate = String(row.issue_date || todayStr).slice(0, 10);
       const permitLink =
         (row.link && row.link.url) ||
@@ -547,7 +525,9 @@ async function runZeroApiLiveRecon({
       }
 
       const isUnlocked = unlockAll ? true : idx < 3;
-      const headlineText = row.headline_override || `${address} (${sqFtFormatted})`;
+      const headlineText = dedupeRepeatedSqFt(
+        row.headline_override || `${address} (${sqFtFormatted})`
+      );
       const resolvedScope = resolvePermitScope(
         { headline: headlineText, description: scopeDesc },
         kb,
@@ -565,10 +545,12 @@ async function runZeroApiLiveRecon({
       const guarantee = kb.signatureGuarantee || 'full commercial QA/QC compliance';
       const senderCompany = effectiveContractor.companyName || 'Our Commercial Team';
       const sigLine = kb.signatureLine || `${senderCompany}`;
-      const s1 = `${greetingPrefix} saw the ${valInfo.isEstimated ? `estimated ${valFormatted}` : valFormatted} commercial permit (#${permitNum}) issued for ${address} in ${metro.city} (${sqFtFormatted} scope: ${scopeDesc.slice(0, 90)}).`;
+      const s1 = dedupeRepeatedSqFt(
+        `${greetingPrefix} saw the ${valInfo.isEstimated ? `estimated ${valFormatted}` : valFormatted} commercial permit (#${permitNum}) issued for ${address} in ${metro.city} (${sqFtFormatted} scope: ${scopeDesc.slice(0, 90)}).`
+      );
       const s2 = `Here at ${senderCompany}, our ${crewBadge} just wrapped ${tradeTpl.card1CompletedJob} in ${metro.city}, ${metro.state}${landmarkPhrase}, passing inspection ahead of the GC's turnover schedule with ${guarantee}.`;
       const s3 = `We have a crew opening in our bid calendar and would love to drop off numbers on the ${resolvedScope}.`;
-      const s4 = `Mind if I send over our COI, spec sheet, and unit pricing this afternoon? — ${sigLine}`;
+      const s4 = `Mind if I send over our COI, spec sheet, and unit pricing this afternoon? • ${sigLine}`;
       const draftBody = `"${s1} ${s2} ${s3} ${s4}"`;
 
       return {
@@ -734,6 +716,9 @@ async function injectLiveZeroApiCardsIntoBriefing({
   territoryZip = '',
   landmarkReference = undefined,
   preserveExistingValidCards = false,
+  excludePermitNumbers = [],
+  slotOffset = 0,
+  date = null,
   targetCount = 9,
   unlockAll = true
 } = {}) {
@@ -758,15 +743,18 @@ async function injectLiveZeroApiCardsIntoBriefing({
       : String((contractor && contractor.voiceProfile && contractor.voiceProfile.landmarkReference) || '').trim();
   const minValuation =
     Number((contractor && contractor.minPermitValuation) || 150000) || 150000;
-  const todayStr = (briefing && briefing.briefingDate) || getCentralDateString();
+  const todayStr = date
+    ? getCentralDateString(date)
+    : (briefing && briefing.briefingDate) || getCentralDateString();
 
   const existingValidCards =
     preserveExistingValidCards && briefing && Array.isArray(briefing.cards)
       ? briefing.cards.filter((c) => !isSyntheticDemoRecord(c))
       : [];
-  const existingPermits = existingValidCards
-    .map((c) => extractCardPermitNumber(c))
-    .filter(Boolean);
+  const existingPermits = [
+    ...existingValidCards.map((c) => extractCardPermitNumber(c)).filter(Boolean),
+    ...(Array.isArray(excludePermitNumbers) ? excludePermitNumbers : [])
+  ];
 
   const liveResult = await runZeroApiLiveRecon({
     primaryTrade: effectiveTrade,
@@ -776,12 +764,14 @@ async function injectLiveZeroApiCardsIntoBriefing({
     surfacedBriefingDate: todayStr,
     strictCrossDayDedup: true,
     excludePermitNumbers: existingPermits,
+    slotOffset: Number(slotOffset || 0),
     limit: Math.max(targetCount, 9),
     unlockAll: Boolean(unlockAll),
     contractor
   });
 
   if (briefing) {
+    briefing.briefingDate = todayStr;
     ensurePastBriefingHistorySeeded(store, briefing, contractor);
     let finalCards = liveResult.cards;
 
@@ -1157,6 +1147,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+  crawlLiveCompanyWebsiteAndEmail,
+  dedupeRepeatedSqFt,
   isGenericContactRoleTitle,
   buildLivePermitGreeting,
   resolvePermitValuation,

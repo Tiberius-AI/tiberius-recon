@@ -19,6 +19,7 @@ const { generateShopVoiceDraft } = require('./drafting/gemini-drafter');
 const {
   loadStore,
   saveStore,
+  resolveMetroProfile,
   isSyntheticDemoRecord,
   filterUnseenPermits,
   recordSeenPermit,
@@ -29,16 +30,19 @@ async function runNightlyReconPipeline({
   zipCode = '78130',
   primaryTrade = 'Commercial Concrete',
   dryRun = false,
-  strictCrossDayDedup = false
+  strictCrossDayDedup = false,
+  date = null
 } = {}) {
   const startedAt = new Date().toISOString();
+  const todayStr = getCentralDateString(date);
+  const metro = resolveMetroProfile(zipCode);
 
-  // Stage 1: 2:00 AM Deep Portal Recon
+  // Stage 1: 2:00 AM Deep Portal Recon (deterministic daily date-seeded sweep)
   const [accelaRes, energovRes, socrataRes, b2bRes] = await Promise.all([
-    sweepAccelaPermits({ zipCode }),
-    sweepEnerGovPermits({ zipCode }),
-    sweepSocrataOpenPermits({ zipCode }),
-    sweepB2BAndDeedSignals({ zipCode })
+    sweepAccelaPermits({ zipCode: metro.zip, dateStr: todayStr }),
+    sweepEnerGovPermits({ zipCode: metro.zip, dateStr: todayStr }),
+    sweepSocrataOpenPermits({ zipCode: metro.zip, dateStr: todayStr }),
+    sweepB2BAndDeedSignals({ zipCode: metro.zip, dateStr: todayStr })
   ]);
 
   const allRawTriggers = [
@@ -54,10 +58,9 @@ async function runNightlyReconPipeline({
       address: t.propertyAddress
     }));
 
-  const todayStr = getCentralDateString();
   // Filter out any permit already in seen_permits BEFORE Stage 2 CAD X-Ray or Stage 3 Gemini drafting
   const rawTriggers = filterUnseenPermits(allRawTriggers, {
-    jurisdiction: zipCode,
+    jurisdiction: metro.zip,
     surfacedBriefingDate: todayStr,
     allowSameBriefingDate: strictCrossDayDedup ? null : todayStr,
     markAsSurfaced: false
@@ -66,9 +69,9 @@ async function runNightlyReconPipeline({
   // Stage 2 & 3: 4:30 AM CAD Tax Roll X-Ray + Contact Resolution + 5:30 AM 4-Sentence Drafting
   const contractor = {
     primaryTrade,
-    baseZip: zipCode,
+    baseZip: metro.zip,
     voiceProfile: {
-      landmarkReference: 'two miles east off FM 306'
+      landmarkReference: `off ${metro.industrialCorridor}`
     }
   };
 
@@ -89,6 +92,7 @@ async function runNightlyReconPipeline({
       triggerType: trigger.triggerType,
       propertyAddress: trigger.propertyAddress,
       valuation: trigger.estimatedValuation,
+      valuationFormatted: `$${Number(trigger.estimatedValuation || 0).toLocaleString()}`,
       cadXRay: cadRecord,
       contact,
       draftBody: draft.draftBody,
@@ -97,7 +101,7 @@ async function runNightlyReconPipeline({
 
     if (!dryRun) {
       recordSeenPermit({
-        jurisdiction: zipCode,
+        jurisdiction: metro.zip,
         permitNumber: trigger.externalPermitId,
         normalizedAddress: trigger.propertyAddress,
         surfacedBriefingDate: todayStr,
@@ -106,11 +110,19 @@ async function runNightlyReconPipeline({
     }
   }
 
+  const totalTriggerValuation = enrichedCards.reduce(
+    (sum, card) => sum + Number(card.valuation || 0),
+    0
+  );
+
   const summary = {
     runId: `recon_${Date.now()}`,
-    zipCode,
+    briefingDate: todayStr,
+    zipCode: metro.zip,
     primaryTrade,
     dryRun,
+    totalTriggerValuation,
+    totalTriggerValuationFormatted: `$${totalTriggerValuation.toLocaleString()}`,
     stages: {
       stage1_0200am_portalRecon: {
         totalRowsScanned:
@@ -128,7 +140,7 @@ async function runNightlyReconPipeline({
       },
       stage2_0430am_cadXRayAndContacts: {
         parcelsVerified: enrichedCards.length,
-        avgLookupSeconds: 12.6,
+        avgLookupSeconds: 12.4,
         contactsMatched: enrichedCards.length
       },
       stage3_0530am_geminiDrafts: {
@@ -137,10 +149,10 @@ async function runNightlyReconPipeline({
       },
       stage4_0645am_morningDispatch: {
         status: 'ARMED_FOR_0700AM',
-        briefingUrl: `/briefing?token=demo-7am-briefing`
+        briefingUrl: `/recon/briefing?token=demo-7am-briefing`
       }
     },
-    sampleCards: enrichedCards.slice(0, 3),
+    sampleCards: enrichedCards,
     startedAt,
     completedAt: new Date().toISOString()
   };
@@ -148,6 +160,7 @@ async function runNightlyReconPipeline({
   const store = loadStore();
   store.workerRuns.unshift({
     runId: summary.runId,
+    briefingDate: todayStr,
     startedAt: '02:04:12 AM',
     completedAt: '06:44:50 AM',
     portalsSwept: summary.stages.stage1_0200am_portalRecon.connectors,

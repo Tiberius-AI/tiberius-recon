@@ -163,7 +163,7 @@ function resolveWatchPayload({
   let briefingBundle = null;
   if (effectiveToken) {
     briefingBundle = getBriefingByToken(effectiveToken, {
-      demo: effectiveToken === 'demo-7am-briefing',
+      demo: false,
       autoScrape: true,
       forceRegenerate: false
     });
