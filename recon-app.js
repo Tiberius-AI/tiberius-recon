@@ -624,6 +624,15 @@
   const zipCheckerResult = document.getElementById('zip-checker-result');
   const zipCheckerStatusText = document.getElementById('zip-checker-status-text');
 
+  const STRIPE_PAYMENT_LINKS = {
+    'tier-1-checkout-link': 'https://buy.stripe.com/28EfZi0hZedt52KezH2sM0x',
+    'tier-2-checkout-link': 'https://buy.stripe.com/7sYaEY3ubglB2UCfDL2sM0y',
+    'tier-3-checkout-link': 'https://buy.stripe.com/4gM3cw9Szedtan4bnv2sM0z',
+    'briefing-tier-1-checkout-link': 'https://buy.stripe.com/28EfZi0hZedt52KezH2sM0x',
+    'briefing-tier-2-checkout-link': 'https://buy.stripe.com/7sYaEY3ubglB2UCfDL2sM0y',
+    'briefing-tier-3-checkout-link': 'https://buy.stripe.com/4gM3cw9Szedtan4bnv2sM0z'
+  };
+
   function syncStripeClientReferenceIds(zip, trade) {
     const safeZip = (String(zip || '78130').match(/\b\d{5}\b/) || ['78130'])[0];
     const safeTradeSlug = String(trade || 'Commercial_Concrete')
@@ -633,9 +642,10 @@
     const refId = `${safeZip}_${safeTradeSlug}`;
 
     document.querySelectorAll('a[data-stripe-base]').forEach((link) => {
-      const base = link.getAttribute('data-stripe-base');
-      if (base) {
-        link.href = `${base}?client_reference_id=${encodeURIComponent(refId)}`;
+      const canonicalBase = STRIPE_PAYMENT_LINKS[link.id] || link.getAttribute('data-stripe-base');
+      if (canonicalBase) {
+        link.setAttribute('data-stripe-base', canonicalBase);
+        link.href = `${canonicalBase}?client_reference_id=${encodeURIComponent(refId)}`;
       }
     });
 
@@ -646,6 +656,11 @@
     if (t2Label) t2Label.textContent = `Lock Zip ${safeZip} ($399/Mo Trial) →`;
     if (t3Label) t3Label.textContent = `Lock Exclusive Zip ${safeZip} ($599/Mo) →`;
   }
+
+  syncStripeClientReferenceIds(
+    zipCheckerInput ? zipCheckerInput.value : '78130',
+    zipCheckerTrade ? zipCheckerTrade.value : 'Commercial Concrete'
+  );
 
   if (zipCheckerTrade) {
     zipCheckerTrade.addEventListener('change', () => {

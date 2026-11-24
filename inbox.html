@@ -40,7 +40,7 @@
     };
   </script>
 
-  <link rel="stylesheet" href="/recon/styles.css?v=2.6" onerror="this.onerror=null;this.href='styles.css?v=2.6';" />
+  <link rel="stylesheet" href="/recon/styles.css?v=3.5" onerror="this.onerror=null;this.href='styles.css?v=3.5';" />
 </head>
 
 <body class="g-root g3-root bg-subtle-grid text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
@@ -72,13 +72,12 @@
       <nav aria-label="Conversation Room Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-200">
         <a href="/recon/login" class="hover:text-blue-400 transition-colors">← Back to Account Portal</a>
         <a id="nav-briefing-link" href="/recon/briefing" class="hover:text-blue-400 transition-colors flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
           <span>07:00 AM Briefing Cards</span>
         </a>
         <a id="nav-command-link" href="/recon/command" class="hover:text-blue-400 transition-colors">
           🧠 Shop Knowledge Base &amp; Territory
         </a>
-        <span class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300">
+        <span class="px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300">
           💬 CONVERSATION &amp; FOLLOW-UP ROOM
         </span>
       </nav>
@@ -115,17 +114,19 @@
 
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div>
-            <div class="flex flex-wrap items-center gap-2 mb-2">
-              <span class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 font-mono-telemetry text-xs text-emerald-300 font-bold">
-                💬 2-WAY REPLY &amp; FOLLOW-UP ROOM
+            <div class="mb-2">
+              <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-300">
+                01 // 2-WAY REPLY &amp; FOLLOW-UP ROOM
               </span>
-              <span id="inbox-demo-banner" class="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-xs text-amber-300 font-bold">
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mb-2.5">
+              <span id="inbox-demo-banner" class="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-xs text-amber-300 font-bold">
                 ILLUSTRATIVE DEMO • SAMPLE RECORDS &amp; SIMULATED REPLIES
               </span>
-              <span id="inbox-kb-badge" class="px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-xs text-blue-300">
+              <span id="inbox-kb-badge" class="px-2.5 py-1 rounded-md bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-xs text-blue-300">
                 🧠 SHOP KNOWLEDGE BASE CONNECTED
               </span>
-              <span id="inbox-pretrip-header-badge" class="hidden px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+              <span id="inbox-pretrip-header-badge" class="hidden px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
                 🩺 5:30 AM Pre-Trip Watchdog: PASS
               </span>
             </div>
@@ -154,7 +155,7 @@
             </button>
             <a
               id="header-briefing-btn"
-              href="briefing.html"
+              href="/recon/briefing"
               class="btn-trust-emerald px-4 py-2.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
             >
               <span>☕ Back to 7:00 AM Cards →</span>
@@ -227,8 +228,8 @@
           <!-- Thread Header -->
           <div class="pb-4 border-b border-slate-700 space-y-2">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span id="active-thread-stage-badge" class="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
-                🔥 HOT REPLY - BID WALK REQUESTED
+              <span id="active-thread-stage-badge" class="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                🔥 HOT REPLY • BID WALK REQUESTED
               </span>
               <select
                 id="active-thread-stage-select"
@@ -513,7 +514,7 @@
                 <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">🩺 5:30 AM PRE-TRIP WATCHDOG</div>
                 <h3 class="font-display font-bold text-base text-white">Auto-Heal &amp; 6:45 AM Circuit Breaker</h3>
               </div>
-              <span id="pretrip-status-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold">
+              <span id="pretrip-status-badge" class="px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold">
                 PASS
               </span>
             </div>
@@ -556,7 +557,7 @@
                 <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">📞 ZERO-A2P PHONE &amp; NATIVE SIM</div>
                 <h3 class="font-display font-bold text-base text-white">1-Tap Call &amp; 20-Sec Voicemail Script</h3>
               </div>
-              <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[10px] text-emerald-300 font-bold">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[10px] text-emerald-300 font-bold">
                 ZERO A2P RISK
               </span>
             </div>
@@ -647,7 +648,7 @@
               </div>
               <a
                 id="pane-edit-kb-link"
-                href="command.html"
+                href="/recon/command"
                 class="text-xs font-mono-telemetry text-emerald-400 hover:underline font-bold"
               >
                 Edit / Scan Site →
@@ -699,7 +700,7 @@
                 <div class="font-mono-telemetry text-[11px] text-emerald-400 font-bold">📲 SCOUT-TO-CONTRACTOR SMS &amp; A2P</div>
                 <h3 class="font-display font-bold text-base text-white">Master Twilio &amp; Bridge Pool Status</h3>
               </div>
-              <span id="a2p-stage-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[10px] text-emerald-300 font-bold">
+              <span id="a2p-stage-badge" class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[10px] text-emerald-300 font-bold">
                 MASTER A2P + BRIDGE POOL
               </span>
             </div>
@@ -763,6 +764,6 @@
     </div>
   </footer>
 
-  <script src="/recon/inbox.js?v=2.5" onerror="this.onerror=null;this.src='inbox.js?v=2.5';"></script>
+  <script src="/recon/inbox.js?v=3.5" onerror="this.onerror=null;this.src='inbox.js?v=3.5';"></script>
 </body>
 </html>

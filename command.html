@@ -41,7 +41,7 @@
     };
   </script>
 
-  <link rel="stylesheet" href="/recon/styles.css?v=2.6" onerror="this.onerror=null;this.href='styles.css?v=2.6';" />
+  <link rel="stylesheet" href="/recon/styles.css?v=3.5" onerror="this.onerror=null;this.href='styles.css?v=3.5';" />
 </head>
 
 <body class="g-root g3-root bg-subtle-grid text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
@@ -73,13 +73,12 @@
       <nav aria-label="Command Navigation" class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-700">
         <a href="/recon/login" class="hover:text-blue-700 transition-colors">← Back to Account Portal</a>
         <a id="nav-briefing-link" href="/recon/briefing" class="hover:text-blue-700 transition-colors flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></span>
           <span>07:00 AM Briefing Queue</span>
         </a>
         <a id="nav-inbox-link" href="/recon/inbox" class="hover:text-blue-700 transition-colors flex items-center gap-1.5">
           <span>💬 Conversation Room</span>
         </a>
-        <span class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
+        <span class="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF]">
           TERRITORY COMMAND &amp; SHOP DOSSIER
         </span>
       </nav>
@@ -121,8 +120,10 @@
           <div class="g3-hero-vignette"></div>
         </div>
         <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-xs text-[#1E40AF] mb-2.5">
-            <span>CONTRACTOR TERRITORY &amp; VOICE CALIBRATION</span>
+          <div class="mb-2">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-[#1E40AF]">
+              01 // CONTRACTOR TERRITORY &amp; VOICE CALIBRATION
+            </span>
           </div>
           <h1 id="cmd-contractor-title" class="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-[#0F172A] tracking-tight">
             Territory Command &amp; Shop Dossier
@@ -135,14 +136,14 @@
         <div class="flex flex-wrap items-center gap-3 shrink-0">
           <a
             id="hero-open-inbox-btn"
-            href="inbox.html"
+            href="/recon/inbox"
             class="btn-outline-slate px-4 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-2"
           >
             <span>💬 Open Conversation Room (Replies)</span>
           </a>
           <a
             id="hero-open-briefing-btn"
-            href="briefing.html"
+            href="/recon/briefing"
             class="btn-trust-emerald px-5 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-2"
           >
             <span>☕ Open Today's 7:00 AM Briefing →</span>
@@ -157,8 +158,10 @@
       <section class="enterprise-card bg-slate-900 border border-slate-700 rounded-2xl shadow-lg p-6 sm:p-8 space-y-6">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-700">
           <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-xs text-blue-300 mb-2">
-              <span>🧠 AUTONOMOUS CLIENT KNOWLEDGE BASE • POWERS ALL EMAILS &amp; REPLIES</span>
+            <div class="mb-2">
+              <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-blue-300">
+                02 // AUTONOMOUS CLIENT KNOWLEDGE BASE • POWERS ALL EMAILS &amp; REPLIES
+              </span>
             </div>
             <h2 class="font-display font-extrabold text-xl sm:text-2xl text-white">
               Client Shop Dossier &amp; Zero-API Website Auto-Scanner
@@ -303,7 +306,7 @@
               </button>
               <a
                 id="kb-open-inbox-link"
-                href="inbox.html"
+                href="/recon/inbox"
                 class="btn-outline-slate px-4 py-3 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-1.5"
               >
                 <span>💬 Test in Conversation Room →</span>
@@ -332,7 +335,7 @@
                 Territory Lock &amp; Shop Voice Calibration
               </h2>
             </div>
-            <span id="cmd-availability-pill" class="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
+            <span id="cmd-availability-pill" class="px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800">
               ✓ SLOT OPEN
             </span>
           </div>
@@ -464,7 +467,7 @@
           <section id="account-profile-module" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-7">
             <div class="flex items-center justify-between gap-2 mb-3">
               <span class="font-mono-telemetry text-xs text-[#1E40AF]">ACCOUNT PROFILE &amp; CREDENTIALS</span>
-              <span class="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-[11px] text-blue-800 font-bold">
+              <span class="px-2.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 font-mono-telemetry text-[11px] text-blue-800 font-bold">
                 🔐 LOGIN &amp; SECURITY
               </span>
             </div>
@@ -577,12 +580,12 @@
                   CLIENT-OWNED OUTBOUND CHANNELS (ZERO SHARED SERVERS)
                 </span>
                 <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800 font-bold">
+                  <span class="px-2.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800 font-bold">
                     📱 SMS: MY PHONE SIM
                   </span>
                   <span
                     id="client-email-status-pill"
-                    class="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-[10px] text-[#1E40AF] font-bold"
+                    class="px-2.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 font-mono-telemetry text-[10px] text-[#1E40AF] font-bold"
                   >
                     ✉️ EMAIL: MY MAIL APP
                   </span>
@@ -763,8 +766,10 @@
       <section id="meta-recon-module" class="hidden enterprise-card bg-slate-900 border border-slate-700 rounded-2xl shadow-xl p-6 sm:p-8 space-y-6">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-700">
           <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 font-mono-telemetry text-xs text-emerald-300 mb-2">
-              <span>🤖 MODULE 04 • TIBERIUS META-RECON™ • AUTONOMOUS LEAD-GEN FOR TIBERIUS ITSELF</span>
+            <div class="mb-2">
+              <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-300">
+                04 // TIBERIUS META-RECON™ • AUTONOMOUS LEAD-GEN FOR TIBERIUS ITSELF
+              </span>
             </div>
             <h2 class="font-display font-extrabold text-xl sm:text-2xl text-white">
               Autonomous Prospect Scout, 3-Leak Website Teardown &amp; Trojan Horse Permit Outbound
@@ -1035,6 +1040,6 @@
     </div>
   </footer>
 
-  <script src="/recon/command.js?v=2.6" onerror="this.onerror=null;this.src='command.js?v=2.6';"></script>
+  <script src="/recon/command.js?v=3.5" onerror="this.onerror=null;this.src='command.js?v=3.5';"></script>
 </body>
 </html>

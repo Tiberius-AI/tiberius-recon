@@ -681,7 +681,7 @@ async function runTests() {
     // 2. Verify Sentence #1 persona-aware greeting & contact sanitization on ?demo=true cards (Cards 01-09)
     const card01 = cards.find((c) => c.cardNumber.includes('#BP-2026-06102')) || cards[0];
     assert.ok(
-      card01.draftBody.includes('Hey Wayne & the Lott Brothers team — saw the commercial permit (#BP-2026-06102) filed for 2950 Cold Spring Dr in New Braunfels.'),
+      card01.draftBody.includes('Hey Wayne & the Lott Brothers team, saw the commercial permit (#BP-2026-06102) filed for 2950 Cold Spring Dr in New Braunfels.'),
       `Unexpected Card 01 greeting: ${card01.draftBody}`
     );
     assert.ok(
@@ -692,18 +692,18 @@ async function runTests() {
     const card03 = cards.find((c) => c.cardNumber.includes('#BP-2026-06388'));
     assert.ok(card03, 'Card 03 (#BP-2026-06388) should be present');
     assert.ok(
-      card03.draftBody.includes('Hey Lauren — saw the commercial CapEx permit (#BP-2026-06388) filed for Guadalupe River Business Park at 1420 Common St in New Braunfels.'),
+      card03.draftBody.includes('Hey Lauren, saw the commercial CapEx permit (#BP-2026-06388) filed for Guadalupe River Business Park at 1420 Common St in New Braunfels.'),
       `Unexpected Card 03 PM greeting: ${card03.draftBody}`
     );
     assert.ok(
-      card03.draftBody.includes('Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? — Jack Williams • A-lert Roof Systems • (830) 481-0653'),
+      card03.draftBody.includes('Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? • Jack Williams • A-lert Roof Systems • (830) 481-0653'),
       `Card 03 PM closing CTA should use CapEx comparison numbers: ${card03.draftBody}`
     );
 
     const card04 = cards.find((c) => c.cardNumber.includes('#BP-2026-06511'));
     assert.ok(card04, 'Card 04 (#BP-2026-06511) should be present');
     assert.ok(
-      card04.draftBody.includes('Hey David & the Keller-Martin team — saw the commercial permit (#BP-2026-06511) filed for 2180 State Hwy 46 W in New Braunfels.'),
+      card04.draftBody.includes('Hey David & the Keller-Martin team, saw the commercial permit (#BP-2026-06511) filed for 2180 State Hwy 46 W in New Braunfels.'),
       `Unexpected Card 04 greeting: ${card04.draftBody}`
     );
     assert.ok(
@@ -725,7 +725,7 @@ async function runTests() {
       'Card 07 contactName must sanitize raw email address into Preconstruction Desk label'
     );
     assert.ok(
-      card07.draftBody.includes('Hey Structura Inc Estimating Team — saw the commercial permit (#BP-2026-06915) filed for 715 Landa St in New Braunfels.'),
+      card07.draftBody.includes('Hey Structura Inc Estimating Team, saw the commercial permit (#BP-2026-06915) filed for 715 Landa St in New Braunfels.'),
       `Unexpected Card 07 generic desk greeting: ${card07.draftBody}`
     );
     assert.strictEqual(card07.cadDetails.parcelId, 'CAD-78132-6915');

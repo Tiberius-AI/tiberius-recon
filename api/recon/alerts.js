@@ -154,7 +154,7 @@ module.exports = async function handler(req, res) {
           {};
         const lastMsg =
           (activeThread.messages || [])[activeThread.messages.length - 1] || {
-            body: 'We are finalizing bids this week — can you meet Thursday at 9:00 AM?'
+            body: 'We are finalizing bids this week. Can you meet Thursday at 9:00 AM?'
           };
 
         const receipt = await dispatchContractorHotReplyAlertSms({

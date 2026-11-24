@@ -108,21 +108,20 @@
   }
 
   function trackWatchTelemetry(eventType, extra = {}) {
-    const w = state.watchData || {};
-    fetch('/api/recon/watch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'track_event',
-        videoId: w.videoId || state.videoId,
-        token: w.token || state.selectedToken,
-        companyName: (w.prospect && w.prospect.companyName) || '',
-        contactName: (w.prospect && w.prospect.contactName) || '',
-        viewer: urlParams.get('viewer') === 'admin' || urlParams.get('studio') === '1' ? 'admin' : undefined,
+    try {
+      const logKey = 'tiberius_watch_telemetry_log';
+      const prev = JSON.parse(localStorage.getItem(logKey) || '[]');
+      prev.unshift({
         eventType,
+        timestamp: new Date().toISOString(),
+        token: state.selectedToken || '',
+        videoId: state.videoId || '',
         ...extra
-      })
-    }).catch(() => {});
+      });
+      localStorage.setItem(logKey, JSON.stringify(prev.slice(0, 25)));
+    } catch (_err) {
+      // Ignore storage access errors in private browsing
+    }
   }
 
   function updateStudioModeUI(mode) {
@@ -659,46 +658,135 @@
     });
   }
 
+  function buildLocalIntroScript({ contactName = '', companyName = '', territoryZip = '78130', city = 'New Braunfels', tradeName = 'Commercial Concrete' } = {}) {
+    const first = String(contactName || '')
+      .replace(/^(Mr\.|Ms\.|Mrs\.|Dr\.)\s+/i, '')
+      .trim()
+      .split(/\s+/)[0];
+    const hasPerson = first && !/^(there|owner|team|estimating|preconstruction|desk|office|admin)$/i.test(first);
+    const tradeShort = String(tradeName || 'commercial').split('/')[0].trim().toLowerCase();
+    if (!companyName && !hasPerson) {
+      return 'Welcome to Tiberius Recon. Watch how we pull new county building permits overnight and text your 7:00 AM list before competitors know the job exists.';
+    }
+    const greeting = hasPerson ? `Hey ${first}` : `Hey ${companyName || 'team'}`;
+    return `${greeting}, I pulled three live ${tradeShort} permits in ${territoryZip} (${city}) for ${companyName || 'your shop'} this morning. Watch how your 7:00 AM list works right here:`;
+  }
+
+  function buildDefaultSidebarPermits(zip = '78130', city = 'New Braunfels') {
+    return [
+      {
+        rank: 1,
+        permitNumber: 'PERMIT #BP-2026-08941',
+        headline: '$240,000 Commercial Building Upgrade',
+        address: `1420 Industrial Pkwy, ${city}, TX ${zip}`,
+        pillText: `$240,000 JOB VALUE • ${zip}`,
+        contactName: 'Marcus Vance • Apex Builders'
+      },
+      {
+        rank: 2,
+        permitNumber: 'PERMIT #2026-10412 BP',
+        headline: '$680,000 New Commercial Building',
+        address: `2850 FM 306, ${city}, TX ${zip}`,
+        pillText: '$680,000 JOB VALUE • OWNER MATCHED',
+        contactName: 'Ryan Ogle • SpawGlass Contractors'
+      },
+      {
+        rank: 3,
+        permitNumber: 'PERMIT #2026-10889 BP',
+        headline: '$410,000 Multi-Unit Commercial Remodel',
+        address: `1916 State Hwy 46 W, ${city}, TX ${zip}`,
+        pillText: '$410,000 JOB VALUE • JUST FILED',
+        contactName: 'Taylor Thaggard • 1916 HWY 46 LLC'
+      }
+    ];
+  }
+
+  function buildLocalWatchPayload(opts = {}) {
+    const mode = opts.mode || 'PREMADE_STANDARD';
+    const companyName = String(opts.companyName || '').trim();
+    const contactName = String(opts.contactName || '').trim();
+    const territoryZip = String(opts.territoryZip || '78130').trim() || '78130';
+    const city = String(opts.city || 'New Braunfels').trim() || 'New Braunfels';
+    const tradeName = String(opts.tradeName || 'Commercial Concrete').trim();
+    const token = String(opts.token || 'demo-7am-briefing').trim();
+    const isPersonalized = Boolean(mode !== 'PREMADE_STANDARD' && (companyName || (opts.token && opts.token !== 'demo-7am-briefing')));
+    const contactFirstName = String(contactName || '')
+      .replace(/^(Mr\.|Ms\.|Mrs\.|Dr\.)\s+/i, '')
+      .trim()
+      .split(/\s+/)[0] || 'there';
+
+    const introScript =
+      String(opts.introScript || '').trim() ||
+      buildLocalIntroScript({ contactName, companyName, territoryZip, city, tradeName });
+
+    return {
+      ok: true,
+      mode,
+      isPersonalized,
+      token,
+      title: isPersonalized
+        ? `${companyName || 'Your Shop'}: 7:00 AM Local Permit Walkthrough (${territoryZip} • ${city})`
+        : 'See Local Building Permits Before Competitors Know They Exist',
+      subtitle: isPersonalized
+        ? `Prepared for ${contactName ? `${contactName} @ ` : ''}${companyName || 'Your Shop'} • 3 New Local Permits in ${territoryZip}`
+        : 'Watch how Recon pulls high-dollar county permits overnight so you reach owners first at 7:00 AM.',
+      sender: {
+        name: 'Billy • Tiberius Recon',
+        avatarUrl: '/recon/images/tiberius-ai.png'
+      },
+      prospect: {
+        companyName: companyName || 'Your Contracting Business',
+        contactName: contactName || 'Estimating & Operations',
+        contactFirstName,
+        territoryZip,
+        city,
+        tradeName,
+        googleDocUrl: opts.googleDocUrl || ''
+      },
+      player: {
+        masterVideoUrl: '/recon/video/TIBERIUS%20RECON.mp4',
+        posterUrl: '/recon/images/tiberius-recon-poster.jpg',
+        introScript,
+        introAudioUrl: opts.introAudioUrl || '',
+        introVideoUrl: opts.introVideoUrl || '',
+        introDurationSeconds: Number(opts.introDurationSeconds) || 5,
+        enableCircularBubble: opts.enableCircularBubble !== false
+      },
+      cta: {
+        primaryLabel: isPersonalized
+          ? `Open ${companyName || 'Your'} Live 7:00 AM Permit List →`
+          : 'Open Live 7:00 AM Permit List →',
+        primaryUrl: `/recon/briefing?token=${encodeURIComponent(token || 'demo-7am-briefing')}`
+      },
+      telemetry: {
+        viewsCount: isPersonalized ? 1 : 14,
+        reactions: { fire: 4, thumbsUp: 3, bullseye: 2, bolt: 3 }
+      },
+      sidebarPermits:
+        Array.isArray(opts.sidebarPermits) && opts.sidebarPermits.length > 0
+          ? opts.sidebarPermits
+          : buildDefaultSidebarPermits(territoryZip, city)
+    };
+  }
+
   // Studio Auto-Write 5s AI Script & Attach Voiceover
   if (studioGenerateAiBtn) {
-    studioGenerateAiBtn.addEventListener('click', async () => {
-      const orig = studioGenerateAiBtn.textContent;
-      studioGenerateAiBtn.textContent = 'Generating 5s Intro...';
-      try {
-        const resp = await fetch('/api/recon/watch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'generate_ai_intro',
-            companyName: studioCompanyInput ? studioCompanyInput.value.trim() : '',
-            contactName: studioContactInput ? studioContactInput.value.trim() : '',
-            territoryZip: studioZipInput ? studioZipInput.value.trim() : '78130',
-            tradeName: studioTradeSelect ? studioTradeSelect.value : 'Commercial Concrete',
-            customIntroAudioUrl:
-              (studioCustomAudioInput && studioCustomAudioInput.value.trim()) ||
-              (studioVoiceSelect && studioVoiceSelect.value) ||
-              ''
-          })
-        });
-        const data = await resp.json();
-        if (data && data.ok) {
-          if (studioIntroScript) studioIntroScript.value = data.introScript;
-          updateStudioModeUI('AI_STITCH_3_97');
-        }
-      } catch (_err) {
-        // Ignore
-      } finally {
-        studioGenerateAiBtn.textContent = orig;
-      }
+    studioGenerateAiBtn.addEventListener('click', () => {
+      const generatedScript = buildLocalIntroScript({
+        companyName: studioCompanyInput ? studioCompanyInput.value.trim() : '',
+        contactName: studioContactInput ? studioContactInput.value.trim() : '',
+        territoryZip: studioZipInput ? studioZipInput.value.trim() : '78130',
+        tradeName: studioTradeSelect ? studioTradeSelect.value : 'Commercial Concrete'
+      });
+      if (studioIntroScript) studioIntroScript.value = generatedScript;
+      updateStudioModeUI('AI_STITCH_3_97');
     });
   }
 
   // Apply Studio Settings & Save Standalone Watch Link
   if (studioApplyBtn) {
-    studioApplyBtn.addEventListener('click', async () => {
+    studioApplyBtn.addEventListener('click', () => {
       const orig = studioApplyBtn.textContent;
-      studioApplyBtn.textContent = 'Building Link...';
-
       const isStandard = state.studioMode === 'PREMADE_STANDARD';
       const isAiStitch = state.studioMode === 'AI_STITCH_3_97';
       const companyName = isStandard ? '' : (studioCompanyInput && studioCompanyInput.value.trim()) || '';
@@ -713,43 +801,47 @@
       const introVideoUrl = isAiStitch
         ? (studioCustomVideoInput && studioCustomVideoInput.value.trim()) || ''
         : '';
+      const introScript = studioIntroScript ? studioIntroScript.value.trim() : '';
+      const enableCircularBubble = studioBubbleCheckbox ? studioBubbleCheckbox.checked : true;
 
-      try {
-        const resp = await fetch('/api/recon/watch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'save_watch_config',
-            mode: state.studioMode,
-            token: isStandard ? '' : state.selectedToken,
-            companyName,
-            contactName,
-            territoryZip,
-            tradeName,
-            introScript: studioIntroScript ? studioIntroScript.value.trim() : '',
-            introAudioUrl,
-            introVideoUrl,
-            enableCircularBubble: studioBubbleCheckbox ? studioBubbleCheckbox.checked : true
-          })
-        });
-        const data = await resp.json();
-        if (data && data.ok && data.watch) {
-          const newUrl = isStandard
-            ? `${window.location.origin}${window.location.pathname}`
-            : `${window.location.origin}${data.sharePath}`;
-          window.history.replaceState({}, '', newUrl);
-          if (studioShareUrlOutput) studioShareUrlOutput.value = newUrl;
-          if (loomBigPlayOverlay) loomBigPlayOverlay.classList.remove('hidden');
-          renderWatchPage(data.watch);
-        }
-      } catch (_err) {
-        // Fallback URL update if offline
-      } finally {
-        studioApplyBtn.textContent = '✓ Applied & Link Ready!';
-        setTimeout(() => {
-          studioApplyBtn.textContent = orig;
-        }, 2000);
+      const shareParams = new URLSearchParams();
+      if (!isStandard) {
+        shareParams.set('mode', state.studioMode);
+        if (state.selectedToken) shareParams.set('token', state.selectedToken);
+        if (companyName) shareParams.set('company', companyName);
+        if (contactName) shareParams.set('contact', contactName);
+        if (territoryZip) shareParams.set('zip', territoryZip);
+        if (tradeName) shareParams.set('trade', tradeName);
+        if (introAudioUrl) shareParams.set('introAudio', introAudioUrl);
+        if (introVideoUrl) shareParams.set('introVideo', introVideoUrl);
       }
+      const qs = shareParams.toString();
+      const newUrl = qs
+        ? `${window.location.origin}${window.location.pathname}?${qs}`
+        : `${window.location.origin}${window.location.pathname}`;
+      window.history.replaceState({}, '', newUrl);
+      if (studioShareUrlOutput) studioShareUrlOutput.value = newUrl;
+      if (loomBigPlayOverlay) loomBigPlayOverlay.classList.remove('hidden');
+
+      renderWatchPage(
+        buildLocalWatchPayload({
+          mode: state.studioMode,
+          token: isStandard ? 'demo-7am-briefing' : state.selectedToken || 'demo-7am-briefing',
+          companyName,
+          contactName,
+          territoryZip,
+          tradeName,
+          introScript,
+          introAudioUrl,
+          introVideoUrl,
+          enableCircularBubble
+        })
+      );
+
+      studioApplyBtn.textContent = '✓ Applied & Link Ready!';
+      setTimeout(() => {
+        studioApplyBtn.textContent = orig;
+      }, 2000);
     });
   }
 
@@ -771,42 +863,89 @@
 
   async function loadWatchInitial() {
     const query = new URLSearchParams(window.location.search);
-    try {
-      const resp = await fetch(`/api/recon/watch?${query.toString()}`);
-      const data = await resp.json();
-      if (data && data.ok) {
-        renderWatchPage(data);
-        trackWatchTelemetry('VIDEO_OPENED');
-        return;
+    const tokenParam = (query.get('token') || query.get('t') || '').trim();
+    const companyParam = (query.get('company') || query.get('companyName') || '').trim();
+    const contactParam = (query.get('contact') || query.get('contactName') || '').trim();
+    const zipParam = (query.get('zip') || query.get('territoryZip') || '78130').trim();
+    const tradeParam = (query.get('trade') || query.get('tradeName') || 'Commercial Concrete').trim();
+    const introAudioParam = (query.get('introAudio') || '').trim();
+    const introVideoParam = (query.get('introVideo') || '').trim();
+    const explicitMode = (query.get('mode') || '').trim();
+
+    if (tokenParam && tokenParam !== 'demo-7am-briefing') {
+      try {
+        const resp = await fetch(`/api/recon/briefing?token=${encodeURIComponent(tokenParam)}`);
+        if (resp.ok) {
+          const bData = await resp.json();
+          if (bData && bData.ok && bData.briefing) {
+            const c = bData.contractor || {};
+            const b = bData.briefing || {};
+            const unlocked = Array.isArray(b.cards)
+              ? b.cards
+                  .filter((card) => !card.isLockedOverflow)
+                  .slice(0, 3)
+                  .map((card, idx) => ({
+                    rank: idx + 1,
+                    permitNumber: String(card.cardNumber || `PERMIT #0${idx + 1}`).replace(/\u2014/g, '•'),
+                    headline: String(card.headline || '').replace(/\u2014/g, '•'),
+                    address: String(card.subMeta || '').replace(/^📍\s*/, '').replace(/\u2014/g, '•'),
+                    pillText: String(card.pillText || '').replace(/\u2014/g, '•'),
+                    contactName: String(card.contactName || '').replace(/\u2014/g, '•')
+                  }))
+              : [];
+            const resolvedCompany = companyParam || c.companyName || '';
+            const resolvedContact = contactParam || c.ownerName || '';
+            const resolvedZip = b.territoryZip || c.baseZip || zipParam || '78130';
+            const resolvedCity = b.metroCity || 'New Braunfels';
+            const resolvedTrade = b.tradeName || c.primaryTrade || tradeParam;
+            const resolvedMode =
+              explicitMode ||
+              (introAudioParam || introVideoParam ? 'AI_STITCH_3_97' : 'PERSONALIZED_WRAPPER');
+
+            renderWatchPage(
+              buildLocalWatchPayload({
+                mode: resolvedMode,
+                token: tokenParam,
+                companyName: resolvedCompany,
+                contactName: resolvedContact,
+                territoryZip: resolvedZip,
+                city: resolvedCity,
+                tradeName: resolvedTrade,
+                introAudioUrl: introAudioParam,
+                introVideoUrl: introVideoParam,
+                sidebarPermits: unlocked
+              })
+            );
+            trackWatchTelemetry('VIDEO_OPENED');
+            return;
+          }
+        }
+      } catch (_err) {
+        // Fall through to deterministic local payload
       }
-    } catch (_err) {
-      // Offline fallback below
     }
 
-    renderWatchPage({
-      ok: true,
-      mode: 'PREMADE_STANDARD',
-      isPersonalized: false,
-      title: 'Tiberius Recon™ - 90-Second Local Permit Walkthrough',
-      subtitle:
-        'Watch how Recon pulls overnight building permits and county owner records before 7:00 AM.',
-      prospect: {
-        companyName: 'Your Contracting Business',
-        territoryZip: '78130',
-        city: 'New Braunfels',
-        tradeName: 'Commercial Concrete'
-      },
-      player: {
-        masterVideoUrl: '/recon/video/TIBERIUS%20RECON.mp4',
-        posterUrl: '/recon/images/tiberius-recon-poster.jpg',
-        enableCircularBubble: true
-      },
-      cta: {
-        primaryLabel: 'Open Interactive 7:00 AM Briefing →',
-        primaryUrl: '/recon/briefing?token=demo-7am-briefing'
-      },
-      sidebarPermits: []
-    });
+    const fallbackMode =
+      explicitMode ||
+      (introAudioParam || introVideoParam
+        ? 'AI_STITCH_3_97'
+        : companyParam
+        ? 'PERSONALIZED_WRAPPER'
+        : 'PREMADE_STANDARD');
+
+    renderWatchPage(
+      buildLocalWatchPayload({
+        mode: fallbackMode,
+        token: tokenParam || 'demo-7am-briefing',
+        companyName: companyParam,
+        contactName: contactParam,
+        territoryZip: zipParam,
+        tradeName: tradeParam,
+        introAudioUrl: introAudioParam,
+        introVideoUrl: introVideoParam
+      })
+    );
+    trackWatchTelemetry('VIDEO_OPENED');
   }
 
   loadWatchInitial();

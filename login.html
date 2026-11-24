@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/recon/styles.css?v=2.6" onerror="this.onerror=null;this.href='styles.css?v=2.6';" />
+  <link rel="stylesheet" href="/recon/styles.css?v=3.5" onerror="this.onerror=null;this.href='styles.css?v=3.5';" />
 </head>
 <body class="g-root g3-root bg-subtle-grid text-slate-900 antialiased selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
 
@@ -52,7 +52,7 @@
         <div class="hidden sm:block border-l border-white/10 pl-4">
           <div class="flex items-center gap-2">
             <span class="font-display font-extrabold text-slate-900 tracking-tight text-sm">TIBERIUS RECON™</span>
-            <span class="px-2 py-0.5 text-[10px] font-mono-telemetry font-semibold uppercase tracking-wider bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+            <span class="px-2 py-0.5 text-[10px] font-mono-telemetry font-semibold uppercase tracking-wider bg-blue-50 text-blue-700 rounded-md border border-blue-200">
               MULTI-CLIENT AUTH
             </span>
           </div>
@@ -69,16 +69,16 @@
         <button id="nav-logout-btn" type="button" class="hidden px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-colors">
           Sign Out
         </button>
-        <a href="onboarding.html" class="btn-trust-emerald px-3 py-1.5 rounded-lg text-xs font-semibold">
+        <a href="/recon/onboarding" class="btn-trust-emerald px-3 py-1.5 rounded-lg text-xs font-semibold">
           🚀 New Client Onboarding
         </a>
-        <a href="briefing.html" class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-semibold">
+        <a href="/recon/briefing" class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-semibold">
           7:00 AM Briefing
         </a>
-        <a href="inbox.html" class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-semibold">
+        <a href="/recon/inbox" class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-semibold">
           💬 Conversation Room
         </a>
-        <a href="command.html" class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-semibold">
+        <a href="/recon/command" class="btn-outline-slate px-3 py-1.5 rounded-lg text-xs font-semibold">
           🧠 Knowledge Base &amp; Command
         </a>
       </div>
@@ -97,10 +97,10 @@
           <div class="g3-hero-vignette"></div>
         </div>
         <div>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono-telemetry font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
-            🔐 Secure Account Access
+          <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-blue-700">
+            01 // SECURE ACCOUNT ACCESS
           </span>
-          <h1 class="mt-2.5 font-display text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 class="mt-2 font-display text-2xl font-extrabold text-slate-900 tracking-tight">
             Contractor &amp; Agency Sign-In
           </h1>
           <p class="mt-1 text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -149,7 +149,7 @@
 
         <div class="pt-3 border-t border-slate-700/70 flex items-center justify-between gap-2 text-xs">
           <span class="text-slate-400">Just completed checkout?</span>
-          <a href="onboarding.html" class="font-mono-telemetry font-bold text-emerald-400 hover:underline">
+          <a href="/recon/onboarding" class="font-mono-telemetry font-bold text-emerald-400 hover:underline">
             🚀 Complete New Client Setup &amp; Get Credentials →
           </a>
         </div>
@@ -172,21 +172,21 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <a
               id="session-open-briefing-btn"
-              href="briefing.html"
+              href="/recon/briefing"
               class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-bold text-xs text-center shadow-sm transition-colors"
             >
               ☕ 7:00 AM Briefing →
             </a>
             <a
               id="session-open-inbox-btn"
-              href="inbox.html"
+              href="/recon/inbox"
               class="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-display font-bold text-xs text-center shadow-sm transition-colors"
             >
               💬 Conversation Room →
             </a>
             <a
               id="session-open-command-btn"
-              href="command.html"
+              href="/recon/command"
               class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-bold text-xs text-center shadow-sm transition-colors"
             >
               🧠 Knowledge Base →
@@ -363,7 +363,7 @@
               Explore the Sample Workspace or Sign In to Your Territory
             </h2>
           </div>
-          <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-mono-telemetry font-semibold">
+          <span class="px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-mono-telemetry font-semibold">
             Sandbox Mode • No Live Outbound Dispatch
           </span>
         </div>
@@ -375,7 +375,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <!-- Sample Morning Briefing Sandbox -->
           <a
-            href="briefing.html?token=demo-7am-briefing"
+            href="/recon/briefing?token=demo-7am-briefing"
             class="text-left p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 transition-all group space-y-1.5 block"
           >
             <div class="flex items-center justify-between">
@@ -391,7 +391,7 @@
 
           <!-- Sample Conversation Room Sandbox -->
           <a
-            href="inbox.html?token=demo-7am-briefing"
+            href="/recon/inbox?token=demo-7am-briefing"
             class="text-left p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 transition-all group space-y-1.5 block"
           >
             <div class="flex items-center justify-between gap-2">
@@ -412,7 +412,7 @@
             Start your 7-day free trial to unlock your territory queue.
           </div>
           <a
-            href="./#pricing"
+            href="/recon#pricing"
             class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-bold text-xs transition-colors"
           >
             Start My 7-Day Free Trial →
@@ -426,7 +426,7 @@
       <div class="bg-slate-900 text-white rounded-2xl p-6 sm:p-7 shadow-md space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <span class="px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 text-[11px] font-mono-telemetry font-bold uppercase tracking-wider">
+            <span class="px-2.5 py-1 rounded-md bg-amber-400 text-slate-950 text-[11px] font-mono-telemetry font-bold uppercase tracking-wider">
               ★ MASTER AGENCY COMMAND CENTER
             </span>
             <h2 class="mt-2 font-display text-2xl font-extrabold tracking-tight">
@@ -465,7 +465,7 @@
               <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
                 🩺 5:30 AM Pre-Trip Watchdog
               </span>
-              <span id="admin-pretrip-status-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+              <span id="admin-pretrip-status-badge" class="px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
                 PASS
               </span>
               <span id="admin-pretrip-circuit-pill" class="font-mono-telemetry text-xs text-emerald-400 font-bold">
@@ -642,6 +642,6 @@
     </div>
   </footer>
 
-  <script src="login.js" onerror="this.onerror=null;this.src='/recon/login.js';"></script>
+  <script src="/recon/login.js?v=3.5" onerror="this.onerror=null;this.src='login.js?v=3.5';"></script>
 </body>
 </html>

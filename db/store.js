@@ -1,11 +1,11 @@
 /**
- * TIBERIUS RECON™ — UNIFIED RUNTIME DATA & TERRITORY ENGINE (db/store.js)
+ * TIBERIUS RECON™ • UNIFIED RUNTIME DATA & TERRITORY ENGINE (db/store.js)
  *
  * Powers:
  * 1. Zip Code Exclusivity & Tier Capacity Ledger (Tier 2: Max 2/Zip | Tier 3: 100% Exclusive)
  * 2. Dynamic Trade- & Metro-Calibrated 7:00 AM Briefing Generator (3 Unlocked + 9 Locked Overflow)
  * 3. 1-Tap Human-in-the-Loop Approval, Draft Editing & Dispatch Logging
- * 4. Contractor Command Portal State, Voice Calibration & $200/mo Smart Site Equity Ledger
+ * 4. Contractor Command Portal State, Voice Calibration & Territory Pipeline Ledger
  */
 
 const fs = require('fs');
@@ -434,7 +434,7 @@ function extractCardAddress(card = {}) {
     }
   }
   if (card.headline) {
-    const headlineLead = String(card.headline).split(/[—(]/)[0].trim();
+    const headlineLead = String(card.headline).split(/[\u2014•(]/)[0].trim();
     return normalizePermitAddress(headlineLead);
   }
   return '';
@@ -456,7 +456,7 @@ function extractCardStreetKey(card = {}) {
     }
   }
   if (card.headline) {
-    const headlineLead = String(card.headline).split(/[—(]/)[0].trim();
+    const headlineLead = String(card.headline).split(/[\u2014•(]/)[0].trim();
     return normalizeStreetKey(headlineLead);
   }
   return '';
@@ -2276,11 +2276,11 @@ function parseCardContact(card = {}) {
 /**
  * Sentence #1 Dynamic Contact Parser & Persona-Aware Greeting:
  * - Case A (Named GC Estimator / Precon / PM):
- *   "Hey [First Name] & the [Company Short Name] team — saw the commercial permit (#[Permit ID]) filed for [Address] in [City]."
+ *   "Hey [First Name] & the [Company Short Name] team • saw the commercial permit (#[Permit ID]) filed for [Address] in [City]."
  * - Case B (Property Management / Ownership Persona):
- *   "Hey [First Name] — saw the commercial CapEx permit (#[Permit ID]) filed for [Project Name] at [Address] in [City]."
+ *   "Hey [First Name] • saw the commercial CapEx permit (#[Permit ID]) filed for [Project Name] at [Address] in [City]."
  * - Case C (Generic Role Title / Generic Inbox / No Named Person):
- *   "Hey [Company Short Name] team —" (or "Hey [Company Short Name] Estimating Team —" for Preconstruction/Estimating desk).
+ *   "Hey [Company Short Name] team • " (or "Hey [Company Short Name] Estimating Team • " for Preconstruction/Estimating desk).
  */
 function resolveGreeting(card = {}) {
   const parsed = parseCardContact(card);
@@ -2290,15 +2290,15 @@ function resolveGreeting(card = {}) {
     .trim();
   const fullAddress = String(card.address || card.propertyAddress || '').trim();
   const addressParts = fullAddress.split(',').map((s) => s.trim());
-  const streetAddress = addressParts[0] || String(card.headline || 'the project site').split('—')[0].trim();
+  const streetAddress = addressParts[0] || String(card.headline || 'the project site').split(/[\u2014•]/)[0].trim();
   const city = card.city || addressParts[1] || 'New Braunfels';
   const projectName = String(card.headline || streetAddress)
-    .split('—')[0]
+    .split(/[\u2014•]/)[0]
     .trim();
 
   if (parsed.isPropertyOrOwnerPersona) {
     const salutation = parsed.firstName || `${parsed.companyShortName} team`;
-    return `Hey ${salutation} — saw the commercial CapEx permit (#${rawPermit}) filed for ${projectName} at ${streetAddress} in ${city}.`;
+    return `Hey ${salutation}, saw the commercial CapEx permit (#${rawPermit}) filed for ${projectName} at ${streetAddress} in ${city}.`;
   }
 
   if (parsed.isGenericDesk || !parsed.firstName) {
@@ -2308,10 +2308,10 @@ function resolveGreeting(card = {}) {
     const teamLabel = isStructuraEstimating
       ? `${parsed.companyShortName} Estimating Team`
       : `${parsed.companyShortName} team`;
-    return `Hey ${teamLabel} — saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
+    return `Hey ${teamLabel}, saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
   }
 
-  return `Hey ${parsed.firstName} & the ${parsed.companyShortName} team — saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
+  return `Hey ${parsed.firstName} & the ${parsed.companyShortName} team, saw the commercial permit (#${rawPermit}) filed for ${streetAddress} in ${city}.`;
 }
 
 /**
@@ -2543,17 +2543,17 @@ function rotateBriefingCardProofVariants(cards = [], contractor = {}, metroArg =
 /**
  * Sentence #4 Persona-Aware Closing CTA:
  * - For Property Management / Ownership (Card 03 archetype):
- *   "Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? — [Sender Name] • [Company Name] • [Phone]"
+ *   "Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? • [Sender Name] • [Company Name] • [Phone]"
  * - For GC Estimators / PMs:
- *   "Mind if I send over our COI, spec sheet, and unit pricing this afternoon? — [Sender Name] • [Company Name] • [Phone]"
+ *   "Mind if I send over our COI, spec sheet, and unit pricing this afternoon? • [Sender Name] • [Company Name] • [Phone]"
  */
 function resolveClosingCta(card = {}, signatureLine = '') {
   const parsed = parseCardContact(card);
   const cleanSig = String(signatureLine || 'Shop Owner • Commercial Pros').trim();
   if (parsed.isPropertyOrOwnerPersona) {
-    return `Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? — ${cleanSig}`;
+    return `Mind if I send over our CapEx comparison numbers, warranty specs, and COI this afternoon? • ${cleanSig}`;
   }
-  return `Mind if I send over our COI, spec sheet, and unit pricing this afternoon? — ${cleanSig}`;
+  return `Mind if I send over our COI, spec sheet, and unit pricing this afternoon? • ${cleanSig}`;
 }
 
 /**
@@ -2812,7 +2812,7 @@ function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade,
           : 'NEW DAILY FILING • $1,340,000 COMMERCIAL SHELL & SITE PACKAGE',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Creekside Town Center Pad G — 26,500 Sq Ft Commercial Buildout`,
+      headline: `Creekside Town Center Pad G • 26,500 Sq Ft Commercial Buildout`,
       address: `2950 Cold Spring Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-6102`,
       deededOwner: 'Creekside Town Center Phase IV LP',
@@ -2832,7 +2832,7 @@ function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade,
       issuedLabel: 'NEW DAILY FILING • $1,890,000 INDUSTRIAL DISTRIBUTION CENTER',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `IH-35 Logistics Crossing Bldg 3 — 54,000 Sq Ft Spec Industrial`,
+      headline: `IH-35 Logistics Crossing Bldg 3 • 54,000 Sq Ft Spec Industrial`,
       address: `4410 IH-35 North Frontage, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-6245`,
       deededOwner: 'Corridor Logistics REIT II LLC',
@@ -2852,7 +2852,7 @@ function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade,
       issuedLabel: 'NEW DAILY FILING • $760,000 B2B PORTFOLIO CAPEX UPGRADE',
       pillIcon: '⚡',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `Guadalupe River Business Park — 4-Building Exterior & CapEx Re-Bid`,
+      headline: `Guadalupe River Business Park • 4-Building Exterior & CapEx Re-Bid`,
       address: `1420 Common St, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-6388`,
       deededOwner: 'Stream Realty South Central Portfolio LP',
@@ -2892,7 +2892,7 @@ function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade,
       issuedLabel: 'NEW DAILY FILING • $1,550,000 MEDICAL & SURGICAL PAVILION',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Resolute Health Corridor Annex — 22,000 Sq Ft Clinical Shell`,
+      headline: `Resolute Health Corridor Annex • 22,000 Sq Ft Clinical Shell`,
       address: `598 N Union Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-6640`,
       deededOwner: 'Baptist Regional Medical Properties LP',
@@ -2912,7 +2912,7 @@ function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade,
       issuedLabel: 'NEW DAILY FILING • $620,000 RETAIL STRIP & AUTOMOTIVE PLAZA',
       pillIcon: '⚡',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Walnut Ave Commercial Plaza — 14,800 Sq Ft Multi-Tenant Buildout`,
+      headline: `Walnut Ave Commercial Plaza • 14,800 Sq Ft Multi-Tenant Buildout`,
       address: `1045 S Walnut Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-6792`,
       deededOwner: 'Walnut Commercial Retail Partners LLC',
@@ -2932,7 +2932,7 @@ function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade,
       issuedLabel: 'NEW DAILY FILING • $840,000 COMMERCIAL OFFICE & SHOWROOM TI',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Landa Street Commercial Exchange — 19,400 Sq Ft Structural Remodel`,
+      headline: `Landa Street Commercial Exchange • 19,400 Sq Ft Structural Remodel`,
       address: `715 Landa St, ${metro.city}, ${metro.state} ${westNbZip}`,
       parcelId: `CAD-${westNbZip}-6915`,
       deededOwner: 'Landa Exchange Commercial LLC',
@@ -2952,7 +2952,7 @@ function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade,
       issuedLabel: 'NEW DAILY FILING • $1,180,000 SCHOOL & MUNICIPAL GYMNASIUM',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Comal Corridor Athletic & Activity Center — 28,000 Sq Ft Package`,
+      headline: `Comal Corridor Athletic & Activity Center • 28,000 Sq Ft Package`,
       address: `1860 Church Hill Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-7044`,
       deededOwner: 'Central Texas Educational Facilities LP',
@@ -2972,7 +2972,7 @@ function buildSyntheticDemoNewBraunfelsBlueprints(metro, westNbZip, activeTrade,
       issuedLabel: 'NEW DAILY FILING • $530,000 COMMERCIAL FLEX & BREWERY RETROFIT',
       pillIcon: '🏡',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `Gruene Historic Corridor Commercial Annex — 12,600 Sq Ft Expansion`,
+      headline: `Gruene Historic Corridor Commercial Annex • 12,600 Sq Ft Expansion`,
       address: `1640 Hunter Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-7189`,
       deededOwner: 'Hunter Road Hospitality Holdings LP',
@@ -3021,7 +3021,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'ISSUED 24 HRS AGO • $1,000,000 COMMERCIAL PERMIT',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `11920 Wilson Parke Ave — ${tradeTpl.card1Headline}`,
+      headline: `11920 Wilson Parke Ave • ${tradeTpl.card1Headline}`,
       address: `11920 Wilson Parke Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `TCAD #0162340471`,
       deededOwner: 'The Parke Commercial Phase C LP',
@@ -3042,7 +3042,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'ISSUED 36 HRS AGO • $1,200,000 COMMERCIAL SITE PERMIT',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `1802 Crossing Pl — 30,000 Sq Ft Commercial Campus & ${tradeTpl.shortTrade}`,
+      headline: `1802 Crossing Pl • 30,000 Sq Ft Commercial Campus & ${tradeTpl.shortTrade}`,
       address: `1802 Crossing Pl, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `TCAD #0308101501`,
       deededOwner: 'River Park South Commercial BLK B LP',
@@ -3063,7 +3063,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'ISSUED 48 HRS AGO • $1,000,000 COMMERCIAL REMODEL PERMIT',
       pillIcon: '⚡',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `2627 Manor Rd — Commercial Conversion & ${tradeTpl.shortTrade} Retrofit`,
+      headline: `2627 Manor Rd • Commercial Conversion & ${tradeTpl.shortTrade} Retrofit`,
       address: `2627 Manor Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `TCAD #0212100404`,
       deededOwner: 'Isherwood Heights Commercial Holdings LLC',
@@ -3084,7 +3084,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FILED THIS WEEK • $680,000 COMMERCIAL SHELL PERMIT',
       pillIcon: '⚡',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `${metro.industrialCorridor} — $680,000 Commercial Shell & Retail Pad`,
+      headline: `${metro.industrialCorridor} • $680,000 Commercial Shell & Retail Pad`,
       address: `${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-308194`,
       deededOwner: 'Corridor Commercial Development Partners LP',
@@ -3104,7 +3104,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FILED THIS WEEK • $1,450,000 RETAIL & MEDICAL PLAZA',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `${metro.commercialAvenue} — 42,000 Sq Ft Commercial Plaza Buildout`,
+      headline: `${metro.commercialAvenue} • 42,000 Sq Ft Commercial Plaza Buildout`,
       address: `${metro.commercialAvenue}, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-312605`,
       deededOwner: 'South Central Commercial REIT LP',
@@ -3124,7 +3124,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FILED THIS WEEK • $920,000 INDUSTRIAL FLEX WAREHOUSE',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `IH-35 Corridor Business Park — 36,000 Sq Ft Industrial Flex Package`,
+      headline: `IH-35 Corridor Business Park • 36,000 Sq Ft Industrial Flex Package`,
       address: `IH-35 Business Park, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-319427`,
       deededOwner: 'IH-35 Industrial Logistics LLC',
@@ -3144,7 +3144,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FILED THIS WEEK • $540,000 MEDICAL & SURGICAL SUITE TI',
       pillIcon: '⚡',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Medical Center Pkwy Suite 200 — $540,000 Medical Office Finish-Out`,
+      headline: `Medical Center Pkwy Suite 200 • $540,000 Medical Office Finish-Out`,
       address: `Medical Center Pkwy, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-324819`,
       deededOwner: 'Hill Country Medical Properties LP',
@@ -3164,7 +3164,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FILED THIS WEEK • $1,120,000 TILT-WALL SPEC WAREHOUSE',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `FM 306 Commercial Park — $1.12M Tilt-Wall & Exterior Envelope`,
+      headline: `FM 306 Commercial Park • $1.12M Tilt-Wall & Exterior Envelope`,
       address: `FM 306 Commercial Park, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-331752`,
       deededOwner: 'Comal Corridor Industrial Group LLC',
@@ -3184,7 +3184,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FILED THIS WEEK • $495,000 COMMERCIAL TI & EXTERIOR UPGRADE',
       pillIcon: '🏡',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `Loop 337 Commercial Commons — $495,000 Exterior & Tenant Remodel`,
+      headline: `Loop 337 Commercial Commons • $495,000 Exterior & Tenant Remodel`,
       address: `Loop 337 Commons, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-338906`,
       deededOwner: 'Loop 337 Commercial Holdings LP',
@@ -3206,7 +3206,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $1,620,000 COMMERCIAL RETAIL POWER CENTER',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Town Center North Phase II — 38,000 Sq Ft Retail & Restaurant Shell`,
+      headline: `Town Center North Phase II • 38,000 Sq Ft Retail & Restaurant Shell`,
       address: `2740 Town Center Dr, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-342187`,
       deededOwner: 'Endeavor Corridor Retail LP',
@@ -3246,7 +3246,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $890,000 INDUSTRIAL SERVICE & FLEET FACILITY',
       pillIcon: '⚡',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `FM 1103 Commercial Fleet & Service Complex — 21,500 Sq Ft Build`,
+      headline: `FM 1103 Commercial Fleet & Service Complex • 21,500 Sq Ft Build`,
       address: `1910 FM 1103, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-354821`,
       deededOwner: 'South Texas Fleet Logistics LLC',
@@ -3266,7 +3266,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $715,000 COMMERCIAL OFFICE PARK RE-ROOF & TI',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Oak Run Corporate Park — 32,000 Sq Ft Exterior Envelope & TI`,
+      headline: `Oak Run Corporate Park • 32,000 Sq Ft Exterior Envelope & TI`,
       address: `2250 State Hwy 46, ${metro.city}, ${metro.state} ${westNbZip}`,
       parcelId: `CAD-${westNbZip}-361904`,
       deededOwner: 'Aquila Commercial Asset Management LP',
@@ -3286,7 +3286,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $1,080,000 AUTO DEALERSHIP & SERVICE BAYS',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `IH-35 South Auto & Commercial Service Pavilion — 27,000 Sq Ft`,
+      headline: `IH-35 South Auto & Commercial Service Pavilion • 27,000 Sq Ft`,
       address: `3890 IH-35 South, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-368259`,
       deededOwner: 'Corridor Automotive Group LP',
@@ -3306,7 +3306,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $640,000 COMMERCIAL WAREHOUSE & COLD STORAGE',
       pillIcon: '⚡',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Schertz-New Braunfels Industrial Pkwy — 18,000 Sq Ft Cold Storage`,
+      headline: `Schertz-New Braunfels Industrial Pkwy • 18,000 Sq Ft Cold Storage`,
       address: `6120 Industrial Pkwy, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-374512`,
       deededOwner: 'Tri-County Cold Storage Logistics LLC',
@@ -3326,7 +3326,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $1,290,000 RETAIL & GROCERY ANCHOR PAD',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `FM 306 Crossing Pad A — 29,500 Sq Ft Commercial Anchor Shell`,
+      headline: `FM 306 Crossing Pad A • 29,500 Sq Ft Commercial Anchor Shell`,
       address: `2915 FM 306, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-381649`,
       deededOwner: 'Endeavor Real Estate Corridor LP',
@@ -3346,7 +3346,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $780,000 CORPORATE CAMPUS EXTERIOR CAPEX',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Westpointe Commercial Village — 3-Building Exterior & Roof CapEx`,
+      headline: `Westpointe Commercial Village • 3-Building Exterior & Roof CapEx`,
       address: `2154 Westpointe Dr, ${metro.city}, ${metro.state} ${westNbZip}`,
       parcelId: `CAD-${westNbZip}-389207`,
       deededOwner: 'Lincoln Property Commercial REIT LP',
@@ -3366,7 +3366,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $560,000 MEDICAL & DENTAL SPECIALTY PLAZA',
       pillIcon: '🏡',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `Seguin Ave Commercial Medical Commons — 13,500 Sq Ft Buildout`,
+      headline: `Seguin Ave Commercial Medical Commons • 13,500 Sq Ft Buildout`,
       address: `1485 S Seguin Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-394735`,
       deededOwner: 'Comal Medical Commons LLC',
@@ -3388,7 +3388,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $1,410,000 COMMERCIAL SHELL & RETAIL PAD',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Solms Landing Commercial Commons — 31,000 Sq Ft Retail Shell`,
+      headline: `Solms Landing Commercial Commons • 31,000 Sq Ft Retail Shell`,
       address: `2410 Solms Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-401863`,
       deededOwner: 'Solms Corridor Retail Holdings LP',
@@ -3408,7 +3408,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $1,760,000 SPEC INDUSTRIAL DISTRIBUTION',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Corridor 35 Industrial Park Bldg 2 — 48,000 Sq Ft Tilt-Wall`,
+      headline: `Corridor 35 Industrial Park Bldg 2 • 48,000 Sq Ft Tilt-Wall`,
       address: `5110 IH-35 North, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-407291`,
       deededOwner: 'Prologis South Central Industrial LP',
@@ -3428,7 +3428,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $695,000 PORTFOLIO CAPEX & EXTERIOR UPGRADE',
       pillIcon: '⚡',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `Comal Creek Corporate Center — 3-Building Exterior & CapEx Re-Bid`,
+      headline: `Comal Creek Corporate Center • 3-Building Exterior & CapEx Re-Bid`,
       address: `1725 Common St, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-413958`,
       deededOwner: 'Hines Regional Commercial REIT LP',
@@ -3468,7 +3468,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $1,320,000 MEDICAL & SURGICAL CENTER',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `Creekside Medical & Surgical Pavilion — 20,500 Sq Ft Clinical Shell`,
+      headline: `Creekside Medical & Surgical Pavilion • 20,500 Sq Ft Clinical Shell`,
       address: `640 Creekside Crossing, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-425319`,
       deededOwner: 'Methodist Healthcare Corridor Properties LP',
@@ -3488,7 +3488,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $580,000 RETAIL STRIP & SERVICE PLAZA',
       pillIcon: '⚡',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `County Line Commercial Plaza — 15,600 Sq Ft Multi-Tenant Buildout`,
+      headline: `County Line Commercial Plaza • 15,600 Sq Ft Multi-Tenant Buildout`,
       address: `1210 County Line Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-431876`,
       deededOwner: 'County Line Retail Ventures LLC',
@@ -3508,7 +3508,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $790,000 COMMERCIAL OFFICE & SHOWROOM TI',
       pillIcon: '🛰️',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `castell Avenue Commercial Exchange — 17,800 Sq Ft Structural Remodel`,
+      headline: `castell Avenue Commercial Exchange • 17,800 Sq Ft Structural Remodel`,
       address: `480 S Castell Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-438521`,
       deededOwner: 'Castell Downtown Commercial Holdings LLC',
@@ -3528,7 +3528,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $1,140,000 MUNICIPAL & SCHOOL GYMNASIUM',
       pillIcon: '🏢',
       pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-      headline: `New Braunfels Regional Athletic & Activity Center — 26,000 Sq Ft`,
+      headline: `New Braunfels Regional Athletic & Activity Center • 26,000 Sq Ft`,
       address: `2120 Klein Way, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-445193`,
       deededOwner: 'Comal Regional Educational Facilities LP',
@@ -3548,7 +3548,7 @@ function buildRealClientBriefingCards(contractor, customBatchIndex, options = {}
       issuedLabel: 'FRESH PORTAL FILING • $510,000 COMMERCIAL FLEX & BREWERY RETROFIT',
       pillIcon: '🏡',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `Dry Comal Creek Commercial Annex — 11,800 Sq Ft Brewery Retrofit`,
+      headline: `Dry Comal Creek Commercial Annex • 11,800 Sq Ft Brewery Retrofit`,
       address: `1740 Hunter Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
       parcelId: `CAD-${metro.zip}-452768`,
       deededOwner: 'Dry Comal Hospitality Holdings LP',
@@ -3842,7 +3842,7 @@ function scrapeUnseenMunicipalPermitBlueprints({
       issuedLabel: `${tplItem.pillType} • ${valuationFmt} COMMERCIAL PERMIT`,
       pillIcon: tplItem.pillIcon,
       pillClass: tplItem.pillClass,
-      headline: `${streetNum} ${tplItem.corridor} — ${sqFtFmt} ${tplItem.projectSuffix}`,
+      headline: `${streetNum} ${tplItem.corridor} • ${sqFtFmt} ${tplItem.projectSuffix}`,
       address: candidateAddress,
       parcelId: `CAD-${m.zip}-${cadParcelNum}`,
       deededOwner: `${tplItem.ownerPrefix} #${(safetyCounter % 9) + 1}`,
@@ -4059,7 +4059,7 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
       contactPhone: '(512) 555-0148',
       draftLabel: '4-SENTENCE BID INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
       draftSubject: `Bid numbers for ${metro.industrialCorridor} ($240K Permit #BP-2026-08941)`,
-      draftBody: `"Hey Marcus — saw the $240,000 commercial TI buildout permit filed yesterday at ${metro.industrialCorridor}. Our crew just wrapped ${tradeTpl.card1CompletedJob} ${landmark} (${proofJobSnippet}) and passed city inspection ahead of schedule. We have a crew opening up next month and would love to drop off numbers on the ${tradeTpl.card1Scope}. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"`,
+      draftBody: `"Hey Marcus, saw the $240,000 commercial TI buildout permit filed yesterday at ${metro.industrialCorridor}. Our crew just wrapped ${tradeTpl.card1CompletedJob} ${landmark} (${proofJobSnippet}) and passed city inspection ahead of schedule. We have a crew opening up next month and would love to drop off numbers on the ${tradeTpl.card1Scope}. Mind if I send over our commercial spec sheet and bid calendar this afternoon?"`,
       approvalStatus: 'ready',
       dispatchChannel: 'CLOUD_EMAIL',
       approvedAt: null,
@@ -4093,7 +4093,7 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
       contactPhone: '(512) 555-0182',
       draftLabel: '4-SENTENCE VENDOR INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
       draftSubject: `Vendor packet for Oakridge Commons (${metro.commercialAvenue})`,
-      draftBody: `"Hi Dana — congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads on ${metro.commercialAvenue}. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage (${kb.certificationsAndBonding.split('•')[0].trim()}) and specialize in weekend phased work on ${tradeTpl.card2Scope} so zero tenants lose access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"`,
+      draftBody: `"Hi Dana, congrats to the Crestview team on closing the acquisition of the 140-unit Oakridge Commons complex and adjacent retail pads on ${metro.commercialAvenue}. Usually during the first 30 days of a transition, inherited exterior trade vendors get re-evaluated to bring the property up to your standards. We carry full commercial coverage (${kb.certificationsAndBonding.split('•')[0].trim()}) and specialize in weekend phased work on ${tradeTpl.card2Scope} so zero tenants lose access. Can I swing by Thursday to leave you a clean CapEx bid breakdown?"`,
       approvalStatus: 'ready',
       dispatchChannel: 'CLOUD_EMAIL',
       approvedAt: null,
@@ -4108,7 +4108,7 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
       pillIcon: '🏡',
       pillText: 'CUSTOM ADDITION + CAD TAX ROLL MATCH',
       pillClass: 'bg-blue-50 border-blue-200 text-[#1E40AF]',
-      headline: `${metro.estateNeighborhood} — ${tradeTpl.card3Headline}`,
+      headline: `${metro.estateNeighborhood} • ${tradeTpl.card3Headline}`,
       subMeta: `Permit Address: ${metro.estateNeighborhood} (${metro.city}, ${metro.state} ${metro.zip}) • ${metro.countyCad} Record`,
       cadCallout: '$940,000 Assessed Value • 4,120 Sq Ft • 1.4 Acres • Sample Property Record',
       cadDetails: {
@@ -4127,7 +4127,7 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
       contactPhone: '(512) 555-0199',
       draftLabel: '4-SENTENCE OWNER INTRO (YOUR VOICE + SHOP KNOWLEDGE BASE):',
       draftSubject: `Quick question on your ${metro.estateNeighborhood} addition permit`,
-      draftBody: `"Hi Robert — noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at ${metro.estateNeighborhood}. Our custom residential team specializes in ${tradeTpl.card3Scope} across ${metro.city} with ${guaranteeSnippet}. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a ${kb.preferredCta} this week?"`,
+      draftBody: `"Hi Robert, noticed the city permit approved this week for the custom addition on your 4,120 sq ft estate at ${metro.estateNeighborhood}. Our custom residential team specializes in ${tradeTpl.card3Scope} across ${metro.city} with ${guaranteeSnippet}. Because we coordinate directly with your framing schedule, we keep your project on timeline without headaches. Would you be open to a ${kb.preferredCta} this week?"`,
       approvalStatus: 'ready',
       dispatchChannel: 'CLOUD_EMAIL',
       approvedAt: null,
@@ -4153,7 +4153,7 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
       code: 'LOCKED #05',
       type: 'B2B REGIONAL PM',
       pillText: 'VENDOR RE-BID • 4 RETAIL PLAZAS',
-      title: 'Regional PM — 4 Strip Plazas Seeking Qualified Trade Subs',
+      title: 'Regional PM • 4 Strip Plazas Seeking Qualified Trade Subs',
       redacted: 'Claire Sterling • 420,000 Sq Ft Portfolio',
       contactName: 'Claire Sterling • Senior Asset Manager @ Vantage Retail Group',
       contactEmail: 'csterling@vantageretail.com',
@@ -4165,7 +4165,7 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
       code: 'LOCKED #06',
       type: 'RESIDENTIAL + CAD X-RAY',
       pillText: 'NEW CUSTOM BUILD • $1.18M CAD MATCH',
-      title: '3,900 Sq Ft Custom Build — $1.18M CAD Tax Roll Match',
+      title: '3,900 Sq Ft Custom Build • $1.18M CAD Tax Roll Match',
       redacted: `Lot 14B Ridgeview • Verified Deeded Owner`,
       contactName: 'Jonathan & Brooke Prescot • Verified Property Owners',
       contactEmail: 'jprescot@prescotcapital.com',
@@ -4231,7 +4231,7 @@ function buildBriefingCardsForContractor(contractor, options = {}) {
     redactedPreview: item.redacted,
     draftLabel: '4-SENTENCE BID INTRO (YOUR VOICE):',
     draftSubject: `Scope & bid availability for ${item.title}`,
-    draftBody: `"Hi ${item.contactName.split(' ')[0]} — saw the county filing yesterday for the ${item.title} in ${metro.city} (${metro.zip}). Our ${tradeTpl.shortTrade} crew just wrapped a comparable ${item.type.toLowerCase()} project ${landmark} and passed inspection ahead of schedule. We have capacity opening next month and keep our job sites 100% turn-key. Mind if I send over our spec sheet and bid calendar today?"`,
+    draftBody: `"Hi ${item.contactName.split(' ')[0]}, saw the county filing yesterday for the ${item.title} in ${metro.city} (${metro.zip}). Our ${tradeTpl.shortTrade} crew just wrapped a comparable ${item.type.toLowerCase()} project ${landmark} and passed inspection ahead of schedule. We have capacity opening next month and keep our job sites 100% turn-key. Mind if I send over our spec sheet and bid calendar today?"`,
     approvalStatus: 'ready',
     dispatchChannel: 'CLOUD_EMAIL',
     approvedAt: null,
@@ -4261,12 +4261,12 @@ function createDefaultConversationThreads(contractor, cards = []) {
         cardId: 'deal-1',
         cardNumber: c1.cardNumber || 'CARD 01 • LIVE PERMIT #2026-050098 BP',
         stage: 'REPLIED_HOT',
-        stageBadge: '🔥 HOT REPLY — BID WALK REQUESTED',
+        stageBadge: '🔥 HOT REPLY • BID WALK REQUESTED',
         unread: true,
         dealValuation: '$1,000,000',
         permitNumber: '#2026-050098 BP',
         propertyAddress: `11920 Wilson Parke Ave, ${metro.city}, ${metro.state} ${metro.zip}`,
-        headline: c1.headline || `11920 Wilson Parke Ave — ${tradeTpl.card1Headline}`,
+        headline: c1.headline || `11920 Wilson Parke Ave • ${tradeTpl.card1Headline}`,
         cadDetails: c1.cadDetails || {
           parcelId: 'TCAD #0162340471',
           countyName: metro.countyCad,
@@ -4281,7 +4281,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
         contactPhone: c1.contactPhone || '(512) 719-5251',
         channel: 'CLOUD_EMAIL',
         lastActivityLabel: '14 mins ago',
-        followUpDueLabel: 'Reply Now — Bid Window Open',
+        followUpDueLabel: 'Reply Now • Bid Window Open',
         messages: [
           {
             id: 'msg-101',
@@ -4297,7 +4297,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
             senderName: c1.contactShort || 'Ryan Ogle (SpawGlass Contractors Inc)',
             timestamp: 'Today • 08:19 AM',
             channel: 'CLOUD_EMAIL',
-            body: `Hey ${ownerFirst} — timing is spot on. We are finalizing our ${tradeTpl.shortTrade} bidders for the 11920 Wilson Parke Ave commercial build (#2026-050098 BP). Do you guys carry $2M commercial GL + bonding, and can you walk the site with our superintendent this Thursday at 9:00 AM to review the plan set?`
+            body: `Hey ${ownerFirst}, timing is spot on. We are finalizing our ${tradeTpl.shortTrade} bidders for the 11920 Wilson Parke Ave commercial build (#2026-050098 BP). Do you guys carry $2M commercial GL + bonding, and can you walk the site with our superintendent this Thursday at 9:00 AM to review the plan set?`
           }
         ]
       },
@@ -4306,12 +4306,12 @@ function createDefaultConversationThreads(contractor, cards = []) {
         cardId: 'deal-2',
         cardNumber: c2.cardNumber || 'CARD 02 • LIVE PERMIT #2025-156429 BP',
         stage: 'REPLIED_HOT',
-        stageBadge: '🔥 HOT REPLY — VENDOR PACKET REQUESTED',
+        stageBadge: '🔥 HOT REPLY • VENDOR PACKET REQUESTED',
         unread: true,
         dealValuation: '$1,200,000',
         permitNumber: '#2025-156429 BP',
         propertyAddress: `1802 Crossing Pl, ${metro.city}, ${metro.state} ${metro.zip}`,
-        headline: c2.headline || `1802 Crossing Pl — 30,000 Sq Ft Commercial Campus`,
+        headline: c2.headline || `1802 Crossing Pl • 30,000 Sq Ft Commercial Campus`,
         cadDetails: c2.cadDetails || {
           parcelId: 'TCAD #0308101501',
           countyName: metro.countyCad,
@@ -4356,7 +4356,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
         dealValuation: '$1,000,000',
         permitNumber: '#2026-139668 BP',
         propertyAddress: `2627 Manor Rd, ${metro.city}, ${metro.state} ${metro.zip}`,
-        headline: c3.headline || `2627 Manor Rd — Commercial Conversion & ${tradeTpl.shortTrade}`,
+        headline: c3.headline || `2627 Manor Rd • Commercial Conversion & ${tradeTpl.shortTrade}`,
         cadDetails: c3.cadDetails || {
           parcelId: 'TCAD #0212100404',
           countyName: metro.countyCad,
@@ -4388,12 +4388,12 @@ function createDefaultConversationThreads(contractor, cards = []) {
         cardId: 'deal-4',
         cardNumber: c4.cardNumber || 'CARD 04 • LIVE PERMIT #BP-2026-04118',
         stage: 'SITE_WALK_BOOKED',
-        stageBadge: '📅 SITE WALK BOOKED — THU 8:30 AM',
+        stageBadge: '📅 SITE WALK BOOKED • THU 8:30 AM',
         unread: false,
         dealValuation: '$680,000',
         permitNumber: '#BP-2026-04118',
         propertyAddress: `${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
-        headline: c4.headline || `${metro.industrialCorridor} — $680,000 Commercial Shell & Retail Pad`,
+        headline: c4.headline || `${metro.industrialCorridor} • $680,000 Commercial Shell & Retail Pad`,
         cadDetails: c4.cadDetails || {
           parcelId: `CAD-${metro.zip}-308194`,
           countyName: metro.countyCad,
@@ -4432,7 +4432,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
             senderName: `${contractor.ownerName} (${contractor.companyName})`,
             timestamp: 'Yesterday • 10:28 AM',
             channel: 'CLOUD_EMAIL',
-            body: `Locked in for Thursday at 8:30 AM at the ${metro.industrialCorridor} job trailer, Matt. Bringing our COI, W-9, and commercial unit-price sheet. — ${kb.signatureLine}`
+            body: `Locked in for Thursday at 8:30 AM at the ${metro.industrialCorridor} job trailer, Matt. Bringing our COI, W-9, and commercial unit-price sheet. • ${kb.signatureLine}`
           }
         ]
       }
@@ -4445,7 +4445,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
       cardId: 'deal-1',
       cardNumber: c1.cardNumber || 'CARD 01 • COMMERCIAL PERMIT',
       stage: 'REPLIED_HOT',
-      stageBadge: '🔥 HOT REPLY — BID WALK REQUESTED',
+      stageBadge: '🔥 HOT REPLY • BID WALK REQUESTED',
       unread: true,
       dealValuation: '$240,000',
       permitNumber: '#BP-2026-08941',
@@ -4465,7 +4465,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
       contactPhone: c1.contactPhone || '(512) 555-0148',
       channel: 'CLOUD_EMAIL',
       lastActivityLabel: '14 mins ago',
-      followUpDueLabel: 'Reply Now — Bid Window Closes Friday',
+      followUpDueLabel: 'Reply Now • Bid Window Closes Friday',
       messages: [
         {
           id: 'msg-101',
@@ -4483,7 +4483,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
           channel: 'CLOUD_EMAIL',
           body: `Hey ${
             (contractor.ownerName || 'there').split(' ')[0]
-          } — timing is spot on. Our previous sub backed out on the ${
+          }, timing is spot on. Our previous sub backed out on the ${
             tradeTpl.card1Scope
           } schedule at ${
             metro.industrialCorridor
@@ -4496,7 +4496,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
       cardId: 'deal-2',
       cardNumber: c2.cardNumber || 'CARD 02 • B2B PROPERTY MANAGER',
       stage: 'REPLIED_HOT',
-      stageBadge: '🔥 HOT REPLY — VENDOR PACKET REQUESTED',
+      stageBadge: '🔥 HOT REPLY • VENDOR PACKET REQUESTED',
       unread: true,
       dealValuation: '$14,200,000 CapEx',
       permitNumber: `Deed Transfer • Parcel #CAD-${metro.zip}-218635`,
@@ -4552,7 +4552,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
       dealValuation: '$940,000 Estate',
       permitNumber: `CAD Parcel #CAD-${metro.zip}-90418A`,
       propertyAddress: `${metro.estateNeighborhood}, ${metro.city}, ${metro.state} ${metro.zip}`,
-      headline: c3.headline || `${metro.estateNeighborhood} — ${tradeTpl.card3Headline}`,
+      headline: c3.headline || `${metro.estateNeighborhood} • ${tradeTpl.card3Headline}`,
       cadDetails: c3.cadDetails || {
         parcelId: `CAD-${metro.zip}-90418A`,
         countyName: metro.countyCad,
@@ -4584,7 +4584,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
       cardId: 'deal-4',
       cardNumber: c4.cardNumber || 'CARD 04 • COMMERCIAL SHELL PERMIT',
       stage: 'SITE_WALK_BOOKED',
-      stageBadge: '📅 SITE WALK BOOKED — THU 8:30 AM',
+      stageBadge: '📅 SITE WALK BOOKED • THU 8:30 AM',
       unread: false,
       dealValuation: '$410,000',
       permitNumber: `#BP-2026-0914`,
@@ -4630,7 +4630,7 @@ function createDefaultConversationThreads(contractor, cards = []) {
           senderName: `${contractor.ownerName} (${contractor.companyName})`,
           timestamp: 'Yesterday • 10:28 AM',
           channel: 'CLOUD_EMAIL',
-          body: `Locked in for Thursday at 8:30 AM at the 4829 Main St job trailer, Grant. Bringing our COI, W-9, and commercial unit-price sheet. — ${kb.signatureLine}`
+          body: `Locked in for Thursday at 8:30 AM at the 4829 Main St job trailer, Grant. Bringing our COI, W-9, and commercial unit-price sheet. • ${kb.signatureLine}`
         }
       ]
     }
@@ -4649,7 +4649,7 @@ function createDefaultScoutAlertLogs(contractor, briefingToken) {
         fromMasterTwilioNumber: 'Tiberius Master A2P (MG4c4176)',
         a2pCampaignModel: 'MASTER_TIBERIUS_A2P_10DLC',
         deliveryStatus: 'DELIVERED',
-        smsBody: `🔥 TIBERIUS HOT REPLY: Ryan Ogle (Project Executive @ SpawGlass Contractors Inc) just replied on Permit #2026-050098 BP ($1,000,000): "Hey ${firstName} — we are finalizing our ${contractor.primaryTrade} bidders this week..." Tap to reply in 1 click: https://www.tiberius.ai/recon/inbox?token=${briefingToken}`
+        smsBody: `🔥 TIBERIUS HOT REPLY: Ryan Ogle (Project Executive @ SpawGlass Contractors Inc) just replied on Permit #2026-050098 BP ($1,000,000): "Hey ${firstName}, we are finalizing our ${contractor.primaryTrade} bidders this week..." Tap to reply in 1 click: https://www.tiberius.ai/recon/inbox?token=${briefingToken}`
       },
       {
         id: `alert_7am_${briefingToken}_0645`,
@@ -4659,7 +4659,7 @@ function createDefaultScoutAlertLogs(contractor, briefingToken) {
         fromMasterTwilioNumber: 'Tiberius Master A2P (MG4c4176)',
         a2pCampaignModel: 'MASTER_TIBERIUS_A2P_10DLC',
         deliveryStatus: 'DELIVERED',
-        smsBody: `☕ TIBERIUS RECON 7:00 AM BRIEFING (${contractor.baseZip}): Morning ${firstName} — 9 verified ${contractor.primaryTrade} permits ($1,200,000 top permit) are unlocked & pre-drafted for ${contractor.companyName}. Tap to review & 1-tap send: https://www.tiberius.ai/recon/briefing?token=${briefingToken}`
+        smsBody: `☕ TIBERIUS RECON 7:00 AM BRIEFING (${contractor.baseZip}): Morning ${firstName}: 9 verified ${contractor.primaryTrade} permits ($1,200,000 top permit) are unlocked & pre-drafted for ${contractor.companyName}. Tap to review & 1-tap send: https://www.tiberius.ai/recon/briefing?token=${briefingToken}`
       }
     ];
   }
@@ -4672,7 +4672,7 @@ function createDefaultScoutAlertLogs(contractor, briefingToken) {
       fromMasterTwilioNumber: '+18305550100',
       a2pCampaignModel: 'MASTER_TIBERIUS_A2P_10DLC',
       deliveryStatus: 'DELIVERED',
-      smsBody: `🔥 TIBERIUS HOT REPLY: Marcus Vance (Sr. PM @ Apex Commercial Builders) just replied on #BP-2026-08941 ($240,000): "Hey ${firstName} — yes, we are finalizing our subs this week..." Tap to reply in 1 click: https://www.tiberius.ai/recon/inbox?token=${briefingToken}`
+      smsBody: `🔥 TIBERIUS HOT REPLY: Marcus Vance (Sr. PM @ Apex Commercial Builders) just replied on #BP-2026-08941 ($240,000): "Hey ${firstName}, yes, we are finalizing our subs this week..." Tap to reply in 1 click: https://www.tiberius.ai/recon/inbox?token=${briefingToken}`
     },
     {
       id: `alert_7am_${briefingToken}_0645`,
@@ -4682,7 +4682,7 @@ function createDefaultScoutAlertLogs(contractor, briefingToken) {
       fromMasterTwilioNumber: '+18305550100',
       a2pCampaignModel: 'MASTER_TIBERIUS_A2P_10DLC',
       deliveryStatus: 'DELIVERED',
-      smsBody: `☕ TIBERIUS RECON 7:00 AM BRIEFING (${contractor.baseZip}): Morning ${firstName} — 3 verified ${contractor.primaryTrade} deals ($240,000 top permit) are unlocked & pre-drafted for ${contractor.companyName}. Tap to review & 1-tap send: https://www.tiberius.ai/recon/briefing?token=${briefingToken}`
+      smsBody: `☕ TIBERIUS RECON 7:00 AM BRIEFING (${contractor.baseZip}): Morning ${firstName}: 3 verified ${contractor.primaryTrade} deals ($240,000 top permit) are unlocked & pre-drafted for ${contractor.companyName}. Tap to review & 1-tap send: https://www.tiberius.ai/recon/briefing?token=${briefingToken}`
     }
   ];
 }
@@ -5690,7 +5690,7 @@ function ensurePastBriefingHistorySeeded(store, briefing, contractor) {
         issuedLabel: `ARCHIVED FILING (${cfg.date}) • $${valNum.toLocaleString()} COMMERCIAL PERMIT`,
         pillIcon: i % 2 === 0 ? '🛰️' : '🏢',
         pillClass: 'bg-[#FEF3C7] border-amber-300 text-[#D97706]',
-        headline: `${streetNum} ${metro.industrialCorridor} — ${sqFtNum.toLocaleString()} Sq Ft Commercial Shell & TI`,
+        headline: `${streetNum} ${metro.industrialCorridor} • ${sqFtNum.toLocaleString()} Sq Ft Commercial Shell & TI`,
         address: `${streetNum} ${metro.industrialCorridor}, ${metro.city}, ${metro.state} ${metro.zip}`,
         parcelId: `CAD-${metro.zip}-${620140 + i * 37}`,
         deededOwner: `${metro.city} Commercial Ventures Series ${i + 1} LP`,
@@ -6337,7 +6337,7 @@ function processBriefingAction({
         cardId: card.id,
         cardNumber: card.cardNumber,
         stage: 'FOLLOWUP_DUE',
-        stageBadge: '📤 INTRO DISPATCHED — TRACKING OPENS',
+        stageBadge: '📤 INTRO DISPATCHED • TRACKING OPENS',
         unread: false,
         dealValuation: (card.pillText && card.pillText.match(/\$[0-9,]+[KM]?/)?.[0]) || '$240,000',
         permitNumber: card.cardNumber,
@@ -6402,7 +6402,7 @@ function processBriefingAction({
 }
 
 /**
- * Updates Contractor Settings, Voice Calibration, or Smart Site Equity from the Command Portal.
+ * Updates Contractor Settings, Voice Calibration, or Territory Pipeline from the Command Portal.
  * In production mode (`!isDemoModeEnabled({ demo })`), recalibrates existing live cards in-place
  * (or scrapes unseen live permits when the queue is empty and `autoScrape !== false`),
  * never falling back to the 9 static demo cards.
@@ -6810,7 +6810,7 @@ function hydrateAccountFromSession(sessionClaims) {
  * Updates profile details (username, email, ownerName, companyName, mobilePhone, websiteUrl, accessPin,
  * trade, territoryZip, tierLevel) and/or changes the account password for either:
  *   1. The Master Agency Admin (`ADMIN`)
- *   2. Any Contractor Client Account (`CONTRACTOR`) — via self-service or Admin override
+ *   2. Any Contractor Client Account (`CONTRACTOR`) • via self-service or Admin override
  */
 function updateAccountProfile({
   sessionClaims = null,
@@ -7493,7 +7493,7 @@ function enrichThreadWithCommsMetadata(thread, contractor, briefingToken) {
   const replyToAddress = buildThreadReplyToAddress(briefingToken, thread.id);
   const topService = (kb.coreServices && kb.coreServices[0]) || contractor.primaryTrade || 'commercial work';
 
-  const nativeSimDraft = `Hey ${prospectFirst} — ${ownerFirst} w/ ${contractor.companyName} here. Just sent you a quick note on the ${thread.dealValuation} permit at ${shortStreet} (${thread.permitNumber}). We just wrapped ${kb.proofProjects} nearby — open to a quick 10-min site walk Thursday at 9am?`;
+  const nativeSimDraft = `Hey ${prospectFirst}, ${ownerFirst} w/ ${contractor.companyName} here. Just sent you a quick note on the ${thread.dealValuation} permit at ${shortStreet} (${thread.permitNumber}). We just wrapped ${kb.proofProjects} nearby • open to a quick 10-min site walk Thursday at 9am?`;
   const nativeSimUri = buildNativeSimSmsUri(thread.contactPhone, nativeSimDraft);
 
   const voicemailScript = `"Hey ${prospectFirst}, this is ${contractor.ownerName} with ${contractor.companyName} here in ${
@@ -7502,7 +7502,7 @@ function enrichThreadWithCommsMetadata(thread, contractor, briefingToken) {
     contractor.primaryTrade
   } crew just wrapped ${kb.proofProjects}, and we carry ${
     kb.certificationsAndBonding.split('•')[0].trim()
-  } with ${kb.warrantyAndGuarantee}. I just shot our COI and spec sheet to your email — call or text me back on my cell at ${
+  } with ${kb.warrantyAndGuarantee}. I just shot our COI and spec sheet to your email. Call or text me back on my cell at ${
     contractor.mobilePhone
   } if Thursday at 9:00 AM works to drop off numbers."`;
 
@@ -7649,9 +7649,9 @@ function processConversationAction({
 
     let generatedDraft = '';
     if (lastBodyLower.includes('vendor') || lastBodyLower.includes('w-9') || lastBodyLower.includes('warrant')) {
-      generatedDraft = `Hi ${prospectFirst} — happy to send our full vendor packet right over. ${contractor.companyName} specializes in ${topServices}, and we carry ${kb.certificationsAndBonding} backed by ${kb.warrantyAndGuarantee}. We also recently completed ${kb.proofProjects}. Can I lock in Thursday at 9:00 AM to walk ${thread.propertyAddress.split(',')[0]} with your team? — ${kb.signatureLine}`;
+      generatedDraft = `Hi ${prospectFirst}, happy to send our full vendor packet right over. ${contractor.companyName} specializes in ${topServices}, and we carry ${kb.certificationsAndBonding} backed by ${kb.warrantyAndGuarantee}. We also recently completed ${kb.proofProjects}. Can I lock in Thursday at 9:00 AM to walk ${thread.propertyAddress.split(',')[0]} with your team? • ${kb.signatureLine}`;
     } else {
-      generatedDraft = `Hey ${prospectFirst} — yes, we carry ${kb.certificationsAndBonding} and our ${contractor.primaryTrade} crews specialize in ${topServices} (${kb.warrantyAndGuarantee}). We just wrapped ${kb.proofProjects}, so our crew is ready for the schedule at ${thread.propertyAddress.split(',')[0]}. Thursday at 9:00 AM works great for our estimator to meet on-site with our COI and unit-price sheet. — ${kb.signatureLine}`;
+      generatedDraft = `Hey ${prospectFirst}, yes, we carry ${kb.certificationsAndBonding} and our ${contractor.primaryTrade} crews specialize in ${topServices} (${kb.warrantyAndGuarantee}). We just wrapped ${kb.proofProjects}, so our crew is ready for the schedule at ${thread.propertyAddress.split(',')[0]}. Thursday at 9:00 AM works great for our estimator to meet on-site with our COI and unit-price sheet. • ${kb.signatureLine}`;
     }
 
     return {
@@ -7670,7 +7670,7 @@ function processConversationAction({
   }
 
   if (action === 'draft_day3_bump') {
-    const bumpDraft = `Hi ${prospectFirst} — floating this back to the top of your inbox regarding the ${thread.headline} (${thread.propertyAddress.split(',')[0]}). Our ${contractor.primaryTrade} crew (${kb.yearsInBusiness}, ${kb.warrantyAndGuarantee}) has an opening in our bid calendar this week — open to a ${kb.preferredCta} on Thursday? — ${kb.signatureLine}`;
+    const bumpDraft = `Hi ${prospectFirst}, floating this back to the top of your inbox regarding the ${thread.headline} (${thread.propertyAddress.split(',')[0]}). Our ${contractor.primaryTrade} crew (${kb.yearsInBusiness}, ${kb.warrantyAndGuarantee}) has an opening in our bid calendar this week • open to a ${kb.preferredCta} on Thursday? • ${kb.signatureLine}`;
     return {
       ok: true,
       action,
@@ -7681,7 +7681,7 @@ function processConversationAction({
   }
 
   if (action === 'draft_site_walk') {
-    const walkDraft = `Hey ${prospectFirst} — locking us in for Thursday at 9:00 AM on-site at ${thread.propertyAddress.split(',')[0]}. I'll bring our COI (${kb.certificationsAndBonding.split('•')[0].trim()}), W-9, and a line-item bid sheet for the ${thread.headline}. My direct cell is ${contractor.mobilePhone} if anything shifts. — ${kb.signatureLine}`;
+    const walkDraft = `Hey ${prospectFirst}, locking us in for Thursday at 9:00 AM on-site at ${thread.propertyAddress.split(',')[0]}. I'll bring our COI (${kb.certificationsAndBonding.split('•')[0].trim()}), W-9, and a line-item bid sheet for the ${thread.headline}. My direct cell is ${contractor.mobilePhone} if anything shifts. • ${kb.signatureLine}`;
     return {
       ok: true,
       action,
@@ -7776,7 +7776,7 @@ function processConversationAction({
       thread.followUpDueLabel = 'Site Walk Scheduled • Bring COI & Bid Sheet';
     } else {
       thread.stage = 'AWAITING_REPLY';
-      thread.stageBadge = '✅ REPLIED — AWAITING PROSPECT CONFIRMATION';
+      thread.stageBadge = '✅ REPLIED • AWAITING PROSPECT CONFIRMATION';
       thread.followUpDueLabel = 'Auto-Follow-Up Paused (Active Conversation)';
     }
 
@@ -7802,11 +7802,11 @@ function processConversationAction({
       senderName: thread.contactShort,
       timestamp: `Today • ${nowLabel}`,
       channel: 'RESEND_INBOUND_WEBHOOK',
-      body: `Sounds good ${(contractor.ownerName || '').split(' ')[0]} — Thursday at 9:00 AM at ${thread.propertyAddress.split(',')[0]} works for us. Please bring your COI, W-9, and any unit pricing on ${(kb.coreServices || [])[0] || contractor.primaryTrade}. See you on site.`
+      body: `Sounds good ${(contractor.ownerName || '').split(' ')[0]}, Thursday at 9:00 AM at ${thread.propertyAddress.split(',')[0]} works for us. Please bring your COI, W-9, and any unit pricing on ${(kb.coreServices || [])[0] || contractor.primaryTrade}. See you on site.`
     };
     thread.messages.push(inboundMsg);
     thread.stage = 'REPLIED_HOT';
-    thread.stageBadge = '🔥 NEW INBOUND REPLY — SITE WALK CONFIRMED';
+    thread.stageBadge = '🔥 NEW INBOUND REPLY • SITE WALK CONFIRMED';
     thread.unread = true;
     thread.lastActivityLabel = `New Reply • ${nowLabel}`;
     thread.followUpDueLabel = 'Prospect Confirmed Site Walk!';
@@ -7824,10 +7824,10 @@ function processConversationAction({
   if (action === 'update_stage' && stage) {
     thread.stage = stage;
     const badgeMap = {
-      REPLIED_HOT: '🔥 HOT REPLY — ACTION REQUIRED',
+      REPLIED_HOT: '🔥 HOT REPLY • ACTION REQUIRED',
       FOLLOWUP_DUE: '⏳ DAY-3 FOLLOW-UP READY',
       SITE_WALK_BOOKED: '📅 SITE WALK BOOKED',
-      AWAITING_REPLY: '✅ REPLIED — AWAITING CONFIRMATION'
+      AWAITING_REPLY: '✅ REPLIED • AWAITING CONFIRMATION'
     };
     thread.stageBadge = badgeMap[stage] || stage;
     thread.unread = false;
@@ -7905,7 +7905,7 @@ function ingestInboundWebhookReply({
     matchedThread = threads[0];
   }
 
-  const cleanedBody = stripQuotedEmailChain(rawBody || subject || 'Interested — please send bid details.');
+  const cleanedBody = stripQuotedEmailChain(rawBody || subject || 'Interested, please send bid details.');
   const nowLabel = new Date().toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit'
@@ -7924,11 +7924,11 @@ function ingestInboundWebhookReply({
   matchedThread.stage = 'REPLIED_HOT';
   matchedThread.stageBadge =
     provider === 'TWILIO'
-      ? '🔥 INBOUND SMS REPLY — ACTION REQUIRED'
-      : '🔥 INBOUND EMAIL REPLY — ACTION REQUIRED';
+      ? '🔥 INBOUND SMS REPLY • ACTION REQUIRED'
+      : '🔥 INBOUND EMAIL REPLY • ACTION REQUIRED';
   matchedThread.unread = true;
   matchedThread.lastActivityLabel = `Inbound ${provider} • ${nowLabel}`;
-  matchedThread.followUpDueLabel = 'Prospect Replied — Respond Now';
+  matchedThread.followUpDueLabel = 'Prospect Replied • Respond Now';
 
   saveStore(store);
 
@@ -8245,7 +8245,7 @@ async function ensureCloudAccountsSynced({ identifier, token } = {}) {
         const textStr = String(detail.text || '');
         const ownerMatch = textStr.match(/Welcome to Tiberius Recon(?:™)?,\s*([^!\n]+)!/i);
         const territoryCompanyMatch = textStr.match(
-          /Your territory\s*\((\d{5})\s*[—-]\s*[^)]+\)\s*and Shop Knowledge Base for\s*([^\n]+?)\s*are now locked/i
+          /Your territory\s*\((\d{5})\s*[\u2014•-]\s*[^)]+\)\s*and Shop Knowledge Base for\s*([^\n]+?)\s*are now locked/i
         );
         const loginLineMatch = textStr.match(
           /Login Email \/ Phone:\s*([^\s(]+)\s*(?:\(or\s*([^)]+)\))?/i

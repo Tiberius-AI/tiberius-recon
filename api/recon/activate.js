@@ -125,7 +125,7 @@ module.exports = async function handler(req, res) {
     const emailBody = [
       `Welcome to Tiberius Recon™, ${activation.contractor.ownerName}!`,
       ``,
-      `Your territory (${activation.briefing.territoryZip} — ${activation.briefing.metroCity}) and Shop Knowledge Base for ${activation.contractor.companyName} are now locked and active.`,
+      `Your territory (${activation.briefing.territoryZip} • ${activation.briefing.metroCity}) and Shop Knowledge Base for ${activation.contractor.companyName} are now locked and active.`,
       ``,
       `=========================================`,
       `YOUR LOGIN CREDENTIALS`,
@@ -144,7 +144,7 @@ module.exports = async function handler(req, res) {
       ``,
       `Your Digital Scout will sweep ${activation.briefing.portalName} and ${activation.briefing.countyCad} tonight at 2:00 AM and text your cell (${activation.contractor.mobilePhone}) at 6:45 AM.`,
       ``,
-      `— Tiberius AI Command`
+      `Tiberius AI Command`
     ].join('\n');
 
     const onboardSnapshotB64 = Buffer.from(
@@ -172,7 +172,7 @@ module.exports = async function handler(req, res) {
       },
       recipientEmail: activation.contractor.workEmail,
       recipientName: activation.contractor.ownerName,
-      subject: `Welcome to Tiberius Recon™ — Your Login Credentials & ${activation.briefing.territoryZip} Territory Links`,
+      subject: `Welcome to Tiberius Recon™: Your Login Credentials & ${activation.briefing.territoryZip} Territory Links`,
       bodyText: emailBody,
       htmlBody,
       token: magicToken,

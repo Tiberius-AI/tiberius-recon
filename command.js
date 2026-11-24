@@ -95,8 +95,8 @@
     if (cmdAvailabilityPill) {
       cmdAvailabilityPill.textContent = avail.isAvailable ? '✓ TERRITORY OPEN' : '🔒 ZIP LOCKED';
       cmdAvailabilityPill.className = avail.isAvailable
-        ? 'px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800'
-        : 'px-3 py-1 rounded-full bg-rose-50 border border-rose-200 font-mono-telemetry text-xs text-rose-800';
+        ? 'px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 font-mono-telemetry text-xs text-emerald-800'
+        : 'px-2.5 py-1 rounded-md bg-rose-50 border border-rose-200 font-mono-telemetry text-xs text-rose-800';
     }
     if (cmdZipStatusTitle) {
       cmdZipStatusTitle.textContent = avail.statusBadge;
@@ -243,11 +243,11 @@
       if (cfg.isSmtpReady) {
         clientEmailStatusPill.textContent = '⚡ EMAIL: 1-TAP SHOP SMTP ACTIVE';
         clientEmailStatusPill.className =
-          'px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800 font-bold';
+          'px-2.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 font-mono-telemetry text-[10px] text-emerald-800 font-bold';
       } else {
         clientEmailStatusPill.textContent = '✉️ EMAIL: MY MAIL APP';
         clientEmailStatusPill.className =
-          'px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 font-mono-telemetry text-[10px] text-[#1E40AF] font-bold';
+          'px-2.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 font-mono-telemetry text-[10px] text-[#1E40AF] font-bold';
       }
     }
     syncClientEmailFieldsVisibility();
@@ -293,10 +293,6 @@
         }
         if (c.knowledgeBase) {
           renderKnowledgeBase(c.knowledgeBase);
-        }
-        if (typeof c.smartSiteEquityCents === 'number' && c.smartSiteEquityCents > 0) {
-          currentEquityCents = c.smartSiteEquityCents;
-          renderEquityBar();
         }
         if (data.availability) {
           renderAvailability(data.availability);
@@ -699,6 +695,7 @@
 
   function escapeHtml(str) {
     return String(str || '')
+      .replace(/\s*\u2014\s*/g, ' • ')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -715,12 +712,12 @@
     const src = String(p.sourceType || 'SANDBOX_DEMO').toUpperCase();
     const label = p.licenseBadge || src;
     if (src === 'LIVE_TDLR' || src === 'LIVE_TX_COMPTROLLER' || src === 'LIVE_MUNICIPAL_PERMIT') {
-      return `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[10px] text-emerald-300 font-bold">🏛️ ${escapeHtml(label)}</span>`;
+      return `<span class="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[10px] text-emerald-300 font-bold">🏛️ ${escapeHtml(label)}</span>`;
     }
     if (src === 'MANUAL_ENTRY' || src === 'CSV_IMPORT') {
-      return `<span class="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/40 font-mono-telemetry text-[10px] text-purple-200 font-bold">✍️ ${escapeHtml(label)}</span>`;
+      return `<span class="px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-400/40 font-mono-telemetry text-[10px] text-purple-200 font-bold">✍️ ${escapeHtml(label)}</span>`;
     }
-    return `<span class="px-2 py-0.5 rounded-full bg-slate-700/80 border border-slate-600 font-mono-telemetry text-[10px] text-slate-300">🧪 ${escapeHtml(label)}</span>`;
+    return `<span class="px-2 py-0.5 rounded-md bg-slate-700/80 border border-slate-600 font-mono-telemetry text-[10px] text-slate-300">🧪 ${escapeHtml(label)}</span>`;
   }
 
   function renderMetaRadarFeed(metaRecon) {
@@ -792,12 +789,12 @@
 
         const radarPillHtml =
           totalRadarHits > 0
-            ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/60 font-mono-telemetry text-[11px] text-emerald-200 font-bold">👀 VIEWED ${totalRadarHits}x (${escapeHtml(tel.lastDeviceHint || 'Live')})</span>`
+            ? `<span class="px-2.5 py-0.5 rounded-md bg-emerald-500/25 border border-emerald-400/60 font-mono-telemetry text-[11px] text-emerald-200 font-bold">👀 VIEWED ${totalRadarHits}x (${escapeHtml(tel.lastDeviceHint || 'Live')})</span>`
             : '';
 
         const statusBadge = isDemoSent
-          ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/50 font-mono-telemetry text-[11px] text-emerald-300 font-bold">🔥 REPLIED • LIVE PREVIEW AUTO-SENT</span>`
-          : `<span class="px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-[11px] text-blue-300">${escapeHtml(
+          ? `<span class="px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/50 font-mono-telemetry text-[11px] text-emerald-300 font-bold">🔥 REPLIED • LIVE PREVIEW AUTO-SENT</span>`
+          : `<span class="px-2.5 py-1 rounded-md bg-blue-500/15 border border-blue-400/30 font-mono-telemetry text-[11px] text-blue-300">${escapeHtml(
               p.outreachStatus
             )}</span>`;
 
@@ -819,7 +816,7 @@
           <div class="space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex flex-wrap items-center gap-1.5">
-                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
+                <span class="px-2.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-[11px] text-amber-300 font-bold">
                   ${escapeHtml(xray.leadScore || 'HOT')} • ${escapeHtml(p.primaryTrade)} (${escapeHtml(p.zipCode)})
                 </span>
                 ${formatSourceBadgeHtml(p)}

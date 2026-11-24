@@ -57,10 +57,10 @@
       adminPretripStatusBadge.textContent = displayStatus;
       adminPretripStatusBadge.className =
         rawStatus === 'RED_TAGGED'
-          ? 'px-2.5 py-1 rounded-full bg-red-500/20 border border-red-400/50 font-mono-telemetry text-xs text-red-300 font-bold'
+          ? 'px-2.5 py-1 rounded-md bg-red-500/20 border border-red-400/50 font-mono-telemetry text-xs text-red-300 font-bold'
           : rawStatus === 'AUTO_HEALED'
-          ? 'px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 font-mono-telemetry text-xs text-amber-300 font-bold'
-          : 'px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold';
+          ? 'px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/50 font-mono-telemetry text-xs text-amber-300 font-bold'
+          : 'px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold';
     }
     if (adminPretripCircuitPill) {
       adminPretripCircuitPill.textContent = holdDispatch
@@ -153,6 +153,7 @@
 
   function escapeAttr(val) {
     return String(val || '')
+      .replace(/\s*\u2014\s*/g, ' • ')
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
       .replace(/</g, '&lt;')
@@ -257,14 +258,14 @@
           : `${userTag}${account.ownerName || 'Owner'} • ${account.workEmail || ''} • ${account.primaryTrade || ''} • Zip ${account.baseZip || ''}`;
     }
     if (sessionOpenBriefingBtn) {
-      sessionOpenBriefingBtn.href = `briefing.html?token=${encodeURIComponent(magicToken)}`;
+      sessionOpenBriefingBtn.href = `/recon/briefing?token=${encodeURIComponent(magicToken)}`;
     }
     const sessionOpenInboxBtn = document.getElementById('session-open-inbox-btn');
     if (sessionOpenInboxBtn) {
-      sessionOpenInboxBtn.href = `inbox.html?token=${encodeURIComponent(magicToken)}`;
+      sessionOpenInboxBtn.href = `/recon/inbox?token=${encodeURIComponent(magicToken)}`;
     }
     if (sessionOpenCommandBtn) {
-      sessionOpenCommandBtn.href = `command.html?token=${encodeURIComponent(magicToken)}`;
+      sessionOpenCommandBtn.href = `/recon/command?token=${encodeURIComponent(magicToken)}`;
     }
 
     populateSelfProfileForm(role, account);
@@ -299,7 +300,7 @@
     adminClientsGrid.innerHTML = '';
 
     (data.clients || []).forEach((client) => {
-      const equityDollars = Math.round(Number(client.smartSiteEquityCents || 0) / 100);
+      const equityDollars = Math.round(Number(client.territoryEquityCents || 0) / 100);
       const card = document.createElement('div');
       card.className =
         'p-5 rounded-2xl border border-slate-700 bg-slate-800/90 hover:border-slate-500 transition-colors flex flex-col justify-between gap-4 shadow-sm';
@@ -307,7 +308,7 @@
       card.innerHTML = `
         <div class="space-y-2.5">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono-telemetry font-bold uppercase ${
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-mono-telemetry font-bold uppercase ${
               client.tierLevel && client.tierLevel.includes('Tier 3')
                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                 : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
@@ -339,21 +340,21 @@
         </div>
         <div class="pt-3.5 border-t border-slate-700/80 flex flex-wrap items-center gap-2">
           <a
-            href="briefing.html?token=${encodeURIComponent(client.magicToken)}"
+            href="/recon/briefing?token=${encodeURIComponent(client.magicToken)}"
             data-switch-token="${escapeAttr(client.magicToken)}"
             class="client-impersonate-link px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-display font-bold text-xs transition-colors"
           >
             ☕ 7:00 AM Briefing →
           </a>
           <a
-            href="inbox.html?token=${encodeURIComponent(client.magicToken)}"
+            href="/recon/inbox?token=${encodeURIComponent(client.magicToken)}"
             data-switch-token="${escapeAttr(client.magicToken)}"
             class="client-impersonate-link px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-display font-bold text-xs transition-colors"
           >
             💬 Conversation Room →
           </a>
           <a
-            href="command.html?token=${encodeURIComponent(client.magicToken)}"
+            href="/recon/command?token=${encodeURIComponent(client.magicToken)}"
             data-switch-token="${escapeAttr(client.magicToken)}"
             class="client-impersonate-link px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-display font-bold text-xs transition-colors"
           >
@@ -811,8 +812,7 @@
         bestEmail: document.getElementById('new-client-email').value.trim(),
         mobilePhone: document.getElementById('new-client-phone').value.trim(),
         tierLevel: document.getElementById('new-client-tier').value,
-        accountPassword: document.getElementById('new-client-password').value.trim(),
-        includeSmartSiteBundle: true
+        accountPassword: document.getElementById('new-client-password').value.trim()
       };
 
       try {

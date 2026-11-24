@@ -191,8 +191,20 @@
   let selectedThreadId = null;
   let activeFilter = 'ALL';
 
-  function escapeHtml(str) {
+  function stripEmDashes(str) {
     return String(str || '')
+      .replace(/&(?:mdash|#8212|#x2014);/gi, '•')
+      .replace(/\s*\u2014\s*/g, (match, offset, full) => {
+        const before = full.slice(Math.max(0, offset - 28), offset).trim();
+        if (/^(?:["']?\s*)?(?:Hey|Hi|Morning|Afternoon|Sounds good)\b/i.test(before)) {
+          return ', ';
+        }
+        return ' • ';
+      });
+  }
+
+  function escapeHtml(str) {
+    return stripEmDashes(str)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -224,16 +236,16 @@
         .join('');
     }
     if (kbDrawerCertsEl && kb.certificationsAndBonding) {
-      kbDrawerCertsEl.textContent = kb.certificationsAndBonding;
+      kbDrawerCertsEl.textContent = stripEmDashes(kb.certificationsAndBonding);
     }
     if (kbDrawerProofEl && kb.proofProjects) {
-      kbDrawerProofEl.textContent = kb.proofProjects;
+      kbDrawerProofEl.textContent = stripEmDashes(kb.proofProjects);
     }
     if (kbDrawerWarrantyEl && kb.warrantyAndGuarantee) {
-      kbDrawerWarrantyEl.textContent = kb.warrantyAndGuarantee;
+      kbDrawerWarrantyEl.textContent = stripEmDashes(kb.warrantyAndGuarantee);
     }
     if (kbDrawerSignatureEl && kb.signatureLine) {
-      kbDrawerSignatureEl.textContent = kb.signatureLine;
+      kbDrawerSignatureEl.textContent = stripEmDashes(kb.signatureLine);
     }
   }
 
@@ -326,17 +338,17 @@
     selectedThreadId = thread.id;
 
     if (activeStageBadgeEl) {
-      activeStageBadgeEl.textContent = thread.stageBadge;
-      activeStageBadgeEl.className = `px-2.5 py-1 rounded-full border font-mono-telemetry text-[11px] font-bold ${getStagePillStyle(
+      activeStageBadgeEl.textContent = stripEmDashes(thread.stageBadge);
+      activeStageBadgeEl.className = `px-2.5 py-1 rounded-md border font-mono-telemetry text-[11px] font-bold ${getStagePillStyle(
         thread.stage
       )}`;
     }
     if (activeStageSelectEl) {
       activeStageSelectEl.value = thread.stage;
     }
-    if (activeContactEl) activeContactEl.textContent = thread.contactName;
+    if (activeContactEl) activeContactEl.textContent = stripEmDashes(thread.contactName);
     if (activePropertyEl) {
-      activePropertyEl.textContent = `${thread.headline} • ${thread.propertyAddress}`;
+      activePropertyEl.textContent = stripEmDashes(`${thread.headline} • ${thread.propertyAddress}`);
     }
     if (activePhoneEl) {
       const digits = String(thread.contactPhone || '').replace(/\D/g, '');
@@ -351,7 +363,7 @@
       activeReplyToEl.textContent = thread.replyToAddress;
     }
     if (voicemailScriptTextEl && thread.voicemailScript) {
-      voicemailScriptTextEl.textContent = thread.voicemailScript;
+      voicemailScriptTextEl.textContent = stripEmDashes(thread.voicemailScript);
     }
     if (voicemailCallLinkEl) {
       const digits = String(thread.contactPhone || '').replace(/\D/g, '');
@@ -395,11 +407,11 @@
     // Render Pane 3 Permit & CAD Dossier
     const cad = thread.cadDetails || {};
     if (dossierValuationEl) dossierValuationEl.textContent = thread.dealValuation || '$240,000';
-    if (dossierHeadlineEl) dossierHeadlineEl.textContent = thread.headline;
-    if (dossierAddressEl) dossierAddressEl.textContent = thread.propertyAddress;
+    if (dossierHeadlineEl) dossierHeadlineEl.textContent = stripEmDashes(thread.headline);
+    if (dossierAddressEl) dossierAddressEl.textContent = stripEmDashes(thread.propertyAddress);
     if (dossierParcelEl) dossierParcelEl.textContent = cad.parcelId || 'CAD-VERIFIED';
     if (dossierAssessedEl) dossierAssessedEl.textContent = cad.assessedValue || '$1,850,000';
-    if (dossierOwnerEl) dossierOwnerEl.textContent = cad.deededOwner || 'Verified Property Owner';
+    if (dossierOwnerEl) dossierOwnerEl.textContent = stripEmDashes(cad.deededOwner || 'Verified Property Owner');
     if (dossierFootprintEl) {
       dossierFootprintEl.textContent = `${cad.buildingSqFt || '18,500 Sq Ft'} • ${
         cad.lotAcres || '2.4 Acres'
@@ -511,10 +523,10 @@
 
     const badgeClasses =
       rawStatus === 'RED_TAGGED'
-        ? 'px-2.5 py-1 rounded-full bg-red-500/20 border border-red-400/50 font-mono-telemetry text-[11px] text-red-300 font-bold'
+        ? 'px-2.5 py-1 rounded-md bg-red-500/20 border border-red-400/50 font-mono-telemetry text-[11px] text-red-300 font-bold'
         : rawStatus === 'AUTO_HEALED'
-        ? 'px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 font-mono-telemetry text-[11px] text-amber-300 font-bold'
-        : 'px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold';
+        ? 'px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/50 font-mono-telemetry text-[11px] text-amber-300 font-bold'
+        : 'px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-[11px] text-emerald-300 font-bold';
 
     if (pretripStatusBadgeEl) {
       pretripStatusBadgeEl.textContent = displayStatus;
@@ -670,7 +682,7 @@
       });
       const data = await resp.json();
       if (data && data.ok && data.draftText && replyTextarea) {
-        replyTextarea.value = data.draftText;
+        replyTextarea.value = stripEmDashes(data.draftText);
         replyTextarea.focus();
         if (drafterStatusPill) {
           drafterStatusPill.textContent = '✓ DRAFTED FROM SHOP KNOWLEDGE BASE';

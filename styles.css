@@ -303,6 +303,25 @@ main blockquote {
   filter: none !important;
 }
 
+@media (max-width: 767px) {
+  .enterprise-navbar.has-mobile-cta .brand-logo,
+  #command-navbar.has-mobile-cta .brand-logo {
+    display: inline-flex !important;
+    width: auto !important;
+    max-width: 56% !important;
+    justify-content: flex-start !important;
+  }
+
+  .enterprise-navbar.has-mobile-cta .brand-logo-img,
+  #command-navbar.has-mobile-cta .brand-logo-img {
+    width: auto !important;
+    max-width: 100% !important;
+    height: 44px !important;
+    max-height: 44px !important;
+    margin: 0 !important;
+  }
+}
+
 @media (min-width: 768px) {
   .brand-logo,
   .enterprise-navbar .brand-logo,

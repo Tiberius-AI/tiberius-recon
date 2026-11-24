@@ -207,7 +207,7 @@
     if (zip.length < 5) {
       badgeEl.textContent = 'ENTER 5-DIGIT ZIP CODE';
       badgeEl.className =
-        'px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono-telemetry text-xs text-slate-300 font-bold';
+        'px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 font-mono-telemetry text-xs text-slate-300 font-bold';
       return;
     }
 
@@ -219,11 +219,11 @@
         if (data.available) {
           badgeEl.textContent = `✓ ${data.remainingSlots} OF ${data.maxSlots} TERRITORY SLOTS OPEN (${zip})`;
           badgeEl.className =
-            'px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold';
+            'px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold';
         } else {
           badgeEl.textContent = `⚠ ${zip} WAITLIST • ADJACENT ZIP AVAILABLE`;
           badgeEl.className =
-            'px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-xs text-amber-300 font-bold';
+            'px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-xs text-amber-300 font-bold';
         }
         const cityLabel = data.city ? `${data.city}, ${data.state || 'TX'}` : `Zip ${zip}`;
         const portalText = data.municipalPortal || 'Municipal Permit Portal';
@@ -247,7 +247,7 @@
       if (pill) {
         pill.textContent = '⚠ ENTER WEBSITE URL FIRST';
         pill.className =
-          'px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-xs text-amber-300 shrink-0';
+          'px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/40 font-mono-telemetry text-xs text-amber-300 shrink-0';
       }
       if (urlInput) urlInput.focus();
       return;
@@ -260,7 +260,7 @@
     if (pill) {
       pill.textContent = '⏳ SCANNING SITE & EXTRACTING DOSSIER...';
       pill.className =
-        'px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-xs text-blue-300 shrink-0';
+        'px-2.5 py-1 rounded-md bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-xs text-blue-300 shrink-0';
     }
 
     try {
@@ -312,7 +312,7 @@
         if (pill) {
           pill.textContent = '✓ WEBSITE SCANNED & DOSSIER POPULATED';
           pill.className =
-            'px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 shrink-0';
+            'px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 shrink-0';
         }
       } else {
         throw new Error((data && data.error) || 'Could not scan website');
@@ -322,7 +322,7 @@
       if (pill) {
         pill.textContent = '✓ APPLIED TRADE BENCHMARK DOSSIER';
         pill.className =
-          'px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 shrink-0';
+          'px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 shrink-0';
       }
     } finally {
       if (btn) {
@@ -344,7 +344,7 @@
     const territoryZip = ($('onb-territory-zip')?.value || '78130').trim();
     const minValuation = Number($('onb-min-valuation')?.value || 100000);
     const tierLevel = $('onb-tier-level')?.value || 'Tier 2: Commercial Permits';
-    const smartSiteBundle = Boolean($('onb-smart-site-bundle')?.checked);
+    const smsAlertsBundle = Boolean($('onb-sms-alerts-bundle')?.checked);
     const websiteUrl = ($('onb-website-url')?.value || '').trim();
     const sendWelcomeCredentials = Boolean($('onb-send-welcome-creds')?.checked);
 
@@ -400,7 +400,7 @@
           territoryZip,
           minValuation,
           tierLevel,
-          smartSiteBundle,
+          smsAlertsBundle,
           websiteUrl,
           knowledgeBase,
           isPaidOnboarding: true,
@@ -448,7 +448,7 @@
       }
       if ($('cred-login-url')) {
         $('cred-login-url').textContent = creds.loginUrl;
-        $('cred-login-url').href = `login.html`;
+        $('cred-login-url').href = `/recon/login`;
       }
       if ($('cred-login-email')) $('cred-login-email').textContent = creds.loginEmail;
       if ($('cred-login-phone')) $('cred-login-phone').textContent = creds.loginPhone;
@@ -490,13 +490,13 @@
 
       const tokenParam = encodeURIComponent(data.magicToken || '');
       if ($('launch-briefing-btn')) {
-        $('launch-briefing-btn').href = `briefing.html?token=${tokenParam}&unlocked=all`;
+        $('launch-briefing-btn').href = `/recon/briefing?token=${tokenParam}&unlocked=all`;
       }
       if ($('launch-inbox-btn')) {
-        $('launch-inbox-btn').href = `inbox.html?token=${tokenParam}`;
+        $('launch-inbox-btn').href = `/recon/inbox?token=${tokenParam}`;
       }
       if ($('launch-command-btn')) {
-        $('launch-command-btn').href = `command.html?token=${tokenParam}`;
+        $('launch-command-btn').href = `/recon/command?token=${tokenParam}`;
       }
 
       lastIssuedCredentialsCopyText = [
@@ -560,12 +560,10 @@
         $('onb-tier-level').value = params.get('tier');
       }
     }
-    if ($('onb-smart-site-bundle')) {
-      if (params.has('bundle')) {
-        const b = String(params.get('bundle')).toLowerCase();
-        $('onb-smart-site-bundle').checked = b === '1' || b === 'true' || b === 'yes';
-      } else if (params.has('tier')) {
-        $('onb-smart-site-bundle').checked = false;
+    if ($('onb-sms-alerts-bundle')) {
+      if (params.has('alerts')) {
+        const b = String(params.get('alerts')).toLowerCase();
+        $('onb-sms-alerts-bundle').checked = b === '1' || b === 'true' || b === 'yes';
       }
     }
   }

@@ -233,10 +233,16 @@
         .replace(/[^A-Za-z0-9]+/g, '_')
         .replace(/^_+|_+$/g, '')
         .slice(0, 40) || 'Commercial_Concrete';
+    const BRIEFING_STRIPE_LINKS = {
+      'briefing-tier-1-checkout-link': 'https://buy.stripe.com/28EfZi0hZedt52KezH2sM0x',
+      'briefing-tier-2-checkout-link': 'https://buy.stripe.com/7sYaEY3ubglB2UCfDL2sM0y',
+      'briefing-tier-3-checkout-link': 'https://buy.stripe.com/4gM3cw9Szedtan4bnv2sM0z'
+    };
     const stripeRefId = `${cleanZipForStripe}_${cleanTradeForStripe}`;
     document.querySelectorAll('a[data-stripe-base]').forEach((link) => {
-      const base = link.getAttribute('data-stripe-base');
+      const base = BRIEFING_STRIPE_LINKS[link.id] || link.getAttribute('data-stripe-base');
       if (base) {
+        link.setAttribute('data-stripe-base', base);
         link.href = `${base}?client_reference_id=${encodeURIComponent(stripeRefId)}`;
       }
     });

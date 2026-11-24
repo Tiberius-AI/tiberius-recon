@@ -40,7 +40,7 @@
     };
   </script>
 
-  <link rel="stylesheet" href="/recon/styles.css?v=2.6" onerror="this.onerror=null;this.href='styles.css?v=2.6';" />
+  <link rel="stylesheet" href="/recon/styles.css?v=3.5" onerror="this.onerror=null;this.href='styles.css?v=3.5';" />
 </head>
 
 <body class="g-root g3-root bg-subtle-grid text-bodyInk selection:bg-blue-600/40 selection:text-white min-h-screen flex flex-col">
@@ -70,14 +70,14 @@
       </a>
 
       <div class="hidden md:flex items-center gap-4 text-xs font-mono-telemetry">
-        <span class="px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 font-bold">
+        <span class="px-3 py-1.5 rounded-md bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 font-bold">
           ✓ 7-DAY FREE TRIAL CONFIRMED ($0 TODAY) • STEP 1 OF 1: ONBOARDING &amp; FULL ACCESS UNLOCK
         </span>
       </div>
 
       <div class="flex items-center gap-2.5">
         <a
-          href="login.html"
+          href="/recon/login"
           class="btn-outline-slate px-4 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5"
         >
           <span>🔐 Already Set Up? Sign In →</span>
@@ -99,8 +99,10 @@
         </div>
 
         <div class="max-w-3xl">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 font-mono-telemetry text-xs text-emerald-300 font-bold mb-3">
-            <span>🚀 WELCOME TO TIBERIUS RECON™ • 7-DAY FREE TRIAL &amp; ACCOUNT ONBOARDING</span>
+          <div class="mb-2.5">
+            <span class="editorial-kicker font-mono-telemetry text-xs font-bold uppercase tracking-widest text-emerald-300">
+              01 // WELCOME TO TIBERIUS RECON™ • 7-DAY FREE TRIAL &amp; ACCOUNT ONBOARDING
+            </span>
           </div>
           <h1 class="font-display font-extrabold text-2xl sm:text-4xl text-white tracking-tight">
             Configure Your Territory, Calibrate Your Scout &amp; Get Your Login Credentials.
@@ -136,7 +138,7 @@
       >
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-700">
           <div>
-            <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+            <span class="px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
               ✓ TERRITORY LOCKED &amp; ACCOUNT ACTIVATED
             </span>
             <h2 id="success-company-headline" class="font-display font-extrabold text-2xl sm:text-3xl text-white mt-2">
@@ -164,7 +166,7 @@
             <div class="space-y-1.5 text-xs sm:text-sm">
               <div class="flex items-center justify-between gap-2 py-1 border-b border-slate-700/70">
                 <span class="text-slate-400">Client Login URL:</span>
-                <a id="cred-login-url" href="login.html" class="font-mono-telemetry text-blue-400 hover:underline font-bold">
+                <a id="cred-login-url" href="/recon/login" class="font-mono-telemetry text-blue-400 hover:underline font-bold">
                   https://tiberius.ai/recon/login
                 </a>
               </div>
@@ -222,27 +224,27 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <a
               id="launch-briefing-btn"
-              href="briefing.html"
+              href="/recon/briefing"
               class="btn-trust-emerald py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-1.5"
             >
               <span>☕ 7:00 AM Briefing Cards →</span>
             </a>
             <a
               id="launch-inbox-btn"
-              href="inbox.html"
+              href="/recon/inbox"
               class="btn-executive-navy py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-1.5"
             >
               <span>💬 Conversation Room →</span>
             </a>
             <a
               id="launch-command-btn"
-              href="command.html"
+              href="/recon/command"
               class="btn-outline-slate py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-1.5"
             >
               <span>🧠 Shop Knowledge Base →</span>
             </a>
             <a
-              href="login.html"
+              href="/recon/login"
               class="btn-outline-slate py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center inline-flex items-center justify-center gap-1.5"
             >
               <span>🔐 Client Login Portal →</span>
@@ -265,7 +267,7 @@
                 Who Should Receive the 6:45 AM Recon Briefing &amp; Replies?
               </h2>
             </div>
-            <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono-telemetry text-xs text-slate-300">
+            <span class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 font-mono-telemetry text-xs text-slate-300">
               REQUIRED
             </span>
           </div>
@@ -351,7 +353,7 @@
                 Which Trade, Zip Code &amp; Minimum Job Size Should Your Scout Hunt?
               </h2>
             </div>
-            <span id="onb-zip-live-badge" class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
+            <span id="onb-zip-live-badge" class="px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/40 font-mono-telemetry text-xs text-emerald-300 font-bold">
               ✓ TERRITORY SLOT AVAILABLE
             </span>
           </div>
@@ -437,7 +439,7 @@
                 Enter your website below and click <strong class="text-white">Auto-Scan Website</strong> - or type your details directly. Your AI uses these exact facts to write your 7:00 AM bid intros and Conversation Room replies.
               </p>
             </div>
-            <span id="onb-scan-status-pill" class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-xs text-blue-300 shrink-0">
+            <span id="onb-scan-status-pill" class="px-2.5 py-1 rounded-md bg-blue-500/20 border border-blue-400/40 font-mono-telemetry text-xs text-blue-300 shrink-0">
               🧠 READY TO SCAN
             </span>
           </div>
@@ -563,11 +565,11 @@
       <span>TIBERIUS RECON™ • NEW CLIENT ONBOARDING &amp; TERRITORY LOCK</span>
       <div class="flex items-center gap-5">
         <a href="/recon" class="text-slate-300 hover:underline">← Recon Sales Page</a>
-        <a href="login.html" class="text-emerald-400 hover:underline">Client Sign-In Portal →</a>
+        <a href="/recon/login" class="text-emerald-400 hover:underline">Client Sign-In Portal →</a>
       </div>
     </div>
   </footer>
 
-  <script src="/recon/onboarding.js?v=2.6" onerror="this.onerror=null;this.src='onboarding.js?v=2.6';"></script>
+  <script src="/recon/onboarding.js?v=3.5" onerror="this.onerror=null;this.src='onboarding.js?v=3.5';"></script>
 </body>
 </html>
